@@ -1,0 +1,781 @@
+/* ============================================================
+   LE BOURG — css/style.css
+   Le langage visuel est celui du dossier `style/` : fond aubergine
+   profond, panneaux aux angles adoucis posés sur ce fond, titres en
+   condensé lourd tout en capitales, accents corail et or, et beaucoup
+   d'air. Tout est en APLATS — un filet d'un pixel, jamais un dégradé
+   décoratif — pour que l'interface soit du même bois que le pixel art
+   qu'elle recouvre.
+
+   Trois règles tenues partout :
+     · une barre de chargement est ÉPAISSE et porte son propre libellé ;
+     · un intitulé est petit, espacé, en capitales ; une valeur est
+       grande, en chiffres tabulaires ;
+     · rien ne bouge sans raison — les transitions restent sous 180 ms.
+   ============================================================ */
+
+@font-face{
+  font-family:'Condense';
+  src:url('../../style/copie_alice_is_missing/www.aliceismissing.com/fonts/DIN-Condensed-Bold.ttf') format('truetype');
+  font-weight:700; font-style:normal; font-display:swap;
+}
+
+:root{
+  /* --- fonds --- */
+  --fond:#120f1a;
+  --fond2:#0b0910;
+  --panneau:#1d1728;
+  --panneau2:#251e33;
+  --panneau3:#2e2540;
+  --creux:#0e0b15;
+  --bord:rgba(255,255,255,.075);
+  --bord2:rgba(255,255,255,.16);
+  --bord3:rgba(255,255,255,.28);
+
+  /* --- encres --- */
+  --texte:#eae4ef;
+  --doux:#9d94aa;
+  --faible:#6b6379;
+
+  /* --- accents --- */
+  --corail:#e0625c;
+  --corail2:#8f3a37;
+  --or:#e6c069;
+  --or2:#8a6f34;
+  --vert:#7fb069;
+  --vert2:#48663a;
+  --bleu:#5f9ad0;
+  --bleu2:#35597a;
+  --violet:#8f7fc0;
+
+  /* --- géométrie --- */
+  --r:10px;
+  --r2:6px;
+  --r3:4px;
+  --ui:12px;
+  --dock:300px;
+  --bandeau:44px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--fond2)}
+body{
+  color:var(--texte);
+  font-family:system-ui,'Segoe UI Variable Text','Segoe UI',Roboto,-apple-system,
+              'Helvetica Neue',Arial,sans-serif;
+  font-size:var(--ui);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+#scene{position:fixed;inset:0;display:grid;place-items:center;line-height:0;background:var(--fond2)}
+#c{
+  image-rendering:pixelated;image-rendering:crisp-edges;
+  display:block;background:#000;cursor:default;touch-action:manipulation;
+}
+
+#couche{position:fixed;inset:0;pointer-events:none;z-index:5}
+#couche > *{pointer-events:auto}
+
+/* ---------------------------------------------------------------
+   TYPOGRAPHIE
+   --------------------------------------------------------------- */
+.eti{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faible);font-weight:600}
+.eti-or{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--or);font-weight:600}
+.tt{font-family:'Condense','Inter',sans-serif;font-size:16px;letter-spacing:.055em;
+    text-transform:uppercase;color:var(--texte);font-weight:700;line-height:1.15}
+.tt.corail{color:var(--corail)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:'tnum'}
+.faible{color:var(--faible)}
+.doux{color:var(--doux)}
+.mauvais{color:var(--corail)}
+.bon{color:var(--vert)}
+.note{font-size:12px;line-height:1.62;color:var(--doux)}
+.note em{color:var(--texte);font-style:normal}
+.grand{font-family:'Condense','Inter',sans-serif;font-size:22px;letter-spacing:.03em;
+       font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+
+/* un intertitre de section : filet + libellé, comme dans la référence */
+.section{display:flex;align-items:center;gap:10px;margin:2px 0 2px}
+.section .b{flex:1;height:1px;background:var(--bord)}
+.section > span{font-size:10px;letter-spacing:.20em;text-transform:uppercase;color:var(--faible);font-weight:600}
+
+/* ---------------------------------------------------------------
+   BANDEAU DE TÊTE
+   --------------------------------------------------------------- */
+#bandeau{
+  position:fixed;top:8px;left:8px;right:8px;height:var(--bandeau);
+  display:flex;align-items:stretch;gap:6px;
+  background:rgba(18,15,26,.92);
+  border:1px solid var(--bord);
+  border-radius:var(--r);
+  padding:4px;
+  backdrop-filter:blur(8px);
+  z-index:20;
+}
+#bandeau .bloc{
+  display:flex;align-items:center;gap:9px;padding:0 13px;
+  border-radius:var(--r2);
+  cursor:pointer;transition:background .14s;
+  white-space:nowrap;position:relative;min-width:84px;
+}
+#bandeau .bloc + .bloc::before{
+  content:'';position:absolute;left:-3px;top:8px;bottom:8px;width:1px;background:var(--bord);
+}
+#bandeau .bloc:hover{background:var(--panneau2)}
+#bandeau .bloc.inerte{cursor:default}
+#bandeau .bloc.inerte:hover{background:none}
+#bandeau .v{font-family:'Condense','Inter',sans-serif;font-size:19px;letter-spacing:.02em;
+            color:var(--texte);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+#bandeau .v.bon{color:var(--vert)} #bandeau .v.mauvais{color:var(--corail)}
+#bandeau .k{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--faible);
+            margin-top:3px;font-weight:600}
+/* La jauge se glisse ENTRE la valeur et son intitulé : elle appartient au
+   même bloc, elle ne flotte pas à côté. */
+#bandeau .col{display:flex;flex-direction:column;justify-content:center;gap:0}
+#bandeau .col .jauge-mince{margin-top:4px;width:100%;min-width:56px}
+#bandeau .grow{flex:1;cursor:pointer}
+#bandeau .nomv{font-family:'Condense','Inter',sans-serif;font-size:21px;letter-spacing:.05em;
+               text-transform:uppercase;color:var(--corail);font-weight:700;line-height:1}
+#bandeau canvas,#bandeau img.ico{image-rendering:pixelated}
+
+.jauge-mince{width:64px;height:8px;background:var(--creux);border-radius:99px;
+             overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px var(--bord)}
+.jauge-mince i{position:absolute;inset:0 auto 0 0;background:var(--vert);display:block;
+               border-radius:99px;transition:width .3s}
+.jauge-mince.danger i{background:var(--corail)}
+.jauge-mince.or i{background:var(--or)}
+
+/* ---------------------------------------------------------------
+   LE DOCK
+   --------------------------------------------------------------- */
+#dock{
+  position:fixed;left:8px;top:calc(var(--bandeau) + 18px);bottom:8px;width:var(--dock);
+  display:flex;flex-direction:column;
+  background:rgba(18,15,26,.90);
+  border:1px solid var(--bord);
+  border-radius:var(--r);
+  backdrop-filter:blur(8px);
+  transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s;
+  z-index:15;overflow:hidden;
+}
+#dock.replie{transform:translateX(calc(-1 * var(--dock) - 16px));opacity:0}
+#dock-tete{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 12px 9px;border-bottom:1px solid var(--bord);
+}
+#dock-liste{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px}
+#dock-pied{padding:9px 12px;border-top:1px solid var(--bord);font-size:11px;color:var(--doux)}
+#dock-poignee{
+  position:fixed;left:calc(var(--dock) + 8px);top:calc(var(--bandeau) + 28px);
+  width:22px;height:54px;
+  background:rgba(18,15,26,.92);border:1px solid var(--bord);
+  border-radius:0 var(--r2) var(--r2) 0;border-left:none;
+  display:grid;place-items:center;cursor:pointer;z-index:16;
+  transition:left .2s cubic-bezier(.4,0,.2,1),background .14s;
+}
+#dock-poignee:hover{background:var(--panneau2)}
+#dock-poignee span{color:var(--or);font-size:13px;line-height:1}
+
+/* --- une tâche du dock : la pièce maîtresse de l'écran --- */
+.tache{
+  border:1px solid var(--bord);background:var(--panneau);
+  border-radius:var(--r2);
+  padding:9px 10px 10px;margin-bottom:7px;cursor:pointer;
+  transition:border-color .14s,background .14s,transform .1s;
+  position:relative;overflow:hidden;
+}
+.tache::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--vert)}
+.tache:hover{border-color:var(--bord2);background:var(--panneau2)}
+.tache:active{transform:translateY(1px)}
+.tache.chantier::before{background:var(--or)}
+.tache.bloquee::before{background:var(--corail)}
+.tache.aventure::before{background:var(--bleu)}
+.tache.expedition::before{background:var(--violet)}
+.tache .l1{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.tache .nom{flex:1;font-size:12.5px;color:var(--texte);font-weight:600;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.005em}
+.tache .tps{font-family:'Condense','Inter',sans-serif;font-size:14px;color:var(--doux);
+            font-variant-numeric:tabular-nums;font-weight:700;flex:none}
+/* deuxième ligne : le LIEU en capitales espacées, le détail en clair — deux
+   registres différents, sinon l'œil ne sait pas lequel des deux lire. */
+.tache .l2{display:flex;justify-content:space-between;gap:10px;margin-top:7px;align-items:baseline}
+.tache .l2 .ou{font-size:9px;letter-spacing:.15em;color:var(--faible);
+               text-transform:uppercase;font-weight:700;flex:none;
+               max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tache .l2 .qu{font-size:10.5px;color:var(--doux);flex:1;text-align:right;
+               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tache.bloquee .l2 .qu{color:var(--corail)}
+.tache .ico{width:20px;height:20px;flex:none;line-height:0}
+.tache .ico canvas,.tache .ico img{width:20px;height:20px;display:block;image-rendering:pixelated}
+
+/* ---------------------------------------------------------------
+   BARRES DE CHARGEMENT — épaisses, arrondies, avec leur propre texte
+   --------------------------------------------------------------- */
+.barre{
+  height:13px;background:var(--creux);border-radius:99px;
+  position:relative;overflow:hidden;
+  box-shadow:inset 0 0 0 1px var(--bord), inset 0 2px 3px rgba(0,0,0,.34);
+}
+.barre i{
+  position:absolute;left:0;top:0;bottom:0;background:var(--or);display:block;
+  border-radius:99px;transition:width .22s linear;
+  box-shadow:0 0 0 1px rgba(0,0,0,.22);
+}
+/* deux filets seulement : un jour en haut, une ombre en bas. Le volume
+   vient de là, pas d'un dégradé. */
+.barre i::after{
+  content:'';position:absolute;inset:1px 1px auto 1px;height:34%;min-height:1px;
+  background:rgba(255,255,255,.17);border-radius:99px;
+}
+.barre i::before{
+  content:'';position:absolute;inset:auto 1px 1px 1px;height:1px;
+  background:rgba(0,0,0,.22);border-radius:99px;
+}
+.barre.vert i{background:var(--vert)}
+.barre.rouge i{background:var(--corail)}
+.barre.bleu i{background:var(--bleu)}
+.barre.violet i{background:var(--violet)}
+.barre.grande{height:22px;border-radius:7px}
+.barre.grande i{border-radius:6px}
+.barre.enorme{height:30px;border-radius:8px}
+.barre.enorme i{border-radius:7px}
+.barre.enorme .dedans{font-size:12px;padding:0 12px}
+.barre.mince{height:8px}
+.barre.raye i{
+  background-image:repeating-linear-gradient(135deg,
+    rgba(0,0,0,.14) 0 6px, rgba(0,0,0,0) 6px 12px);
+}
+/* le texte DANS la barre : c'est ce qui la rend lisible d'un coup d'œil */
+.barre .dedans{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 10px;font-size:11px;font-weight:700;letter-spacing:.04em;
+  color:var(--texte);text-shadow:0 1px 2px rgba(0,0,0,.75);
+  font-variant-numeric:tabular-nums;pointer-events:none;
+  overflow:hidden;white-space:nowrap;gap:8px;
+}
+.barre .dedans .g{overflow:hidden;text-overflow:ellipsis}
+.barre .dedans .d{flex:none}
+.barre .dedans .d{opacity:.85}
+
+/* ---------------------------------------------------------------
+   FENÊTRES FLOTTANTES
+   --------------------------------------------------------------- */
+.fen{
+  position:fixed;min-width:420px;max-width:min(660px,94vw);
+  background:rgba(20,16,29,.975);
+  border:1px solid var(--bord2);
+  border-radius:var(--r);
+  box-shadow:0 24px 64px rgba(0,0,0,.62), 0 0 0 1px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;z-index:30;overflow:hidden;
+  backdrop-filter:blur(10px);
+}
+.fen.active{border-color:var(--bord3)}
+.fen.large{min-width:min(760px,94vw);max-width:min(860px,96vw)}
+.fen-tete{
+  display:flex;align-items:center;gap:10px;padding:12px 12px 11px 15px;
+  background:var(--panneau);border-bottom:1px solid var(--bord);cursor:grab;
+  user-select:none;
+}
+.fen-tete:active{cursor:grabbing}
+.fen-tete .ti{flex:1;min-width:0}
+.fen-tete h2{
+  font-family:'Condense','Inter',sans-serif;font-size:19px;letter-spacing:.045em;
+  text-transform:uppercase;color:var(--texte);font-weight:700;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fen-tete .sous{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+                color:var(--faible);margin-top:4px;font-weight:600}
+.fen-x{
+  width:26px;height:26px;flex:none;border:1px solid var(--bord);background:transparent;
+  color:var(--doux);border-radius:var(--r3);
+  cursor:pointer;line-height:0;display:grid;place-items:center;font-size:15px;font-family:inherit;
+  transition:border-color .14s,color .14s,background .14s;
+}
+.fen-x:hover{border-color:var(--corail2);color:var(--corail);background:rgba(224,98,92,.10)}
+
+/* onglets : capitales espacées, l'actif souligné d'un trait d'accent */
+.fen-onglets{display:flex;flex-wrap:wrap;background:var(--fond);
+             border-bottom:1px solid var(--bord);padding:0 6px;gap:0 2px}
+.fen-onglets button{
+  font:inherit;font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;
+  background:none;border:none;color:var(--faible);
+  padding:11px 13px 9px;cursor:pointer;white-space:nowrap;position:relative;
+  transition:color .14s;
+}
+.fen-onglets button::after{
+  content:'';position:absolute;left:13px;right:13px;bottom:0;height:2px;
+  background:transparent;border-radius:2px 2px 0 0;transition:background .14s;
+}
+.fen-onglets button:hover{color:var(--doux)}
+.fen-onglets button.on{color:var(--texte)}
+.fen-onglets button.on::after{background:var(--corail)}
+.fen-corps{padding:14px;overflow-y:auto;max-height:min(66vh,640px)}
+.fen-corps > * + *{margin-top:12px}
+
+/* ---------------------------------------------------------------
+   BLOCS
+   --------------------------------------------------------------- */
+.cadre{border:1px solid var(--bord);background:var(--panneau);
+       border-radius:var(--r2);padding:11px 12px}
+.cadre + .cadre{margin-top:8px}
+.cadre.actif{border-color:var(--or2);background:var(--panneau2)}
+.cadre.mort{opacity:.45}
+.cadre.creux{background:var(--creux)}
+.cadre.alerte{border-color:var(--corail2);background:rgba(224,98,92,.07)}
+
+.rangee{display:flex;align-items:center;gap:10px}
+.rangee.entre{justify-content:space-between}
+.rangee.haut{align-items:flex-start}
+.rangee.enroule{flex-wrap:wrap}
+.colonne{display:flex;flex-direction:column;gap:8px}
+.sep{height:1px;background:var(--bord);margin:11px 0}
+
+/* grille de statistiques, façon référence */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+       gap:1px;background:var(--bord);border:1px solid var(--bord);border-radius:var(--r2);overflow:hidden}
+.stats > div{background:var(--panneau);padding:9px 11px;display:flex;flex-direction:column;
+              justify-content:space-between;gap:6px;min-height:52px}
+.stats .k{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faible);
+          font-weight:600;line-height:1.25}
+.stats .v{font-family:'Condense','Inter',sans-serif;font-size:19px;font-weight:700;
+          line-height:1;font-variant-numeric:tabular-nums}
+
+/* ---------------------------------------------------------------
+   BOUTONS
+   --------------------------------------------------------------- */
+button.b, a.b{
+  font:inherit;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;
+  color:var(--texte);background:var(--panneau2);
+  border:1px solid var(--bord2);border-radius:var(--r3);
+  padding:9px 14px;cursor:pointer;text-decoration:none;display:inline-flex;
+  align-items:center;gap:7px;justify-content:center;
+  transition:background .14s,border-color .14s,color .14s,transform .08s;
+}
+button.b:hover:not(:disabled){background:var(--panneau3);border-color:var(--bord3)}
+button.b:active:not(:disabled){transform:translateY(1px)}
+button.b:disabled{opacity:.32;cursor:not-allowed}
+button.b.primaire{border-color:var(--or2);color:var(--or);background:rgba(230,192,105,.07)}
+button.b.primaire:hover:not(:disabled){background:var(--or);color:#1a1424;border-color:var(--or)}
+button.b.danger{color:var(--doux)}
+button.b.danger:hover:not(:disabled){border-color:var(--corail2);color:var(--corail);background:rgba(224,98,92,.10)}
+button.b.mini{padding:5px 9px;font-size:9.5px;letter-spacing:.07em;border-radius:var(--r3)}
+button.b.carre{padding:6px;width:28px;height:28px}
+button.b.pleine{width:100%}
+
+/* interrupteur segmenté */
+.segments{display:inline-flex;flex-wrap:wrap;background:var(--creux);border:1px solid var(--bord);
+          border-radius:var(--r3);padding:2px;gap:2px;max-width:100%}
+.segments button{
+  font:inherit;font-size:9.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:700;
+  background:none;border:none;color:var(--faible);padding:6px 11px;cursor:pointer;
+  border-radius:3px;transition:background .14s,color .14s;
+}
+.segments button:hover{color:var(--doux)}
+.segments button.on{background:var(--panneau3);color:var(--texte)}
+
+/* bascule oui / non */
+.bascule{width:38px;height:20px;border-radius:99px;background:var(--creux);
+         border:1px solid var(--bord);position:relative;cursor:pointer;flex:none;
+         transition:background .16s,border-color .16s}
+.bascule i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:99px;
+           background:var(--faible);transition:left .16s,background .16s}
+.bascule.on{background:rgba(127,176,105,.22);border-color:var(--vert2)}
+.bascule.on i{left:20px;background:var(--vert)}
+
+/* ---------------------------------------------------------------
+   PUCES DE RESSOURCE
+   --------------------------------------------------------------- */
+.puce{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--bord);background:var(--creux);
+  border-radius:var(--r3);padding:4px 9px 4px 4px;
+  font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--texte);
+}
+.puce canvas,.puce img{width:18px;height:18px;display:block;image-rendering:pixelated}
+.puce.insuffisant{border-color:var(--corail2);color:var(--corail);background:rgba(224,98,92,.08)}
+.puce.gain{border-color:var(--vert2);background:rgba(127,176,105,.08)}
+.puce.mini{padding:2px 6px 2px 2px;font-size:10.5px}
+.puce.mini canvas,.puce.mini img{width:14px;height:14px}
+/* une TROUVAILLE n'est pas un rendement : bordure pointillée et or, pour
+   qu'on ne la confonde jamais avec ce que la recette rend à coup sûr. */
+.puce.butin{border-style:dashed;border-color:var(--or2);color:var(--or)}
+.puce b{font-weight:700}
+
+.liste-res{display:flex;flex-wrap:wrap;gap:6px}
+
+.grille-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:6px}
+.item-res{
+  display:flex;align-items:center;gap:9px;border:1px solid var(--bord);
+  background:var(--panneau);padding:8px 10px;border-radius:var(--r2);
+  transition:border-color .14s;
+}
+.item-res:hover{border-color:var(--bord2)}
+.item-res canvas,.item-res img{width:26px;height:26px;flex:none;display:block;image-rendering:pixelated}
+.item-res .n{flex:1;min-width:0}
+.item-res .n b{display:block;font-size:11.5px;font-weight:500;color:var(--texte);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-res .n i{display:block;font-style:normal;font-size:9.5px;color:var(--faible)}
+.item-res .q{font-family:'Condense','Inter',sans-serif;font-size:17px;font-weight:700;
+             font-variant-numeric:tabular-nums;color:var(--texte)}
+.item-res .q small{display:block;font-size:9px;font-family:inherit;color:var(--faible);
+                   text-align:right;font-weight:600;letter-spacing:.06em}
+.item-res.plein .q{color:var(--corail)}
+.item-res.monte .q small{color:var(--vert)}
+.item-res.baisse .q small{color:var(--corail)}
+
+/* ---------------------------------------------------------------
+   POSTE DE TRAVAIL
+   --------------------------------------------------------------- */
+.poste{border:1px solid var(--bord);background:var(--panneau);
+       border-radius:var(--r2);padding:11px 12px;position:relative;overflow:hidden}
+.poste.vacant{border-style:dashed;background:transparent}
+.poste.actif{border-color:var(--vert2)}
+.poste.bloque{border-color:var(--corail2)}
+.poste + .poste{margin-top:8px}
+.poste .haut{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+/* le bloc d'identité d'un habitant, utilisable partout */
+.qui{flex:1;min-width:0}
+.qui b{display:block;font-size:13px;font-weight:600;color:var(--texte);
+       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qui i{font-style:normal;color:var(--faible);font-size:9px;display:block;
+       letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin-bottom:2px}
+.qui > span{display:block;margin-top:2px}
+/* la pastille d'un habitant : son métier de prédilection, en rond */
+.av{width:34px;height:34px;flex:none;border-radius:99px;background:var(--creux);
+    border:1px solid var(--bord);display:grid;place-items:center;line-height:0}
+.av canvas,.av img{width:20px;height:20px;image-rendering:pixelated}
+.av.or{border-color:var(--or2)}
+.av.vert{border-color:var(--vert2)}
+
+/* une pastille de niveau */
+.niv{font-family:'Condense','Inter',sans-serif;font-size:12px;font-weight:700;
+     letter-spacing:.04em;color:var(--or);background:rgba(230,192,105,.10);
+     border:1px solid var(--or2);border-radius:99px;padding:2px 8px;flex:none;
+     font-variant-numeric:tabular-nums}
+
+/* ---------------------------------------------------------------
+   CHAMPS
+   --------------------------------------------------------------- */
+select.s, input.s{
+  font:inherit;font-size:12px;color:var(--texte);background:var(--creux);
+  border:1px solid var(--bord2);border-radius:var(--r3);padding:8px 9px;width:100%;
+  transition:border-color .14s;
+}
+select.s:hover,input.s:hover{border-color:var(--bord3)}
+select.s:focus,input.s:focus{outline:none;border-color:var(--or2)}
+input.s[type=range]{padding:0;height:22px;background:transparent;border:none}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--creux);
+  border-radius:99px;box-shadow:inset 0 0 0 1px var(--bord)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  border-radius:99px;background:var(--or);margin-top:-5px;cursor:pointer;border:none}
+input[type=range]::-moz-range-track{height:6px;background:var(--creux);border-radius:99px}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
+  background:var(--or);border:none;cursor:pointer}
+
+/* ---------------------------------------------------------------
+   TABLEAUX
+   --------------------------------------------------------------- */
+.tabl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tabl td,.tabl th{padding:6px 8px;border-bottom:1px solid var(--bord);text-align:left}
+.tabl tr:last-child td{border-bottom:none}
+.tabl th{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faible);font-weight:600}
+.tabl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabl td.g{font-family:'Condense','Inter',sans-serif;font-size:15px;font-weight:700}
+
+/* ---------------------------------------------------------------
+   CATALOGUE DE CONSTRUCTION
+   --------------------------------------------------------------- */
+.cat-item{
+  display:flex;gap:12px;border:1px solid var(--bord);background:var(--panneau);
+  padding:11px 12px;cursor:pointer;border-radius:var(--r2);
+  transition:border-color .14s,background .14s,transform .08s;
+}
+.cat-item:hover{border-color:var(--bord3);background:var(--panneau2)}
+.cat-item:active{transform:translateY(1px)}
+.cat-item.impossible{opacity:.42}
+.cat-item .cc{flex:1;min-width:0}
+.cat-item h3{font-family:'Condense','Inter',sans-serif;font-size:15px;letter-spacing:.04em;
+             text-transform:uppercase;color:var(--texte);font-weight:700;margin-bottom:3px}
+.cat-item .m{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faible);
+             margin-bottom:8px;font-weight:600}
+.cat-item .vig{width:46px;height:46px;flex:none;border:1px solid var(--bord);background:var(--creux);
+  display:grid;place-items:center;line-height:0;border-radius:var(--r2)}
+.cat-item .vig canvas,.cat-item .vig img{width:32px;height:32px;display:block;image-rendering:pixelated}
+
+/* ---------------------------------------------------------------
+   FILE DU CHANTIER
+   --------------------------------------------------------------- */
+.job{display:flex;align-items:center;gap:10px;border:1px solid var(--bord);
+     background:var(--panneau);padding:9px 11px;border-radius:var(--r2)}
+.job + .job{margin-top:7px}
+.job.tete{border-color:var(--or2);background:var(--panneau2)}
+.job .jn{flex:1;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job .jr{font-size:10.5px;color:var(--doux);font-variant-numeric:tabular-nums;font-weight:600}
+.job .fl{display:flex;gap:3px}
+
+/* ---------------------------------------------------------------
+   MODE CONSTRUCTION
+   --------------------------------------------------------------- */
+#barre-cons{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:22px;
+  display:none;align-items:center;gap:16px;
+  background:rgba(20,16,29,.97);border:1px solid var(--or2);
+  border-radius:var(--r);padding:12px 18px;z-index:40;
+  box-shadow:0 16px 44px rgba(0,0,0,.55);
+}
+#barre-cons.vu{display:flex}
+#barre-cons .q{font-size:12.5px}
+#barre-cons .q b{color:var(--or);font-weight:700}
+
+/* ---------------------------------------------------------------
+   INFOBULLE DE SURVOL
+   --------------------------------------------------------------- */
+#survol{
+  position:fixed;z-index:22;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:rgba(20,16,29,.96);border:1px solid var(--bord2);border-radius:var(--r2);
+  padding:7px 12px;transform:translate(-50%,-100%);white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+#survol.vu{opacity:1}
+#survol .n{font-family:'Condense','Inter',sans-serif;font-size:14px;letter-spacing:.05em;
+           text-transform:uppercase;color:var(--texte);font-weight:700}
+#survol .d{font-size:10px;color:var(--doux);margin-top:3px}
+#survol .barre{margin-top:6px;width:150px}
+
+/* ---------------------------------------------------------------
+   MESSAGES
+   --------------------------------------------------------------- */
+#messages{position:fixed;top:calc(var(--bandeau) + 20px);left:50%;transform:translateX(-50%);
+  z-index:60;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none}
+.msg{
+  background:rgba(20,16,29,.97);border:1px solid var(--bord2);border-radius:var(--r2);
+  padding:10px 18px;font-size:12px;letter-spacing:.01em;font-weight:500;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+  animation:msg-in .2s cubic-bezier(.2,.8,.3,1);
+  display:flex;align-items:center;gap:9px;
+}
+.msg::before{content:'';width:3px;align-self:stretch;border-radius:2px;background:var(--doux)}
+.msg.bien::before{background:var(--vert)}
+.msg.alerte::before{background:var(--corail)}
+.msg.butin::before{background:var(--or)}
+.msg.butin{color:var(--or)}
+@keyframes msg-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+/* ---------------------------------------------------------------
+   JOURNAL
+   --------------------------------------------------------------- */
+.jl{display:flex;gap:10px;font-size:11.5px;padding:7px 0;border-bottom:1px solid var(--bord)}
+.jl .t{color:var(--faible);font-variant-numeric:tabular-nums;flex:none;width:58px;font-weight:600}
+.jl .x{flex:1}
+.jl.alerte .x{color:var(--corail)}
+.jl.bien .x{color:var(--vert)}
+.jl.butin .x{color:var(--or)}
+.jl.guerre .x{color:#c99a6a}
+.jl.rang .x{color:var(--violet)}
+
+.vide{padding:26px 12px;text-align:center;color:var(--faible);font-size:12px;line-height:1.8}
+
+/* ---------------------------------------------------------------
+   PLATEAU PLEIN ÉCRAN
+   --------------------------------------------------------------- */
+#plateau{position:fixed;inset:0;z-index:80;background:var(--fond2);display:none;flex-direction:column}
+#plateau.vu{display:flex}
+#plateau-tete{display:flex;align-items:center;gap:14px;padding:11px 16px;
+  background:var(--panneau);border-bottom:1px solid var(--bord)}
+#plateau-tete .ti{flex:1}
+#plateau-scene{flex:1;position:relative;display:grid;place-items:center;overflow:hidden}
+#plateau-scene canvas{max-width:100%;max-height:100%;display:block;border-radius:var(--r2)}
+#plateau-pied{padding:11px 16px;background:var(--panneau);border-top:1px solid var(--bord);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ---------------------------------------------------------------
+   DÉFILEMENT
+   --------------------------------------------------------------- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--panneau3);border:3px solid transparent;
+                          background-clip:content-box;border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--bord3);background-clip:content-box}
+
+/* ---------------------------------------------------------------
+   LE DOCK À DROITE — même panneau, autre bord.
+   --------------------------------------------------------------- */
+body.dock-droite #dock{left:auto;right:8px}
+body.dock-droite #dock.replie{transform:translateX(calc(var(--dock) + 16px))}
+body.dock-droite #dock-poignee{left:auto;right:calc(var(--dock) + 8px);
+  border-radius:var(--r2) 0 0 var(--r2);border-left:1px solid var(--bord);border-right:none}
+body.dock-droite #dock-poignee span{transform:scaleX(-1)}
+
+@media (max-width:980px){
+  :root{--dock:250px}
+  .fen{min-width:300px;max-width:95vw}
+  #bandeau .bloc{padding:0 8px}
+}
+
+/* ---------------------------------------------------------------
+   LES HABITANTS : RARETÉS, TRAITS, POSTULANTS
+   Une fiche doit se lire sans lire : la couleur du liseré dit la
+   rareté, la couleur de la pastille dit qualité ou défaut. Le texte
+   n'est là que pour ceux qui veulent le détail.
+   --------------------------------------------------------------- */
+.rarete{
+  font-size:9px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;
+  padding:3px 7px;border-radius:99px;border:1px solid currentColor;
+  white-space:nowrap;line-height:1;flex:none;
+}
+.r-commun  > .rarete, .rarete.r-commun {color:#9a92a6}
+.r-estime  > .rarete, .rarete.r-estime {color:#8bbd76}
+.r-rare    > .rarete, .rarete.r-rare   {color:#6fa0d8}
+.r-insigne > .rarete, .rarete.r-insigne{color:#e6c069}
+.r-legende > .rarete, .rarete.r-legende{color:#e0625c}
+
+.traits{display:flex;flex-wrap:wrap;gap:5px}
+.trait{
+  font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:99px;
+  border:1px solid transparent;white-space:nowrap;cursor:help;line-height:1.15;
+}
+.trait.qualite{color:#a8d295;background:rgba(127,176,105,.11);border-color:rgba(127,176,105,.34)}
+.trait.defaut {color:#efa09b;background:rgba(224,98,92,.11); border-color:rgba(224,98,92,.34)}
+.traits.serre .trait{font-size:9.5px;padding:2px 7px}
+
+/* la fiche d'un habitant porte sa rareté en liseré gauche */
+.cadre.fiche{border-left-width:3px}
+.cadre.fiche.r-estime {border-left-color:#7fb069}
+.cadre.fiche.r-rare   {border-left-color:#5f93cc}
+.cadre.fiche.r-insigne{border-left-color:#e6c069}
+.cadre.fiche.r-legende{border-left-color:#e0625c}
+
+/* les trois voyageurs à la porte */
+.postulants{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:10px}
+.postulant{
+  position:relative;border:1px solid var(--bord2);background:var(--panneau);
+  border-radius:var(--r2);padding:12px 12px 12px;overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:border-color .14s,background .14s;
+}
+.postulant:hover{border-color:var(--bord3);background:var(--panneau2)}
+.postulant .liseret{position:absolute;inset:0 0 auto 0;height:3px}
+.postulant.r-insigne{box-shadow:inset 0 0 0 1px rgba(230,192,105,.22)}
+.postulant.r-legende{box-shadow:inset 0 0 0 1px rgba(224,98,92,.28)}
+.postulant .b{margin-top:auto}
+
+/* la jauge des chances : une bande, cinq segments, aucune légende cachée */
+.jauge-raretes{display:flex;height:14px;border-radius:99px;overflow:hidden;
+               box-shadow:inset 0 0 0 1px var(--bord)}
+.jauge-raretes i{display:block;height:100%}
+.jauge-raretes i + i{box-shadow:inset 1px 0 0 rgba(0,0,0,.35)}
+
+.pastille-r{width:26px;height:26px;border-radius:6px;flex:none}
+.item-res.r-legende{border-color:rgba(224,98,92,.35)}
+.item-res.r-insigne{border-color:rgba(230,192,105,.30)}
+
+button.b.large{width:100%;justify-content:center}
+.rangee > button.b.large + button.b.large{margin-left:0}
+
+/* ---------------------------------------------------------------
+   L'ÉCHELLE DE LA MENACE — cinq paliers, largeur proportionnelle
+   --------------------------------------------------------------- */
+.echelle{display:flex;gap:2px;border-radius:var(--r2);overflow:hidden}
+.ech-pas{
+  background:var(--creux);padding:8px 6px;min-width:0;
+  display:flex;flex-direction:column;gap:3px;text-align:center;cursor:help;
+  border-top:2px solid var(--bord);
+}
+.ech-pas b{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+           color:var(--doux);font-weight:700;
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ech-pas i{font-style:normal;font-size:9.5px;color:var(--faible);
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ech-pas.ici{background:var(--panneau2);border-top-color:var(--corail)}
+.ech-pas.ici b{color:var(--texte)}
+.ech-pas.ici i{color:var(--corail)}
+
+/* ---------------------------------------------------------------
+   LE PUITS — le péril du moment, teinté de son élément
+   --------------------------------------------------------------- */
+.cadre.peril{border-left-width:3px}
+.cadre.peril.p-neutre{border-left-color:#8f8799}
+.cadre.peril.p-feu   {border-left-color:#e0784a}
+.cadre.peril.p-venin {border-left-color:#8fc04a}
+.cadre.peril.p-gel   {border-left-color:#9fd0e0}
+.cadre.peril.p-foudre{border-left-color:#e6d06a}
+.cadre.peril.p-ombre {border-left-color:#a08fc0}
+
+/* la route de la tour : six paliers, six réserves */
+.route{display:flex;gap:2px;border-radius:var(--r2);overflow:hidden;margin-bottom:8px}
+.pas-route{
+  flex:1;min-width:0;background:var(--creux);padding:8px 5px;
+  display:flex;flex-direction:column;gap:3px;text-align:center;cursor:help;
+  border-top:2px solid var(--bord);
+}
+.pas-route b{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--doux);
+             font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pas-route i{font-style:normal;font-size:9px;color:var(--faible)}
+.pas-route span{font-size:9.5px;font-weight:700}
+.pas-route.loin{opacity:.45}
+.pas-route.ici{background:var(--panneau2)}
+.pas-route.ici b{color:var(--texte)}
+.pas-route.p-neutre.ici{border-top-color:#8f8799}
+.pas-route.p-feu.ici   {border-top-color:#e0784a}
+.pas-route.p-venin.ici {border-top-color:#8fc04a}
+.pas-route.p-gel.ici   {border-top-color:#9fd0e0}
+.pas-route.p-foudre.ici{border-top-color:#e6d06a}
+.pas-route.p-ombre.ici {border-top-color:#a08fc0}
+
+/* ---------------------------------------------------------------
+   LES BULLES DE CONSTRUCTION — en bas, au centre. Chaque plan appris
+   y attend son heure ; une pastille marque ceux qu'on n'a pas ouverts.
+   --------------------------------------------------------------- */
+#bulles{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  z-index:24;pointer-events:none;max-width:min(92vw,880px);
+}
+#bulles > *{pointer-events:auto}
+#bulles-rail{
+  display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+  padding:7px 9px;border-radius:16px;
+  background:rgba(20,16,29,.86);border:1px solid var(--bord2);
+  backdrop-filter:blur(10px);
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+  max-height:118px;overflow-y:auto;
+}
+.bulle{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
+  width:64px;padding:7px 2px 6px;border-radius:12px;cursor:pointer;
+  background:var(--panneau);border:1px solid var(--bord);
+  transition:background .14s,border-color .14s,transform .1s;
+  font:inherit;color:var(--texte);
+}
+.bulle:hover{background:var(--panneau2);border-color:var(--bord3);transform:translateY(-2px)}
+.bulle .n{font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;
+          color:var(--doux);max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bulle.pauvre{opacity:.5}
+.bulle.pauvre:hover{opacity:.8}
+.bulle .point{
+  position:absolute;top:5px;right:6px;width:8px;height:8px;border-radius:50%;
+  background:var(--corail);box-shadow:0 0 0 2px rgba(20,16,29,.9);
+}
+.bulle.neuve{border-color:var(--or2)}
+@keyframes bulle-nait{from{transform:translateY(14px) scale(.6);opacity:0}
+                      to{transform:none;opacity:1}}
+.bulle.neuve{animation:bulle-nait .35s cubic-bezier(.2,.8,.3,1.15)}
+
+/* la palette des maisons, dépliée au-dessus des bulles */
+#bulles-palette{
+  display:none;gap:6px;padding:7px 9px;border-radius:99px;
+  background:rgba(20,16,29,.86);border:1px solid var(--bord2);
+  backdrop-filter:blur(10px);
+}
+#bulles-palette.vu{display:flex}
+.nuance{
+  width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;
+  border:2px solid rgba(255,255,255,.25);
+  transition:transform .12s,border-color .12s;
+}
+.nuance:hover{transform:translateY(-2px)}
+.nuance.choisie{border-color:#fff;transform:translateY(-2px);
+  box-shadow:0 0 0 2px rgba(255,255,255,.25)}

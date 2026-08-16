@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Le Bourg — griffes, plumes et charpente</title>
+<link rel="stylesheet" href="jeu/css/style.css">
+</head>
+<body>
+
+<!-- Le village, plein écran. C'est le seul « écran » du jeu :
+     tout le reste flotte au-dessus et se referme. -->
+<div id="scene"><canvas id="c" aria-label="Le bourg en trois dimensions"></canvas></div>
+
+<!-- La couche d'interface. Transparente aux clics ; seuls les panneaux
+     qu'elle contient reprennent le pointeur. -->
+<div id="couche"></div>
+
+<!-- Le plateau plein écran des batailles et de l'arène. -->
+<div id="plateau">
+  <div id="plateau-tete">
+    <div class="ti">
+      <div class="tt" id="plateau-titre">—</div>
+      <div class="eti" id="plateau-sous"></div>
+    </div>
+    <div id="plateau-boutons" class="rangee"></div>
+  </div>
+  <div id="plateau-scene"><canvas id="plateau-canvas"></canvas></div>
+  <div id="plateau-pied"></div>
+</div>
+
+<!-- ============================================================
+     1. LE NOYAU CONSERVÉ — moteurs de bataille, arène, unités,
+        équipement et sprites. Ordre imposé : portée partagée.
+     ============================================================ -->
+<script src="jeu/donnees/gd-core.js"></script>
+<script src="unites/data-units.js"></script>
+<script src="unites/data-forge.js"></script>
+<script src="jeu/donnees/gd-talents.js"></script>
+<script src="aventure/data-general.js"></script>
+
+<script src="sprites/model3d.js"></script>
+<script src="sprites/sprites-core.js"></script>
+<script src="sprites/sprites-weapons.js"></script>
+<script src="sprites/sprites-armor.js"></script>
+<script src="sprites/sprites-units.js"></script>
+<script src="jeu/sprites/sprites-monde.js"></script>
+<script src="sprites/sprites-index.js"></script>
+
+<!-- ============================================================
+     2. L'ÉCONOMIE DU BOURG
+     ============================================================ -->
+<script src="jeu/js/icones.js"></script>
+<script src="jeu/donnees/ressources.js"></script>
+<script src="jeu/donnees/batiments.js"></script>
+<script src="jeu/donnees/ameliorations.js"></script>
+<script src="jeu/donnees/objectifs.js"></script>
+<script src="jeu/donnees/butins.js"></script>
+<script src="jeu/donnees/habitants.js"></script>
+<script src="jeu/js/etat.js"></script>
+<script src="jeu/js/moteur.js"></script>
+<script src="jeu/js/auto.js"></script>
+<script src="jeu/js/marche.js"></script>
+<script src="jeu/js/prestige.js"></script>
+
+<!-- ============================================================
+     3. LES MOTEURS DE COMBAT, une fois GameState disponible
+     ============================================================ -->
+<script src="jeu/js/pont-combat.js"></script>
+<script src="aventure/state-general.js"></script>
+<script src="aventure/adventure.js"></script>
+<script src="expedition/battle-mapgen.js"></script>
+<script src="expedition/battle-terrain.js"></script>
+<script src="expedition/battle-core.js"></script>
+
+<!-- ============================================================
+     4. LE VILLAGE ET L'INTERFACE
+     ============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="jeu/3d/village-doc.js"></script>
+<script src="jeu/3d/village3d.js"></script>
+<script src="jeu/js/reglages.js"></script>
+<script src="jeu/js/ui-noyau.js"></script>
+<script src="jeu/js/ui-fenetres.js"></script>
+<script src="jeu/js/ui-dock.js"></script>
+<script src="jeu/js/ui-bulles.js"></script>
+<script src="jeu/js/ui-compagnie.js"></script>
+<script src="jeu/js/tour.js"></script>
+<script src="jeu/js/aventure.js"></script>
+<script src="jeu/js/expedition.js"></script>
+<script src="jeu/js/app.js"></script>
+
+</body>
+</html>

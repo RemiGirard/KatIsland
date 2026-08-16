@@ -1,0 +1,17 @@
+# ------------------------------------------------------------------
+# Le dossier `style/` est une COPIE LOCALE du site aliceismissing.com,
+# gardée hors du dépôt : elle n'a servi que de référence de design
+# pendant le développement, et republier le site d'un tiers n'aurait
+# ni intérêt ni légitimité. Le langage visuel qu'on en a tiré vit
+# désormais dans jeu/css/style.css, qui est bien versionné.
+# ------------------------------------------------------------------
+style/
+
+# captures de mise au point (jeu/dev-capture.js les dépose ici)
+jeu/*.png
+
+# scories habituelles
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
