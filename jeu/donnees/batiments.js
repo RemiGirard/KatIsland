@@ -796,6 +796,23 @@
     in:{ecu:900,tourte:2}, out:{}, recrue:1,
     desc:"À la troisième chope, on trouve toujours quelqu'un pour s'installer au bourg. La nurserie n'élève que des soldats : un ouvrier, il faut aller le chercher dehors — aux portes, ou ici, au prix fort." });
 
+  /* LE PORT. Il ne produit presque rien : il ARME. Toute la guerre
+     passe par lui — on y affrète les navires, on les charge, on les
+     envoie, et c'est là qu'on lance la bataille quand ils touchent
+     terre. C'est aussi la seule façon de faire retomber la Nuée. */
+  b('port', {
+    nom:'Le Port', metier:'Capitaine', cat:'porte', rangees:[0,1], nivMax:6,
+    desc:"Un môle de pierre, deux ducs-d'Albe et une grue à chèvre. Tant que le bourg n'a pas de port, la Nuée choisit seule le moment de venir.",
+    cout:{planche:40,poutre:4,corde:20,pierretaille:16}, temps:220, postes:P(1,1,1,2,2,2),
+    recettes:['carener','cordages'],
+  });
+  x('carener', { bat:'port', nom:'Caréner la coque', metier:'bois', duree:70,
+    in:{planche:4,resine:1}, out:{}, xpBourg:20,
+    desc:"On échoue le navire à marée basse, on gratte, on brûle, on repasse au suif. Une coque propre gagne un nœud." });
+  x('cordages', { bat:'port', nom:'Commettre du cordage', metier:'tissage', duree:52,
+    in:{fil:4}, out:{corde:5}, loot:[{res:'toile',p:0.2,n:[1,1]}],
+    desc:"Trois torons commis à l'envers l'un de l'autre. Sans cordage, un navire n'est qu'une caisse qui flotte." });
+
   b('halle', {
     nom:'Halle', metier:'—', cat:'commerce', rangees:[1,2], nivMax:6,
     desc:"Charpente sur poteaux, étals dessous, et la mesure à grain scellée au pilier. Elle fait baisser le prix de tout ce que le bourg achète.",
@@ -956,6 +973,8 @@
        Elle tient en quelques minutes et ne demande aucune transformation. */
     caserne:       { bat:{scierie:1} },
     portail:       { bat:{caserne:1} },
+    /* LE PORT s'ouvre tôt : c'est par lui que passe toute la guerre. */
+    port:          { bat:{pecherie:2} },
     champ:         { bat:{caserne:1} },
     grange:        { bat:{champ:1} },
 

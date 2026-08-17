@@ -207,10 +207,41 @@
     };
   }
 
+  /* ==================================================================
+     UNE ÎLE, VUE DEPUIS LE PORT
+
+     La zone de bataille se déduit de l'île — sa difficulté, ses nœuds,
+     son butin — mais la COLONNE vient de la cale du navire. C'est toute
+     la différence avec l'ancienne sortie : on ne se bat pas avec ce que
+     le bourg possède, on se bat avec ce qu'on a eu la place d'emmener.
+     ================================================================== */
+  let navireEnCours = null;
+
+  function zoneDeLIle(ile) {
+    return {
+      id: 'ile:' + ile.id, ile: ile.id, nom: ile.nom, diff: ile.diff,
+      noeuds: ile.noeuds, desc: ile.desc,
+      cout: { unites: 1 },          // la cale a déjà été payée à l'embarquement
+      bonus: ile.bonus || {}, butin: ile.butin || {},
+      gainMenace: ile.menace,
+    };
+  }
+
+  function lancerIle(ile, navire) {
+    if (!ile || !navire) return;
+    navireEnCours = navire;
+    lancer(zoneDeLIle(ile), { cale: navire.cargo.map(c => ({ type: c.type, n: c.n })) });
+  }
+
+  /* LA SORTIE N'EXISTE PLUS. On ne part plus « à pied » : le bourg est
+     sur une île, et toute la guerre passe désormais par le port. La
+     fonction reste pour les sauvegardes qui la citent encore, mais
+     elle renvoie au quai au lieu de lancer quoi que ce soit. */
   function lancerSortie() {
-    const v = window.Jeu.sortiePossible();
-    if (!v.ok) { U().dire(v.pourquoi, 'alerte'); return; }
-    lancer(zoneSortie());
+    const b = window.Etat.batsDeType('port')[0];
+    if (b) { U().dire('La guerre passe par le port : armez un navire.', 'info');
+             window.UIFen.ouvrirBatiment(b.id); }
+    else U().dire('Il faut un port pour aller se battre.', 'alerte');
   }
 
   function lancer(zid, options) {
@@ -221,7 +252,9 @@
     const E2 = E();
     const ligne = reprise && E2.expedition && E2.expedition.ligne
       ? E2.expedition.ligne.map(x => ({ type:x.type, n:x.n }))
-      : (window.Armee ? window.Armee.colonne() : [{ type:'lancier', n:E2.armee.unites }]);
+      : (options && options.cale && options.cale.length
+          ? options.cale.map(x => ({ type:x.type, n:x.n }))
+          : (window.Armee ? window.Armee.colonne() : [{ type:'lancier', n:E2.armee.unites }]));
     const effectif = ligne.reduce((n, x) => n + x.n, 0);
     if (effectif < z.cout.unites) {
       U().dire('La colonne doit aligner ' + z.cout.unites + ' unités au minimum.', 'alerte'); return;
@@ -384,6 +417,19 @@
     const E2 = E();
     E2.expedition = null;
     if (!z) { fermer(); return; }
+
+    /* UNE BATAILLE D'ÎLE APPARTIENT AU PORT. C'est lui qui fait
+       retomber la Nuée, remplit la cale de butin et renvoie le navire
+       au bourg — le module d'expédition ne fait que la mener. */
+    if (z.ile && window.Port && navireEnCours) {
+      const total = colonneEnCours.reduce((n, x) => n + x.n, 0);
+      const pertes = Math.ceil(total * (gagne ? 0.20 : 0.38));
+      const nav = navireEnCours; navireEnCours = null;
+      window.Port.resultat(nav.id, gagne, pertes);
+      if (window.Armee) window.Armee.gagnerXp(colonneEnCours, gagne ? 55 + z.diff * 16 : 18 + z.diff * 5);
+      montrerBilan(gagne, z, gagne ? (z.butin || {}) : {});
+      return;
+    }
     if (gagne && z.sortie) {
       /* Une sortie ne rapporte pas de terre : elle rachète du temps. */
       const av = E2.menace;
@@ -538,9 +584,14 @@
     for (const x of colonneEnCours) {
       const s = window.Armee ? window.Armee.stats(x.type) : null;
       const p = window.Armee ? window.Armee.pouvoirActif(x.type) : null;
+      const illustration = window.Img && window.Img.unite ? window.Img.unite(x.type) : null;
       gauche.appendChild(A('div', { class:'plateau-membre' },
         A('div', { class:'rangee' },
-          A('div', { class:'plateau-portrait', text:String(x.n) }),
+          illustration
+            ? A('div', { class:'plateau-portrait unite-portrait' },
+                window.Img.vignette(illustration, 52, window.Armee ? window.Armee.nom(x.type) : x.type, 'vig-unite'),
+                A('span', { class:'unite-quantite', text:String(x.n) }))
+            : A('div', { class:'plateau-portrait', text:String(x.n) }),
           A('div', { style:'min-width:0' },
             A('div', { class:'tt', text:window.Armee ? window.Armee.nom(x.type) : x.type }),
             A('div', { class:'eti', text:p ? p.name : 'sans technique' }))),
@@ -653,7 +704,7 @@
 
   window.UIExpedition = { rendre, ouvrir: () => { refs(); if (E().expedition) { if (!bataille) reprendre(); else { ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur(); } } },
     fermer, tick, ZONES, bonusMetier, bonusButin, facteurMenace, estPrise, prises,
-    lancerSortie, zoneSortie, forces };
+    lancerSortie, zoneSortie, forces, lancerIle, zoneDeLIle };
   window.Expedition = { tick, bonusMetier, bonusButin, facteurMenace, lancerSortie, zoneSortie, forces };
 
 })();

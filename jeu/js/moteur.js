@@ -722,6 +722,9 @@
     if (window.Auto) window.Auto.tick(dt);
     if (window.Marche) window.Marche.tickFlux(dt);
     if (window.Prestige) window.Prestige.tick(dt);
+    /* LA MER. Les navires traversent, mouillent, rentrent — même
+       quand le joueur regarde ailleurs. */
+    if (window.Port) window.Port.tick(dt);
     tickPostes(dt);
     tickChantier(dt);
     tickMenace(dt);

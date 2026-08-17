@@ -90,7 +90,7 @@
   }
   function gardien(id) {
     if (!plan || !plan.gardienSet.has(String(id))) return null;
-    return 'img/gardien/' + id + '/gardien-' + id + '.png';
+    return 'img/gardien/' + id + '/' + id + '.png';
   }
 
   /* ------------------------------------------------------------------

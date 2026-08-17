@@ -443,6 +443,13 @@
 
         if (def.porte === 'aventure') ong.unshift({ id: 'descente', nom: 'Descente', rendu: c => window.UIAventure.rendre(c) });
         if (def.porte === 'expedition') ong.unshift({ id: 'expedition', nom: 'Expédition', rendu: c => window.UIExpedition.rendre(c) });
+        /* LE PORT a deux panneaux à lui : sa flotte, et la carte des
+           îles. Ils passent devant les postes — c'est pour eux qu'on
+           ouvre ce bâtiment. */
+        if (bb && bb.type === 'port') {
+          ong.unshift({ id: 'iles', nom: 'Les îles', rendu: c => rendreIles(c) });
+          ong.unshift({ id: 'flotte', nom: 'La flotte', rendu: c => rendreFlotte(c) });
+        }
         ong.push({ id: 'notice', nom: 'Notice', rendu: c => rendreNotice(c, bid) });
         return ong;
       },
@@ -753,6 +760,192 @@
             onclick: () => { const r = window.Jeu.outiller(bid, t);
               U.dire(r.ok ? 'Atelier outillé.' : r.raison, r.ok ? 'bien' : 'alerte'); } }))));
     }
+  }
+
+  /* ==================================================================
+     LE PORT — LA FLOTTE
+
+     Un navire, une carte. On voit sa cale, ce qu'elle contient, et le
+     seul geste qui compte selon son état : charger s'il est à quai,
+     attendre s'il est en mer, se battre s'il mouille devant une île.
+     ================================================================== */
+  function rendreFlotte(c) {
+    const P = window.Port;
+    if (!P) return;
+    const navs = P.navires();
+    const quais = P.quaisMax();
+
+    c.appendChild(U.stats([
+      ['navires', navs.length + ' / ' + quais],
+      ['en mer', navs.filter(n => n.etat !== 'quai').length],
+      ['îles prises', P.assure().prises.length],
+    ]));
+
+    for (const n of navs) c.appendChild(carteNavire(n));
+
+    const v = P.peutArmer();
+    const bloc = el('div', { class: 'cadre' },
+      el('div', { class: 'rangee entre' },
+        el('span', { class: 'eti-or', text: 'armer un navire de plus' }),
+        el('span', { class: 'eti', text: navs.length + ' / ' + quais + ' quais' })));
+    if (v.cout) bloc.appendChild(el('div', { style: 'margin-top:8px' }, ligneCout(v.cout, 'coût')));
+    bloc.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:8px' },
+      el('span', { class: 'eti', text: v.ok ? 'le chantier naval est prêt' : v.pourquoi }),
+      el('button', { class: 'b primaire', text: 'Armer', disabled: !v.ok,
+        onclick: () => { const r = P.armerNavire();
+          U.dire(r.ok ? 'Un navire de plus est à quai.' : r.pourquoi, r.ok ? 'bien' : 'alerte'); } })));
+    c.appendChild(bloc);
+  }
+
+  function carteNavire(n) {
+    const P = window.Port;
+    const et = P.etatNavire(n);
+    const ile = P.ileDe(n);
+    const pris = P.placesPrises(n.cargo);
+    const box = el('div', { class: 'cadre' + (n.etat === 'mouillage' ? ' actif' : '') },
+      el('div', { class: 'rangee entre' },
+        el('span', { class: 'tt', text: n.nom }),
+        el('span', { class: n.etat === 'mouillage' ? 'eti-or' : 'eti', text: et.court })));
+
+    /* LA CALE EN BARRE. C'est la contrainte du jeu : elle doit se voir
+       avant tout le reste. */
+    box.appendChild(el('div', { style: 'margin-top:8px' },
+      U.barre(pris / Math.max(1, n.places), 'grande ' + (pris >= n.places ? 'or' : 'vert'),
+        'cale', pris + ' / ' + n.places + ' places')));
+
+    if (n.cargo.length)
+      box.appendChild(el('div', { class: 'rangee enroule', style: 'margin-top:8px' },
+        ...n.cargo.map(x => el('span', { class: 'puce mini',
+          text: x.n + ' × ' + nomUnite(x.type) }))));
+    else if (n.etat === 'quai')
+      box.appendChild(el('div', { class: 'note', style: 'margin-top:4px', text: 'Cale vide.' }));
+
+    if (n.etat === 'mer' || n.etat === 'retour')
+      box.appendChild(el('div', { style: 'margin-top:8px' },
+        U.barre(1 - n.reste / Math.max(1, n.total), 'grande bleu',
+          n.etat === 'mer' ? 'vers ' + (ile ? ile.nom : '—') : 'retour au bourg',
+          U.duree(n.reste))));
+
+    const actions = el('div', { class: 'rangee', style: 'margin-top:12px;gap:6px' });
+    if (n.etat === 'quai') {
+      actions.appendChild(el('button', { class: 'b', text: 'Charger',
+        onclick: () => ouvrirCale(n.id) }));
+      const ag = P.peutAgrandir(n.id);
+      actions.appendChild(el('button', { class: 'b', text: 'Agrandir la cale',
+        disabled: !ag.ok,
+        title: ag.ok ? 'Passer à ' + ag.vers.nom + ' — ' + ag.vers.places + ' places' : ag.pourquoi,
+        onclick: () => { const r = P.agrandir(n.id);
+          U.dire(r.ok ? 'La cale est agrandie.' : r.pourquoi, r.ok ? 'bien' : 'alerte'); } }));
+    } else if (n.etat === 'mouillage') {
+      actions.appendChild(el('button', { class: 'b primaire large', text: 'Lancer la bataille',
+        onclick: () => { window.Port.combattre(n.id); } }));
+    }
+    if (actions.children.length) box.appendChild(actions);
+    return box;
+  }
+
+  function nomUnite(t) {
+    const u = window.GameData.UNIT_TYPES[t];
+    return u ? (u.name && u.name.cats ? u.name.cats : t) : t;
+  }
+
+  /* LA CALE. On embarque type par type, la place est comptée : c'est le
+     seul endroit du jeu où l'on choisit VRAIMENT sa compagnie. */
+  function ouvrirCale(navId) {
+    U.ouvrir('cale', {
+      titre: 'La cale', sous: "Ce qu'on emmène", classe: 'large',
+      onglets: [{ id: 'c', nom: 'Embarquement', rendu: c => {
+        const P = window.Port, n = P.navire(navId);
+        if (!n) return;
+        const pris = P.placesPrises(n.cargo);
+        c.appendChild(el('div', { class: 'note',
+          text: 'La cale de ' + n.nom + ' tient ' + n.places + ' places. Une unité en prend une, '
+              + 'les plus lourdes davantage. Ce qui reste à quai ne se bat pas.' }));
+        c.appendChild(el('div', { style: 'margin-top:8px' },
+          U.barre(pris / Math.max(1, n.places), 'grande ' + (pris >= n.places ? 'or' : 'vert'),
+            'cale', pris + ' / ' + n.places)));
+        const types = P.typesEmbarquables();
+        if (!types.length) {
+          c.appendChild(el('div', { class: 'vide' },
+            el('div', { text: 'Aucune unité au bourg.' }),
+            el('div', { class: 'note', style: 'margin-top:8px',
+              text: "Formez des recrues au terrain d'entraînement : il faut un chaton, une arme et du pain." })));
+          return;
+        }
+        for (const t of types) {
+          const embarque = (n.cargo.find(x => x.type === t) || { n: 0 }).n;
+          const libre = P.disponible(t, n.id);
+          c.appendChild(el('div', { class: 'cadre' },
+            el('div', { class: 'rangee entre' },
+              el('span', { class: 'tt', style: 'font-size:14px', text: nomUnite(t) }),
+              el('span', { class: 'eti', text: embarque + ' embarqué(s) · ' + libre + ' au bourg' })),
+            el('div', { class: 'rangee', style: 'margin-top:8px;gap:6px' },
+              ...[1, 5, 25].map(k => el('button', { class: 'b mini',
+                text: '+' + k, disabled: libre <= 0,
+                onclick: () => { P.charger(n.id, t, k); } })),
+              el('button', { class: 'b mini', text: 'tout', disabled: libre <= 0,
+                onclick: () => { P.charger(n.id, t, libre); } }),
+              el('button', { class: 'b mini danger', text: '−', disabled: embarque <= 0,
+                onclick: () => { P.decharger(n.id, t, 1); } }))));
+        }
+        c.appendChild(el('div', { class: 'rangee', style: 'margin-top:12px;gap:6px' },
+          el('button', { class: 'b', text: 'Vider la cale', onclick: () => P.viderCale(n.id) }),
+          el('button', { class: 'b primaire', text: 'Choisir une île',
+            onclick: () => { U.fermer('cale'); ouvrirDestination(navId); } })));
+      } }],
+    });
+  }
+
+  /* LE CHOIX DE L'ÎLE : distance, force, et ce que la prise fait
+     retomber. Trois nombres, et l'on décide. */
+  function ouvrirDestination(navId) {
+    U.ouvrir('destination', {
+      titre: 'Où met-on le cap ?', sous: 'Les îles connues', classe: 'large',
+      onglets: [{ id: 'd', nom: 'Destinations', rendu: c => {
+        const P = window.Port, n = P.navire(navId);
+        if (!n) return;
+        for (const ile of window.ILES) c.appendChild(carteIle(ile, n));
+      } }],
+    });
+  }
+
+  function carteIle(ile, nav) {
+    const P = window.Port;
+    const prise = P.estPrise(ile.id);
+    const duree = window.IleUtil.traversee(ile.lieues, nav ? nav.palier : 0);
+    const v = nav ? P.peutAppareiller(nav.id, ile.id) : { ok: false, pourquoi: '' };
+    const box = el('div', { class: 'cadre' + (prise ? ' actif' : '') },
+      el('div', { class: 'rangee entre' },
+        el('span', { class: 'tt', style: 'font-size:14px', text: ile.nom }),
+        el('span', { class: 'eti', text: ile.lieues + ' lieues · ' + U.duree(duree) })),
+      el('div', { class: 'note', style: 'margin-top:4px', text: ile.desc }),
+      /* LA FORCE en dix crans : on la lit sans compter. */
+      el('div', { class: 'rangee entre', style: 'margin-top:8px' },
+        el('span', { class: 'eti', text: 'force' }),
+        el('div', { class: 'force' },
+          ...Array.from({ length: 10 }, (_, i) =>
+            el('i', { class: i < ile.force ? 'on' : '' })))),
+      el('div', { class: 'rangee entre', style: 'margin-top:4px' },
+        el('span', { class: 'eti', text: 'la prendre fait retomber la Nuée de' }),
+        el('span', { class: 'eti-or', text: ile.menace + ' points' })));
+    if (Object.keys(ile.cout).length)
+      box.appendChild(el('div', { style: 'margin-top:8px' }, ligneCout(ile.cout, 'ravitaillement')));
+    box.appendChild(el('div', { style: 'margin-top:4px' }, U.listeRes(ile.butin, { gain: true })));
+    if (nav) box.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:12px' },
+      el('span', { class: 'eti', text: v.ok ? 'prêt à appareiller' : v.pourquoi }),
+      el('button', { class: 'b primaire', text: 'Appareiller', disabled: !v.ok,
+        onclick: () => { const r = P.appareiller(nav.id, ile.id);
+          if (r.ok) { U.fermer('destination'); U.dire('Le navire appareille.', 'bien'); }
+          else U.dire(r.pourquoi, 'alerte'); } })));
+    return box;
+  }
+
+  /* L'onglet « Les îles » : la carte du monde, sans navire attaché. */
+  function rendreIles(c) {
+    c.appendChild(el('div', { class: 'note',
+      text: "Tout ce qui n'est pas le bourg est de l'autre côté de l'eau. "
+          + "Prendre une île est la SEULE façon de faire retomber la Nuée." }));
+    for (const ile of window.ILES) c.appendChild(carteIle(ile, null));
   }
 
   function rendreNotice(c, bid) {
@@ -1914,29 +2107,42 @@
         P.nom, Math.floor(E2.menace) + ' / 100')));
     c.appendChild(el('div', { class: 'note', text: P.desc }));
 
-    /* --- la sortie --- */
-    c.appendChild(U.section('Sortir à sa rencontre'));
-    const v = window.Jeu.sortiePossible();
-    const gain = window.Jeu.gainSortie();
-    const z = window.Expedition && window.Expedition.zoneSortie ? window.Expedition.zoneSortie() : null;
-    const f = (z && window.Expedition.forces) ? window.Expedition.forces(z) : null;
-    c.appendChild(el('div', { class: 'cadre' },
+    /* --- PAR OÙ LA FAIRE RETOMBER --- */
+    c.appendChild(U.section('La faire retomber'));
+    const aPort = window.Etat.aBatiment('port');
+    const P2 = window.Port;
+    const mouilles = aPort && P2 ? P2.navires().filter(n => n.etat === 'mouillage') : [];
+    const enMer = aPort && P2 ? P2.navires().filter(n => n.etat === 'mer').length : 0;
+
+    const bloc = el('div', { class: 'cadre' + (mouilles.length ? ' actif' : '') },
       el('div', { class: 'note',
-        text: "Attendre les cent points, c'est subir le raid chez soi. Sortir, c'est choisir son moment : les murs restent intacts, la jauge retombe pour de bon, et l'on ramasse ce que la colonne transportait." }),
-      f ? U.stats([
-        ['menace après', Math.max(0, Math.floor(E2.menace - gain)), 'bon'],
-        ['le bourg aligne', f.bourg, f.bourg >= f.nuee ? 'bon' : 'mauvais'],
-        ['la Nuée aligne', f.nuee],
-        ['bras engagés', z.cout.unites + ' / ' + E2.armee.unites,
-          E2.armee.unites >= z.cout.unites ? '' : 'mauvais'],
-      ]) : null,
-      z ? el('div', { style: 'margin-top:8px' },
-        el('div', { class: 'eti', text: 'ce qu\'on ramassera' }),
-        U.listeRes(z.butin, { gain: true })) : null,
-      el('button', { class: 'b primaire large', style: 'margin-top:12px',
-        disabled: !v.ok, text: v.ok ? 'Faire une sortie' : 'Sortie impossible',
-        onclick: () => { U.fermerTout(); window.Expedition.lancerSortie(); } }),
-      v.ok ? null : el('div', { class: 'note mauvais', style: 'margin-top:8px', text: v.pourquoi })));
+        text: "La Nuée ne recule pas d'elle-même, et l'on ne va pas la chercher à pied : "
+            + "le bourg est sur une île. On arme un navire, on charge la cale, on traverse, "
+            + "et l'on prend la sienne. C'est la SEULE façon de faire baisser cette jauge." }));
+
+    if (!aPort) {
+      bloc.appendChild(el('div', { class: 'note mauvais', style: 'margin-top:8px',
+        text: "Le bourg n'a pas de port : la jauge ne peut que monter." }));
+      bloc.appendChild(el('button', { class: 'b primaire large', style: 'margin-top:12px',
+        text: 'Que bâtir ?', onclick: () => { U.fermerTout(); window.UIFen.ouvrirChantier(); } }));
+    } else {
+      const b = window.Etat.batsDeType('port')[0];
+      bloc.appendChild(U.stats([
+        ['navires', P2.navires().length + ' / ' + P2.quaisMax()],
+        ['en traversée', enMer],
+        ['devant une île', mouilles.length, mouilles.length ? 'bon' : ''],
+        ['îles prises', P2.assure().prises.length],
+      ]));
+      /* ce que rapporterait la prochaine île à portée */
+      const proches = (window.ILES || []).slice().sort((a, z) => a.lieues - z.lieues);
+      if (proches.length) bloc.appendChild(el('div', { class: 'note', style: 'margin-top:8px',
+        text: 'La plus proche, ' + proches[0].nom + ', est à ' + proches[0].lieues +
+              ' lieues et ferait retomber la Nuée de ' + proches[0].menace + ' points.' }));
+      bloc.appendChild(el('button', { class: 'b primaire large', style: 'margin-top:12px',
+        text: mouilles.length ? 'Un navire attend l\'ordre de bataille' : 'Ouvrir le port',
+        onclick: () => { U.fermerTout(); window.UIFen.ouvrirBatiment(b.id); } }));
+    }
+    c.appendChild(bloc);
 
     /* --- la défense passive --- */
     c.appendChild(U.section('Si on ne sort pas'));

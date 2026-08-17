@@ -230,5 +230,41 @@
   "poterie",
   "savoir",
   "tissage"
+ ],
+ "unite": [
+  "artilleur",
+  "assassin",
+  "aura",
+  "barde",
+  "chronarque",
+  "costaud",
+  "eclaireur",
+  "entraveur",
+  "espion",
+  "essaim",
+  "fronde",
+  "heros",
+  "ingenieur",
+  "invocateur",
+  "jeune_agile",
+  "jeune_force",
+  "jeune_magie",
+  "jeune_poudre",
+  "lancier",
+  "mage",
+  "porteur",
+  "rempart",
+  "sapeur",
+  "soigneur",
+  "targier",
+  "traqueur"
+ ],
+ "gardien": [
+  "10",
+  "20",
+  "30",
+  "40",
+  "50",
+  "60"
  ]
 }
