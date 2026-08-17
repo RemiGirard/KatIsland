@@ -85,7 +85,7 @@
     4, () => Object.keys((E().auto || {}).acquis || {}).length, { ecu: 20000 });
 
   /* ---------------- DESCENDRE ---------------- */
-  o('d1', 'descendre', 'Le premier étage', 'Descendre à l\'étage 3 du Puits.',
+  o('d1', 'descendre', 'Le premier étage', 'Descendre à l\'étage 3 de la Tour sombre.',
     3, () => E().aventure.record, { ecu: 900 });
   o('d2', 'descendre', 'Les grottes', 'Descendre à l\'étage 10.',
     10, () => E().aventure.record, { ecu: 4500, essence: 10 });
@@ -100,7 +100,7 @@
     { ecu: 12000 });
 
   /* ---------------- CONQUÉRIR ---------------- */
-  o('g1', 'conquerir', 'La première colonne', 'Former dix unités au terrain d\'entraînement.',
+  o('g1', 'conquerir', 'La première colonne', 'Former dix unités à la caserne.',
     10, () => E().armee.unites, { ecu: 1500 });
   o('g2', 'conquerir', 'Les Basses Berges', 'Prendre un territoire.',
     1, () => E().territoires.length, { ecu: 5000, medaille: 2 });

@@ -33,7 +33,7 @@
     forge:'Forge', cuisine:'Boulangerie', moulin:'Moulin', bergerie:'Bergerie',
     pecherie:'Pêcherie', mine:'Mine', scierie:'Scierie', laiterie:'Laiterie',
     champ:'Blé', herboristerie:'Légumes', rucher:'Fleurs',
-    alchimie:'Alchimie', taverne:'Auberge', nurserie:'Pépinière',
+    alchimie:'Alchimie', taverne:'Auberge', pepiniere:'Pépinière',
     descente:'Tour sombre', caserne:'Caserne',
   };
   /* la teinte d'une maison ordinaire, par catégorie du jeu — pour que
@@ -54,8 +54,8 @@
   }
 
   /* ---------------- l'état de l'adaptateur ---------------- */
-  const bats = new Map();                // id -> {id,type,pour,cell,cells[],...}
-  const parCell = new Map();             // index de cellule -> id de bâtiment
+  const bats = new Map();                // id -> {id,type,pour,cell,L,slots[],...}
+  const parCell = new Map();             // « cellule:niveau » -> id de bâtiment
   let SEQ = 0, NOM = '', graine = 1;
   let listeners = {}, modeCons = null;
   let lancé = false;
@@ -69,33 +69,45 @@
   /* ================================================================
      POSER — on emprunte les règles du document
      ================================================================ */
+  const cle = (c, L) => c.i + ':' + L;
   function occupees(){
     const s = new Set();
-    for(const c of D().cellules) if(c.b && c.b.length) s.add(c.i);
+    for(const c of D().cellules) for(let L=0; L<(c.b || []).length; L++)
+      if(c.b[L] >= 0) s.add(cle(c, L));
     return s;
+  }
+
+  /* Les parcelles de production vivent du sol : champ, élevage, pêche,
+     coupe et extraction ne s'empilent jamais. Le bâti urbain, les maisons
+     et les ateliers peuvent au contraire former de vrais quartiers hauts. */
+  function empilable(type){
+    const d = window.BAT && window.BAT[type];
+    return !(d && (d.cat === 'recolte' || d.cat === 'elevage')) &&
+           type !== 'descente';
   }
 
   /* Les parcelles d'accueil, de la plus proche du bourg à la plus
      lointaine. On les essaie dans l'ordre : un bâtiment à plusieurs
      parts peut refuser une place trop serrée, et c'est le document qui
      le sait — `placementOk` — pas nous. */
-  function candidats(pref){
+  function candidats(pref, L){
     const cs = D().cellules;
+    if(pref != null) return cs[pref] ? [cs[pref]] : [];
     let cx = 0, cz = 0, n = 0;
     for(const [,b] of bats){ const c = cs[b.cell]; if(!c) continue; cx += c.cx; cz += c.cz; n++; }
     if(n){ cx /= n; cz /= n; }
-    const libres = cs.filter(c => !parCell.has(c.i) && !(c.b && c.b.length));
+    const libres = cs.filter(c => !parCell.has(cle(c, L)) && !((c.b || [])[L] >= 0));
     libres.sort((a,b) => Math.hypot(a.cx-cx, a.cz-cz) - Math.hypot(b.cx-cx, b.cz-cz));
-    if(pref != null && cs[pref] && !parCell.has(pref) && !(cs[pref].b && cs[pref].b.length))
-      return [cs[pref]].concat(libres.filter(c => c.i !== pref));
     return libres;
   }
 
-  function poserInterne(type, cellPref, id, pour, niv, coul){
+  function poserInterne(type, cellPref, id, pour, niv, coul, niveau){
     const doc = D();
     const cible = pour || type;
     const t = indexDoc(cible);
     const def = window.BAT ? window.BAT[cible] : null;
+    const L = Math.max(0, niveau | 0);
+    if(L > 0 && !empilable(cible)) return null;
     /* un chantier se pose en bloc nu, couleur bois : il sera remplacé */
     doc.typeCourant = pour ? -1 : t;
     doc.couleur = pour ? 12
@@ -104,8 +116,8 @@
 
     const avant = occupees();
     let pose = null;
-    for(const c of candidats(cellPref)){
-      if(doc.poser({c, L: 0})){ pose = c; break; }
+    for(const c of candidats(cellPref, L)){
+      if(doc.poser({c, L})){ pose = c; break; }
     }
     doc.typeCourant = -1;
     if(!pose) return null;
@@ -115,19 +127,24 @@
        — la cour, la tourelle, l'appentis — ouvre la bonne fenêtre. */
     const bat = {
       id: id || ('e' + (++SEQ)),
-      type, pour: pour || null, cell: pose.i,
-      r: (pose.sp && pose.sp[0] && pose.sp[0].r) || 0,
+      type, pour: pour || null, cell: pose.i, L,
+      r: (pose.sp && pose.sp[L] && pose.sp[L].r) || 0,
       niv: niv || 1, coul: coul != null ? coul : null,
-      cells: [],
+      cells: [], slots: [],
     };
     const nId = parseInt(String(bat.id).slice(1), 10);
     if(Number.isFinite(nId)) SEQ = Math.max(SEQ, nId);
-    for(const c of doc.cellules){
-      if(avant.has(c.i) || !(c.b && c.b.length)) continue;
+    for(const c of doc.cellules) for(let LL=0; LL<(c.b || []).length; LL++){
+      const k = cle(c, LL);
+      if(avant.has(k) || c.b[LL] < 0) continue;
       bat.cells.push(c.i);
-      parCell.set(c.i, bat.id);
+      bat.slots.push({cell:c.i, L:LL});
+      parCell.set(k, bat.id);
     }
-    if(!bat.cells.length){ bat.cells.push(pose.i); parCell.set(pose.i, bat.id); }
+    if(!bat.slots.length){
+      bat.cells.push(pose.i); bat.slots.push({cell:pose.i, L});
+      parCell.set(cle(pose, L), bat.id);
+    }
     bat.xr = bat.cell / doc.cellules.length;
     bats.set(bat.id, bat);
     return bat;
@@ -138,12 +155,14 @@
     if(!bat) return false;
     const cs = D().cellules;
     const c = cs[bat.cell];
-    if(c && c.b && c.b.length) D().retirer({c, L: 0});
+    if(c && c.b && c.b[bat.L] >= 0) D().retirer({c, L: bat.L});
     /* ce que le document aurait laissé (une part orpheline) : on nettoie */
-    for(const i of bat.cells){
-      const cc = cs[i];
-      if(cc && parCell.get(i) === id && cc.b && cc.b.length){ cc.b = []; cc.sp = []; }
-      parCell.delete(i);
+    for(const slot of bat.slots){
+      const cc = cs[slot.cell], k = cc && cle(cc, slot.L);
+      if(cc && parCell.get(k) === id && cc.b && cc.b[slot.L] >= 0){
+        cc.b[slot.L] = -1; cc.sp[slot.L] = undefined;
+      }
+      if(k) parCell.delete(k);
     }
     bats.delete(id);
     return true;
@@ -152,9 +171,9 @@
   /* ================================================================
      LE CLIC ET LE SURVOL, traduits pour le jeu
      ================================================================ */
-  function batDeCellule(c){
+  function batDeCellule(c, L){
     if(!c) return null;
-    const id = parCell.get(c.i);
+    const id = parCell.get(cle(c, Math.max(0, L | 0)));
     return id ? bats.get(id) : null;
   }
 
@@ -162,20 +181,23 @@
     D().surClic = (t, bouton) => {
       if(!t) return false;
       if(modeCons){
-        const c = t.pose && t.pose.c;
-        if(c && !parCell.has(c.i) && !(c.b && c.b.length)){
-          if(listeners.pose) listeners.pose(modeCons, {x: c.i, r: null});
+        const p = t.pose;
+        const bonNiveau = p && (p.L === 0 || empilable(modeCons));
+        if(p && bonNiveau && !parCell.has(cle(p.c, p.L))){
+          if(listeners.pose) listeners.pose(modeCons, {x: p.c.i, y: p.L, r: null});
         } else if(listeners.poseRefus) listeners.poseRefus(modeCons);
         return false;
       }
-      const bat = batDeCellule((t.sup && t.sup.c) || (t.pose && t.pose.c));
+      const cible = t.sup || t.pose;
+      const bat = cible ? batDeCellule(cible.c, cible.L) : null;
       if(bat){ if(listeners.selection) listeners.selection(bat); return false; }
       if(listeners.sol) listeners.sol({x: t.pose ? t.pose.c.i : null, r: null});
       return false;
     };
     let dernier = null;
     D().surSurvol = (t) => {
-      const bat = t ? batDeCellule((t.sup && t.sup.c) || (t.pose && t.pose.c)) : null;
+      const cible = t && (t.sup || t.pose);
+      const bat = cible ? batDeCellule(cible.c, cible.L) : null;
       if(bat === dernier) return;
       dernier = bat;
       if(listeners.survol) listeners.survol(bat || null);
@@ -202,17 +224,37 @@
     hooks(h){ listeners = h || {}; },
 
     /* ---- le plan ---- */
-    poser(type, vx, r, id, niv, coul){
+    poser(type, vx, r, id, niv, coul, niveau){
       const b = poserInterne(type, (typeof vx === 'number' ? Math.round(vx) : null),
-                             id, null, niv, coul);
+                             id, null, niv, coul, niveau);
       if(b) D().demanderRebati();
       return b;
     },
-    poserChantier(typeCible, vx, r, id, coul){
+    poserChantier(typeCible, vx, r, id, coul, niveau){
       const b = poserInterne(typeCible, (typeof vx === 'number' ? Math.round(vx) : null),
-                             id, typeCible, 1, coul);
+                             id, typeCible, 1, coul, niveau);
       if(b) D().demanderRebati();
       return b;
+    },
+    /* Une annexe bâtie change l'édifice. On note ce qu'il porte —
+       l'appentis, la cave, la roue — et l'on redemande la bâtisse : le
+       document relit `annexes` en montant les corps du bâtiment. */
+    rafraichir(id){
+      const b = bats.get(id);
+      if(!b) return false;
+      const e = window.Etat && window.Etat.E && window.Etat.E.bat[id];
+      const liste = [];
+      if(e && e.raff && window.RaffUtil){
+        for(const rid in e.raff){
+          if(!e.raff[rid]) continue;
+          const r = window.RaffUtil.trouver(e.type, rid);
+          if(r && r.annexe) liste.push(r.annexe);
+        }
+      }
+      b.annexes = liste;
+      D().demanderRebati();
+      this.ping(id, '#e8c88a');
+      return true;
     },
     retirer(id){
       const ok = retirerInterne(id);
@@ -236,7 +278,7 @@
     plan(){
       return [...bats.values()].map(b => ({
         id: b.id, type: b.type, pour: b.pour || null,
-        cell: b.cell, r: b.r, niv: b.niv, coul: b.coul,
+        cell: b.cell, L: b.L || 0, r: b.r, niv: b.niv, coul: b.coul,
         xr: b.cell / D().cellules.length,
       }));
     },
@@ -245,12 +287,14 @@
       D().vider();
       for(const e of (p || []))
         poserInterne(e.type, e.cell != null ? e.cell : null, e.id,
-                     e.pour || null, e.niv || 1, e.coul);
+                     e.pour || null, e.niv || 1, e.coul, e.L || 0);
       D().demanderRebati();
       D().recentrer();
       return this;
     },
-    possible(){ return parCell.size < D().cellules.length; },
+    possible(){
+      return D().cellules.some(c => !parCell.has(cle(c, 0)) && !((c.b || [])[0] >= 0));
+    },
 
     /* ---- le mode construction ---- */
     modeConstruction(type){
@@ -306,7 +350,10 @@
     graine(){ return graine; },
     canvas(){ return D().canvas; },
     fps(){ return 60; },
-    occupation(){ return { pris: parCell.size, total: D().cellules.length }; },
+    occupation(){
+      const pris = new Set([...parCell.keys()].map(k => k.split(':')[0])).size;
+      return { pris, total: D().cellules.length };
+    },
   };
 
 })();

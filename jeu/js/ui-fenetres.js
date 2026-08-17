@@ -13,6 +13,7 @@
 
   const U = window.UI, el = U.el;
   const E = () => window.Etat.E;
+  let postulantChoisi = null;
 
   /* =================================================================
      OUTILS D'AFFICHAGE PARTAGÉS
@@ -49,16 +50,71 @@
     return el('span', { class: 'rarete r-' + R.id, title: R.desc, text: R.nom });
   }
 
+  /* ------------------------------------------------------------------
+     QUAND UN ONGLET A-T-IL QUELQUE CHOSE À DIRE ?
+
+     La règle est la même partout : dès que la chose est ARRIVÉE UNE
+     FOIS dans la partie, elle ne repart plus. On ne fait pas clignoter
+     une fonction d'entrée et de sortie selon l'état du stock — ce
+     serait pire que de la montrer tout le temps.
+     ------------------------------------------------------------------ */
+  function jamaisRevient(cle) {
+    /* `vus` est déjà le registre de ce que le bourg a découvert : on
+       s'y greffe plutôt que d'inventer un second journal. */
+    return !!E().vus['ui:' + cle];
+  }
+  function retenir(cle) { E().vus['ui:' + cle] = true; }
+
+  /* LES ÉTABLIS : rien à acheter tant que l'atelier est au niveau 1 et
+     que le bourg n'a pas un écu. */
+  function aVuUneAmelioration(b) {
+    if (jamaisRevient('amelio')) return true;
+    const assezRiche = window.Etat.qte('ecu') >= 60;
+    if (b.niv >= 2 || assezRiche || (b.am && Object.keys(b.am).length)) {
+      retenir('amelio'); return true;
+    }
+    return false;
+  }
+  /* L'OUTILLAGE : il n'existe pas avant la forge. */
+  function aVuUnOutil(b) {
+    if (jamaisRevient('outil')) return true;
+    if (b.outil || window.Etat.qte('outil') > 0 || window.Etat.qte('outilacier') > 0
+        || window.Etat.aBatiment('forge')) { retenir('outil'); return true; }
+    return false;
+  }
+  /* LES ANNEXES : c'est une mécanique tardive. On l'ouvre quand
+     l'atelier a mûri, ou dès qu'une annexe a déjà été bâtie quelque
+     part — le joueur connaît alors la notion. */
+  function aVuUneAnnexe(b) {
+    if (jamaisRevient('annexe')) return true;
+    if ((b.raff && Object.keys(b.raff).length) || b.niv >= 3) { retenir('annexe'); return true; }
+    for (const id in E().bat) {
+      const x = E().bat[id];
+      if (x.raff && Object.keys(x.raff).length) { retenir('annexe'); return true; }
+    }
+    return false;
+  }
+
+  /* L'avatar d'un habitant : son visage si le joueur a déposé les
+     images, l'icône de son métier sinon. Un seul endroit le décide. */
+  function avatarHab(h, taille, classe) {
+    const meta = window.METIERS[h.talent] || { nom: '—', ico: { f: 'cube', c: ['#8a8272'] } };
+    const v = window.Img ? window.Img.portrait(h) : null;
+    const box = el('div', { class: 'av' + (classe ? ' ' + classe : '') + (v ? ' face' : ''),
+      title: h.nom + ' — ' + meta.nom });
+    box.appendChild(v ? window.Img.vignette(v, taille + 12, h.nom) : U.ico(meta.ico, taille));
+    return box;
+  }
+
   function vignetteHabitant(h, rec) {
     const meta = window.METIERS[h.talent] || { nom: '—', ico: { f: 'cube', c: ['#8a8272'] } };
     const bonus = rec ? window.Jeu.facteurHabitant(h, rec) : 1;
     const accorde = rec && h.talent === rec.metier;
     return el('div', { class: 'rangee', style: 'flex:1;min-width:0' },
-      el('div', { class: 'av' + (accorde ? ' or' : ''), title: 'Prédilection : ' + meta.nom },
-        U.ico(meta.ico, 20)),
+      avatarHab(h, 20, accorde ? 'or' : ''),
       el('div', { class: 'qui', style: 'flex:1;min-width:0' },
         el('i', { text: meta.nom + (accorde ? '  ·  à son métier' : '') }),
-        el('div', { class: 'rangee', style: 'gap:7px' },
+        el('div', { class: 'rangee', style: 'gap:8px' },
           el('b', { text: h.nom }), etiqRarete(h)),
         bandeTraits(h, { serre: true })),
       el('span', { class: 'niv', text: 'niv ' + (h.niv || 1) }),
@@ -69,6 +125,49 @@
 
   /* Le choix de l'habitant : une petite fenêtre qui classe les candidats
      par ce qu'ils rendraient ICI. */
+  /* ------------------------------------------------------------------
+     PRENDRE LE MEILLEUR.
+     Le classement existait déjà — il ne servait qu'à dresser une liste.
+     On s'en sert pour DÉCIDER, et l'on annonce le résultat : sans quoi
+     le joueur ne sait pas qui vient d'être placé.
+     ------------------------------------------------------------------ */
+  function nomDuMeilleur(bid, i) {
+    const c = window.Jeu.candidatsPoste(bid, i);
+    return c && c.length ? c[0].h.nom : null;
+  }
+  function prendreLeMeilleur(bid, i) {
+    const c = window.Jeu.candidatsPoste(bid, i);
+    if (!c || !c.length) { U.dire('Personne de libre au bourg.', 'alerte'); return; }
+    const h = c[0].h;
+    window.Jeu.assigner(bid, i, h.id);
+    const b = E().bat[bid];
+    const rec = b && b.postes[i] && b.postes[i].rec ? window.REC[b.postes[i].rec] : null;
+    U.dire(h.nom + ' prend le poste' +
+           (rec && h.talent === rec.metier ? ' — c\'est son métier.' : '.'), 'bien');
+    rafraichirVillage();
+  }
+
+  /* POURVOIR TOUT L'ATELIER. On place du poste le plus utile au moins
+     utile : ceux qui ont déjà une tâche d'abord, puisqu'eux
+     produiront dès la seconde suivante. */
+  function pourvoirTout(bid) {
+    const b = E().bat[bid];
+    if (!b) return;
+    const ordre = b.postes.map((p, i) => i)
+      .filter(i => !b.postes[i].hab)
+      .sort((a, z) => (b.postes[z].rec ? 1 : 0) - (b.postes[a].rec ? 1 : 0));
+    let n = 0;
+    for (const i of ordre) {
+      if (!window.Etat.habitantsLibres().length) break;
+      const c = window.Jeu.candidatsPoste(bid, i);
+      if (!c || !c.length) break;
+      window.Jeu.assigner(bid, i, c[0].h.id); n++;
+    }
+    U.dire(n ? n + ' poste' + (n > 1 ? 's' : '') + ' pourvu' + (n > 1 ? 's' : '') + '.'
+             : 'Personne de libre au bourg.', n ? 'bien' : 'alerte');
+    rafraichirVillage();
+  }
+
   function choisirHabitant(bid, i) {
     U.ouvrir('affecter', {
       titre: 'Qui prend ce poste ?', sous: window.BAT[E().bat[bid].type].nom,
@@ -99,7 +198,7 @@
 
   function blocPoste(b, i) {
     const p = b.postes[i];
-    const dispo = window.BatUtil.recettesDe(b.type, b.niv);
+    const dispo = window.BatUtil.recettesDe(b.type, b.niv, b);
     const h = p.hab ? window.Etat.habitant(p.hab) : null;
     const rec = p.rec ? window.REC[p.rec] : null;
     const v = rec ? window.Jeu.vitessePoste(b, rec, h) : 1;
@@ -114,11 +213,26 @@
             el('div', { class: 'qui' },
               el('i', { text: 'poste ' + (i + 1) }),
               el('b', { class: 'faible', text: 'personne au poste' }))),
-      h ? el('button', { class: 'b mini danger', text: 'Retirer',
-            onclick: () => { window.Etat.libererHabitant(p.hab); rafraichirVillage(); } })
-        : el('button', { class: 'b mini primaire', text: 'Affecter',
-            disabled: !window.Etat.habitantsLibres().length,
-            onclick: () => choisirHabitant(b.id, i) })));
+      h ? el('button', { class: 'b mini', text: 'Libérer',
+            title: 'Libérer le poste\n' + h.nom + ' redevient disponible et pourra tenir '
+                 + 'un autre poste, ou le chantier. Rien n\'est perdu : ce poste s\'arrête, '
+                 + 'voilà tout.',
+            onclick: () => { window.Etat.libererHabitant(p.hab);
+              U.dire(h.nom + ' quitte le poste et redevient libre.', 'info');
+              rafraichirVillage(); } })
+        : el('div', { class: 'rangee', style: 'gap:4px' },
+            el('button', { class: 'b mini primaire', text: 'Prendre',
+              disabled: !window.Etat.habitantsLibres().length,
+              title: nomDuMeilleur(b.id, i)
+                ? 'Prendre le meilleur\nPlace ' + nomDuMeilleur(b.id, i)
+                  + ', le mieux fait pour cette tâche parmi ceux qui ne font rien.'
+                : 'Personne ne se tourne les pattes en ce moment.',
+              onclick: () => prendreLeMeilleur(b.id, i) }),
+            el('button', { class: 'b mini', text: '…',
+              disabled: !window.Etat.habitantsLibres().length,
+              title: 'Choisir soi-même\nOuvre la liste des candidats, classés par ce qu\'ils '
+                   + 'rendraient à cette tâche.',
+              onclick: () => choisirHabitant(b.id, i) }))));
 
     /* --- ce qu'on y fait --- */
     box.appendChild(el('div', { class: 'rangee entre', style: 'margin-bottom:8px' },
@@ -134,12 +248,17 @@
     if (rec) {
       const parMin = 60 / (rec.duree / Math.max(0.001, v));
       const pct = p.bloque ? 0 : Math.min(1, p.prog / rec.duree);
-      box.appendChild(el('div', { style: 'margin-top:10px' },
+      box.appendChild(el('div', { style: 'margin-top:12px' },
         U.barre(pct, 'grande ' + (p.bloque ? 'rouge raye' : (h ? 'vert' : '')),
           p.bloque ? 'en attente de matière' : (h ? U.duree(rec.duree / Math.max(0.001, v)) + ' par cycle' : 'aucun ouvrier'),
           h && !p.bloque ? (Math.round(parMin * 10) / 10).toString().replace('.', ',') + ' /min' : '')));
 
-      const ent = el('div', { class: 'rangee enroule', style: 'margin-top:9px' });
+      const details = el('details', { class: 'poste-details' });
+      details.appendChild(el('summary', { text: 'Rendement, répétition et file d’attente' }));
+      const detailCorps = el('div', { class: 'poste-details-corps' });
+      details.appendChild(detailCorps);
+
+      const ent = el('div', { class: 'rangee enroule', style: 'margin-top:8px' });
       if (Object.keys(rec.in).length) {
         ent.appendChild(el('span', { class: 'eti', text: 'consomme' }));
         for (const r in rec.in) ent.appendChild(U.puce(r, rec.in[r], { mini: true, insuffisant: window.Etat.qte(r) < rec.in[r] }));
@@ -152,7 +271,7 @@
       if (rec.unite) ent.appendChild(el('span', { class: 'puce gain mini', text: '+1 unité' }));
       if (rec.xpArmee) ent.appendChild(el('span', { class: 'puce gain mini', text: '+' + rec.xpArmee + ' xp' }));
       if (rec.menace) ent.appendChild(el('span', { class: 'puce gain mini', text: rec.menace + ' menace' }));
-      box.appendChild(ent);
+      detailCorps.appendChild(ent);
 
       /* LES TROUVAILLES, chances réelles à l'appui — celles de l'ouvrage
          et celles du métier, multipliées par ce que vaut l'habitant au
@@ -162,7 +281,7 @@
                      (1 + window.Jeu.amelioDe(b, 'oeil') + window.Jeu.acquis().butin);
       const tousLoots = (rec.loot || []).concat(window.ButinUtil.tableDe(rec.metier, rec.duree, 1));
       if (tousLoots.length) {
-        const lo = el('div', { class: 'rangee enroule', style: 'margin-top:6px' },
+        const lo = el('div', { class: 'rangee enroule', style: 'margin-top:8px' },
           el('span', { class: 'eti', title: 'Par cycle, en tenant compte de qui tient le poste.',
                        text: 'trouvailles' }));
         for (const l of tousLoots) {
@@ -174,17 +293,17 @@
           lo.appendChild(el('span', { class: 'eti-or',
             title: 'Le caractère de l\'habitant, l\'œil exercé de l\'atelier et les recherches du bourg.',
             text: '×' + kButin.toFixed(2).replace('.', ',') }));
-        box.appendChild(lo);
+        detailCorps.appendChild(lo);
       }
       if (p.bloque) {
         const m = window.Etat.manque(rec.in);
-        box.appendChild(el('div', { class: 'note mauvais', style: 'margin-top:6px',
+        detailCorps.appendChild(el('div', { class: 'note mauvais', style: 'margin-top:8px',
           text: 'Il manque : ' + m.map(x => (window.RES[x.id] ? window.RES[x.id].nom : x.id) + ' (' + Math.floor(x.il) + '/' + x.faut + ')').join(', ') }));
       }
 
       /* --- combien de fois --- */
       const poss = window.Jeu.cyclesPossibles(p.rec);
-      box.appendChild(el('div', { class: 'rangee enroule', style: 'margin-top:9px' },
+      detailCorps.appendChild(el('div', { class: 'rangee enroule', style: 'margin-top:8px' },
         el('span', { class: 'eti', text: 'répéter' }),
         U.segments([
           { v: null, n: 'en boucle', t: 'Sans fin, tant qu\'il y a de la matière' },
@@ -200,14 +319,14 @@
 
       /* --- la file du poste --- */
       const file = p.file || [];
-      box.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:10px' },
+      detailCorps.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:12px' },
         el('span', { class: 'eti', text: file.length ? 'à la suite (' + file.length + ')' : 'à la suite' }),
         el('button', { class: 'b mini', text: 'Ajouter', disabled: file.length >= 8,
           onclick: () => choisirTache(b.id, i, true) })));
       if (file.length) {
         for (let k = 0; k < file.length; k++) {
           const f = file[k], fr = window.REC[f.rec];
-          box.appendChild(el('div', { class: 'job', style: 'margin-top:5px' },
+          detailCorps.appendChild(el('div', { class: 'job', style: 'margin-top:4px' },
             U.ico(window.METIERS[fr.metier].ico, 16),
             el('span', { class: 'jn', text: fr.nom }),
             el('span', { class: 'jr', text: f.n == null ? 'en boucle' : '×' + f.n }),
@@ -220,7 +339,8 @@
                 onclick: () => { window.Jeu.retirerFile(b.id, i, k); } }))));
         }
       }
-      box.appendChild(el('div', { class: 'note', style: 'margin-top:8px', text: rec.desc }));
+      detailCorps.appendChild(el('div', { class: 'note', style: 'margin-top:8px', text: rec.desc }));
+      box.appendChild(details);
     } else {
       box.appendChild(el('div', { class: 'note',
         text: 'Choisissez une tâche : elle se répétera en boucle, ou le nombre de fois que vous demanderez, puis cédera la place à la suivante de la file.' }));
@@ -241,7 +361,7 @@
       onglets: [{ id: 't', nom: 'Tâches', rendu: c => {
         const b = E().bat[bid];
         if (!b) return;
-        const dispo = window.BatUtil.recettesDe(b.type, b.niv);
+        const dispo = window.BatUtil.recettesDe(b.type, b.niv, b);
         const toutes = window.BAT[b.type].recettes || [];
         const h = b.postes[i] && b.postes[i].hab ? window.Etat.habitant(b.postes[i].hab) : null;
         c.appendChild(el('div', { class: 'note',
@@ -273,7 +393,7 @@
                   l.appendChild(U.puce(lo.res, null, { mini: true, butin: true, texte: (Math.round(lo.p * 1000) / 10).toString().replace('.', ',') + ' %' }));
                 return l;
               })(),
-              el('div', { class: 'note', style: 'margin-top:6px', text: r.desc })));
+              el('div', { class: 'note', style: 'margin-top:8px', text: r.desc })));
           c.appendChild(carte);
         }
       } }],
@@ -302,10 +422,25 @@
       onglets: () => {
         const bb = E().bat[bid];
         const ong = [];
-        if (bb && bb.postes.length) ong.push({ id: 'postes', nom: 'Postes', rendu: c => rendrePostes(c, bid) });
+        if (bb && bb.postes.length) ong.push({ id: 'postes', nom: bb.type === 'caserne' ? 'Recrutement' : 'Postes', rendu: c => rendrePostes(c, bid) });
+        if (bb && bb.type === 'caserne' && window.UIArmee) {
+          ong.unshift({ id: 'effectifs', nom: 'Effectifs', rendu: c => window.UIArmee.rendreEffectifs(c, bid) });
+          ong.push({ id: 'colonne', nom: 'Colonne', rendu: c => window.UIArmee.rendreColonne(c, bid) });
+          ong.push({ id: 'techniques', nom: 'Techniques', rendu: c => window.UIArmee.rendreTechniques(c, bid) });
+        }
         ong.push({ id: 'niveau', nom: 'Niveau', rendu: c => rendreNiveau(c, bid) });
-        if (bb && bb.postes.length) ong.push({ id: 'amelio', nom: 'Améliorations', rendu: c => rendreAmelio(c, bid) });
-        if (bb && bb.postes.length) ong.push({ id: 'outil', nom: 'Outillage', rendu: c => rendreOutil(c, bid) });
+
+        /* CE QUI N'EXISTE PAS ENCORE NE S'AFFICHE PAS.
+           Trois onglets vides le premier jour, c'est trois promesses
+           qu'on ne tient pas — et un jeu qui paraît trois fois plus
+           compliqué qu'il ne l'est. Chacun attend son heure. */
+        if (bb && bb.postes.length && aVuUneAmelioration(bb))
+          ong.push({ id: 'amelio', nom: 'Améliorations', rendu: c => rendreAmelio(c, bid) });
+        if (bb && bb.postes.length && aVuUnOutil(bb))
+          ong.push({ id: 'outil', nom: 'Outillage', rendu: c => rendreOutil(c, bid) });
+        if (bb && window.RaffUtil && window.RaffUtil.pourBat(bb.type).length && aVuUneAnnexe(bb))
+          ong.push({ id: 'annexe', nom: 'Annexes', rendu: c => rendreAnnexes(c, bid) });
+
         if (def.porte === 'aventure') ong.unshift({ id: 'descente', nom: 'Descente', rendu: c => window.UIAventure.rendre(c) });
         if (def.porte === 'expedition') ong.unshift({ id: 'expedition', nom: 'Expédition', rendu: c => window.UIExpedition.rendre(c) });
         ong.push({ id: 'notice', nom: 'Notice', rendu: c => rendreNotice(c, bid) });
@@ -321,7 +456,7 @@
       c.appendChild(el('div', { class: 'cadre' },
         el('div', { class: 'eti mauvais', text: 'Bâtiment endommagé' }),
         el('div', { class: 'note', text: 'Le raid l\'a abîmé : il travaille à 40 % tant qu\'il n\'est pas remis en état. La remise en état passe par le chantier.' }),
-        el('div', { style: 'margin-top:7px' },
+        el('div', { style: 'margin-top:8px' },
           el('button', { class: 'b primaire', text: 'Mettre au chantier', onclick: () => {
             const r = window.Jeu.reparer(bid);
             U.dire(r.ok ? 'Réparation en file.' : r.raison, r.ok ? 'bien' : 'alerte');
@@ -330,12 +465,34 @@
     const libres = window.Etat.habitantsLibres().length;
     const tenus = b.postes.filter(p => p.hab).length;
     const actifs = b.postes.filter(p => p.hab && p.rec && !p.bloque).length;
+    const vacants = b.postes.length - tenus;
     c.appendChild(U.stats([
       ['postes tenus', tenus + ' / ' + b.postes.length, tenus === b.postes.length ? 'bon' : ''],
       ['en production', actifs, actifs ? 'bon' : 'mauvais'],
-      ['niveau', b.niv],
       ['libres au bourg', libres, libres ? '' : 'faible'],
     ]));
+
+    /* LA BARRE D'ACTION. Elle ne dit que ce qu'il y a à faire ici et
+       maintenant — et disparaît quand il n'y a rien à faire. */
+    if (vacants && libres) {
+      c.appendChild(el('div', { class: 'appel' },
+        el('div', { style: 'flex:1;min-width:0' },
+          el('div', { class: 'tt', style: 'font-size:13px',
+            text: vacants + ' poste' + (vacants > 1 ? 's' : '') + ' sans personne' }),
+          el('div', { class: 'eti', text: libres + ' habitant' + (libres > 1 ? 's' : '') + ' sans emploi au bourg' })),
+        el('button', { class: 'b primaire', text: vacants > 1 ? 'Tout pourvoir' : 'Pourvoir',
+          title: 'Pourvoir l\'atelier\nPlace les meilleurs candidats disponibles sur '
+               + 'chaque poste vide, en commençant par ceux qui ont déjà une tâche.',
+          onclick: () => pourvoirTout(bid) })));
+    } else if (vacants && !libres) {
+      c.appendChild(el('div', { class: 'appel calme' },
+        el('div', { style: 'flex:1' },
+          el('div', { class: 'tt', style: 'font-size:13px',
+            text: vacants + ' poste' + (vacants > 1 ? 's' : '') + ' sans personne' }),
+          el('div', { class: 'eti', text: 'personne de libre — bâtissez un logement, ou libérez un poste ailleurs' })),
+        el('button', { class: 'b', text: 'Voir les habitants',
+          onclick: () => window.UIFen.ouvrirHabitants('roles') })));
+    }
     if (b.outil && b.outil.restant > 0)
       c.appendChild(el('div', { class: 'rangee entre' },
         el('span', { class: 'eti-or', text: 'outillé · ' + window.RES[b.outil.type].nom.toLowerCase() }),
@@ -389,6 +546,65 @@
   }
 
   /* ------------------------------------------------------------------
+     LES ANNEXES
+     Une annexe ne fait pas grandir l'atelier : elle lui ajoute un corps
+     de bâtiment, et avec lui des gestes qui n'existaient nulle part. On
+     la paie en matériaux et on la bâtit au chantier, comme un édifice —
+     mais elle ne coûte pas de parcelle.
+     ------------------------------------------------------------------ */
+  function rendreAnnexes(c, bid) {
+    const b = E().bat[bid];
+    if (!b) return;
+    if (!b.raff) b.raff = {};
+    const liste = window.RaffUtil.pourBat(b.type);
+    c.appendChild(el('div', { class: 'note',
+      text: "Ce qu'on greffe sur l'atelier plutôt qu'à côté. Une annexe ouvre des tâches nouvelles — et se voit depuis la falaise." }));
+
+    for (const r of liste) {
+      const bati = !!b.raff[r.id];
+      const enFile = E().chantier.file.some(j => j.k === 'raffiner' && j.bat === bid && j.raff === r.id);
+      const cout = window.RaffUtil.coutDe(b.type, r.id, b.niv);
+      const temps = window.RaffUtil.tempsDe(b.type, r.id, b.niv);
+      /* ce que l'annexe débloque : on le montre AVANT l'achat, sinon on
+         paie sans savoir pour quoi */
+      const ouvre = (window.BAT[b.type].recettes || [])
+        .filter(rid => window.REC[rid] && window.REC[rid].raff === r.id)
+        .map(rid => window.REC[rid].nom);
+
+      const corps = [
+        el('div', { class: 'rangee entre' },
+          el('span', { class: 'tt', text: r.nom }),
+          el('span', { class: bati ? 'eti-or' : 'eti', text: bati ? 'bâtie' : U.duree(temps) })),
+        el('div', { class: 'note', style: 'margin-top:4px', text: r.desc }),
+      ];
+      if (ouvre.length)
+        corps.push(el('div', { class: 'eti', style: 'margin-top:8px',
+          text: 'ouvre : ' + ouvre.join(', ') }));
+      for (const k in r.effet)
+        corps.push(el('div', { class: 'eti-or', style: 'margin-top:4px',
+          text: k + ' + ' + Math.round(r.effet[k] * 100) + ' %' }));
+
+      if (!bati) {
+        corps.push(el('div', { class: 'sep' }));
+        corps.push(ligneCout(cout, 'coût'));
+        corps.push(el('div', { class: 'rangee entre', style: 'margin-top:8px' },
+          el('span', { class: 'eti', text: 'chantier : ' + U.duree(temps) }),
+          el('button', {
+            class: 'b primaire', text: enFile ? 'déjà en file' : 'Mettre au chantier',
+            disabled: enFile || !window.Etat.assez(cout),
+            onclick: () => {
+              const rr = window.Jeu.raffiner(bid, r.id);
+              U.dire(rr.ok ? r.nom + ' : chantier ouvert.' : rr.raison, rr.ok ? 'bien' : 'alerte');
+            },
+          })));
+      }
+      c.appendChild(el('div', { class: 'cadre' + (bati ? ' actif' : '') }, ...corps));
+    }
+    c.appendChild(el('div', { class: 'note faible',
+      text: "Le coût d'une annexe monte avec le niveau de l'atelier : on ne greffe pas une cave sur un édifice de maître au prix d'une cabane." }));
+  }
+
+  /* ------------------------------------------------------------------
      LES AMÉLIORATIONS D'ATELIER
      Achetées ici, tout de suite, sans passer par le chantier — et payées
      en écus ET en ce que l'atelier produit lui-même. C'est le puits où
@@ -417,13 +633,13 @@
             el('div', { class: 'rangee entre' },
               el('span', { class: 'tt', style: 'font-size:14px', text: a.nom }),
               el('span', { class: 'niv', text: rang + ' / ' + a.max })),
-            el('div', { class: 'note', style: 'margin-top:3px', text: a.desc })),
+            el('div', { class: 'note', style: 'margin-top:4px', text: a.desc })),
           el('span', { class: rang ? 'grand bon' : 'grand faible',
             text: cle === 'postes' ? '+' + val : '+' + Math.round(val * 100) + ' %' })),
         el('div', { style: 'margin-top:8px' },
           U.barre(rang / a.max, 'vert', '', rang + ' / ' + a.max)),
         fini ? el('div', { class: 'eti-or', style: 'margin-top:8px', text: 'dernier cran atteint' })
-             : el('div', { class: 'rangee entre', style: 'margin-top:9px;flex-wrap:wrap' },
+             : el('div', { class: 'rangee entre', style: 'margin-top:8px;flex-wrap:wrap' },
                  U.listeRes(cout, { verifier: true }),
                  el('button', { class: 'b mini primaire', text: 'Améliorer', disabled: !ok,
                    onclick: () => {
@@ -458,7 +674,7 @@
       el('div', { class: 'av or' }, U.ico(br.ico, 20)),
       el('div', { style: 'flex:1' },
         el('div', { class: 'note', text: br.desc }),
-        el('div', { style: 'margin-top:7px' },
+        el('div', { style: 'margin-top:8px' },
           U.barre(pris / noeuds.length, 'grande', br.nom, pris + ' / ' + noeuds.length)))));
     let rangCourant = -1;
     for (const n of noeuds) {
@@ -473,14 +689,14 @@
           el('span', { class: 'tt', style: 'font-size:15px', text: n.nom }),
           acquise ? el('span', { class: 'niv', text: 'acquise' }) : null),
         el('div', { class: 'note', style: 'margin-top:4px', text: n.desc }),
-        acquise ? null : el('div', { class: 'rangee entre', style: 'margin-top:10px;flex-wrap:wrap' },
+        acquise ? null : el('div', { class: 'rangee entre', style: 'margin-top:12px;flex-wrap:wrap' },
           U.listeRes(n.cout, { verifier: true }),
           el('button', { class: 'b mini primaire', text: 'Acquérir', disabled: !payable,
             onclick: () => {
               const r = window.Jeu.acheterRecherche(n.id);
               U.dire(r.ok ? 'Recherche acquise : ' + n.nom : r.raison, r.ok ? 'bien' : 'alerte');
             } })),
-        (!acquise && manquants.length) ? el('div', { class: 'note mauvais', style: 'margin-top:6px',
+        (!acquise && manquants.length) ? el('div', { class: 'note mauvais', style: 'margin-top:8px',
           text: 'Demande d\'abord : ' + manquants.join(', ') }) : null));
     }
   }
@@ -504,8 +720,8 @@
       const v2 = def.effet[k] * (1 + 0.35 * (n2 - 1));
       lig(k[0].toUpperCase() + k.slice(1), Math.round(v * 100) / 100, n2 > b.niv ? Math.round(v2 * 100) / 100 : '');
     }
-    const nb = window.BatUtil.recettesDe(b.type, b.niv).length;
-    const nb2 = n2 > b.niv ? window.BatUtil.recettesDe(b.type, n2).length : nb;
+    const nb = window.BatUtil.recettesDe(b.type, b.niv, b).length;
+    const nb2 = n2 > b.niv ? window.BatUtil.recettesDe(b.type, n2, b).length : nb;
     if (nb2 > nb) lig('Tâches', nb, nb2);
     return t;
   }
@@ -521,7 +737,7 @@
         el('div', { class: 'rangee entre' },
           el('span', { class: 'tt', text: window.RES[b.outil.type].nom }),
           el('span', { class: 'eti-or', text: b.outil.type === 'outilacier' ? '× 1,9' : '× 1,4' })),
-        el('div', { style: 'margin-top:7px' }, U.barre(pct, 'vert')),
+        el('div', { style: 'margin-top:8px' }, U.barre(pct, 'vert')),
         el('div', { class: 'eti', style: 'margin-top:4px', text: b.outil.restant + ' cycles avant usure' })));
     } else {
       c.appendChild(el('div', { class: 'cadre' }, el('div', { class: 'note faible', text: "Cet atelier travaille à mains nues." })));
@@ -530,7 +746,7 @@
       const q = window.Etat.qte(t);
       c.appendChild(el('div', { class: 'cadre' },
         el('div', { class: 'rangee entre' },
-          el('div', { class: 'rangee' }, U.ico(window.RES[t].ico, 22),
+          el('div', { class: 'rangee' }, U.icoRes(t, 26),
             el('div', {}, el('div', { class: 'tt', text: window.RES[t].nom }),
               el('div', { class: 'eti', text: (t === 'outilacier' ? '× 1,9 · 520' : '× 1,4 · 190') + ' cycles' }))),
           el('button', { class: 'b', text: 'Équiper (' + U.fmt(q) + ')', disabled: q < 1,
@@ -545,7 +761,7 @@
     const def = window.BAT[b.type];
     c.appendChild(el('div', { class: 'note', text: def.desc }));
     c.appendChild(el('div', { class: 'sep' }));
-    const dispo = window.BatUtil.recettesDe(b.type, b.niv);
+    const dispo = window.BatUtil.recettesDe(b.type, b.niv, b);
     const toutes = def.recettes || [];
     if (toutes.length) {
       c.appendChild(el('div', { class: 'eti-or', text: 'ce qu\'on y fait' }));
@@ -590,9 +806,12 @@
   }
 
   function vignetteBat(type) {
-    /* La vignette du catalogue est l'ICÔNE DU MÉTIER, pas une image du
-       bâtiment : le bâtiment, on le verra en vrai en le posant. */
+    /* Les planches de bâtiments sont désormais la vignette principale.
+       Le dessin métier reste un repli pour les anciennes sauvegardes ou
+       les bâtiments ajoutés sans illustration. */
     const def = window.BAT[type];
+    const image = window.Img && window.Img.bat ? window.Img.bat(type) : null;
+    if (image) return window.Img.vignette(image, 56, def.nom, 'vig-bat');
     const parMetier = {
       recolte: { f: 'epi', c: ['#c9a94e', '#8f7430'] },
       atelier: { f: 'enclume', c: ['#4a4e56', '#7a7e86'] },
@@ -620,7 +839,7 @@
     for (const g in groupes) {
       const l = cat.filter(t => window.BAT[t].cat === g);
       if (!l.length) continue;
-      c.appendChild(el('div', { class: 'eti-or', style: 'margin-top:10px', text: groupes[g] }));
+      c.appendChild(el('div', { class: 'eti-or', style: 'margin-top:12px', text: groupes[g] }));
       for (const type of l) c.appendChild(carteCatalogue(type));
     }
   }
@@ -641,7 +860,7 @@
         el('h3', { text: def.nom + (dejaUn ? '  ×' + dejaUn : '') }),
         el('div', { class: 'm', text: def.metier + ' · ' + U.duree(window.BatUtil.tempsNiveau(type, 1)) }),
         U.listeRes(cout, { verifier: true, rien: 'gratuit' }),
-        el('div', { class: 'note', style: 'margin-top:5px', text: def.desc })));
+        el('div', { class: 'note', style: 'margin-top:4px', text: def.desc })));
     return carte;
   }
 
@@ -711,12 +930,16 @@
   function entrerConstruction(type, opts) {
     typeAPoser = type;
     coulAPoser = opts && opts.coul != null ? opts.coul : null;
-    window.Village.modeConstruction('chantier');
+    window.Village.modeConstruction(type);
     const b = document.getElementById('barre-cons');
     b.classList.add('vu');
     U.vide(b);
     b.appendChild(el('span', { class: 'q' }, 'Désignez la parcelle pour ', el('b', { text: window.BAT[type].nom })));
-    b.appendChild(el('span', { class: 'eti', text: 'la terrasse suit le curseur' }));
+    const cat = window.BAT[type].cat;
+    b.appendChild(el('span', { class: 'eti', text:
+      (cat === 'recolte' || cat === 'elevage')
+        ? 'parcelle au sol uniquement'
+        : 'cliquez un toit pour empiler' }));
     b.appendChild(el('button', { class: 'b', text: 'Annuler', onclick: quitterConstruction }));
     U.fermer('chantier');
   }
@@ -728,7 +951,9 @@
   function poserIci(pos) {
     if (!typeAPoser) return;
     const t = typeAPoser;
-    const r = window.Jeu.poserBatiment(t, pos.x, pos.r, { coul: coulAPoser });
+    const r = window.Jeu.poserBatiment(t, pos.x, pos.r, {
+      coul: coulAPoser, niveau: Math.max(0, pos.y | 0),
+    });
     if (!r.ok) { U.dire(r.raison, 'alerte'); return; }
     U.dire(window.BAT[t].nom + ' : chantier ouvert.', 'bien');
     quitterConstruction();
@@ -743,48 +968,93 @@
       titre: 'Réserves du bourg', sous: 'Ce que le bourg possède', classe: 'large',
       onglet: catInit,
       onglets: () => {
+        /* Huit catégories dont six vides au premier jour. On ne montre
+           que celles dont quelque chose est DÉJÀ passé par le bourg —
+           et l'on garde celle qu'on regarde, pour ne pas la voir
+           disparaître sous les doigts. */
+        const vue = cat => {
+          if (cat.id === catInit) return true;
+          for (const id in window.RES)
+            if (window.RES[id].cat === cat.id &&
+                (E().vus['res:' + id] || window.Etat.qte(id) > 0)) return true;
+          return false;
+        };
         const l = Object.values(window.CAT_RES).sort((a, b) => a.ordre - b.ordre)
+          .filter(vue)
           .map(cat => ({ id: cat.id, nom: cat.nom, rendu: c => rendreCategorie(c, cat) }));
-        l.push({ id: 'marche', nom: 'Marché', rendu: rendreMarche });
-        return l;
+        /* le marché n'a de sens qu'une fois qu'on a de quoi vendre */
+        if (window.Etat.aBatiment('halle') || window.Etat.qte('ecu') > 0 || E().vus['ui:marche']) {
+          E().vus['ui:marche'] = true;
+          l.push({ id: 'marche', nom: 'Marché', rendu: rendreMarche });
+        }
+        return l.length ? l : [{ id: 'vivres', nom: 'Vivres',
+          rendu: c => rendreCategorie(c, window.CAT_RES.vivres) }];
       },
     });
   }
 
-  /* La ligne d'une ressource : ce qu'on en a, ce qui entre ou sort par
-     minute, et dans combien de temps elle débordera ou manquera. Un
-     stock ne dit rien ; un DÉBIT dit tout. */
-  function ligneRes(id, cap) {
+  /* LA CASE D'UNE RESSOURCE.
+
+     C'était une ligne : icône, nom, sous-titre, quantité, débit. Cinq
+     informations par ressource, quatre-vingt-dix-huit ressources — une
+     colonne illisible où l'on ne trouvait jamais ce qu'on cherchait.
+
+     C'est maintenant une CASE : l'image, et le nombre. Le reste — le
+     nom, ce qu'elle vaut, ce qui entre et sort, dans combien de temps
+     elle déborde — attend dans l'infobulle, à portée de souris. On
+     reconnaît un stock d'un coup d'œil ; on ne le LIT que si l'on
+     doute. */
+  function caseRes(id, cap) {
     const r = window.RES[id], q = window.Etat.qte(id);
     const d = window.Marche ? window.Marche.debit(id) : 0;
     const h = window.Marche ? window.Marche.horizon(id) : null;
     const plein = cap && cap < 9000 && q >= cap;
-    const cls = 'item-res' + (plein ? ' plein' : '') + (d > 0.002 ? ' monte' : (d < -0.002 ? ' baisse' : ''));
     const parMin = d * 60;
-    let sous = 'palier ' + r.tier;
-    if (h && h.t > 0 && h.t < 36000) sous = (h.plein ? 'plein dans ' : 'vide dans ') + U.duree(h.t);
-    else if (plein) sous = 'au plafond';
-    return el('div', { class: cls, title: r.desc },
-      U.ico(r.ico, 26),
-      el('div', { class: 'n' }, el('b', { text: r.nom }), el('i', { text: sous })),
-      el('span', { class: 'q' }, U.fmt(q),
-        el('small', { text: Math.abs(parMin) < 0.05 ? '—'
-          : (parMin > 0 ? '+' : '') + (Math.round(parMin * 10) / 10).toString().replace('.', ',') + '/min' })));
+
+    const bulle = [r.nom, r.desc, ''];
+    bulle.push('en réserve : ' + U.fmt(q) + (cap && cap < 9000 ? ' / ' + U.fmt(cap) : ''));
+    if (Math.abs(parMin) >= 0.05)
+      bulle.push('débit : ' + (parMin > 0 ? '+' : '') +
+                 (Math.round(parMin * 10) / 10).toString().replace('.', ',') + ' /min');
+    if (h && h.t > 0 && h.t < 36000)
+      bulle.push((h.plein ? 'au plafond dans ' : 'épuisée dans ') + U.duree(h.t));
+    else if (plein) bulle.push('AU PLAFOND — ce qui entre est perdu');
+    if (r.val) bulle.push('valeur : ' + U.fmt(r.val) + ' écus');
+
+    const suivie = !!(window.UIDock && window.UIDock.estSuivie(id));
+    const cls = 'case-res' + (plein ? ' plein' : '')
+              + (d > 0.002 ? ' monte' : (d < -0.002 ? ' baisse' : ''))
+              + (q <= 0 ? ' zero' : '') + (suivie ? ' suivie' : '');
+    const suivi = el('button', { class: 'case-suivre' + (suivie ? ' on' : ''),
+      title: suivie ? 'Retirer du bandeau' : 'Suivre dans le bandeau',
+      'aria-label': (suivie ? 'Ne plus suivre ' : 'Suivre ') + r.nom,
+      text: suivie ? '★' : '☆',
+      onclick: ev => {
+        ev.stopPropagation();
+        const on = window.UIDock.basculerSuivi(id);
+        suivi.classList.toggle('on', on);
+        suivi.textContent = on ? '★' : '☆';
+        suivi.title = on ? 'Retirer du bandeau' : 'Suivre dans le bandeau';
+        suivi.parentNode.classList.toggle('suivie', on);
+      } });
+    return el('div', { class: cls, title: bulle.filter(x => x !== null).join('\n') },
+      suivi,
+      el('div', { class: 'im' }, U.icoRes(id, 40)),
+      el('span', { class: 'q', text: U.fmt(q) }),
+      el('span', { class: 'nm', text: r.nom }));
   }
 
   function rendreCategorie(c, cat) {
     const cap = window.Etat.plafonds()[cat.id];
     const ids = window.RES_ORDRE.filter(id => window.RES[id].cat === cat.id);
     const connus = ids.filter(id => E().vus['res:' + id] || window.Etat.qte(id) > 0);
-    c.appendChild(el('div', { class: 'note', text: cat.desc }));
     if (cap && cap < 9000) {
       const total = connus.reduce((s, id) => s + window.Etat.qte(id), 0);
       const pleins = connus.filter(id => window.Etat.qte(id) >= cap).length;
       c.appendChild(U.stats([
+        ['en réserve', U.fmt(total)],
         ['plafond', U.fmt(cap)],
         ['au plafond', pleins, pleins ? 'mauvais' : 'bon'],
-        ['en réserve', U.fmt(total)],
-        ['sortes', connus.length],
       ]));
       const bStock = cat.batStock;
       if (bStock && !window.Etat.aBatiment(bStock))
@@ -792,7 +1062,20 @@
           text: 'Le bourg n\'a pas de ' + window.BAT[bStock].nom.toLowerCase() + ' : tout ce qui dépasse le plafond est perdu.' }));
     }
     if (!connus.length) {
-      c.appendChild(el('div', { class: 'vide', text: 'Rien de cette sorte n\'est encore passé par le bourg.' }));
+      /* Un vide n'est pas une erreur, c'est une étape. On dit d'où
+         viendra la première au lieu de constater l'absence — et l'on
+         laisse de quoi y aller. */
+      const v = el('div', { class: 'vide' },
+        el('div', { text: 'Rien de cette sorte n\'est encore passé par le bourg.' }));
+      const bStock = cat.batStock;
+      if (bStock && !window.Etat.aBatiment(bStock))
+        v.appendChild(el('div', { class: 'note', style: 'margin-top:8px',
+          text: 'Il faudra de toute façon ' + window.BAT[bStock].nom.toLowerCase()
+              + ' pour en garder plus que la poignée du départ.' }));
+      v.appendChild(el('button', { class: 'b', style: 'margin-top:12px',
+        text: 'Que bâtir ?',
+        onclick: () => { U.fermer('reserves'); window.UIFen.ouvrirChantier(); } }));
+      c.appendChild(v);
       return;
     }
     /* les ressources qui débordent d'abord, puis celles qui montent */
@@ -801,8 +1084,9 @@
       const pa = (cap && window.Etat.qte(a) >= cap) ? 1 : 0, pb = (cap && window.Etat.qte(b) >= cap) ? 1 : 0;
       return (pb - pa) || (db - da) || (window.Etat.qte(b) - window.Etat.qte(a));
     });
-    const grille = el('div', { class: 'grille-res' });
-    for (const id of tri) grille.appendChild(ligneRes(id, cap));
+    c.appendChild(el('div', { class: 'suivi-aide', text: '☆ Cliquez pour afficher une ressource dans le bandeau.' }));
+    const grille = el('div', { class: 'quadrillage-res' });
+    for (const id of tri) grille.appendChild(caseRes(id, cap));
     c.appendChild(grille);
     const gasp = Object.keys(E().gaspille).filter(id => window.RES[id] && window.RES[id].cat === cat.id && E().gaspille[id] > 0);
     if (gasp.length) {
@@ -846,14 +1130,14 @@
       const t = M.tendance(id);
       c.appendChild(el('div', { class: 'cadre' },
         el('div', { class: 'rangee' },
-          U.ico(r.ico, 26),
+          U.icoRes(id, 30),
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'rangee entre' },
               el('span', { class: 'tt', style: 'font-size:14px', text: r.nom }),
               el('span', { class: t > 0.02 ? 'eti bon' : (t < -0.02 ? 'eti mauvais' : 'eti'),
                 text: 'cours ×' + M.cours(id).toFixed(2).replace('.', ',') +
                       (t > 0.02 ? '  en hausse' : t < -0.02 ? '  en baisse' : '  stable') })),
-            el('div', { class: 'eti', style: 'margin-top:3px',
+            el('div', { class: 'eti', style: 'margin-top:4px',
               text: 'en réserve : ' + U.fmt(q) })),
           el('div', { class: 'colonne', style: 'gap:4px' },
             el('div', { class: 'rangee', style: 'gap:4px' },
@@ -866,7 +1150,7 @@
                 title: (pa * 10) + ' écus', onclick: () => { const z = M.acheter(id, 10); if (!z.ok) U.dire(z.raison, 'alerte'); } }),
               el('button', { class: 'b mini primaire', text: '×100', disabled: !ach || window.Etat.qte('ecu') < pa * 100,
                 title: (pa * 100) + ' écus', onclick: () => { const z = M.acheter(id, 100); if (!z.ok) U.dire(z.raison, 'alerte'); } })))),
-        el('div', { class: 'rangee', style: 'margin-top:7px' },
+        el('div', { class: 'rangee', style: 'margin-top:8px' },
           el('span', { class: 'eti', text: 'vente' }), U.puce('ecu', pv, { mini: true, gain: true }),
           el('span', { class: 'eti', text: 'achat' }), U.puce('ecu', pa, { mini: true }))));
     }
@@ -878,7 +1162,7 @@
   function ouvrirHabitants(onglet) {
     U.ouvrir('habitants', {
       onglet: typeof onglet === 'string' ? onglet : undefined,
-      titre: 'Les habitants', sous: 'Qui fait quoi',
+      titre: 'Les habitants', sous: 'Qui fait quoi', classe: 'habitants-fen',
       sousVif: () => { const n = E().habitants.length, l = window.Etat.habitantsLibres().length;
         return n + (n > 1 ? ' habitants' : ' habitant') + ' · ' + l + (l > 1 ? ' libres' : ' libre'); },
       onglets: [
@@ -894,26 +1178,64 @@
     const E2 = E();
     const log = window.Etat.logementTotal();
     const libres = window.Etat.habitantsLibres().length;
+    const ateliers = Object.keys(E2.bat).map(id => E2.bat[id]).filter(b => b.postes && b.postes.length);
+    const postes = ateliers.reduce((n, b) => n + b.postes.length, 0);
+    const tenus = ateliers.reduce((n, b) => n + b.postes.filter(p => p.hab).length, 0);
     c.appendChild(U.stats([
       ['habitants', E2.habitants.length + ' / ' + log, E2.habitants.length >= log ? 'mauvais' : 'bon'],
       ['sans emploi', libres, libres ? 'faible' : 'bon'],
-      ['vivres / min', (window.Jeu.besoinTotal() * 60).toFixed(1).replace('.', ',')],
+      ['postes tenus', tenus + ' / ' + postes, tenus === postes && postes ? 'bon' : ''],
       ['cadence', '×' + window.Jeu.multGlobal().toFixed(2).replace('.', ',')],
     ]));
-    c.appendChild(U.barre(E2.habitants.length / Math.max(1, log),
-      'grande ' + (E2.habitants.length >= log ? 'rouge' : 'vert'),
-      'toits occupés', E2.habitants.length + ' / ' + log));
-    const pl = window.Etat.placesLibres();
-    c.appendChild(el('div', { class: 'note',
-      text: pl <= 0
-        ? 'Plus un seul toit libre : personne ne peut s\'installer et aucune portée ne peut être élevée. Bâtissez une maison.'
-        : pl + ' toit' + (pl > 1 ? 's libres' : ' libre') + ' : autant de fois que vous pouvez ouvrir les portes.' }));
-    if (pl > 0) c.appendChild(el('button', { class: 'b primaire large',
-      text: 'Ouvrir les portes  (' + pl + ')',
-      onclick: () => { window.UIFen.ouvrirHabitants('portes'); } }));
 
-    c.appendChild(U.section('Qui fait quoi'));
-    const tries = E2.habitants.slice().sort((a, b) => (a.aff ? 0 : 1) - (b.aff ? 0 : 1) || (b.niv || 1) - (a.niv || 1));
+    const vacants = Math.max(0, postes - tenus);
+    if (libres && vacants) c.appendChild(el('div', { class: 'appel affect-appel' },
+      el('div', { style: 'flex:1;min-width:0' },
+        el('div', { class: 'tt', style: 'font-size:14px', text: 'Le bourg peut produire davantage' }),
+        el('div', { class: 'eti', text: Math.min(libres, vacants) + ' affectation(s) disponible(s)' })),
+      el('button', { class: 'b primaire', text: 'Répartir au mieux', onclick: () => {
+        /* D'abord les postes dont la tâche est déjà choisie, puis les
+           autres : un clic relance réellement la production. */
+        const cibles = [];
+        for (const b of ateliers) for (let i = 0; i < b.postes.length; i++)
+          if (!b.postes[i].hab) cibles.push({ b, i, pret: !!b.postes[i].rec });
+        cibles.sort((a, z) => (z.pret ? 1 : 0) - (a.pret ? 1 : 0));
+        for (const x of cibles) {
+          if (!window.Etat.habitantsLibres().length) break;
+          window.Jeu.assignerAuto(x.b.id, x.i);
+        }
+        rafraichirVillage();
+      } })));
+
+    c.appendChild(U.section('Ateliers'));
+    if (!ateliers.length) c.appendChild(el('div', { class: 'vide',
+      html: 'Aucun atelier pour le moment.<br>La pêcherie est un bon premier poste.' }));
+    for (const b of ateliers) {
+      const defB = window.BAT[b.type];
+      const occupes = b.postes.filter(p => p.hab).length;
+      const actifs = b.postes.filter(p => p.hab && p.rec && !p.bloque).length;
+      const premierVide = b.postes.findIndex(p => !p.hab);
+      const productions = b.postes.map(p => p.rec && window.REC[p.rec] ? window.REC[p.rec].nom : null).filter(Boolean);
+      c.appendChild(el('div', { 'data-cle': 'aff-' + b.id, class: 'affect-ligne',
+        onclick: () => window.UIFen.ouvrirBatiment(b.id) },
+        el('div', { class: 'affect-ico' },
+          (window.Img && window.Img.metier && window.Img.metier(defB.metier))
+            ? window.Img.vignette(window.Img.metier(defB.metier), 30, defB.metier, 'vig-metier')
+            : U.ico(window.METIERS[defB.metier] ? window.METIERS[defB.metier].ico : { f:'cube', c:['#789'] }, 24)),
+        el('div', { class: 'affect-main' },
+          el('div', { class: 'rangee entre' },
+            el('span', { class: 'tt', style: 'font-size:14px', text: defB.nom }),
+            el('span', { class: 'affect-compte ' + (actifs ? 'bon' : ''), text: occupes + ' / ' + b.postes.length })),
+          el('div', { class: 'eti', text: productions.length ? productions.join(' · ') : 'tâche à choisir' })),
+        premierVide >= 0 ? el('button', { class: 'b mini' + (libres ? ' primaire' : ''),
+          disabled: !libres, text: '+ meilleur', onclick: ev => {
+            ev.stopPropagation(); window.Jeu.assignerAuto(b.id, premierVide); rafraichirVillage();
+          } }) : el('span', { class: 'etat-ok', text: 'complet' })));
+    }
+
+    c.appendChild(U.section('Habitants'));
+    const tries = E2.habitants.slice().sort((a, b) => (a.aff ? 1 : 0) - (b.aff ? 1 : 0) || (b.niv || 1) - (a.niv || 1));
+    const liste = el('div', { class: 'affect-habitants' });
     for (const h of tries) {
       let ou = 'sans affectation', quoi = '', rec = null;
       if (h.aff && h.aff.k === 'poste') {
@@ -924,31 +1246,20 @@
           quoi = rec ? rec.nom : 'sans tâche'; }
       } else if (h.aff && h.aff.k === 'chantier') { ou = 'Chantier du bourg'; quoi = 'bâtit'; }
       const meta = window.METIERS[h.talent] || { nom: '—', ico: { f: 'cube', c: ['#8a8272'] } };
-      const prog = (h.xp || 0) / window.Etat.xpPourNiveau(h.niv || 1);
-      c.appendChild(el('div', { 'data-cle': h.id, class: 'cadre fiche r-' + (h.rarete || 'commun') + (h.aff ? '' : ' mort') },
-        el('div', { class: 'rangee' },
-          el('div', { class: 'av' + (h.aff ? ' vert' : '') }, U.ico(meta.ico, 20)),
-          el('div', { style: 'flex:1;min-width:0' },
-            el('div', { class: 'rangee' },
-              el('span', { class: 'tt', style: 'font-size:15px', text: h.nom }),
-              etiqRarete(h),
-              el('span', { class: 'niv', text: 'niv ' + (h.niv || 1) })),
-            el('div', { class: 'eti', style: 'margin-top:4px',
-              text: meta.nom + '  ·  ' + ou + (quoi ? '  ·  ' + quoi : '') })),
-          h.aff ? el('button', { class: 'b mini danger', text: 'Libérer',
-              onclick: () => { window.Etat.libererHabitant(h.id); rafraichirVillage(); } })
-                : el('button', { class: 'b mini', text: 'Au chantier',
-              onclick: () => { window.Etat.affecterChantier(h.id); rafraichirVillage(); } })),
-        el('div', { style: 'margin-top:8px' }, bandeTraits(h)),
-        el('div', { style: 'margin-top:8px' }, U.barre(prog, 'bleu', 'expérience',
-          U.fmt(h.xp || 0) + ' / ' + U.fmt(window.Etat.xpPourNiveau(h.niv || 1)))),
-        el('div', { class: 'rangee entre', style: 'margin-top:8px' },
-          el('span', { class: 'note', style: 'font-size:10.5px',
-            text: 'Arrivé au bourg il y a ' + U.duree(E2.tJeu - (h.arrive || 0)) + '.' }),
-          el('button', { class: 'b mini danger', text: 'Renvoyer',
-            title: 'Le faire partir. Le bourg le prendra très mal.',
-            onclick: () => confirmerRenvoi(h) }))));
+      liste.appendChild(el('div', { 'data-cle': h.id, class: 'affect-habitant' + (h.aff ? '' : ' libre'),
+        title: window.HAB.listeTraits(h).map(t => window.HAB.trait(t).nom).join(' · ') },
+        avatarHab(h, 18, h.aff ? 'vert' : ''),
+        el('div', { class: 'affect-identite' },
+          el('div', { class: 'rangee' }, el('b', { text: h.nom }), etiqRarete(h),
+            el('span', { class: 'niv', text: 'niv ' + (h.niv || 1) })),
+          el('span', { text: meta.nom + ' · ' + ou + (quoi ? ' · ' + quoi : '') })),
+        h.aff ? el('button', { class: 'b mini', text: 'Libérer', onclick: () => {
+          window.Etat.libererHabitant(h.id); rafraichirVillage();
+        } }) : el('button', { class: 'b mini', text: 'Chantier', onclick: () => {
+          window.Etat.affecterChantier(h.id); rafraichirVillage();
+        } })));
     }
+    c.appendChild(liste);
   }
   function rendreMetiers(c) {
     c.appendChild(el('div', { class: 'note',
@@ -960,12 +1271,15 @@
       const terr = window.Expedition ? window.Expedition.bonusMetier(m) : 1;
       c.appendChild(el('div', { class: 'cadre' },
         el('div', { class: 'rangee' },
-          el('div', { class: 'av' }, U.ico(meta.ico, 20)),
+          el('div', { class: 'av' },
+            (window.Img && window.Img.metier && window.Img.metier(m))
+              ? window.Img.vignette(window.Img.metier(m), 26, meta.nom, 'vig-metier')
+              : U.ico(meta.ico, 20)),
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'rangee entre' },
               el('span', { class: 'tt', style: 'font-size:14px', text: meta.nom }),
               el('span', { class: 'eti-or', text: 'rang ' + p.rang })),
-            el('div', { style: 'margin-top:7px' },
+            el('div', { style: 'margin-top:8px' },
               U.barre(p.dans / p.pour, 'grande vert',
                 '×' + (1 + 0.03 * (p.rang - 1)).toFixed(2).replace('.', ',') +
                 (terr > 1.001 ? '  ·  territoire ×' + terr.toFixed(2).replace('.', ',') : ''),
@@ -1015,7 +1329,7 @@
             pastilleTrait(t),
             el('span', { class: 'eti-or', text: gens.length ? gens.length + '' : '—' })),
           el('div', { class: 'note', style: 'margin-top:4px', text: T.desc }),
-          gens.length ? el('div', { class: 'eti', style: 'margin-top:5px',
+          gens.length ? el('div', { class: 'eti', style: 'margin-top:4px',
             text: gens.map(h => h.nom).join('  ·  ') }) : null));
       }
     }
@@ -1037,12 +1351,85 @@
     const vivres = window.Etat.vivresDisponibles();
     const attrait = window.Etat.attraitBourg();
 
+    /* Une fois les portes ouvertes, tout le reste s'efface. Ce moment est
+       un choix de personnage, pas une sous-section d'un rapport de stock. */
+    if (E2.portes.postulants) {
+      const refus = window.Etat.apercuRefus();
+      if (postulantChoisi != null && !E2.portes.postulants[postulantChoisi]) postulantChoisi = null;
+      c.appendChild(el('div', { class: 'choix-portes-tete' },
+        el('div', { class: 'choix-portes-sur', text: 'Les portes du bourg' }),
+        el('div', { class: 'choix-portes-titre', text: 'Choisissez votre nouvel habitant' }),
+        el('div', { class: 'choix-portes-sous', text: 'Chaque voyageur apporte un talent et un caractère différents. Vous n’en accueillez qu’un.' })));
+      const g = el('div', { class: 'postulants' });
+      for (let k = 0; k < E2.portes.postulants.length; k++) g.appendChild(cartePostulant(k, () => {
+        postulantChoisi = k; rafraichirVillage();
+      }));
+      c.appendChild(g);
+      c.appendChild(el('div', { class: 'choix-portes-actions' },
+        el('button', { class: 'b danger refuser-candidats', text: 'Refuser les trois',
+          title: 'Portes closes ' + U.duree(refus.duree) + ' · cadence −' + Math.round(refus.force * 100) + ' % · moral −' + refus.moral,
+          onclick: () => {
+            const avert = 'Refuser ces trois voyageurs ?\n\nPortes closes : ' + U.duree(refus.duree)
+              + '\nCadence globale : −' + Math.round(refus.force * 100) + ' %'
+              + '\nMoral : −' + refus.moral;
+            if (window.Reglages.lire('confirmer') && !confirm(avert)) return;
+            postulantChoisi = null; window.Etat.refuserTous(); rafraichirVillage();
+          } }),
+        el('button', { class: 'b primaire confirmer-candidat', disabled: postulantChoisi == null,
+          text: postulantChoisi == null ? 'Choisissez une carte' : 'Confirmer ce choix', onclick: () => {
+            if (postulantChoisi == null) return;
+            window.Etat.accueillir(postulantChoisi); postulantChoisi = null; rafraichirVillage();
+          } })));
+      c.appendChild(el('div', { class: 'choix-portes-prix-refus',
+        text: 'Refuser : portes closes ' + U.duree(refus.duree)
+          + ' · cadence −' + Math.round(refus.force * 100) + ' % · moral −' + refus.moral
+          + ' · prochains candidats moins rares' }));
+      return;
+    }
+
     c.appendChild(U.stats([
       ['toits libres', pl, pl ? 'bon' : 'mauvais'],
-      ['coût d\'accueil', cout + ' portions', vivres >= cout ? '' : 'mauvais'],
+      ['repas en réserve', Math.floor(vivres) + ' / ' + cout, vivres >= cout ? 'bon' : 'mauvais'],
       ['attrait du bourg', '×' + (1 + attrait).toFixed(2).replace('.', ','), attrait > 0.6 ? 'bon' : ''],
       ['accueillis', E2.portes.accueillis || 0],
     ]));
+
+    /* CE QUI VA SORTIR DE LA GRANGE, en clair.
+
+       Le coût s'affichait « 24 portions ». Le mot n'existe nulle part
+       ailleurs dans le jeu : aucun compteur ne le montre, aucune recette
+       ne le rend, et le joueur n'a donc aucun moyen de savoir s'il en a.
+       On montre le PANIER réel — un poisson, deux blés — et la notion
+       cesse d'être abstraite. */
+    const ap = window.Etat.apercuAccueil();
+    const bloc = el('div', { class: 'cadre' },
+      el('div', { class: 'rangee entre' },
+        el('span', { class: 'eti-or', text: 'ce que coûte une bouche de plus' }),
+        el('span', { class: ap.suffit ? 'eti' : 'eti mauvais',
+          text: ap.suffit ? 'la grange y suffit' : 'il manque de quoi nourrir' })));
+    if (Object.keys(ap.panier).length)
+      bloc.appendChild(el('div', { style: 'margin-top:8px' }, U.listeRes(ap.panier)));
+    else
+      bloc.appendChild(el('div', { class: 'note mauvais', style: 'margin-top:4px',
+        text: "La grange est vide : il n'y a rien à sortir. Faites pêcher, labourer ou traire." }));
+
+    /* ET CE QU'EST UNE PORTION. La notion est juste — un navet ne
+       nourrit pas comme une tourte — mais elle n'était expliquée
+       nulle part. On la dit ici, avec la table. */
+    const POR = window.Jeu.PORTIONS || {};
+    const enStock = Object.keys(POR).filter(k => window.Etat.qte(k) > 0)
+      .sort((a, b) => POR[b] - POR[a]);
+    const lignes = ["Ce qu'on appelle un repas",
+      'De quoi nourrir un chat une fois. Chaque vivre en vaut plus ou moins :', ''];
+    for (const k of (enStock.length ? enStock : Object.keys(POR)).slice(0, 9))
+      lignes.push('· ' + window.RES[k].nom + ' : ' +
+        String(POR[k]).replace('.', ',') + ' repas' + " l'unité");
+    lignes.push('');
+    lignes.push('Le bourg sort toujours ce qui nourrit le MOINS : on garde les tourtes pour les jours maigres.');
+    bloc.appendChild(el('div', { class: 'note', style: 'margin-top:8px',
+      title: lignes.join('\n'),
+      text: "Un repas d'avance, pris dans ce qui nourrit le moins. Survolez pour voir ce que vaut chaque vivre." }));
+    c.appendChild(bloc);
 
     /* ce que l'attrait change, en clair : les chances de chaque rareté */
     c.appendChild(U.section('Ce qui se présentera'));
@@ -1059,7 +1446,7 @@
         style: 'width:' + (x.w / tot * 100).toFixed(2) + '%;background:' + x.R.col,
         title: x.R.nom + ' — ' + (x.w / tot * 100).toFixed(1).replace('.', ',') + ' %' }));
     c.appendChild(jauge);
-    const lg = el('div', { class: 'rangee enroule', style: 'margin-top:7px' });
+    const lg = el('div', { class: 'rangee enroule', style: 'margin-top:8px' });
     for (const x of poids)
       lg.appendChild(el('span', { class: 'rarete r-' + x.id,
         text: x.R.nom + ' ' + (x.w / tot * 100).toFixed(1).replace('.', ',') + ' %' }));
@@ -1067,67 +1454,120 @@
     c.appendChild(el('div', { class: 'note',
       text: 'Le moral, la taverne, la chapelle et le donjon font venir du meilleur monde. Chaque renvoi, lui, abîme la réputation du bourg pour de bon.' }));
 
-    /* --- les trois postulants --- */
-    if (E2.portes.postulants) {
-      c.appendChild(U.section('Trois voyageurs à la porte'));
-      c.appendChild(el('div', { class: 'note',
-        text: 'Vous en gardez un. Les deux autres reprennent la route et ne reviendront pas.' }));
-      const g = el('div', { class: 'postulants' });
-      for (let k = 0; k < E2.portes.postulants.length; k++) g.appendChild(cartePostulant(k));
-      c.appendChild(g);
-      c.appendChild(el('button', { class: 'b danger large', text: 'Les renvoyer tous les trois',
-        title: 'Les portes resteront closes deux minutes.',
-        onclick: () => { window.Etat.refuserTous(); rafraichirVillage(); } }));
-      return;
-    }
-
     c.appendChild(U.section('Ouvrir'));
     const v = window.Etat.peutOuvrirPortes();
     if (barre > 0) {
       c.appendChild(el('div', { class: 'cadre alerte' },
         el('div', { class: 'tt', style: 'font-size:14px', text: 'Les portes sont closes' }),
-        el('div', { class: 'note mauvais', style: 'margin-top:5px',
+        el('div', { class: 'note mauvais', style: 'margin-top:4px',
           text: 'La rumeur court encore. Personne ne se présentera avant ' + U.duree(barre) + '.' }),
-        el('div', { style: 'margin-top:9px' },
+        el('div', { style: 'margin-top:8px' },
           U.barre(1 - barre / Math.max(1, 180 * Math.pow(1.35, Math.min(6, (E2.portes.renvois || 1) - 1))),
             'grande rouge', 'réputation', U.duree(barre)))));
     }
     c.appendChild(el('button', {
       class: 'b primaire large', disabled: !v.ok,
-      text: v.ok ? 'Ouvrir les portes  —  ' + cout + ' portions' : 'Impossible d\'ouvrir',
+      text: v.ok
+        ? 'Ouvrir les portes  —  ' + (Object.keys(ap.panier).length
+            ? Object.keys(ap.panier).map(k => ap.panier[k] + ' ' + window.RES[k].nom.toLowerCase()).join(', ')
+            : 'rien en réserve')
+        : 'Impossible d\'ouvrir',
       onclick: () => { window.Etat.ouvrirPortes(); rafraichirVillage(); } }));
-    if (!v.ok) c.appendChild(el('div', { class: 'note mauvais', text: v.pourquoi }));
-    else c.appendChild(el('div', { class: 'note',
-      text: 'On nourrit d\'avance la bouche de plus : ' + cout + ' portions sortent de la grange, quel que soit celui qu\'on garde.' }));
+    if (!v.ok) {
+      c.appendChild(el('div', { class: 'note mauvais', text: v.pourquoi }));
+      /* UN REFUS DOIT PORTER SA SORTIE. Un bouton gris et une phrase qui
+         constate laissent le joueur devant rien — surtout ici, où les
+         portes sont la seule source d'habitants. */
+      if (/vivres/i.test(v.pourquoi))
+        c.appendChild(el('div', { class: 'appel calme', style: 'margin-top:8px' },
+          el('div', { style: 'flex:1;min-width:0' },
+            el('div', { class: 'tt', style: 'font-size:13px', text: 'Il faut de quoi nourrir' }),
+            el('div', { class: 'eti',
+              text: 'La pêcherie et le champ sont les deux sources de départ : mettez-y quelqu\'un.' })),
+          el('button', { class: 'b', text: 'Voir les vivres',
+            onclick: () => window.UIFen.ouvrirReserves('vivres') })));
+      else if (/toit/i.test(v.pourquoi))
+        c.appendChild(el('div', { class: 'appel calme', style: 'margin-top:8px' },
+          el('div', { style: 'flex:1;min-width:0' },
+            el('div', { class: 'tt', style: 'font-size:13px', text: 'Il faut un toit' }),
+            el('div', { class: 'eti', text: 'Une maison neuve ouvre une place ; il faut bâtir un quartier pour grandir.' })),
+          el('button', { class: 'b', text: 'Que bâtir ?',
+            onclick: () => window.UIFen.ouvrirChantier() })));
+    } else c.appendChild(el('div', { class: 'note',
+      text: 'Ces vivres sortent de la grange quel que soit celui qu\'on garde — même si l\'on renvoie les trois.' }));
 
     if (E2.malaise && E2.malaise.reste) c.appendChild(el('div', { class: 'cadre alerte' },
       el('div', { class: 'tt', style: 'font-size:14px', text: 'Le bourg fait la tête' }),
-      el('div', { class: 'note mauvais', style: 'margin-top:5px',
+      el('div', { class: 'note mauvais', style: 'margin-top:4px',
         text: 'Tout le monde travaille ' + Math.round((1 - window.Etat.facteurMalaise()) * 100) +
               ' % moins vite. Cela passera dans ' + U.duree(E2.malaise.reste) + '.' }),
-      el('div', { style: 'margin-top:9px' },
+      el('div', { style: 'margin-top:8px' },
         U.barre(1 - E2.malaise.reste / Math.max(1, E2.malaise.total || 1), 'grande rouge',
           'apaisement', U.duree(E2.malaise.reste)))));
   }
 
-  function cartePostulant(k) {
+  /* LA CARTE D'UN POSTULANT.
+
+     C'est le seul écran du jeu où l'on choisit QUI vit là, et c'était
+     jusqu'ici trois lignes de texte. On lui donne maintenant ce qu'il
+     mérite : le VISAGE d'abord, grand, puis le nom, le métier, et deux
+     lignes seulement — ce qu'il apporte, ce qu'il coûte.
+
+     Le reste des traits reste lisible au survol : on n'encombre pas un
+     choix avec ce qui ne le décide pas. */
+  function cartePostulant(k, selectionner) {
     const p = E().portes.postulants[k];
     const R = window.HAB.RARETES[p.rarete];
     const meta = window.METIERS[p.talent] || { nom: '—', ico: { f: 'cube', c: ['#8a8272'] } };
-    return el('div', { 'data-cle': 'p' + k, class: 'postulant r-' + p.rarete },
-      el('div', { class: 'liseret', style: 'background:' + R.col }),
-      el('div', { class: 'rangee entre' },
-        etiqRarete(p),
-        el('span', { class: 'niv', text: 'niv ' + p.niv })),
-      el('div', { class: 'rangee', style: 'margin-top:8px' },
-        el('div', { class: 'av or' }, U.ico(meta.ico, 20)),
-        el('div', { style: 'flex:1;min-width:0' },
-          el('div', { class: 'tt', style: 'font-size:15px', text: p.nom }),
-          el('div', { class: 'eti', style: 'margin-top:3px',
-            text: meta.nom + '  ·  +' + (p.rarete === 'legende' ? 35 : 20) + ' %' }))),
-      el('div', { style: 'margin-top:9px' }, bandeTraits(p)),
-      el('button', { class: 'b primaire large', style: 'margin-top:10px', text: 'L\'accueillir',
-        onclick: () => { window.Etat.accueillir(k); rafraichirVillage(); } }));
+    const T = window.HAB.TRAITS;
+
+    /* on sépare les qualités des défauts : le joueur veut voir la
+       colonne verte et la colonne rouge, pas une bouillie mêlée */
+    const qual = [], def = [];
+    for (const t of (p.traits || [])) {
+      const d = T[t]; if (!d) continue;
+      (d.genre === 'defaut' ? def : qual).push(d);
+    }
+
+    const visage = window.Img ? window.Img.portrait(p) : null;
+    let portrait = null;
+    if (visage) {
+      portrait = window.Img.vignette(visage, 420, p.nom, 'grand');
+      /* La vignette générique est volontairement dimensionnée en pixels.
+         Ici, la carte doit au contraire remplir tout son cadre, quelle que
+         soit la taille de la fenêtre. */
+      portrait.style.width = '100%';
+      portrait.style.height = '100%';
+    }
+    const av = visage
+      ? el('div', { class: 'figure' }, portrait)
+      : el('div', { class: 'figure sans' }, U.ico(meta.ico, 54));
+
+    function ligneTrait(d, bon) {
+      return el('div', { class: 'tr ' + (bon ? 'bon' : 'mal'), title: d.desc || '' },
+        el('span', { class: 'pt' }),
+        el('span', { class: 'nm', text: d.nom }));
+    }
+
+    return el('div', { 'data-cle': 'p' + k,
+      class: 'postulant r-' + p.rarete + (postulantChoisi === k ? ' choisi' : ''),
+      title: postulantChoisi === k ? p.nom + ' est sélectionné' : 'Sélectionner ' + p.nom,
+      onclick: selectionner },
+      el('div', { class: 'fanion', style: 'background:' + R.col, title: R.nom + ' — ' + R.desc },
+        U.ico(meta.ico, 15)),
+      av,
+      el('div', { class: 'corps' },
+        el('div', { class: 'nom', style: 'color:' + R.col, text: p.nom }),
+        el('div', { class: 'role', text: meta.nom + ' · niveau ' + p.niv }),
+        el('div', { class: 'filet' }),
+        qual.length ? el('div', { class: 'bloc-tr' },
+          el('div', { class: 'chap bon', text: 'bonus' }),
+          ...qual.map(d => ligneTrait(d, true))) : null,
+        def.length ? el('div', { class: 'bloc-tr' },
+          el('div', { class: 'chap mal', text: 'malus' }),
+          ...def.map(d => ligneTrait(d, false))) : null,
+        !def.length ? el('div', { class: 'bloc-tr' },
+          el('div', { class: 'chap bon', text: 'aucun défaut connu' })) : null));
   }
 
   /* Renvoyer quelqu'un : on dit le prix AVANT, en toutes lettres. */
@@ -1149,7 +1589,7 @@
         ]));
         c.appendChild(el('div', { class: 'note mauvais',
           text: 'Chaque renvoi suivant coûtera plus cher que celui-ci, et abaisse durablement l\'attrait du bourg.' }));
-        c.appendChild(el('div', { class: 'rangee', style: 'margin-top:10px' },
+        c.appendChild(el('div', { class: 'rangee', style: 'margin-top:12px' },
           el('button', { class: 'b large', text: 'Le garder',
             onclick: () => U.fermer('renvoi') }),
           el('button', { class: 'b danger large', text: 'Le renvoyer quand même',
@@ -1193,16 +1633,30 @@
       titre: window.Village ? window.Village.nom() : 'Le bourg', sous: 'État général',
       onglet: onglet,
       sousVif: () => 'Jour ' + E().jours + ' · ' + (window.Village ? window.Village.rang() : ''),
-      onglets: [
-        { id: 'general', nom: 'Bourg', rendu: rendreBourg },
-        { id: 'acquis', nom: 'Acquis', rendu: rendreAcquis },
-        { id: 'auto', nom: 'Contremaîtres', rendu: rendreAuto },
-        { id: 'objectifs', nom: 'Objectifs', rendu: rendreObjectifs },
-        { id: 'charte', nom: 'La charte', rendu: rendreCharte },
-        { id: 'menace', nom: 'Menace', rendu: rendreMenace },
-        { id: 'journal', nom: 'Journal', rendu: rendreJournal },
-        { id: 'partie', nom: 'Partie', rendu: rendrePartie },
-      ],
+      onglets: () => {
+        const E2 = E();
+        const ong = [{ id: 'general', nom: 'Bourg', rendu: rendreBourg }];
+        /* Les acquis, les contremaîtres et la charte sont des
+           mécaniques de milieu de partie. Tant qu'aucune n'a servi,
+           les nommer ne fait qu'allonger la barre. */
+        if (Object.keys(E2.recherches || {}).length || E2.jours >= 3 || onglet === 'acquis')
+          ong.push({ id: 'acquis', nom: 'Acquis', rendu: rendreAcquis });
+        const unContremaitre = window.Auto &&
+          (window.Auto.CONTREMAITRES || []).some(x => window.Auto.acquis(x.id));
+        if (unContremaitre || E2.jours >= 5 || onglet === 'auto')
+          ong.push({ id: 'auto', nom: 'Contremaîtres', rendu: rendreAuto });
+        ong.push({ id: 'objectifs', nom: 'Objectifs', rendu: rendreObjectifs });
+        /* la charte n'a de sens qu'une fois un sceau à portée */
+        const charteUtile = window.Prestige &&
+          (window.Prestige.seuilAtteint() || (window.Prestige.etat().sceaux || 0) > 0);
+        if (charteUtile || onglet === 'charte')
+          ong.push({ id: 'charte', nom: 'La charte', rendu: rendreCharte });
+        if (E2.menace > 8 || E2.jours >= 2 || onglet === 'menace')
+          ong.push({ id: 'menace', nom: 'Menace', rendu: rendreMenace });
+        ong.push({ id: 'journal', nom: 'Journal', rendu: rendreJournal });
+        ong.push({ id: 'partie', nom: 'Partie', rendu: rendrePartie });
+        return ong;
+      },
     });
   }
   function rendreBourg(c) {
@@ -1296,11 +1750,11 @@
           el('div', { class: 'av' + (on ? ' or' : '') }, U.ico(x.ico, 20)),
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'tt', style: 'font-size:14px', text: x.nom }),
-            el('div', { class: 'note', style: 'margin-top:3px', text: x.desc })),
+            el('div', { class: 'note', style: 'margin-top:4px', text: x.desc })),
           pris ? U.bascule(on, v => { window.Auto.basculer(x.id, v); })
                : null),
-        el('div', { class: 'note faible', style: 'margin-top:5px', text: x.note }),
-        pris ? null : el('div', { class: 'rangee entre', style: 'margin-top:9px;flex-wrap:wrap' },
+        el('div', { class: 'note faible', style: 'margin-top:4px', text: x.note }),
+        pris ? null : el('div', { class: 'rangee entre', style: 'margin-top:8px;flex-wrap:wrap' },
           U.listeRes(x.cout, { verifier: true }),
           el('button', { class: 'b mini primaire', text: 'Engager',
             disabled: !window.Etat.assez(x.cout),
@@ -1318,7 +1772,7 @@
         el('div', { style: 'margin-top:8px' },
           U.segments([1, 2, 3, 4, 5, 6].map(n => ({ v: n, n: n + '' })), A.brasChantier,
             v => { A.brasChantier = v; })),
-        el('div', { class: 'note', style: 'margin-top:6px',
+        el('div', { class: 'note', style: 'margin-top:8px',
           text: 'Plus il en prend, plus le chantier avance — et moins il reste de monde aux ateliers.' })));
     }
     if (E().venteAuto) {
@@ -1364,7 +1818,7 @@
         el('div', { class: 'note', style: 'margin-top:4px', text: o.desc }),
         pr ? null : el('div', { style: 'margin-top:8px' },
           U.barre(av, f ? 'vert' : '', '', Math.round(av * 100) + ' %')),
-        pr ? null : el('div', { class: 'rangee enroule', style: 'margin-top:7px' },
+        pr ? null : el('div', { class: 'rangee enroule', style: 'margin-top:8px' },
           el('span', { class: 'eti', text: 'récompense' }),
           Object.keys(o.rec).map(k => U.puce(k, o.rec[k], { mini: true, gain: true })))));
     }
@@ -1392,7 +1846,7 @@
       el('div', { class: 'note',
         text: gain >= 5 ? 'Le bourg a fait ses preuves. On peut sceller.'
                         : 'Il faut descendre plus bas, prendre du territoire ou pousser les recherches.' }),
-      el('div', { style: 'margin-top:9px' },
+      el('div', { style: 'margin-top:8px' },
         el('button', { class: 'b danger', text: 'Sceller la charte  (+' + gain + ' sceaux)',
           disabled: gain < 5,
           onclick: () => {
@@ -1476,13 +1930,13 @@
         ['bras engagés', z.cout.unites + ' / ' + E2.armee.unites,
           E2.armee.unites >= z.cout.unites ? '' : 'mauvais'],
       ]) : null,
-      z ? el('div', { style: 'margin-top:9px' },
+      z ? el('div', { style: 'margin-top:8px' },
         el('div', { class: 'eti', text: 'ce qu\'on ramassera' }),
         U.listeRes(z.butin, { gain: true })) : null,
-      el('button', { class: 'b primaire large', style: 'margin-top:10px',
+      el('button', { class: 'b primaire large', style: 'margin-top:12px',
         disabled: !v.ok, text: v.ok ? 'Faire une sortie' : 'Sortie impossible',
         onclick: () => { U.fermerTout(); window.Expedition.lancerSortie(); } }),
-      v.ok ? null : el('div', { class: 'note mauvais', style: 'margin-top:6px', text: v.pourquoi })));
+      v.ok ? null : el('div', { class: 'note mauvais', style: 'margin-top:8px', text: v.pourquoi })));
 
     /* --- la défense passive --- */
     c.appendChild(U.section('Si on ne sort pas'));
@@ -1490,7 +1944,7 @@
       el('div', { class: 'rangee entre' },
         el('span', { class: 'tt', text: 'Défense ' + window.Jeu.defenseTotale() }),
         el('span', { class: 'eti', text: 'contre ' + (40 + E2.territoires.length * 14 + E2.raids * 6) + ' attendus' })),
-      el('div', { class: 'note', style: 'margin-top:6px',
+      el('div', { class: 'note', style: 'margin-top:8px',
         text: "Remparts, caserne, tours de guet, garnison et sentinelles. Si la défense égale la force du raid, il est repoussé sans un seul dégât — et rapporte une médaille." }),
       el('div', { class: 'note',
         text: "Tenir le guet à la tour fait aussi redescendre la jauge, lentement et sans risque." })));
@@ -1527,7 +1981,7 @@
       el('div', { class: 'rangee' },
         el('div', { style: 'flex:1;min-width:0' },
           el('div', { class: 'tt', style: 'font-size:13px', text: nom }),
-          expl ? el('div', { class: 'note', style: 'margin-top:3px', text: expl }) : null),
+          expl ? el('div', { class: 'note', style: 'margin-top:4px', text: expl }) : null),
         controle));
   }
   const R = () => window.Reglages;
@@ -1557,6 +2011,13 @@
     c.appendChild(ligneReglage('Gestes de métier',
       'La canne, la hache, le marteau : les habitants au poste montrent ce qu\'ils font.',
       U.bascule(o.gestes, v => R().ecrire('gestes', v))));
+    c.appendChild(ligneReglage('Les habitants',
+      'Un chat par habitant du bourg. Il se promène quand il ne fait rien, '
+      + 'et se tient à son atelier quand il travaille. Les sprites sont ceux '
+      + 'de la compagnie en expédition ; les volumes tournent vraiment sur eux-mêmes.',
+      U.segments([{ v: 'sprite', n: 'Sprites' }, { v: 'bloc', n: 'Volumes' },
+                  { v: 'aucun', n: 'Aucun' }], o.habitants || 'sprite',
+        v => R().ecrire('habitants', v))));
     c.appendChild(ligneReglage('Densité de la foule',
       'Combien de silhouettes animent les terrasses, en plus de vos habitants.',
       U.segments([{ v: 0, n: 'Clairsemée' }, { v: 1, n: 'Dense' }, { v: 2, n: 'Foule' }], o.foule,
@@ -1591,7 +2052,7 @@
     const champ = el('input', { class: 's', value: window.Village ? window.Village.nom() : '', maxlength: 34 });
     c.appendChild(el('div', { class: 'cadre' },
       el('div', { class: 'tt', style: 'font-size:13px', text: 'Nom du bourg' }),
-      el('div', { class: 'note', style: 'margin:3px 0 8px',
+      el('div', { class: 'note', style: 'margin:4px 0 8px',
         text: 'Celui qui s\'affiche en haut à gauche, et dans le journal.' }),
       el('div', { class: 'rangee' }, champ,
         el('button', { class: 'b mini primaire', text: 'Renommer', onclick: () => {
@@ -1659,7 +2120,7 @@
     c.appendChild(el('div', { class: 'cadre alerte' },
       el('div', { class: 'note mauvais',
         text: 'Efface ce bourg, ses habitants, ses recherches et son territoire. Rien n\'en revient.' }),
-      el('div', { style: 'margin-top:9px' },
+      el('div', { style: 'margin-top:8px' },
         el('button', { class: 'b danger', text: 'Recommencer une partie', onclick: () => {
           if (window.Reglages.lire('confirmer') && !confirm('Effacer ce bourg et repartir de zéro ?')) return;
           /* on ÉCRIT une partie neuve avant de recharger : effacer seul ne

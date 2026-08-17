@@ -43,6 +43,8 @@
                  desc:"Ce qu'on ne trouve NULLE PART dans le bourg : il faut descendre le chercher." },
     monnaie:   { id:'monnaie',   nom:'Trésor',      ordre:8, batStock:'chateau',
                  desc:'Écus, médailles — ce qui achète ce qui ne se fabrique pas.' },
+    peuple:    { id:'peuple',    nom:'Le peuple',   ordre:9, batStock:'nurserie',
+                 desc:"Ceux qui sont nés ici. Ils ne tiendront jamais un poste : la nurserie n'élève pas des ouvriers, elle élève une compagnie." },
   };
 
   /* =============================================================
@@ -196,6 +198,46 @@
     'Écrits par le barde, appris par la troupe. Ils valent une armure de plus.');
 
   /* =============================================================
+     V bis. CE QUE LES NOUVEAUX ATELIERS FONT POUSSER ET TIRENT
+     ============================================================= */
+  r('tournesol', 'Tournesols',         'vivres', 0, 4,  'fleur',   ['#f2c530','#b88a14'],
+    "Hauts comme un chat debout, la tête qui suit le jour. On en tire de l'huile et une farine grasse.");
+  r('fleur',     'Fleurs',             'matiere', 0, 5,  'fleur',   ['#c56d8f','#8a4a62'],
+    "Un carré de couleurs qu'on ne mange pas. L'abeille y va, l'alchimiste aussi, et le bourg respire mieux.");
+  r('paille',    'Paille',             'matiere', 0, 2,  'tas',     ['#d8bd6f','#a89044'],
+    "Ce qui reste du blé quand on lui a pris son grain. Litière, chaume, torchis : rien ne se perd.");
+  r('farineclaire','Farine de tournesol','vivres', 1, 8,  'sac',     ['#e8d8a0','#b8a468'],
+    "Grasse et dorée, elle fait des tourtes qui tiennent au corps deux fois plus longtemps.");
+  r('suif',      'Suif',               'matiere', 1, 12, 'pot',     ['#e8e2cc','#b0a888'],
+    "La graisse fondue et clarifiée. Elle éclaire, elle graisse l'essieu, et elle sauve un cuir.");
+  r('parfum',    'Parfum',             'ouvrage', 3, 190,'fiole',   ['#c56d8f','#7a3f58'],
+    "Trois cents fleurs pour une fiole. Personne au bourg n'en met ; tout le monde en vend.");
+
+  /* =============================================================
+     V ter. LE VERGER
+     La seule culture qui ne se sème pas : elle se plante, et l'on
+     attend. C'est pourquoi le greffon vaut plus cher que le fruit — un
+     fruit se mange une fois, un greffon donne pendant vingt ans.
+     ============================================================= */
+  r('fruit',     'Fruits',             'vivres', 0, 5,  'fruit',   ['#c4443a','#8a2a24'],
+    "Pommes, prunes, coings selon la saison. Le seul vivre du bourg qu'on cueille sans rien tuer ni moudre.");
+  r('greffon',   'Greffons',           'matiere', 1, 16, 'feuille', ['#6d8a4a','#425a2c'],
+    "Une brindille de bon arbre liée sur un sauvageon. Trois ans d'avance sur celui qui sème un noyau.");
+  r('confiture', 'Confiture',          'vivres', 2, 34, 'pot',     ['#c4443a','#7a2a30'],
+    "Fruits et miel cuits jusqu'à ce que la cuillère tienne debout. Un été qu'on garde pour l'hiver.");
+  r('cidre',     'Cidre',              'vivres', 2, 40, 'gobelet', ['#d8a03a','#9a6a1c'],
+    "Pressé, laissé à ses bulles, tiré au tonneau. La taverne n'a jamais si bien porté son nom.");
+
+  /* =============================================================
+     V quater. LE PEUPLE
+     La seule « ressource » qui a un nom et une mère. On ne la vend
+     pas, on ne la troque pas : on la dépense au terrain
+     d'entraînement, et elle ne revient pas toujours.
+     ============================================================= */
+  r('chaton',    'Chatons',            'peuple', 0, 0,  'oeuf',    ['#e8dcc4','#c4b696'],
+    "Nés au bourg, élevés au lait et au poisson. Ils ne tiendront jamais un poste : ceux-là sont pour la compagnie.");
+
+  /* =============================================================
      VI bis. LES TROUVAILLES
      Aucun métier ne les PRODUIT : on les trouve, au hasard des cycles,
      et le hasard penche selon qui tient le poste. Elles ne servent à
@@ -272,7 +314,10 @@
      pèsent), les savoirs et le trésor n'ont pas de limite pratique.
      --------------------------------------------------------------- */
   const PLAFOND_BASE = { vivres: 120, matiere: 120, mineral: 80, textile: 80,
-                         ouvrage: 40, savoir: 9999, profond: 9999, monnaie: 999999 };
+                         ouvrage: 40, savoir: 9999, profond: 9999, monnaie: 999999,
+                         /* on ne peut pas entasser les chatons : sans nurserie,
+                            aucune portée n'a d'endroit où grandir. */
+                         peuple: 0 };
 
   window.RES = R;
   window.RES_ORDRE = ORDRE;

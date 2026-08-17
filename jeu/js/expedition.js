@@ -29,11 +29,11 @@
   const ZONES = [
     { id: 'berges',   nom: 'Les Basses Berges', diff: 1, noeuds: 5,
       desc: "Une langue de gravier que la Nuée utilise pour remonter la rivière sans être vue.",
-      cout: { unites: 3, poissonfume: 4 }, bonus: { metier: 'peche', pct: 0.14 },
+      cout: { unites: 3, poisson: 12 }, bonus: { metier: 'peche', pct: 0.14 },
       butin: { medaille: 1, essence: 2 } },
     { id: 'taillis',  nom: 'Le Taillis Brûlé', diff: 2, noeuds: 6,
       desc: "Ils y mettent le feu chaque printemps pour dégager leur vue. On peut leur retirer l'habitude.",
-      cout: { unites: 4, poissonfume: 6 }, bonus: { metier: 'bois', pct: 0.14 },
+      cout: { unites: 4, poisson: 20 }, bonus: { metier: 'bois', pct: 0.14 },
       butin: { medaille: 1, bois: 40 } },
     { id: 'carriere', nom: 'La Carrière Haute', diff: 3, noeuds: 7,
       desc: "Un front de taille abandonné, tenu par une garnison qui n'en tire rien.",
@@ -77,8 +77,8 @@
       butin: { medaille: 20, relique: 1, obsidienne: 8 } },
   ];
 
-  let bataille = null, zoneEnCours = null, ouvert = false, tB = 0;
-  let plateau, scene, cvB, titre, sous, boutons, pied;
+  let bataille = null, zoneEnCours = null, colonneEnCours = [], ouvert = false, tB = 0, tCotes = 0;
+  let plateau, scene, cvB, titre, sous, boutons, pied, gauche, droite;
 
   function refs() {
     plateau = document.getElementById('plateau');
@@ -88,6 +88,8 @@
     sous = document.getElementById('plateau-sous');
     boutons = document.getElementById('plateau-boutons');
     pied = document.getElementById('plateau-pied');
+    gauche = document.getElementById('plateau-gauche');
+    droite = document.getElementById('plateau-droite');
   }
 
   function zoneById(id) { return ZONES.find(z => z.id === id) || null; }
@@ -154,96 +156,188 @@
     if (m >= 75) b.gemme = 1;
     return b;
   }
+  /* ==================================================================
+     CE QUE VAUT UNE UNITÉ DE LA NUÉE
+
+     Repris de l'ancien lanceur, ligne pour ligne. Le principe : chaque
+     CATÉGORIE d'unité frappe avec SA ligne d'arme et s'habille avec SA
+     ligne d'armure — un archer ne tient pas une épée, un mage ne porte
+     pas de maille. Sans cela, tout le camp adverse se battait avec
+     l'équipement de mêlée du premier palier.
+     ================================================================== */
+  function statsNuee(type, look, diff) {
+    const GD = window.GameData;
+    const u = GD.UNIT_TYPES[type];
+    if (!u) return null;
+    const base = u.base;
+    const em = GD.evoStatMult ? GD.evoStatMult(look.evo) : Math.pow(1.055, look.evo || 0);
+    const cat = u.cat || 'melee';
+    const pick = (arr, tier) => (arr && arr.length)
+      ? arr[Math.min(tier || 0, arr.length - 1)] : { dmgMult: 1, hpMult: 1 };
+
+    let wMult = pick(GD.WEAPONS, look.weapon).dmgMult;
+    if (cat === 'tir' && GD.RANGED) wMult = pick(GD.RANGED, look.ranged).dmgMult;
+    else if (cat === 'magie' && GD.STAFFS) wMult = pick(GD.STAFFS, look.staff).dmgMult;
+    else if (cat === 'explosif' && GD.ORDNANCE) wMult = pick(GD.ORDNANCE, look.ordnance).dmgMult;
+
+    let aMult = pick(GD.ARMORS, look.armor).hpMult;
+    if (cat === 'magie' && GD.ROBES) aMult = pick(GD.ROBES, look.robe).hpMult;
+    else if (cat === 'tir' && GD.VESTS) aMult = pick(GD.VESTS, look.vest).hpMult;
+    else if (cat === 'explosif' && GD.SUITS) aMult = pick(GD.SUITS, look.suit).hpMult;
+
+    /* seules les unités à distance PUISSANTES gagnent de la portée avec
+       leur palier d'arme — et peuvent dépasser une tour */
+    let range = base.range;
+    if (range > 0 && (cat === 'tir' || cat === 'explosif') &&
+        GD.unitTier && GD.unitTier(type) >= 4) {
+      const wTier = cat === 'tir' ? (look.ranged || 0) : (look.ordnance || 0);
+      range = GD.rangedRangeBonus
+        ? base.range * GD.rangedRangeBonus(type, wTier)
+        : base.range * (1 + 0.008 * wTier);
+    }
+    return {
+      hp: base.hp * em * (aMult || 1) * diff,
+      dmg: base.dmg * em * (wMult || 1) * diff,
+      aspd: base.aspd, mspd: base.mspd, range,
+      ability: u.ability || null, cat, pop: u.pop || 1,
+      weapon: look.weapon, armor: look.armor, evo: look.evo,
+      ranged: look.ranged || 0, staff: look.staff || 0,
+      ordnance: look.ordnance || 0, robe: look.robe || 0,
+      vest: look.vest || 0, suit: look.suit || 0,
+    };
+  }
+
   function lancerSortie() {
     const v = window.Jeu.sortiePossible();
     if (!v.ok) { U().dire(v.pourquoi, 'alerte'); return; }
     lancer(zoneSortie());
   }
 
-  function lancer(zid) {
+  function lancer(zid, options) {
+    const reprise = options && options.reprise;
     const z = (zid && typeof zid === 'object') ? zid : zoneById(zid);
     if (!z) return;
     if (!z.sortie && estPrise(z.id)) { U().dire('Cette zone est déjà tenue.', 'alerte'); return; }
     const E2 = E();
-    if (E2.armee.unites < z.cout.unites) {
-      U().dire('Il faut ' + z.cout.unites + ' unités formées au terrain d\'entraînement.', 'alerte'); return;
+    const ligne = reprise && E2.expedition && E2.expedition.ligne
+      ? E2.expedition.ligne.map(x => ({ type:x.type, n:x.n }))
+      : (window.Armee ? window.Armee.colonne() : [{ type:'lancier', n:E2.armee.unites }]);
+    const effectif = ligne.reduce((n, x) => n + x.n, 0);
+    if (effectif < z.cout.unites) {
+      U().dire('La colonne doit aligner ' + z.cout.unites + ' unités au minimum.', 'alerte'); return;
     }
     const cout = {};
     for (const k in z.cout) if (k !== 'unites') cout[k] = z.cout[k];
-    if (!window.Etat.assez(cout)) { U().dire('Ravitaillement insuffisant.', 'alerte'); return; }
-    window.Etat.depenser(cout);
+    if (!reprise && !window.Etat.assez(cout)) { U().dire('Ravitaillement insuffisant.', 'alerte'); return; }
+    if (!reprise) window.Etat.depenser(cout);
 
     refs();
-    ouvert = true; zoneEnCours = z; tB = 0;
+    ouvert = true; zoneEnCours = z; colonneEnCours = ligne; tB = 0; tCotes = 0;
     plateau.classList.add('vu');
     dimensionner();
 
     const seed = ((Date.now() / 1000) | 0) ^ (z.diff * 2654435761);
+    /* `treeDepth` décide de la ramification du réseau de positions :
+       une expédition profonde n'est pas une ligne droite. L'ancien jeu
+       la calait sur l'avancement ; ici, sur la difficulté de la zone. */
     const map = window.Battle.generateMap({
       seed, mode: 'personal', playerFaction: 'cats',
       nodeCount: z.noeuds, stage: z.diff,
+      theme: z.theme || null,
+      treeDepth: Math.max(0, Math.min(3, Math.floor(z.diff / 5))),
       w: cvB.width, h: cvB.height,
     });
-    const compo = equilibrer(map, z);
+    const compo = equilibrer(map, z, ligne);
+    const diffMult = 1 + z.diff * 0.06;
+    /* L'ÉQUIPEMENT DE LA NUÉE. L'ancien jeu tirait ces indices d'un
+       « look » complet — une ligne par catégorie d'unité. On le
+       reconstitue : sans lui, les archers ennemis se battaient avec
+       l'arme de mêlée du premier palier. */
+    const look = {
+      weapon: Math.min(30, z.diff * 2),
+      armor:  Math.min(30, z.diff * 2),
+      ranged: Math.min(30, z.diff * 2),
+      staff:  Math.min(30, z.diff * 2),
+      ordnance: Math.min(30, z.diff * 2),
+      robe:   Math.min(30, z.diff * 2),
+      vest:   Math.min(30, z.diff * 2),
+      suit:   Math.min(30, z.diff * 2),
+      evo:    Math.min(3, (z.diff / 6) | 0),
+    };
     bataille = window.Battle.create({
       canvas: cvB, map, mode: 'personal', playerFaction: 'cats',
-      difficulty: 1 + z.diff * 0.06,
+      difficulty: diffMult,
       composition: compo,
-      enemyLook: { weapon: Math.min(30, z.diff * 2), armor: Math.min(30, z.diff * 2), evo: Math.min(3, (z.diff / 6) | 0) },
+      getStats: (faction, type) => faction === 'cats'
+        ? (window.Armee ? window.Armee.statsCombat(faction, type) : null)
+        : statsNuee(type, look, diffMult),
+      enemyLook: look,
+
+      /* L'IA MONTE EN GAMME. Zéro : elle se contente d'attaquer ce
+         qu'elle voit. Trois : elle tient ses positions, concentre ses
+         envois et vise ce qui fait mal. C'est ce réglage qui manquait
+         le plus — il restait bloqué au milieu. */
+      aiLevel: Math.min(3, Math.floor((z.diff - 1) / 8)),
+
+      /* LES POINTS DE CONTRÔLE À TENIR pour l'emporter, plus nombreux
+         à mesure que les cartes grandissent. */
+      controlWinPoints: (window.GameData.BALANCE.controlWinPointsByStage
+        ? window.GameData.BALANCE.controlWinPointsByStage(z.diff)
+        : window.GameData.BALANCE.controlWinPoints),
+
+      /* LES RENFORTS PAR VAGUES. Sans eux, toute la garnison adverse
+         tombait d'un bloc au début : on gagnait ou l'on perdait dans la
+         première minute. Par vagues, la bataille respire — on prend une
+         position, on la tient, la suivante arrive. */
+      enemyReinforce: z.diff >= 4 ? {
+        interval: Math.max(30, 60 - z.diff),
+        waves: Math.min(6, 1 + Math.floor(z.diff / 5)),
+        size: Math.round((4 + z.diff * 0.8) * (diffMult > 2 ? 1.2 : 1)),
+      } : null,
+
       onEvent: evenement,
     });
     /* La compagnie n'est pas là pour être micro-gérée : par défaut l'IA
        du bourg tient la barre, et le joueur reprend la main s'il veut. */
     bataille.setAutoPilot(true);
-    E2.expedition = { zone: z.id, prog: 0, sortie: !!z.sortie,
+    E2.expedition = { zone: z.id, zoneSpec:z, ligne:ligne, prog: 0, sortie: !!z.sortie,
                       nom: (z.sortie ? 'Sortie — ' : 'Expédition — ') + z.nom };
     window.Etat.journal(z.sortie
       ? 'La colonne sort à la rencontre de la Nuée.'
       : 'La colonne part pour ' + z.nom + '.', 'guerre');
     majTete();
+    majCotes();
+  }
+
+  function reprendre() {
+    const ex = E().expedition;
+    if (!ex) return;
+    const z = ex.zoneSpec || zoneById(ex.zone) || (ex.sortie ? zoneSortie() : null);
+    if (!z) { E().expedition = null; U().dire('Cette ancienne expédition ne peut pas être reprise.', 'alerte'); return; }
+    lancer(z, { reprise:true });
   }
 
   /* ------------------------------------------------------------------
      L'ÉQUILIBRAGE. La carte générée ignore tout du bourg : elle donne au
      joueur une garnison forfaitaire. Or ce qui doit décider d'une
      bataille, c'est LE TRAVAIL DU BOURG — le nombre d'unités formées au
-     terrain d'entraînement et le palier d'armement de la forge. On
+     la caserne et le palier d'armement de la forge. On
      réécrit donc la garnison de départ, et l'on cale la garnison adverse
      sur la difficulté de la zone.
      ------------------------------------------------------------------ */
   /* Ce que chaque camp alignera. On l'affiche AVANT le départ : une
      colonne qu'on envoie à l'aveugle est une colonne qu'on regrette. */
   function forces(z) {
-    const E2 = E();
-    const u = Math.max(1, E2.armee.unites);
-    const arme = E2.armee.palierArme || 0;
-    const armure = E2.armee.palierArmure || 0;
-    const xp = 1 + Math.min(0.8, (E2.armee.xp || 0) / 4000);
-    const bourg = Math.round(u * (1 + 0.10 * arme + 0.06 * armure) * xp);
+    const ligne = window.Armee ? window.Armee.colonne() : [{ type:'lancier', n:Math.max(1, E().armee.unites) }];
+    const bourg = window.Armee ? Math.round(window.Armee.puissance(ligne)) : ligne[0].n;
     return { bourg, nuee: Math.round(bourg * (0.50 + 0.075 * z.diff)) };
   }
 
-  function equilibrer(map, z) {
-    const E2 = E();
-    const u = Math.max(1, E2.armee.unites);
-    const arme = E2.armee.palierArme || 0;
-    const armure = E2.armee.palierArmure || 0;
-    const xp = 1 + Math.min(0.8, (E2.armee.xp || 0) / 4000);
-
-    /* la composition suit l'armement : à mains nues on n'aligne que des
-       lanciers ; bien équipé, le bourg sort ses éclaireurs et ses costauds. */
-    const compo = ['lancier'];
-    if (arme >= 2) compo.push('eclaireur');
-    if (arme >= 4) compo.push('costaud');
-    if (arme >= 6) compo.push('fronde');
-    if (arme >= 9) compo.push('traqueur');
-
-    const total = Math.round(u * (1 + 0.10 * arme + 0.06 * armure) * xp);
+  function equilibrer(map, z, ligne) {
+    const compo = ligne.map(x => x.type);
     const g = {};
-    for (let i = 0; i < compo.length; i++) {
-      const part = i === 0 ? 0.55 : (0.45 / (compo.length - 1));
-      g[compo[i]] = Math.max(1, Math.round(total * part));
-    }
+    for (const x of ligne) g[x.type] = x.n;
+    const total = ligne.reduce((n, x) => n + x.n, 0);
     /* LA DIFFICULTÉ EST UN RAPPORT, pas un coefficient absolu. On mesure
        ce que le bourg aligne, on décide ce que doit aligner la Nuée —
        une fraction aux Basses Berges, le double et plus à l'Aire — et
@@ -294,7 +388,9 @@
       /* Une sortie ne rapporte pas de terre : elle rachète du temps. */
       const av = E2.menace;
       E2.menace = Math.max(0, E2.menace - z.gainMenace);
-      E2.armee.unites = Math.max(0, E2.armee.unites - Math.ceil(z.cout.unites * 0.30));
+      const pertes = Math.ceil(colonneEnCours.reduce((n,x) => n + x.n, 0) * 0.18);
+      if (window.Armee) window.Armee.pertes(colonneEnCours, pertes); else E2.armee.unites = Math.max(0, E2.armee.unites - pertes);
+      if (window.Armee) window.Armee.gagnerXp(colonneEnCours, 35 + z.diff * 12);
       E2.sorties = (E2.sorties || 0) + 1;
       const recu = window.Etat.gagnerLot(z.butin);
       window.Etat.journal('Sortie victorieuse : la Menace retombe de ' +
@@ -304,7 +400,9 @@
     } else if (gagne) {
       if (!estPrise(z.id)) E2.territoires.push(z.id);
       E2.menace = Math.max(0, E2.menace - 45);
-      E2.armee.unites = Math.max(0, E2.armee.unites - Math.ceil(z.cout.unites * 0.35));
+      const pertes = Math.ceil(colonneEnCours.reduce((n,x) => n + x.n, 0) * 0.22);
+      if (window.Armee) window.Armee.pertes(colonneEnCours, pertes); else E2.armee.unites = Math.max(0, E2.armee.unites - pertes);
+      if (window.Armee) window.Armee.gagnerXp(colonneEnCours, 55 + z.diff * 16);
       E2.armee.garnison += 1;
       const recu = window.Etat.gagnerLot(z.butin);
       window.Etat.journal('Victoire à ' + z.nom + '. Le territoire est au bourg.', 'guerre');
@@ -314,12 +412,15 @@
       E2.menace = Math.min(100, E2.menace + (z.sortie ? 4 : 8));
       /* Une défaite coûte des bras, pas la partie : on doit pouvoir
          reformer une colonne et revenir, mieux armé. */
-      E2.armee.unites = Math.max(0, E2.armee.unites - Math.ceil(z.cout.unites * 0.45));
+      const pertes = Math.ceil(colonneEnCours.reduce((n,x) => n + x.n, 0) * 0.38);
+      if (window.Armee) window.Armee.pertes(colonneEnCours, pertes); else E2.armee.unites = Math.max(0, E2.armee.unites - pertes);
+      if (window.Armee) window.Armee.gagnerXp(colonneEnCours, 18 + z.diff * 5);
       window.Etat.journal('Défaite à ' + z.nom + '. La colonne rentre décimée.', 'alerte');
       U().dire('Défaite. La colonne rentre décimée.', 'alerte', 5000);
       montrerBilan(false, z, null);
     }
     zoneEnCours = null;
+    colonneEnCours = [];
     if (bataille) { bataille.destroy(); bataille = null; }
     setTimeout(fermer, 200);
   }
@@ -368,6 +469,7 @@
     if (plateau) plateau.classList.remove('vu');
     if (bataille) { bataille.destroy(); bataille = null; }
     zoneEnCours = null;
+    colonneEnCours = [];
     E().expedition = null;
   }
 
@@ -389,6 +491,8 @@
       if (c) E().expedition.prog = Math.min(1, (c.cats || 0) / Math.max(1, (c.cats || 0) + (c.birds || 0)));
     }
     majPied();
+    tCotes += dt;
+    if (tCotes >= 0.45) { tCotes = 0; majCotes(); }
   }
 
   function majTete() {
@@ -426,6 +530,49 @@
       text: 'clic sur une position, puis sur la cible' }));
   }
 
+  function majCotes() {
+    if (!gauche || !droite || !ouvert || !zoneEnCours) return;
+    const A = el();
+    U().vide(gauche);
+    gauche.appendChild(A('div', { class:'cote-titre', text:'Colonne engagée' }));
+    for (const x of colonneEnCours) {
+      const s = window.Armee ? window.Armee.stats(x.type) : null;
+      const p = window.Armee ? window.Armee.pouvoirActif(x.type) : null;
+      gauche.appendChild(A('div', { class:'plateau-membre' },
+        A('div', { class:'rangee' },
+          A('div', { class:'plateau-portrait', text:String(x.n) }),
+          A('div', { style:'min-width:0' },
+            A('div', { class:'tt', text:window.Armee ? window.Armee.nom(x.type) : x.type }),
+            A('div', { class:'eti', text:p ? p.name : 'sans technique' }))),
+        s ? A('div', { class:'plateau-mini-stats' },
+          A('span', { text:Math.round(s.hp) + ' PV' }),
+          A('span', { text:Math.round(s.dmg * 10) / 10 + ' dégâts' }),
+          A('span', { text:Math.round(s.armure || 0) + ' armure' }),
+          A('span', { text:s.range > 0 ? Math.round(s.range) + ' portée' : 'mêlée' })) : null));
+    }
+    U().vide(droite);
+    droite.appendChild(A('div', { class:'cote-titre', text:zoneEnCours.sortie ? 'Repousser la Menace' : 'Objectif territorial' }));
+    droite.appendChild(A('div', { class:'plateau-membre choisi' },
+      A('div', { class:'tt', text:zoneEnCours.nom }),
+      A('div', { class:'note', text:zoneEnCours.desc }),
+      A('div', { class:'plateau-mini-stats' },
+        A('span', { text:'difficulté ' + zoneEnCours.diff }),
+        A('span', { text:zoneEnCours.noeuds + ' positions' }),
+        A('span', { text:colonneEnCours.reduce((n,x) => n+x.n,0) + ' soldats' }),
+        A('span', { text:'Menace ' + Math.round(E().menace) }))));
+    const c = bataille && bataille.getControl ? bataille.getControl() : null;
+    if (c) {
+      const den = Math.max(1, (c.cats || 0) + (c.birds || 0));
+      droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Contrôle du terrain' }));
+      droite.appendChild(U().barre((c.cats || 0) / den, 'grande vert', 'Bourg ' + (c.cats || 0), 'Nuée ' + (c.birds || 0)));
+    }
+    droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Ordres' }));
+    droite.appendChild(A('div', { class:'note', text:'Sélectionnez une position alliée, puis sa cible. Les boutons du haut règlent la part de garnison envoyée. L’IA peut reprendre les commandes à tout moment.' }));
+    if (zoneEnCours.sortie) droite.appendChild(A('div', { class:'cadre actif', style:'margin-top:12px' },
+      A('div', { class:'eti-or', text:'gain si victoire' }),
+      A('div', { class:'tt', text:'−' + zoneEnCours.gainMenace + ' Menace' })));
+  }
+
   function brancherPointeur() {
     if (!cvB || cvB.__brancheB) return;
     cvB.__brancheB = true;
@@ -449,22 +596,23 @@
       A('div', { class: 'rangee entre' },
         A('span', { class: 'tt', text: E2.armee.unites + ' unités formées' }),
         A('span', { class: 'eti-or', text: prises().length + ' / ' + ZONES.length + ' territoires' })),
-      A('div', { class: 'note', style: 'margin-top:6px',
-        text: "Les unités se forment au terrain d'entraînement, et il faut une arme par recrue. Une victoire coûte du monde : la compagnie ne rentre jamais entière." })));
+      A('div', { class: 'note', style: 'margin-top:8px',
+        text: "Les premières unités se forment à la caserne avec du bois et du poisson. L'entraînement et l'équipement viennent ensuite. Une victoire coûte du monde : la compagnie ne rentre jamais entière." })));
 
     if (E2.expedition) {
       c.appendChild(A('div', { class: 'cadre actif' },
         A('div', { class: 'tt', text: 'Bataille en cours' }),
-        A('div', { style: 'margin-top:7px' },
+        A('div', { style: 'margin-top:8px' },
           A('button', { class: 'b primaire', text: 'Rejoindre la bataille', onclick: () => {
-            refs(); ouvert = true; plateau.classList.add('vu'); majTete(); brancherPointeur();
+            if (!bataille) { reprendre(); return; }
+            refs(); ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur();
           } }))));
     }
 
     for (const z of ZONES) {
       const pris = estPrise(z.id);
       const dispo = !pris && ZONES.filter(y => !estPrise(y.id)).indexOf(z) === 0;
-      const assezU = E2.armee.unites >= z.cout.unites;
+      const assezU = (window.Armee ? window.Armee.nombreColonne() : E2.armee.unites) >= z.cout.unites;
       const cout = {}; for (const k in z.cout) if (k !== 'unites') cout[k] = z.cout[k];
       c.appendChild(A('div', { class: 'cadre' + (pris ? ' actif' : (dispo ? '' : ' mort')) },
         A('div', { class: 'rangee entre' },
@@ -481,29 +629,19 @@
           const bloc = A('div', { style: 'margin-top:8px' });
           bloc.appendChild(U().barre(Math.min(1, ecart / 2), 'grande ' + (ecart > 1.1 ? 'vert' : (ecart > 0.85 ? '' : 'rouge')),
             'la colonne ≈ ' + f.bourg, 'la Nuée ≈ ' + f.nuee));
-          bloc.appendChild(A('div', { class: 'rangee entre', style: 'margin-top:5px' },
+          bloc.appendChild(A('div', { class: 'rangee entre', style: 'margin-top:4px' },
             A('span', { class: 'eti', text: 'ce que le bourg alignera' }),
             A('span', { class: ecart > 1.1 ? 'eti-or' : 'eti mauvais', text: mot })));
-          /* la COMPOSITION dépend du palier d'armement : on la montre, sinon
-             le joueur ne sait pas ce que la forge lui a réellement apporté. */
-          const arme = E().armee.palierArme || 0;
-          const compo = ['lancier'];
-          if (arme >= 2) compo.push('eclaireur');
-          if (arme >= 4) compo.push('costaud');
-          if (arme >= 6) compo.push('fronde');
-          if (arme >= 9) compo.push('traqueur');
-          const noms = { lancier: 'lanciers', eclaireur: 'éclaireurs', costaud: 'costauds',
-                         fronde: 'frondeurs', traqueur: 'traqueurs' };
-          bloc.appendChild(A('div', { class: 'rangee enroule', style: 'margin-top:6px' },
+          const compo = window.Armee ? window.Armee.colonne().map(x => x.type) : ['lancier'];
+          bloc.appendChild(A('div', { class: 'rangee enroule', style: 'margin-top:8px' },
             A('span', { class: 'eti', text: 'composition' }),
-            compo.map(t => A('span', { class: 'puce mini gain', text: noms[t] || t })),
-            arme < 9 ? A('span', { class: 'note faible',
-              text: 'palier ' + (arme + 1) + ' d\'armement : un type de plus' }) : null));
+            compo.map(t => A('span', { class: 'puce mini gain', text: window.Armee ? window.Armee.nom(t) : t })),
+            !compo.length ? A('span', { class: 'note mauvais', text: 'colonne vide — composez-la à la caserne' }) : null));
           return bloc;
         })(),
         pris ? null : A('div', { class: 'rangee entre', style: 'margin-top:8px;flex-wrap:wrap' },
           A('div', { class: 'rangee', style: 'flex-wrap:wrap' },
-            A('span', { class: 'puce' + (assezU ? '' : ' insuffisant'), text: z.cout.unites + ' unités' }),
+            A('span', { class: 'puce' + (assezU ? '' : ' insuffisant'), text: z.cout.unites + ' unités minimum' }),
             U().listeRes(cout, { verifier: true, rien: '' })),
           A('button', { class: 'b primaire', text: 'Lancer la colonne',
             disabled: !dispo || !assezU || !window.Etat.assez(cout) || !!E2.expedition,
@@ -513,7 +651,7 @@
 
   addEventListener('resize', () => { if (ouvert && bataille) dimensionner(); });
 
-  window.UIExpedition = { rendre, ouvrir: () => { refs(); if (E().expedition) { ouvert = true; plateau.classList.add('vu'); majTete(); brancherPointeur(); } },
+  window.UIExpedition = { rendre, ouvrir: () => { refs(); if (E().expedition) { if (!bataille) reprendre(); else { ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur(); } } },
     fermer, tick, ZONES, bonusMetier, bonusButin, facteurMenace, estPrise, prises,
     lancerSortie, zoneSortie, forces };
   window.Expedition = { tick, bonusMetier, bonusButin, facteurMenace, lancerSortie, zoneSortie, forces };

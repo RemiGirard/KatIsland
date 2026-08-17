@@ -97,7 +97,7 @@
   function carteObjet(it, actions) {
     const R = GD().rarityById(it.rarity);
     const col = COUL_RARETE[it.rarity] || '#8b8378';
-    const lignes = el('div', { class: 'rangee enroule', style: 'margin-top:5px' });
+    const lignes = el('div', { class: 'rangee enroule', style: 'margin-top:4px' });
     if (it.stat) lignes.appendChild(el('span', { class: 'puce mini gain',
       text: GD().genStatFmt ? (it.stat + ' ' + Math.round(it.power)) : ('+' + Math.round(it.power)) }));
     for (const L of (it.lines || [])) {
@@ -187,8 +187,9 @@
     const pris = id => o && o.holder.talents.indexOf(id) >= 0;
 
     const bloc = (groupe, voie) => {
-      c.appendChild(U.section(groupe.nom, voie ? 'voie' : ''));
-      if (groupe.desc) c.appendChild(el('div', { class: 'note', text: groupe.desc }));
+      c.appendChild(U.section(groupe.nom || groupe.name || groupe.id, voie ? 'voie' : ''));
+      const description = groupe.desc || groupe.txt;
+      if (description) c.appendChild(el('div', { class: 'note', text: description }));
       for (const n of groupe.nodes) {
         const dedans = pris(n.id);
         const refus = dedans ? null : G().talentRefus(m.id, n.id);
@@ -199,11 +200,11 @@
           points: 'pas assez de points' };
         c.appendChild(el('div', { class: 'cadre' + (dedans ? ' actif' : (refus ? ' mort' : '')) },
           el('div', { class: 'rangee entre' },
-            el('span', { class: 'tt', style: 'font-size:13px', text: n.nom }),
+            el('span', { class: 'tt', style: 'font-size:13px', text: n.nom || n.name || n.id }),
             dedans ? el('span', { class: 'niv', text: 'acquis' })
                    : el('button', { class: 'b mini primaire', text: 'Prendre (' + cout + ')',
                        disabled: !!refus, onclick: () => { G().spendTalent(m.id, n.id); U.ouvrir('compagnie', {}); } })),
-          el('div', { class: 'note', style: 'margin-top:4px', text: n.desc }),
+          el('div', { class: 'note', style: 'margin-top:4px', text: n.desc || '' }),
           refus ? el('div', { class: 'note mauvais', style: 'margin-top:4px',
             text: RAISONS[refus.code] || refus.code }) : null));
       }
@@ -212,7 +213,7 @@
     c.appendChild(U.section('Les voies', 'exclusives'));
     c.appendChild(el('div', { class: 'note',
       text: 'À partir de ' + GD().TALENT_SPEC_AT + ' points engagés, une seule des deux s\'ouvre — et elle se ferme sur l\'autre.' }));
-    for (const s of arbre.specs) bloc(s, true);
+    for (const s of (arbre.specs || GD().talentSpecs(m.cls) || [])) bloc(s, true);
   }
 
   /* =================================================================

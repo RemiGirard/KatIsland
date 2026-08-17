@@ -1,0 +1,1970 @@
+[
+ {
+  "dossier": "img/portrait/peche-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Pêche, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a fishing rod and a woven creel, oilskin hood.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/peche-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Pêche, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a fishing rod and a woven creel, oilskin hood.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/peche-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Pêche, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a fishing rod and a woven creel, oilskin hood.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/bois-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bûcheronnage, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, an axe over the shoulder, rolled sleeves.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/bois-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bûcheronnage, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, an axe over the shoulder, rolled sleeves.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/bois-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bûcheronnage, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, an axe over the shoulder, rolled sleeves.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/champs-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Culture, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a straw hat and a sickle, wheat stalks.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/champs-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Culture, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a straw hat and a sickle, wheat stalks.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/champs-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Culture, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a straw hat and a sickle, wheat stalks.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/elevage-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Élevage, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a shepherd's crook and a wool shawl.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/elevage-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Élevage, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a shepherd's crook and a wool shawl.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/elevage-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Élevage, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a shepherd's crook and a wool shawl.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/mine-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Mine, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a miner's helmet with a small lamp, soot on the fur.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/mine-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Mine, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a miner's helmet with a small lamp, soot on the fur.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/mine-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Mine, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a miner's helmet with a small lamp, soot on the fur.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/feu-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Feu, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a leather apron and long tongs, ember glow on the face.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/feu-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Feu, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a leather apron and long tongs, ember glow on the face.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/feu-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Feu, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a leather apron and long tongs, ember glow on the face.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/forge-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Forge, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a blacksmith's apron and a hammer, soot-marked.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/forge-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Forge, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a blacksmith's apron and a hammer, soot-marked.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/forge-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Forge, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a blacksmith's apron and a hammer, soot-marked.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/tissage-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Tissage, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a spindle and coloured threads, fine tunic.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/tissage-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Tissage, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a spindle and coloured threads, fine tunic.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/tissage-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Tissage, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a spindle and coloured threads, fine tunic.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/cuisine-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Cuisine, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a flour-dusted apron and a wooden spoon.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/cuisine-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Cuisine, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a flour-dusted apron and a wooden spoon.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/cuisine-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Cuisine, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a flour-dusted apron and a wooden spoon.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/savoir-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Savoir, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, round spectacles, a quill and an open book.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/savoir-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Savoir, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, round spectacles, a quill and an open book.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/savoir-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Savoir, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, round spectacles, a quill and an open book.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/batisse-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bâtisse, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a mason's square and a trowel, dusty cap.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/batisse-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bâtisse, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a mason's square and a trowel, dusty cap.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/batisse-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bâtisse, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a mason's square and a trowel, dusty cap.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/guerre-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Guerre, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A young, tabby fur, ears up, eager cat villager, a padded gambeson and a spear, alert eyes.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/guerre-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Guerre, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A middle-aged, grey fur, calm and steady cat villager, a padded gambeson and a spear, alert eyes.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/guerre-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Guerre, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prompt": "flat vector portrait of an anthropomorphic cat, medieval villager, flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, head and shoulders, three-quarter view, plain dark background. A old, faded ginger fur, one notched ear cat villager, a padded gambeson and a spear, alert eyes.",
+  "format": "512×512 carré",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/commun/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Commun (#9a92a6)",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a plain dark iron frame, thin and sober, empty centre, square picture frame, dominant colour #9a92a6.",
+  "format": "512×512 carré, centre vide",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/estime/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Estimé (#7fb069)",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a simple bronze frame with a small leaf motif, empty centre, square picture frame, dominant colour #7fb069.",
+  "format": "512×512 carré, centre vide",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/rare/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Rare (#5f93cc)",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a polished blue steel frame with corner studs, empty centre, square picture frame, dominant colour #5f93cc.",
+  "format": "512×512 carré, centre vide",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/insigne/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Insigne (#e6c069)",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an ornate gold frame with laurel corners, empty centre, square picture frame, dominant colour #e6c069.",
+  "format": "512×512 carré, centre vide",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/legende/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Légende (#e0625c)",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an elaborate crimson and gold frame, small flames at the corners, empty centre, square picture frame, dominant colour #e0625c.",
+  "format": "512×512 carré, centre vide",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/pecherie/",
+  "cat": "Bâtiment",
+  "sujet": "Pêcherie — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a wooden fishing hut on stilts over water, drying nets, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/scierie/",
+  "cat": "Bâtiment",
+  "sujet": "Scierie — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. an open sawmill shed with a frame saw and log stacks, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/champ/",
+  "cat": "Bâtiment",
+  "sujet": "Champ — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a ploughed field in furrows with a scarecrow, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/puits/",
+  "cat": "Bâtiment",
+  "sujet": "Puits — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a stone well with a small wooden roof and bucket, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/maison/",
+  "cat": "Bâtiment",
+  "sujet": "Maison — vie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a small half-timbered cottage with a tiled roof, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/grange/",
+  "cat": "Bâtiment",
+  "sujet": "Grange — stock",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a large barn with tall doors and sacks of grain, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/entrepot/",
+  "cat": "Bâtiment",
+  "sujet": "Entrepôt — stock",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a warehouse with stacked crates and barrels, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/carriere/",
+  "cat": "Bâtiment",
+  "sujet": "Carrière — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a stone quarry face with cut blocks and a crane, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/mine/",
+  "cat": "Bâtiment",
+  "sujet": "Mine — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a timbered mine entrance in a hillside, ore carts, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/charbonniere/",
+  "cat": "Bâtiment",
+  "sujet": "Charbonnière — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a smouldering charcoal mound in a clearing, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/fonderie/",
+  "cat": "Bâtiment",
+  "sujet": "Fonderie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a smelter with a tall chimney and a glowing furnace, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/forge/",
+  "cat": "Bâtiment",
+  "sujet": "Forge — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a blacksmith's forge, anvil and glowing hearth, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/armurerie/",
+  "cat": "Bâtiment",
+  "sujet": "Armurerie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. an armourer's workshop, breastplates on racks, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/tuilerie/",
+  "cat": "Bâtiment",
+  "sujet": "Tuilerie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a tile kiln with stacks of terracotta tiles, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/poterie/",
+  "cat": "Bâtiment",
+  "sujet": "Poterie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a potter's workshop, beehive kiln and rows of pots, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/verrerie/",
+  "cat": "Bâtiment",
+  "sujet": "Verrerie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a glassblower's workshop with a roaring furnace, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/moulin/",
+  "cat": "Bâtiment",
+  "sujet": "Moulin à vent — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a stone windmill with turning canvas sails, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/moulinEau/",
+  "cat": "Bâtiment",
+  "sujet": "Moulin à eau — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a watermill with a paddle wheel on a stream, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/cuisine/",
+  "cat": "Bâtiment",
+  "sujet": "Four banal — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a bakehouse with a domed oven and bread on boards, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/fumoir/",
+  "cat": "Bâtiment",
+  "sujet": "Fumoir — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a smokehouse with fish hanging in the smoke, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/bergerie/",
+  "cat": "Bâtiment",
+  "sujet": "Bergerie — elevage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a thatched sheepfold with sheep in a pen, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/etable/",
+  "cat": "Bâtiment",
+  "sujet": "Étable — elevage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a cow byre with a hayloft above, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/laiterie/",
+  "cat": "Bâtiment",
+  "sujet": "Laiterie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a whitewashed dairy with milk churns, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/rucher/",
+  "cat": "Bâtiment",
+  "sujet": "Rucher — elevage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a row of straw beehives in a flowering meadow, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/filature/",
+  "cat": "Bâtiment",
+  "sujet": "Filature — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a spinning workshop with dyed cloth drying outside, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/tannerie/",
+  "cat": "Bâtiment",
+  "sujet": "Tannerie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a tannery with hides stretched on frames and vats, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/herboristerie/",
+  "cat": "Bâtiment",
+  "sujet": "Herboristerie — recolte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a herbalist's hut under a drying rack of herbs, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/alchimie/",
+  "cat": "Bâtiment",
+  "sujet": "Laboratoire d'alchimie — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. an alchemist's leaning tower with bubbling flasks, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/scriptorium/",
+  "cat": "Bâtiment",
+  "sujet": "Scriptorium — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a scriptorium with sloped desks and manuscripts, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/orfevre/",
+  "cat": "Bâtiment",
+  "sujet": "Orfèvre — atelier",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a goldsmith's shop with scales and cut jewels, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/taverne/",
+  "cat": "Bâtiment",
+  "sujet": "Taverne — commerce",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a lively tavern with a hanging sign and barrels, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/halle/",
+  "cat": "Bâtiment",
+  "sujet": "Halle — commerce",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a covered market hall on wooden posts, stalls beneath, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/nurserie/",
+  "cat": "Bâtiment",
+  "sujet": "Nurserie — vie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a nursery cottage with cushions and a climbing tower, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/entrainement/",
+  "cat": "Bâtiment",
+  "sujet": "Terrain d'entraînement — guerre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a training ground with straw dummies and a quintain, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/caserne/",
+  "cat": "Bâtiment",
+  "sujet": "Caserne — guerre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a small barracks with a banner and a brazier, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/rempart/",
+  "cat": "Bâtiment",
+  "sujet": "Rempart — guerre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a crenellated stone curtain wall with a walkway, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/tour/",
+  "cat": "Bâtiment",
+  "sujet": "Tour de guet — guerre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a round stone watchtower with a lit brazier on top, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/eglise/",
+  "cat": "Bâtiment",
+  "sujet": "Chapelle — vie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a small chapel with a bell gable and a rose window, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/chateau/",
+  "cat": "Bâtiment",
+  "sujet": "Donjon — vie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a square stone keep with corner turrets, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/arbrechat/",
+  "cat": "Bâtiment",
+  "sujet": "Arbre à chat — vie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a tall wooden cat tree with platforms and hammocks, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/portail/",
+  "cat": "Bâtiment",
+  "sujet": "Portail d'expédition — porte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. three standing stones with a shimmering veil between, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/descente/",
+  "cat": "Bâtiment",
+  "sujet": "Le Puits sans fond — porte",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a huge dark well with a timber headframe and lanterns, inhabited by cats.",
+  "format": "1024×576 paysage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/res/poisson/",
+  "cat": "Ressource",
+  "sujet": "Poisson — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a fresh silver river fish.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ble/",
+  "cat": "Ressource",
+  "sujet": "Blé — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a sheaf of golden wheat.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/legume/",
+  "cat": "Ressource",
+  "sujet": "Racines — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a bundle of root vegetables, turnips and carrots.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lait/",
+  "cat": "Ressource",
+  "sujet": "Lait — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a clay jug of milk.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/miel/",
+  "cat": "Ressource",
+  "sujet": "Miel — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a jar of honey with a wooden dipper.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/champignon/",
+  "cat": "Ressource",
+  "sujet": "Champignons — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a cluster of woodland mushrooms.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/farine/",
+  "cat": "Ressource",
+  "sujet": "Farine — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an open sack of white flour.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/viande/",
+  "cat": "Ressource",
+  "sujet": "Viande — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a raw joint of meat on the bone.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/pain/",
+  "cat": "Ressource",
+  "sujet": "Pain — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a round rustic loaf of bread.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fromage/",
+  "cat": "Ressource",
+  "sujet": "Fromage — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a wheel of cheese with a cut wedge.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/poissonfume/",
+  "cat": "Ressource",
+  "sujet": "Poisson fumé — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a smoked amber fish fillet.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/tourte/",
+  "cat": "Ressource",
+  "sujet": "Tourte — vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a golden pie with a lattice crust.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bois/",
+  "cat": "Ressource",
+  "sujet": "Bois — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a stack of cut logs.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/pierre/",
+  "cat": "Ressource",
+  "sujet": "Pierre — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a rough grey boulder.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/argile/",
+  "cat": "Ressource",
+  "sujet": "Argile — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a mound of wet grey clay.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/sable/",
+  "cat": "Ressource",
+  "sujet": "Sable — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a heap of pale sand.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/eau/",
+  "cat": "Ressource",
+  "sujet": "Eau — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a single droplet of clear water.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/herbe/",
+  "cat": "Ressource",
+  "sujet": "Simples — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a bundle of green medicinal herbs.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/planche/",
+  "cat": "Ressource",
+  "sujet": "Planches — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a stack of sawn wooden planks.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/pierretaille/",
+  "cat": "Ressource",
+  "sujet": "Pierre de taille — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a squared dressed stone block.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/brique/",
+  "cat": "Ressource",
+  "sujet": "Briques — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a stack of red clay bricks.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/tuile/",
+  "cat": "Ressource",
+  "sujet": "Tuiles — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a stack of terracotta roof tiles.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/charbonbois/",
+  "cat": "Ressource",
+  "sujet": "Charbon de bois — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a pile of charcoal sticks.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/poutre/",
+  "cat": "Ressource",
+  "sujet": "Poutres — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a heavy squared timber beam.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/verre/",
+  "cat": "Ressource",
+  "sujet": "Verre — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a pane of pale green glass.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/corde/",
+  "cat": "Ressource",
+  "sujet": "Cordage — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a coil of hemp rope.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cire/",
+  "cat": "Ressource",
+  "sujet": "Cire — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a block of golden beeswax.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fer/",
+  "cat": "Ressource",
+  "sujet": "Minerai de fer — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. chunks of rusty red iron ore.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/charbon/",
+  "cat": "Ressource",
+  "sujet": "Charbon de terre — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. lumps of black coal.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cuivre/",
+  "cat": "Ressource",
+  "sujet": "Minerai de cuivre — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. chunks of green-blue copper ore.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/etain/",
+  "cat": "Ressource",
+  "sujet": "Minerai d'étain — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. chunks of pale grey tin ore.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/argentmin/",
+  "cat": "Ressource",
+  "sujet": "Minerai d'argent — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. chunks of silver ore.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ormin/",
+  "cat": "Ressource",
+  "sujet": "Minerai d'or — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. chunks of glinting gold ore.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotfer/",
+  "cat": "Ressource",
+  "sujet": "Lingot de fer — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an iron ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotcuivre/",
+  "cat": "Ressource",
+  "sujet": "Lingot de cuivre — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a copper ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bronze/",
+  "cat": "Ressource",
+  "sujet": "Bronze — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a bronze ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/acier/",
+  "cat": "Ressource",
+  "sujet": "Acier — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a bluish steel ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotargent/",
+  "cat": "Ressource",
+  "sujet": "Lingot d'argent — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a silver ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotor/",
+  "cat": "Ressource",
+  "sujet": "Lingot d'or — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a gold ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/mithril/",
+  "cat": "Ressource",
+  "sujet": "Mithril — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a pale glowing mithril ingot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/laine/",
+  "cat": "Ressource",
+  "sujet": "Laine — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a ball of raw wool.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lin/",
+  "cat": "Ressource",
+  "sujet": "Lin — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a bundle of flax stalks.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/peau/",
+  "cat": "Ressource",
+  "sujet": "Peaux — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a rolled animal hide.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fil/",
+  "cat": "Ressource",
+  "sujet": "Fil — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a spool of thread.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cuir/",
+  "cat": "Ressource",
+  "sujet": "Cuir — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a rolled piece of tanned leather.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/drap/",
+  "cat": "Ressource",
+  "sujet": "Drap — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a folded bolt of woollen cloth.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/toile/",
+  "cat": "Ressource",
+  "sujet": "Toile — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a folded bolt of linen canvas.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/clou/",
+  "cat": "Ressource",
+  "sujet": "Clouterie — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a handful of iron nails.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/outil/",
+  "cat": "Ressource",
+  "sujet": "Outillage — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a set of iron tools, hammer and chisel.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/outilacier/",
+  "cat": "Ressource",
+  "sujet": "Outillage d'acier — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a set of fine polished steel tools.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/arme/",
+  "cat": "Ressource",
+  "sujet": "Armes — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a sword and a spear crossed.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/armure/",
+  "cat": "Ressource",
+  "sujet": "Harnois — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a plate breastplate.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bouclier/",
+  "cat": "Ressource",
+  "sujet": "Écus — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a round wooden shield with an iron boss.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bijou/",
+  "cat": "Ressource",
+  "sujet": "Joaillerie — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a gold ring set with a gemstone.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/poterie/",
+  "cat": "Ressource",
+  "sujet": "Poterie — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a glazed clay pot.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fiole/",
+  "cat": "Ressource",
+  "sujet": "Fioles — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an empty glass vial with a cork.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/potion/",
+  "cat": "Ressource",
+  "sujet": "Potions — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a glass vial of glowing red potion.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/huile/",
+  "cat": "Ressource",
+  "sujet": "Huile — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a small flask of golden oil.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/parchemin/",
+  "cat": "Ressource",
+  "sujet": "Parchemin — savoir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a rolled parchment scroll.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/encre/",
+  "cat": "Ressource",
+  "sujet": "Encre — savoir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an inkpot with a quill.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/sort/",
+  "cat": "Ressource",
+  "sujet": "Grimoires — savoir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an old leather grimoire.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/plan/",
+  "cat": "Ressource",
+  "sujet": "Plans — savoir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an unrolled building blueprint.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/chant/",
+  "cat": "Ressource",
+  "sujet": "Chants de guerre — savoir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a songbook with a feather quill.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/perle/",
+  "cat": "Ressource",
+  "sujet": "Perle — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a lustrous white pearl.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ecaille/",
+  "cat": "Ressource",
+  "sujet": "Écaille — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a large iridescent fish scale.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ambre/",
+  "cat": "Ressource",
+  "sujet": "Ambre — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a piece of amber with an insect inside.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/resine/",
+  "cat": "Ressource",
+  "sujet": "Résine — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a blob of sticky pine resin.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/silex/",
+  "cat": "Ressource",
+  "sujet": "Silex — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a knapped flint blade.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/salpetre/",
+  "cat": "Ressource",
+  "sujet": "Salpêtre — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. white saltpetre crystals.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/plume/",
+  "cat": "Ressource",
+  "sujet": "Plume de Nuée — textile",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a large dusky purple-grey feather.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/racine/",
+  "cat": "Ressource",
+  "sujet": "Racine amère — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a gnarled bitter root.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cendre/",
+  "cat": "Ressource",
+  "sujet": "Cendre vive — matiere",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a heap of pale ash.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/limaille/",
+  "cat": "Ressource",
+  "sujet": "Limaille — mineral",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a pile of metal filings.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardefeu/",
+  "cat": "Ressource",
+  "sujet": "Garde de feu — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a vial of orange fire-ward salve.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardevenin/",
+  "cat": "Ressource",
+  "sujet": "Garde de venin — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a vial of green antivenom brew.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardegel/",
+  "cat": "Ressource",
+  "sujet": "Garde de gel — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a vial of pale blue frost-ward.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardefoudre/",
+  "cat": "Ressource",
+  "sujet": "Garde de foudre — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an amber and copper wrist charm.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardeombre/",
+  "cat": "Ressource",
+  "sujet": "Garde d'ombre — ouvrage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a black candle set with a pearl.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/essence/",
+  "cat": "Ressource",
+  "sujet": "Essence — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a floating glowing wisp of blue essence.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gemme/",
+  "cat": "Ressource",
+  "sujet": "Gemmes — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a cut blue gemstone.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ossuaire/",
+  "cat": "Ressource",
+  "sujet": "Reliquats — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a small pile of bones and a skull.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/obsidienne/",
+  "cat": "Ressource",
+  "sujet": "Obsidienne — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a shard of black obsidian glass.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/relique/",
+  "cat": "Ressource",
+  "sujet": "Reliques — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. an ancient golden crown.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/coeurbiome/",
+  "cat": "Ressource",
+  "sujet": "Cœur de biome — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a pulsing ember-like heart.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/oeilabyme/",
+  "cat": "Ressource",
+  "sujet": "Œil de l'abîme — profond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a single unblinking violet eye.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ecu/",
+  "cat": "Ressource",
+  "sujet": "Écus — monnaie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a small stack of gold coins.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/medaille/",
+  "cat": "Ressource",
+  "sujet": "Médailles — monnaie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a bronze medal on a ribbon.",
+  "format": "512×512 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/peche/",
+  "cat": "Métier",
+  "sujet": "Métier — Pêche",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the pêche trade: a fishing rod and a woven creel, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/bois/",
+  "cat": "Métier",
+  "sujet": "Métier — Bûcheronnage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the bûcheronnage trade: an axe over the shoulder, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/champs/",
+  "cat": "Métier",
+  "sujet": "Métier — Culture",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the culture trade: a straw hat and a sickle, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/elevage/",
+  "cat": "Métier",
+  "sujet": "Métier — Élevage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the élevage trade: a shepherd's crook and a wool shawl, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/mine/",
+  "cat": "Métier",
+  "sujet": "Métier — Mine",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the mine trade: a miner's helmet with a small lamp, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/feu/",
+  "cat": "Métier",
+  "sujet": "Métier — Feu",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the feu trade: a leather apron and long tongs, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/forge/",
+  "cat": "Métier",
+  "sujet": "Métier — Forge",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the forge trade: a blacksmith's apron and a hammer, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/tissage/",
+  "cat": "Métier",
+  "sujet": "Métier — Tissage",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the tissage trade: a spindle and coloured threads, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/cuisine/",
+  "cat": "Métier",
+  "sujet": "Métier — Cuisine",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the cuisine trade: a flour-dusted apron and a wooden spoon, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/savoir/",
+  "cat": "Métier",
+  "sujet": "Métier — Savoir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the savoir trade: round spectacles, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/batisse/",
+  "cat": "Métier",
+  "sujet": "Métier — Bâtisse",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the bâtisse trade: a mason's square and a trowel, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/guerre/",
+  "cat": "Métier",
+  "sujet": "Métier — Guerre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. The emblem of the guerre trade: a padded gambeson and a spear, tools only, no character.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/vivres/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Vivres",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a basket of bread, fish and vegetables, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/matiere/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Matières",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. logs, stone and clay stacked together, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/mineral/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Minéraux",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. ore chunks and metal ingots, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/textile/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Textiles",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. wool, thread and folded cloth, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/ouvrage/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Ouvrages",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. tools, a sword and a clay pot, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/savoir/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Savoirs",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. scrolls, a book and a quill, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/profond/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Profondeurs",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. glowing essence, a gemstone and a skull, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/monnaie/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Trésor",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, single centred object, isolated on transparent background. a heap of gold coins and a medal, grouped together.",
+  "format": "256×256 carré",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/fond-fenetre/",
+  "cat": "Habillage",
+  "sujet": "Fond de fenêtre flottante",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a subtle dark parchment texture, aubergine tinted, seamless, very low contrast.",
+  "format": "1024×1024 raccordable",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/bandeau/",
+  "cat": "Habillage",
+  "sujet": "Fond du bandeau du haut",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a narrow dark banner texture with faint carved stone relief, seamless horizontally.",
+  "format": "2048×128 raccordable",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/dock/",
+  "cat": "Habillage",
+  "sujet": "Fond du dock des chargements",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a vertical dark wooden panel texture, faint grain, seamless vertically.",
+  "format": "512×2048 raccordable",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/bouton/",
+  "cat": "Habillage",
+  "sujet": "Bouton",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a small rounded stone-and-brass button plate, empty centre.",
+  "format": "256×96 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/cartouche/",
+  "cat": "Habillage",
+  "sujet": "Cartouche de titre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. an ornate horizontal cartouche plate, empty centre, brass and dark wood.",
+  "format": "1024×192 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/separateur/",
+  "cat": "Habillage",
+  "sujet": "Filet de séparation",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a thin decorative horizontal divider, small centred lozenge.",
+  "format": "1024×48 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/jauge-fond/",
+  "cat": "Habillage",
+  "sujet": "Fond de barre de chargement",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. an empty rounded stone trough, horizontal.",
+  "format": "512×64 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/jauge-plein/",
+  "cat": "Habillage",
+  "sujet": "Remplissage de barre",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a warm glowing amber fill bar, rounded ends.",
+  "format": "512×64 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/ecusson/",
+  "cat": "Habillage",
+  "sujet": "Écusson du bourg",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a heraldic shield with a cat's head, coral and gold.",
+  "format": "512×512 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/carte-fond/",
+  "cat": "Habillage",
+  "sujet": "Fond de carte d'habitant",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a small ornate card backing, dark leather and brass corners.",
+  "format": "512×640 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/titre-jeu/",
+  "cat": "Habillage",
+  "sujet": "Titre du jeu",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. the words are not needed — an empty ornate title plaque, wide, brass on dark wood.",
+  "format": "1600×400 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/vignette-vide/",
+  "cat": "Habillage",
+  "sujet": "Emplacement vide",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. a faint dashed placeholder frame, very low contrast.",
+  "format": "512×512 fond transparent",
+  "prio": 2
+ },
+ {
+  "dossier": "img/unite/eclaireur/",
+  "cat": "Unité",
+  "sujet": "Chaton Express — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chaton Express. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/lancier/",
+  "cat": "Unité",
+  "sujet": "Chat Lancier — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Lancier. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/targier/",
+  "cat": "Unité",
+  "sujet": "Chat Targier — garde",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Targier. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/costaud/",
+  "cat": "Unité",
+  "sujet": "Gros Matou — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Gros Matou. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/fronde/",
+  "cat": "Unité",
+  "sujet": "Chat Frondeur — tir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Frondeur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/traqueur/",
+  "cat": "Unité",
+  "sujet": "Chat Patineur — tir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Patineur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/mage/",
+  "cat": "Unité",
+  "sujet": "Chat Sorcier — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Sorcier. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/sapeur/",
+  "cat": "Unité",
+  "sujet": "Chat Bélière — explosif",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Bélière. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/essaim/",
+  "cat": "Unité",
+  "sujet": "Chat Gélatineux — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Gélatineux. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/rempart/",
+  "cat": "Unité",
+  "sujet": "Chat Rempart — garde",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Rempart. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/aura/",
+  "cat": "Unité",
+  "sujet": "Chat Ronronneur — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Ronronneur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/assassin/",
+  "cat": "Unité",
+  "sujet": "Chat Ninja — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Ninja. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/barde/",
+  "cat": "Unité",
+  "sujet": "Chat Chef d’Orchestre — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Chef d’Orchestre. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/artilleur/",
+  "cat": "Unité",
+  "sujet": "Chat Artilleur — explosif",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Artilleur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/heros/",
+  "cat": "Unité",
+  "sujet": "Chevalier Griffe — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chevalier Griffe. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/soigneur/",
+  "cat": "Unité",
+  "sujet": "Chat Infirmier — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Infirmier. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/entraveur/",
+  "cat": "Unité",
+  "sujet": "Chat Gluant — tir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Gluant. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/invocateur/",
+  "cat": "Unité",
+  "sujet": "Chat Nécromiaou — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Nécromiaou. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/porteur/",
+  "cat": "Unité",
+  "sujet": "Chat Porteur — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Porteur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/ingenieur/",
+  "cat": "Unité",
+  "sujet": "Chat Bricoleur — tir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Bricoleur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/espion/",
+  "cat": "Unité",
+  "sujet": "Chat Cambrioleur — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Cambrioleur. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/chronarque/",
+  "cat": "Unité",
+  "sujet": "Chat Horloger — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chat Horloger. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_force/",
+  "cat": "Unité",
+  "sujet": "Chaton Griffu — melee",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chaton Griffu. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_agile/",
+  "cat": "Unité",
+  "sujet": "Chaton Fripon — tir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chaton Fripon. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_magie/",
+  "cat": "Unité",
+  "sujet": "Chaton Luisant — magie",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chaton Luisant. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_poudre/",
+  "cat": "Unité",
+  "sujet": "Chaton Pétard — explosif",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. An anthropomorphic cat soldier: Chaton Pétard. Full body, standing, three-quarter view.",
+  "format": "512×512 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/neutre/",
+  "cat": "Péril",
+  "sujet": "Les Galeries",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. damp stone galleries, dripping water, lantern light, seen from inside.",
+  "format": "1024×576 paysage",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/feu/",
+  "cat": "Péril",
+  "sujet": "Les Fournaises",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a fiery underground cavern, cracked glowing floor, seen from inside.",
+  "format": "1024×576 paysage",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/venin/",
+  "cat": "Péril",
+  "sujet": "Les Fongères",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a giant mushroom forest with drifting green spores, seen from inside.",
+  "format": "1024×576 paysage",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/gel/",
+  "cat": "Péril",
+  "sujet": "Le Grand Froid",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a frozen cavern of blue ice and frost, seen from inside.",
+  "format": "1024×576 paysage",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/foudre/",
+  "cat": "Péril",
+  "sujet": "Les Orages Enfouis",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a stormy underground hall crackling with lightning, seen from inside.",
+  "format": "1024×576 paysage",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/ombre/",
+  "cat": "Péril",
+  "sujet": "L'Envers",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark, three-quarter view, small diorama scene, soft pale sky. a lightless void, faint shapes at the edge of vision, seen from inside.",
+  "format": "1024×576 paysage",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/10/",
+  "cat": "Gardien",
+  "sujet": "Étage 10 — La Chose du Puits",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"La Chose du Puits\": Elle occupait déjà le fond quand on a creusé la margelle.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/20/",
+  "cat": "Gardien",
+  "sujet": "Étage 20 — Le Ver de Fond",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Le Ver de Fond\": Il ne mord pas : il avale, puis se retire.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/30/",
+  "cat": "Gardien",
+  "sujet": "Étage 30 — La Braise Marcheuse",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"La Braise Marcheuse\": Une silhouette de cendre qui garde la forme d'un chat.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/40/",
+  "cat": "Gardien",
+  "sujet": "Étage 40 — Le Soufflet",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Le Soufflet\": Une gueule dans la paroi. On l'entend respirer deux étages plus haut.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/50/",
+  "cat": "Gardien",
+  "sujet": "Étage 50 — La Mère des Spores",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"La Mère des Spores\": Elle ne bouge pas. Tout le reste bouge pour elle.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/60/",
+  "cat": "Gardien",
+  "sujet": "Étage 60 — Le Chapeau Noir",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Le Chapeau Noir\": Un champignon de trois mètres, et deux yeux dessous.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/70/",
+  "cat": "Gardien",
+  "sujet": "Étage 70 — Le Givre Assis",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Le Givre Assis\": Il est là depuis si longtemps que la glace a pris sa forme.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/80/",
+  "cat": "Gardien",
+  "sujet": "Étage 80 — La Reine Blanche",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"La Reine Blanche\": Elle n'a pas d'armes. Elle n'en a jamais eu besoin.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/90/",
+  "cat": "Gardien",
+  "sujet": "Étage 90 — Le Bruit",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Le Bruit\": On ne le voit pas venir : on l'entend arriver depuis trois étages.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/100/",
+  "cat": "Gardien",
+  "sujet": "Étage 100 — Le Trait Debout",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Le Trait Debout\": Une colonne de foudre qui a décidé de rester.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/110/",
+  "cat": "Gardien",
+  "sujet": "Étage 110 — L'Absence",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"L'Absence\": Il y a quelque chose dans la salle. C'est tout ce qu'on peut en dire.",
+  "format": "768×768 carré",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/120/",
+  "cat": "Gardien",
+  "sujet": "Étage 120 — Celui qui Regarde",
+  "prompt": "flat vector game art, warm muted palette, soft cel shading, clean bold outlines, medieval fantasy, no text, no watermark. A monstrous dungeon guardian named \"Celui qui Regarde\": Il vous a vu descendre. Il vous voit encore.",
+  "format": "768×768 carré",
+  "prio": 3
+ }
+]

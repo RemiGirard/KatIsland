@@ -21,9 +21,15 @@
   /* Combien de « portions » vaut une unité de chaque vivre. C'est ce qui
      décide de l'ordre où le bourg pioche dans la grange : on mange
      d'abord ce qui nourrit le moins, on garde les tourtes. */
+  /* Toute ressource de catégorie « vivres » doit figurer ici, sinon le
+     bourg refuse de la manger — elle s'entasse en pure perte et le
+     joueur ne comprend pas pourquoi il a faim la grange pleine. Le
+     tournesol, le fruit, la farine claire, la confiture et le cidre
+     avaient été oubliés à mesure qu'on les ajoutait. */
   const PORTIONS = {
     poisson: 1, ble: 0.6, legume: 0.6, lait: 1, champignon: 1, miel: 2,
     farine: 1.5, viande: 2.5, pain: 3, fromage: 3.5, poissonfume: 3, tourte: 8,
+    tournesol: 0.8, fruit: 1.2, farineclaire: 2, confiture: 4, cidre: 2.5,
   };
   const ORDRE_REPAS = Object.keys(PORTIONS).sort((a, b) => PORTIONS[a] - PORTIONS[b]);
 
@@ -74,13 +80,27 @@
 
   /* Ce qu'apportent les améliorations d'un atelier précis. */
   function amelioDe(b, cle) {
-    if (!b || !b.am) return 0;
+    let v = raffDe(b, cle === 'oeil' ? 'butin' : cle);
+    if (!b || !b.am) return v;
     const n = b.am[cle] || 0;
-    if (!n) return 0;
+    if (!n) return v;
     const a = (window.AMELIO || []).find(x => x.id === cle);
-    if (!a) return 0;
+    if (!a) return v;
     const e = a.effet(n);
-    return e[Object.keys(e)[0]] || 0;
+    return v + (e[Object.keys(e)[0]] || 0);
+  }
+  /* Ce qu'apportent les ANNEXES bâties. Une annexe ne se contente pas
+     d'ouvrir des recettes : l'abattoir rend mieux, le martinet frappe
+     plus vite, la laverie trouve davantage. */
+  function raffDe(b, cle) {
+    if (!b || !b.raff || !window.RaffUtil) return 0;
+    let v = 0;
+    for (const id in b.raff) {
+      if (!b.raff[id]) continue;
+      const r = window.RaffUtil.trouver(b.type, id);
+      if (r && r.effet[cle]) v += r.effet[cle];
+    }
+    return v;
   }
   /* Le nombre de postes RÉEL : le niveau, plus les établis achetés, plus
      ce qu'ouvre la recherche « lignes de fabrication ». */
@@ -445,19 +465,37 @@
 
     /* Effets particuliers : certaines recettes ne produisent pas une
        ressource mais un ÉTAT du bourg. */
-    /* LA NURSERIE ne passe pas par les portes : ceux-là sont nés ici.
-       On ne choisit donc pas parmi trois — on prend ce qui vient, et
-       l'attrait du bourg décide seul de ce que ça vaut. */
+    /* LES DEUX FILIÈRES DE POPULATION, et elles ne se croisent jamais.
+       Le TRAVAILLEUR vient du dehors : une maison ouvre des places, les
+       portes amènent des candidats, on choisit. Le SOLDAT naît ici : la
+       nurserie rend des chatons — une ressource comme une autre, qui se
+       stocke et se plafonne — et les formations avancées les dépensent.
+       Un chaton ne tiendra jamais un poste. C'est ce qui rend la guerre
+       chère : non pas en écus, mais en lait, en poisson et en temps de
+       nurserie qu'on n'a pas mis ailleurs.
+
+       `recrue` reste : la TAVERNE, elle, débauche un travailleur venu
+       du dehors à coups de tournées. C'est cher, c'est immédiat, et
+       cela ne passe pas par les portes. */
     if (rec.recrue) {
       if (E.habitants.length < window.Etat.logementTotal()) {
         const h = window.Etat.ajouterHabitant(window.Etat.attraitBourg() * 0.6);
-        window.Etat.journal(h.nom + ' est né au bourg.', 'bien');
+        window.Etat.journal(h.nom + ' s\'installe au bourg.', 'bien');
       } else {
-        window.Etat.journal('Pas de toit libre : la portée attend qu\'on bâtisse.', 'alerte');
+        window.Etat.journal('Pas de toit libre : il faudra bâtir avant d\'accueillir.', 'alerte');
       }
     }
-    if (rec.unite) { E.armee.unites += rec.unite; window.Etat.journal('Une recrue rejoint la compagnie (' + E.armee.unites + ').', 'guerre'); }
-    if (rec.xpArmee) E.armee.xp += rec.xpArmee;
+    if (rec.unite) {
+      const type = rec.uniteType || 'lancier';
+      if (window.Armee) window.Armee.ajouter(type, rec.unite);
+      else E.armee.unites += rec.unite;
+      window.Etat.journal((window.Armee ? window.Armee.nom(type) : 'Une recrue') +
+        ' rejoint la compagnie (' + E.armee.unites + ').', 'guerre');
+    }
+    if (rec.xpArmee) {
+      if (window.Armee) window.Armee.gagnerXp(window.Armee.colonne(), rec.xpArmee);
+      else E.armee.xp += rec.xpArmee;
+    }
     if (rec.xpBourg) for (const m in E.metiers) window.Etat.gagnerXp(m, Math.round(rec.xpBourg / 6));
     if (rec.menace) E.menace = Math.max(0, E.menace + rec.menace);
     if (rec.moral) E.moralBonus = Math.min(30, (E.moralBonus || 0) + rec.moral * 0.1);
@@ -493,7 +531,19 @@
   function tickChantier(dt) {
     const E = S();
     const f = E.chantier.file;
-    if (!f.length) { E.chantier.prog = 0; return; }
+    if (!f.length) {
+      E.chantier.prog = 0;
+      /* Une file terminée ne doit pas garder des habitants dans un faux
+         emploi. Ils reviennent automatiquement disponibles et le tableau
+         d'affectation peut les envoyer à la production suivante. */
+      if (E.chantier.ouvriers.length) {
+        const retour = E.chantier.ouvriers.slice();
+        for (const hid of retour) window.Etat.libererHabitant(hid);
+        window.Etat.journal((retour.length > 1 ? 'Les ouvriers quittent' : 'L\'ouvrier quitte') +
+                            ' le chantier achevé.', 'chantier');
+      }
+      return;
+    }
     const v = vitesseChantier();
     if (v <= 0) return;                       // personne aux outils : rien n'avance
     const job = f[0];
@@ -513,10 +563,10 @@
       if (window.Village) {
         window.Village.retirer(job.bat);
         const pose = window.Village.poser(job.type, Math.round(job.xr * window.Village.dimensions().W),
-                                          job.r, job.bat, 1, job.coul);
+                                          job.r, job.bat, 1, job.coul, job.L || 0);
         if (!pose) {
           // la parcelle a disparu : on repose où l'on peut
-          window.Village.poser(job.type, null, job.r, job.bat, 1, job.coul);
+          window.Village.poser(job.type, null, job.r, job.bat, 1, job.coul, job.L || 0);
         }
         window.Village.ping(job.bat, '#e8d6a8');
         window.Village.souffle(job.bat);
@@ -532,6 +582,20 @@
         window.Etat.journal(window.BAT[b.type].nom + ' passe au niveau ' + b.niv + '.', 'bien');
         if (window.Village) window.Village.ping(b.id, '#a8d8c0');
         window.Etat.prevenir('ameliore', b);
+      }
+    } else if (job.k === 'raffiner') {
+      const b = E.bat[job.bat];
+      if (b) {
+        if (!b.raff) b.raff = {};
+        b.raff[job.raff] = true;
+        const r = window.RaffUtil && window.RaffUtil.trouver(b.type, job.raff);
+        window.Etat.journal(window.BAT[b.type].nom + ' : ' +
+          ((r && r.nom) || job.raff) + ' — l\'atelier a changé de forme.', 'bien');
+        /* le village doit reposer l'édifice : il porte une annexe de
+           plus, et cela se voit depuis la falaise. */
+        if (window.Village && window.Village.rafraichir) window.Village.rafraichir(b.id);
+        else if (window.Village) window.Village.ping(b.id, '#e8c88a');
+        window.Etat.prevenir('raffine', b);
       }
     } else if (job.k === 'reparer') {
       const b = E.bat[job.bat];
@@ -550,12 +614,10 @@
   function tauxMenace() {
     const E = S();
     const n = nbBatiments();
-    /* UN HAMEAU DE QUATRE TOITS N'INTÉRESSE PERSONNE. La Nuée ne se
-       dérange que pour ce qui vaut la peine d'être pillé — sans ce
-       palier, le joueur perdait ses deux premiers bâtiments avant
-       d'avoir compris qu'il existait une jauge. */
-    if (n < 5) return 0;
-    let t = 0.013 + 0.0016 * (n - 4) + 0.010 * E.territoires.length;
+    /* La Nuée observe dès le premier feu, très lentement d'abord. La
+       jauge enseigne ainsi sa règle dès le départ, puis la croissance
+       du bourg et les territoires la rendent plus pressante. */
+    let t = 0.0035 + 0.00145 * Math.max(0, n - 1) + 0.007 * E.territoires.length;
     for (const bid in E.bat) {
       if (E.bat[bid].type === 'tour') t *= (1 - Math.min(0.45, 0.10 * E.bat[bid].niv));
     }
@@ -575,7 +637,7 @@
     const E = S();
     if (E.menace < 22) return { ok: false, pourquoi: 'Rien à combattre : la Nuée ne s\'est pas encore montrée.' };
     if (E.expedition) return { ok: false, pourquoi: 'Une colonne est déjà en campagne.' };
-    if (E.armee.unites < 1) return { ok: false, pourquoi: 'Aucune unité formée. Passez par le terrain d\'entraînement.' };
+    if (E.armee.unites < 1) return { ok: false, pourquoi: 'Aucune unité formée. Levez d\'abord une recrue à la caserne.' };
     return { ok: true };
   }
   /* Ce que la sortie retirera si elle réussit : d'autant plus que la
@@ -664,7 +726,11 @@
     tickChantier(dt);
     tickMenace(dt);
     E.moral = moralEffectif();
-    if (E.moralBonus) E.moralBonus = Math.max(0, E.moralBonus - dt * 0.02);
+    if (E.moralBonus > 0) E.moralBonus = Math.max(0, E.moralBonus - dt * 0.02);
+    /* Une pénalité négative était effacée dès le tick suivant par
+       Math.max(0, ...). Elle remonte désormais lentement vers zéro :
+       refuser ou chasser quelqu'un marque réellement plusieurs heures. */
+    else if (E.moralBonus < 0) E.moralBonus = Math.min(0, E.moralBonus + dt * 0.001);
     /* LE CARNET SE MET À JOUR TOUT SEUL. Beaucoup de déblocages tiennent
        à une RESSOURCE vue pour la première fois, pas à un bâtiment posé :
        s'en remettre aux seuls événements de construction laissait des
@@ -763,8 +829,18 @@
      ------------------------------------------------------------------ */
   function faireApparaitre(type) {
     const E = S();
-    if (window.Etat.aBatiment(type)) return null;
     if (!window.Village) return null;
+    /* Un lieu ancien appartient à l'île, pas au chantier. Si une vieille
+       sauvegarde connaît le lieu sans l'avoir dans son plan, on restaure
+       seulement sa représentation dans le village. */
+    const existant = Object.keys(E.bat).map(id => E.bat[id]).find(b => b.type === type);
+    if (existant) {
+      if (!window.Village.batiment(existant.id)) {
+        const retrouve = window.Village.poser(type, null, null, existant.id, existant.niv || 1);
+        if (retrouve) E.plan = window.Village.plan();
+      }
+      return existant;
+    }
     const pose = window.Village.poser(type);
     if (!pose) return null;
     const b = window.Etat.creerBatiment(type, pose.id);
@@ -778,7 +854,8 @@
   }
   function catalogue() {
     const E = S();
-    return window.BAT_ORDRE.filter(t => E.vus['carnet:' + t]);
+    /* Les lieux apparus dans le décor ne sont jamais des plans à poser. */
+    return window.BAT_ORDRE.filter(t => E.vus['carnet:' + t] && !window.BAT[t].apparait);
   }
 
   function coutConstruction(type) { return window.BatUtil.coutNiveau(type, 1); }
@@ -794,11 +871,12 @@
     if (!window.Village) return { ok: false, raison: 'Le village n\'est pas prêt.' };
     /* la parcelle est cherchée à l'emprise du bâtiment FINI : l'échafaudage
        garde exactement la place qu'il faudra. */
-    const b = window.Village.poserChantier(type, vx, r);
+    const b = window.Village.poserChantier(type, vx, r, null,
+                                           opts && opts.coul, opts && opts.niveau);
     if (!b) return { ok: false, raison: 'Pas de parcelle libre à cet endroit.' };
     window.Etat.depenser(cout);
     E.chantier.file.push({
-      k: 'construire', type, bat: b.id, r: b.r, xr: b.xr,
+      k: 'construire', type, bat: b.id, r: b.r, xr: b.xr, L: b.L || 0,
       coul: opts && opts.coul != null ? opts.coul : null,
       temps: window.BatUtil.tempsNiveau(type, 1), cout,
       nom: window.BAT[type].nom,
@@ -833,6 +911,31 @@
       k: 'ameliorer', bat: bid, type: b.type, niv: b.niv + 1, cout,
       temps: window.BatUtil.tempsNiveau(b.type, b.niv + 1),
       nom: window.BAT[b.type].nom + ' — niveau ' + (b.niv + 1),
+    });
+    window.Etat.prevenir('chantier', null);
+    return { ok: true };
+  }
+
+  /* Bâtir une annexe. C'est un ouvrage comme un autre : il passe par
+     la file du chantier, il coûte, il prend du temps. La différence est
+     qu'à l'arrivée le bâtiment n'a pas grandi — il a changé de nature. */
+  function raffiner(bid, rid) {
+    const E = S();
+    const b = E.bat[bid];
+    if (!b) return { ok: false, raison: 'Bâtiment inconnu.' };
+    if (!window.RaffUtil) return { ok: false, raison: 'Aucune annexe connue.' };
+    const r = window.RaffUtil.trouver(b.type, rid);
+    if (!r) return { ok: false, raison: 'Annexe inconnue ici.' };
+    if (b.raff && b.raff[rid]) return { ok: false, raison: 'Déjà bâtie.' };
+    if (E.chantier.file.some(j => j.k === 'raffiner' && j.bat === bid && j.raff === rid))
+      return { ok: false, raison: 'Déjà dans la file du chantier.' };
+    const cout = window.RaffUtil.coutDe(b.type, rid, b.niv);
+    if (!window.Etat.assez(cout)) return { ok: false, raison: 'Matériaux insuffisants.', manque: window.Etat.manque(cout) };
+    window.Etat.depenser(cout);
+    E.chantier.file.push({
+      k: 'raffiner', bat: bid, type: b.type, raff: rid, cout,
+      temps: window.RaffUtil.tempsDe(b.type, rid, b.niv),
+      nom: window.BAT[b.type].nom + ' — ' + r.nom,
     });
     window.Etat.prevenir('chantier', null);
     return { ok: true };
@@ -1022,17 +1125,18 @@
         const rec = window.REC[p.rec];
         const h = window.Etat.habitant(p.hab);
         const v = vitessePoste(b, rec, h);
+        const sorties = Object.keys(rec.out);
+        const resPrincipale = sorties[0] || null;
+        const cyclesMin = 60 / (rec.duree / Math.max(0.001, v));
         let detail = '';
         if (p.bloque) {
           const m = window.Etat.manque(rec.in);
           detail = 'manque ' + m.map(z => (window.RES[z.id] ? window.RES[z.id].nom.toLowerCase() : z.id)).join(', ');
         } else {
-          const sorties = Object.keys(rec.out);
           detail = sorties.length
             ? sorties.map(z => '+' + rec.out[z] + ' ' + window.RES[z].nom.toLowerCase()).join(', ')
             : (rec.recrue ? '+1 habitant' : rec.unite ? '+1 unité' : rec.menace ? 'menace en baisse' : '');
-          const parMin = 60 / (rec.duree / Math.max(0.001, v));
-          detail += '  ·  ' + (Math.round(parMin * 10) / 10).toString().replace('.', ',') + '/min';
+          detail += '  ·  ' + (Math.round(cyclesMin * 10) / 10).toString().replace('.', ',') + '/min';
           if (p.reste != null) detail += '  ·  ×' + p.reste;
           else if ((p.file || []).length) detail += '  ·  +' + p.file.length + ' en file';
         }
@@ -1043,6 +1147,8 @@
           prog: p.bloque ? 0 : Math.min(1, p.prog / rec.duree),
           reste: p.bloque ? null : Math.max(0, (rec.duree - p.prog) / Math.max(0.001, v)),
           bloque: p.bloque, manque: p.bloque ? window.Etat.manque(rec.in) : null,
+          res: resPrincipale,
+          debit: resPrincipale && !p.bloque ? (rec.out[resPrincipale] || 0) * cyclesMin : 0,
           ico: window.METIERS[rec.metier].ico,
         });
       }
@@ -1062,7 +1168,7 @@
     }
     if (E.aventure.encours) {
       out.unshift({ k: 'aventure', id: 'aventure', nom: 'Descente — étage ' + E.aventure.profondeur,
-        lieu: 'Le Puits sans fond', hab: E.armee.unites + ' en campagne',
+        lieu: 'Tour sombre', hab: E.armee.unites + ' en campagne',
         prog: E.aventure.encours.prog || 0, reste: null, bloque: false,
         ico: { f: 'ame', c: ['#8fd8e0', '#4a8f9c'] } });
     }
@@ -1077,7 +1183,7 @@
   window.Jeu = {
     tick, rattraper,
     debloque, majDecouvertes, catalogue, coutConstruction, faireApparaitre,
-    poserBatiment, ameliorer, reparer, annulerOuvrage, deplacerOuvrage,
+    poserBatiment, ameliorer, raffiner, reparer, annulerOuvrage, deplacerOuvrage,
     definirRecette, ajouterFile, retirerFile, deplacerFile, cyclesPossibles,
     assignerAuto, assigner, candidatsPoste, outiller,
     taches, vitessePoste, vitesseChantier, multGlobal, facteurHabitant, besoinTotal,

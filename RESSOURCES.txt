@@ -1,0 +1,142 @@
+LE BOURG — LES RESSOURCES
+=========================
+
+Engendré depuis jeu/donnees/ressources.js — ne pas modifier à la main.
+
+Colonne « provenance » :
+  Nom du bâtiment  = la ressource sort d une tâche de cet atelier
+  *                = trouvaille, sort au hasard en travaillant
+  [Annexe]         = la tâche demande cette annexe bâtie sur l atelier
+  AVENTURE         = ne se produit pas au village : tour, gardiens, expéditions
+
+
+--------------------------------------------------------------------------
+VIVRES  (14)
+--------------------------------------------------------------------------
+  Poisson                   2   Pêcherie, Pêcherie [Vivier]
+  Blé                       3   Champ, Champ [Aire de battage]
+  Racines                   3   Champ*, Champ, Potager, Étable
+  Tournesols                4   Champ de tournesols
+  Lait                      5   Étable, Laiterie*
+  Champignons               6   Scierie*, Bergerie*, Herboristerie*, Herboristerie
+  Farine                    7   Moulin à vent, Moulin à vent [Bluterie], Moulin à eau
+  Viande                    8   Bergerie, Bergerie [Abattoir], Étable, Étable [Abattoir]
+  Farine de tournesol       8   Moulin à vent
+  Miel                      9   Rucher, Rucher [Cirerie]*
+  Pain                     16   Four banal
+  Fromage                  20   Laiterie, Laiterie [Cave d'affinage]
+  Poisson fumé             22   Fumoir
+  Tourte                   54   Four banal
+
+--------------------------------------------------------------------------
+MATIÈRES  (21)
+--------------------------------------------------------------------------
+  Eau                       1   Puits
+  Bois                      2   Scierie, Scierie*
+  Paille                    2   Champ [Aire de battage], Moulin à vent [Bluterie]*
+  Pierre                    3   Carrière, Mine*, Mine
+  Argile                    3   Champ*, Carrière
+  Sable                     3   Carrière
+  Simples                   5   Pêcherie*, Scierie*, Scierie, Champ*, Potager*, Potager, Champ de fleurs*, Bergerie*, Herboristerie, Herboristerie*, Laboratoire d'alchimie*
+  Fleurs                    5   Champ de tournesols*, Potager*, Champ de fleurs
+  Cordage                   8   Scierie, Filature
+  Planches                  9   Scierie, Scierie [Séchoir à bois]
+  Briques                  10   Tuilerie, Tuilerie [Four à chaux]
+  Cendre vive              10   Tuilerie [Four à chaux]*, Laboratoire d'alchimie*
+  Tuiles                   11   Tuilerie
+  Pierre de taille         12   Carrière, Tuilerie [Four à chaux]
+  Charbon de bois          12   Charbonnière
+  Suif                     12   Bergerie [Abattoir], Étable [Abattoir]
+  Cire                     14   Charbonnière*, Bergerie [Abattoir], Rucher*, Rucher, Rucher [Cirerie]
+  Racine amère             18   Champ de tournesols*, Potager*, Champ de fleurs*
+  Résine                   20   Scierie [Séchoir à bois]*
+  Verre                    30   Verrerie
+  Poutres                  34   Scierie
+
+--------------------------------------------------------------------------
+MINÉRAUX  (18)
+--------------------------------------------------------------------------
+  Minerai de fer            5   Carrière*, Mine, Mine*, Mine [Laverie]
+  Charbon de terre          6   Mine*, Mine
+  Minerai de cuivre         8   Mine, Mine*
+  Minerai d'étain          10   Mine
+  Silex                    14   Mine [Laverie]*
+  Minerai d'argent         18   Mine
+  Lingot de fer            22   Fonderie, Forge [Martinet]
+  Lingot de cuivre         30   Fonderie
+  Minerai d'or             34   Mine, Mine [Laverie]*
+  Limaille                 38   Forge [Martinet]*, Armurerie*, Laboratoire d'alchimie*
+  Salpêtre                 48   AVENTURE
+  Bronze                   58   Fonderie
+  Acier                    78   Fonderie
+  Lingot d'argent          96   Fonderie
+  Ambre                   100   AVENTURE
+  Perle                   130   Pêcherie [Vivier]*
+  Lingot d'or             220   Fonderie
+  Mithril                 900   Fonderie
+
+--------------------------------------------------------------------------
+TEXTILES  (9)
+--------------------------------------------------------------------------
+  Laine                     4   Bergerie, Filature
+  Lin                       4   Champ
+  Peaux                     6   Pêcherie*, Bergerie, Bergerie [Abattoir], Étable, Étable [Abattoir]
+  Fil                      12   Filature*, Filature, Atelier de tissage*
+  Cuir                     20   Tannerie
+  Plume de Nuée            26   AVENTURE
+  Toile                    28   Atelier de tissage
+  Drap                     42   Moulin à eau, Atelier de tissage
+  Écaille                  75   Pêcherie [Vivier]*
+
+--------------------------------------------------------------------------
+OUVRAGES  (17)
+--------------------------------------------------------------------------
+  Clouterie                10   Forge
+  Poterie                  14   Tuilerie, Poterie, Poterie [Tour à pied]
+  Huile                    24   Moulin à vent, Moulin à eau, Bergerie [Abattoir]*, Rucher, Laboratoire d'alchimie [Alambic à fleurs]*
+  Fioles                   26   Verrerie
+  Outillage                60   Forge
+  Potions                  90   Laboratoire d'alchimie
+  Écus                    120   Armurerie
+  Armes                   150   Forge
+  Harnois                 165   Armurerie
+  Parfum                  190   Laboratoire d'alchimie [Alambic à fleurs]
+  Outillage d'acier       210   Forge
+  Garde de feu            220   Laboratoire d'alchimie
+  Garde de venin          220   Laboratoire d'alchimie
+  Garde de gel            240   Laboratoire d'alchimie
+  Garde de foudre         280   Laboratoire d'alchimie
+  Garde d'ombre           320   Laboratoire d'alchimie
+  Joaillerie              480   Orfèvre
+
+--------------------------------------------------------------------------
+SAVOIRS  (5)
+--------------------------------------------------------------------------
+  Encre                    30   Laboratoire d'alchimie
+  Parchemin                40   Tannerie
+  Chants de guerre        180   Verrerie*, Scriptorium, Orfèvre*
+  Plans                   260   Poterie*, Scriptorium, Taverne*
+  Grimoires               320   Scriptorium
+
+--------------------------------------------------------------------------
+PROFONDEURS  (7)
+--------------------------------------------------------------------------
+  Reliquats                55   Pêcherie*, Carrière*, Mine*
+  Essence                  70   Pêcherie*, Mine*, Herboristerie*, Laboratoire d'alchimie
+  Gemmes                  240   Pêcherie*, Carrière*, Mine*, Mine [Laverie]*, Laboratoire d'alchimie
+  Obsidienne              300   Mine*, Laboratoire d'alchimie*
+  Cœur de biome           620   AVENTURE
+  Reliques               1400   Laboratoire d'alchimie*
+  Œil de l'abîme         2600   AVENTURE
+
+--------------------------------------------------------------------------
+TRÉSOR  (2)
+--------------------------------------------------------------------------
+  Médailles                 0   AVENTURE
+  Écus                      1   Pêcherie*, Forge*, Tuilerie*, Poterie*, Poterie, Poterie [Tour à pied]*, Verrerie, Four banal*, Laiterie [Cave d'affinage]*, Atelier de tissage*, Orfèvre, Taverne, Tour de guet*
+
+--------------------------------------------------------------------------
+TOTAL : 93 ressources · 46 bâtiments · 133 recettes · 13 annexes
+
+NOTE — « Écus » nomme deux choses : la monnaie (Trésor) et le bouclier
+forgé à l armurerie (Ouvrages). Les identifiants diffèrent, l affichage non.

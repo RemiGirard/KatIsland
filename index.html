@@ -25,7 +25,11 @@
     </div>
     <div id="plateau-boutons" class="rangee"></div>
   </div>
-  <div id="plateau-scene"><canvas id="plateau-canvas"></canvas></div>
+  <div id="plateau-corps">
+    <aside id="plateau-gauche" class="plateau-cote" aria-label="Compagnie"></aside>
+    <div id="plateau-scene"><canvas id="plateau-canvas"></canvas></div>
+    <aside id="plateau-droite" class="plateau-cote" aria-label="Détails et compétences"></aside>
+  </div>
   <div id="plateau-pied"></div>
 </div>
 
@@ -36,8 +40,9 @@
 <script src="jeu/donnees/gd-core.js"></script>
 <script src="unites/data-units.js"></script>
 <script src="unites/data-forge.js"></script>
-<script src="jeu/donnees/gd-talents.js"></script>
+<script src="jeu/donnees/gd-talents-riches.js"></script>
 <script src="aventure/data-general.js"></script>
+<script src="jeu/donnees/gd-sorts-riches.js"></script>
 
 <script src="sprites/model3d.js"></script>
 <script src="sprites/sprites-core.js"></script>
@@ -51,13 +56,17 @@
      2. L'ÉCONOMIE DU BOURG
      ============================================================ -->
 <script src="jeu/js/icones.js"></script>
+<script src="img/images.js"></script>
+<script src="jeu/js/images.js"></script>
 <script src="jeu/donnees/ressources.js"></script>
 <script src="jeu/donnees/batiments.js"></script>
 <script src="jeu/donnees/ameliorations.js"></script>
 <script src="jeu/donnees/objectifs.js"></script>
 <script src="jeu/donnees/butins.js"></script>
+<script src="jeu/donnees/raffinages.js"></script>
 <script src="jeu/donnees/habitants.js"></script>
 <script src="jeu/js/etat.js"></script>
+<script src="jeu/js/armee.js"></script>
 <script src="jeu/js/moteur.js"></script>
 <script src="jeu/js/auto.js"></script>
 <script src="jeu/js/marche.js"></script>
@@ -79,8 +88,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="jeu/3d/village-doc.js"></script>
 <script src="jeu/3d/village3d.js"></script>
+<script src="jeu/3d/habitants3d.js"></script>
 <script src="jeu/js/reglages.js"></script>
 <script src="jeu/js/ui-noyau.js"></script>
+<script src="jeu/js/ui-armee.js"></script>
 <script src="jeu/js/ui-fenetres.js"></script>
 <script src="jeu/js/ui-dock.js"></script>
 <script src="jeu/js/ui-bulles.js"></script>

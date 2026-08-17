@@ -7,6 +7,9 @@
 # ------------------------------------------------------------------
 style/
 
+# ancienne version complète, conservée localement comme référence de design
+old/
+
 # captures de mise au point (jeu/dev-capture.js les dépose ici)
 jeu/*.png
 
@@ -15,3 +18,8 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+
+# scories d'outillage : captures de mise au point et scripts jetables
+"Nouveau dossier"/
+Nouveau dossier/
+~$*.xlsx

@@ -1,0 +1,1478 @@
+[
+ {
+  "dossier": "img/portrait/peche-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Pêche, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/peche-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Pêche, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/peche-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Pêche, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/bois-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bûcheronnage, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/bois-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bûcheronnage, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/bois-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bûcheronnage, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/champs-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Culture, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/champs-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Culture, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/champs-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Culture, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/elevage-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Élevage, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/elevage-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Élevage, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/elevage-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Élevage, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/mine-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Mine, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/mine-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Mine, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/mine-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Mine, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/feu-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Feu, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/feu-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Feu, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/feu-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Feu, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/forge-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Forge, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/forge-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Forge, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/forge-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Forge, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/tissage-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Tissage, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/tissage-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Tissage, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/tissage-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Tissage, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/cuisine-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Cuisine, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/cuisine-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Cuisine, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/cuisine-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Cuisine, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/savoir-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Savoir, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/savoir-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Savoir, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/savoir-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Savoir, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/batisse-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bâtisse, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/batisse-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bâtisse, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/batisse-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Bâtisse, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/guerre-1/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Guerre, variante 1 (jeune, oreilles dressées, pelage tigré)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/guerre-2/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Guerre, variante 2 (d'âge mûr, pelage gris, air posé)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/portrait/guerre-3/",
+  "cat": "Portrait",
+  "sujet": "Villageois — Guerre, variante 3 (âgé, pelage roux passé, une oreille fendue)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/commun/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Commun (#9a92a6)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/estime/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Estimé (#7fb069)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/rare/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Rare (#5f93cc)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/insigne/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Insigne (#e6c069)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/cadre/legende/",
+  "cat": "Cadre de rareté",
+  "sujet": "Cadre — Légende (#e0625c)",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/pecherie/",
+  "cat": "Bâtiment",
+  "sujet": "Pêcherie — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/scierie/",
+  "cat": "Bâtiment",
+  "sujet": "Scierie — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/champ/",
+  "cat": "Bâtiment",
+  "sujet": "Champ — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/puits/",
+  "cat": "Bâtiment",
+  "sujet": "Puits — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/maison/",
+  "cat": "Bâtiment",
+  "sujet": "Maison — vie",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/grange/",
+  "cat": "Bâtiment",
+  "sujet": "Grange — stock",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/entrepot/",
+  "cat": "Bâtiment",
+  "sujet": "Entrepôt — stock",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/carriere/",
+  "cat": "Bâtiment",
+  "sujet": "Carrière — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/mine/",
+  "cat": "Bâtiment",
+  "sujet": "Mine — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/charbonniere/",
+  "cat": "Bâtiment",
+  "sujet": "Charbonnière — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/fonderie/",
+  "cat": "Bâtiment",
+  "sujet": "Fonderie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/forge/",
+  "cat": "Bâtiment",
+  "sujet": "Forge — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/armurerie/",
+  "cat": "Bâtiment",
+  "sujet": "Armurerie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/tuilerie/",
+  "cat": "Bâtiment",
+  "sujet": "Tuilerie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/poterie/",
+  "cat": "Bâtiment",
+  "sujet": "Poterie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/verrerie/",
+  "cat": "Bâtiment",
+  "sujet": "Verrerie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/moulin/",
+  "cat": "Bâtiment",
+  "sujet": "Moulin à vent — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/moulinEau/",
+  "cat": "Bâtiment",
+  "sujet": "Moulin à eau — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/cuisine/",
+  "cat": "Bâtiment",
+  "sujet": "Four banal — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/fumoir/",
+  "cat": "Bâtiment",
+  "sujet": "Fumoir — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/bergerie/",
+  "cat": "Bâtiment",
+  "sujet": "Bergerie — elevage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/etable/",
+  "cat": "Bâtiment",
+  "sujet": "Étable — elevage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/laiterie/",
+  "cat": "Bâtiment",
+  "sujet": "Laiterie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/rucher/",
+  "cat": "Bâtiment",
+  "sujet": "Rucher — elevage",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/filature/",
+  "cat": "Bâtiment",
+  "sujet": "Filature — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/tannerie/",
+  "cat": "Bâtiment",
+  "sujet": "Tannerie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/herboristerie/",
+  "cat": "Bâtiment",
+  "sujet": "Herboristerie — recolte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/alchimie/",
+  "cat": "Bâtiment",
+  "sujet": "Laboratoire d'alchimie — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/scriptorium/",
+  "cat": "Bâtiment",
+  "sujet": "Scriptorium — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/orfevre/",
+  "cat": "Bâtiment",
+  "sujet": "Orfèvre — atelier",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/taverne/",
+  "cat": "Bâtiment",
+  "sujet": "Taverne — commerce",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/halle/",
+  "cat": "Bâtiment",
+  "sujet": "Halle — commerce",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/nurserie/",
+  "cat": "Bâtiment",
+  "sujet": "Nurserie — vie",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/entrainement/",
+  "cat": "Bâtiment",
+  "sujet": "Terrain d'entraînement — guerre",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/caserne/",
+  "cat": "Bâtiment",
+  "sujet": "Caserne — guerre",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/rempart/",
+  "cat": "Bâtiment",
+  "sujet": "Rempart — guerre",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/tour/",
+  "cat": "Bâtiment",
+  "sujet": "Tour de guet — guerre",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/eglise/",
+  "cat": "Bâtiment",
+  "sujet": "Chapelle — vie",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/chateau/",
+  "cat": "Bâtiment",
+  "sujet": "Donjon — vie",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/arbrechat/",
+  "cat": "Bâtiment",
+  "sujet": "Arbre à chat — vie",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/portail/",
+  "cat": "Bâtiment",
+  "sujet": "Portail d'expédition — porte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/bat/descente/",
+  "cat": "Bâtiment",
+  "sujet": "Le Puits sans fond — porte",
+  "prio": 1
+ },
+ {
+  "dossier": "img/res/poisson/",
+  "cat": "Ressource",
+  "sujet": "Poisson — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ble/",
+  "cat": "Ressource",
+  "sujet": "Blé — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/legume/",
+  "cat": "Ressource",
+  "sujet": "Racines — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lait/",
+  "cat": "Ressource",
+  "sujet": "Lait — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/miel/",
+  "cat": "Ressource",
+  "sujet": "Miel — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/champignon/",
+  "cat": "Ressource",
+  "sujet": "Champignons — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/farine/",
+  "cat": "Ressource",
+  "sujet": "Farine — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/viande/",
+  "cat": "Ressource",
+  "sujet": "Viande — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/pain/",
+  "cat": "Ressource",
+  "sujet": "Pain — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fromage/",
+  "cat": "Ressource",
+  "sujet": "Fromage — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/poissonfume/",
+  "cat": "Ressource",
+  "sujet": "Poisson fumé — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/tourte/",
+  "cat": "Ressource",
+  "sujet": "Tourte — vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bois/",
+  "cat": "Ressource",
+  "sujet": "Bois — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/pierre/",
+  "cat": "Ressource",
+  "sujet": "Pierre — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/argile/",
+  "cat": "Ressource",
+  "sujet": "Argile — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/sable/",
+  "cat": "Ressource",
+  "sujet": "Sable — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/eau/",
+  "cat": "Ressource",
+  "sujet": "Eau — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/herbe/",
+  "cat": "Ressource",
+  "sujet": "Simples — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/planche/",
+  "cat": "Ressource",
+  "sujet": "Planches — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/pierretaille/",
+  "cat": "Ressource",
+  "sujet": "Pierre de taille — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/brique/",
+  "cat": "Ressource",
+  "sujet": "Briques — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/tuile/",
+  "cat": "Ressource",
+  "sujet": "Tuiles — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/charbonbois/",
+  "cat": "Ressource",
+  "sujet": "Charbon de bois — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/poutre/",
+  "cat": "Ressource",
+  "sujet": "Poutres — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/verre/",
+  "cat": "Ressource",
+  "sujet": "Verre — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/corde/",
+  "cat": "Ressource",
+  "sujet": "Cordage — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cire/",
+  "cat": "Ressource",
+  "sujet": "Cire — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fer/",
+  "cat": "Ressource",
+  "sujet": "Minerai de fer — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/charbon/",
+  "cat": "Ressource",
+  "sujet": "Charbon de terre — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cuivre/",
+  "cat": "Ressource",
+  "sujet": "Minerai de cuivre — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/etain/",
+  "cat": "Ressource",
+  "sujet": "Minerai d'étain — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/argentmin/",
+  "cat": "Ressource",
+  "sujet": "Minerai d'argent — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ormin/",
+  "cat": "Ressource",
+  "sujet": "Minerai d'or — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotfer/",
+  "cat": "Ressource",
+  "sujet": "Lingot de fer — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotcuivre/",
+  "cat": "Ressource",
+  "sujet": "Lingot de cuivre — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bronze/",
+  "cat": "Ressource",
+  "sujet": "Bronze — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/acier/",
+  "cat": "Ressource",
+  "sujet": "Acier — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotargent/",
+  "cat": "Ressource",
+  "sujet": "Lingot d'argent — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lingotor/",
+  "cat": "Ressource",
+  "sujet": "Lingot d'or — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/mithril/",
+  "cat": "Ressource",
+  "sujet": "Mithril — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/laine/",
+  "cat": "Ressource",
+  "sujet": "Laine — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/lin/",
+  "cat": "Ressource",
+  "sujet": "Lin — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/peau/",
+  "cat": "Ressource",
+  "sujet": "Peaux — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fil/",
+  "cat": "Ressource",
+  "sujet": "Fil — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cuir/",
+  "cat": "Ressource",
+  "sujet": "Cuir — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/drap/",
+  "cat": "Ressource",
+  "sujet": "Drap — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/toile/",
+  "cat": "Ressource",
+  "sujet": "Toile — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/clou/",
+  "cat": "Ressource",
+  "sujet": "Clouterie — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/outil/",
+  "cat": "Ressource",
+  "sujet": "Outillage — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/outilacier/",
+  "cat": "Ressource",
+  "sujet": "Outillage d'acier — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/arme/",
+  "cat": "Ressource",
+  "sujet": "Armes — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/armure/",
+  "cat": "Ressource",
+  "sujet": "Harnois — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bouclier/",
+  "cat": "Ressource",
+  "sujet": "Écus — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/bijou/",
+  "cat": "Ressource",
+  "sujet": "Joaillerie — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/poterie/",
+  "cat": "Ressource",
+  "sujet": "Poterie — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/fiole/",
+  "cat": "Ressource",
+  "sujet": "Fioles — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/potion/",
+  "cat": "Ressource",
+  "sujet": "Potions — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/huile/",
+  "cat": "Ressource",
+  "sujet": "Huile — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/parchemin/",
+  "cat": "Ressource",
+  "sujet": "Parchemin — savoir",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/encre/",
+  "cat": "Ressource",
+  "sujet": "Encre — savoir",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/sort/",
+  "cat": "Ressource",
+  "sujet": "Grimoires — savoir",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/plan/",
+  "cat": "Ressource",
+  "sujet": "Plans — savoir",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/chant/",
+  "cat": "Ressource",
+  "sujet": "Chants de guerre — savoir",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/perle/",
+  "cat": "Ressource",
+  "sujet": "Perle — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ecaille/",
+  "cat": "Ressource",
+  "sujet": "Écaille — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ambre/",
+  "cat": "Ressource",
+  "sujet": "Ambre — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/resine/",
+  "cat": "Ressource",
+  "sujet": "Résine — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/silex/",
+  "cat": "Ressource",
+  "sujet": "Silex — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/salpetre/",
+  "cat": "Ressource",
+  "sujet": "Salpêtre — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/plume/",
+  "cat": "Ressource",
+  "sujet": "Plume de Nuée — textile",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/racine/",
+  "cat": "Ressource",
+  "sujet": "Racine amère — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/cendre/",
+  "cat": "Ressource",
+  "sujet": "Cendre vive — matiere",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/limaille/",
+  "cat": "Ressource",
+  "sujet": "Limaille — mineral",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardefeu/",
+  "cat": "Ressource",
+  "sujet": "Garde de feu — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardevenin/",
+  "cat": "Ressource",
+  "sujet": "Garde de venin — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardegel/",
+  "cat": "Ressource",
+  "sujet": "Garde de gel — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardefoudre/",
+  "cat": "Ressource",
+  "sujet": "Garde de foudre — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gardeombre/",
+  "cat": "Ressource",
+  "sujet": "Garde d'ombre — ouvrage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/essence/",
+  "cat": "Ressource",
+  "sujet": "Essence — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/gemme/",
+  "cat": "Ressource",
+  "sujet": "Gemmes — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ossuaire/",
+  "cat": "Ressource",
+  "sujet": "Reliquats — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/obsidienne/",
+  "cat": "Ressource",
+  "sujet": "Obsidienne — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/relique/",
+  "cat": "Ressource",
+  "sujet": "Reliques — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/coeurbiome/",
+  "cat": "Ressource",
+  "sujet": "Cœur de biome — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/oeilabyme/",
+  "cat": "Ressource",
+  "sujet": "Œil de l'abîme — profond",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/ecu/",
+  "cat": "Ressource",
+  "sujet": "Écus — monnaie",
+  "prio": 2
+ },
+ {
+  "dossier": "img/res/medaille/",
+  "cat": "Ressource",
+  "sujet": "Médailles — monnaie",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/peche/",
+  "cat": "Métier",
+  "sujet": "Métier — Pêche",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/bois/",
+  "cat": "Métier",
+  "sujet": "Métier — Bûcheronnage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/champs/",
+  "cat": "Métier",
+  "sujet": "Métier — Culture",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/elevage/",
+  "cat": "Métier",
+  "sujet": "Métier — Élevage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/mine/",
+  "cat": "Métier",
+  "sujet": "Métier — Mine",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/feu/",
+  "cat": "Métier",
+  "sujet": "Métier — Feu",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/forge/",
+  "cat": "Métier",
+  "sujet": "Métier — Forge",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/tissage/",
+  "cat": "Métier",
+  "sujet": "Métier — Tissage",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/cuisine/",
+  "cat": "Métier",
+  "sujet": "Métier — Cuisine",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/savoir/",
+  "cat": "Métier",
+  "sujet": "Métier — Savoir",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/batisse/",
+  "cat": "Métier",
+  "sujet": "Métier — Bâtisse",
+  "prio": 2
+ },
+ {
+  "dossier": "img/metier/guerre/",
+  "cat": "Métier",
+  "sujet": "Métier — Guerre",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/vivres/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Vivres",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/matiere/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Matières",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/mineral/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Minéraux",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/textile/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Textiles",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/ouvrage/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Ouvrages",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/savoir/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Savoirs",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/profond/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Profondeurs",
+  "prio": 2
+ },
+ {
+  "dossier": "img/cat/monnaie/",
+  "cat": "Catégorie",
+  "sujet": "Catégorie — Trésor",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/fond-fenetre/",
+  "cat": "Habillage",
+  "sujet": "Fond de fenêtre flottante",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/bandeau/",
+  "cat": "Habillage",
+  "sujet": "Fond du bandeau du haut",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/dock/",
+  "cat": "Habillage",
+  "sujet": "Fond du dock des chargements",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/bouton/",
+  "cat": "Habillage",
+  "sujet": "Bouton",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/cartouche/",
+  "cat": "Habillage",
+  "sujet": "Cartouche de titre",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/separateur/",
+  "cat": "Habillage",
+  "sujet": "Filet de séparation",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/jauge-fond/",
+  "cat": "Habillage",
+  "sujet": "Fond de barre de chargement",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/jauge-plein/",
+  "cat": "Habillage",
+  "sujet": "Remplissage de barre",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/ecusson/",
+  "cat": "Habillage",
+  "sujet": "Écusson du bourg",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/carte-fond/",
+  "cat": "Habillage",
+  "sujet": "Fond de carte d'habitant",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/titre-jeu/",
+  "cat": "Habillage",
+  "sujet": "Titre du jeu",
+  "prio": 2
+ },
+ {
+  "dossier": "img/ui/vignette-vide/",
+  "cat": "Habillage",
+  "sujet": "Emplacement vide",
+  "prio": 2
+ },
+ {
+  "dossier": "img/unite/eclaireur/",
+  "cat": "Unité",
+  "sujet": "Chaton Express — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/lancier/",
+  "cat": "Unité",
+  "sujet": "Chat Lancier — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/targier/",
+  "cat": "Unité",
+  "sujet": "Chat Targier — garde",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/costaud/",
+  "cat": "Unité",
+  "sujet": "Gros Matou — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/fronde/",
+  "cat": "Unité",
+  "sujet": "Chat Frondeur — tir",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/traqueur/",
+  "cat": "Unité",
+  "sujet": "Chat Patineur — tir",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/mage/",
+  "cat": "Unité",
+  "sujet": "Chat Sorcier — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/sapeur/",
+  "cat": "Unité",
+  "sujet": "Chat Bélière — explosif",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/essaim/",
+  "cat": "Unité",
+  "sujet": "Chat Gélatineux — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/rempart/",
+  "cat": "Unité",
+  "sujet": "Chat Rempart — garde",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/aura/",
+  "cat": "Unité",
+  "sujet": "Chat Ronronneur — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/assassin/",
+  "cat": "Unité",
+  "sujet": "Chat Ninja — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/barde/",
+  "cat": "Unité",
+  "sujet": "Chat Chef d’Orchestre — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/artilleur/",
+  "cat": "Unité",
+  "sujet": "Chat Artilleur — explosif",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/heros/",
+  "cat": "Unité",
+  "sujet": "Chevalier Griffe — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/soigneur/",
+  "cat": "Unité",
+  "sujet": "Chat Infirmier — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/entraveur/",
+  "cat": "Unité",
+  "sujet": "Chat Gluant — tir",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/invocateur/",
+  "cat": "Unité",
+  "sujet": "Chat Nécromiaou — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/porteur/",
+  "cat": "Unité",
+  "sujet": "Chat Porteur — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/ingenieur/",
+  "cat": "Unité",
+  "sujet": "Chat Bricoleur — tir",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/espion/",
+  "cat": "Unité",
+  "sujet": "Chat Cambrioleur — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/chronarque/",
+  "cat": "Unité",
+  "sujet": "Chat Horloger — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_force/",
+  "cat": "Unité",
+  "sujet": "Chaton Griffu — melee",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_agile/",
+  "cat": "Unité",
+  "sujet": "Chaton Fripon — tir",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_magie/",
+  "cat": "Unité",
+  "sujet": "Chaton Luisant — magie",
+  "prio": 3
+ },
+ {
+  "dossier": "img/unite/jeune_poudre/",
+  "cat": "Unité",
+  "sujet": "Chaton Pétard — explosif",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/neutre/",
+  "cat": "Péril",
+  "sujet": "Les Galeries",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/feu/",
+  "cat": "Péril",
+  "sujet": "Les Fournaises",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/venin/",
+  "cat": "Péril",
+  "sujet": "Les Fongères",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/gel/",
+  "cat": "Péril",
+  "sujet": "Le Grand Froid",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/foudre/",
+  "cat": "Péril",
+  "sujet": "Les Orages Enfouis",
+  "prio": 3
+ },
+ {
+  "dossier": "img/peril/ombre/",
+  "cat": "Péril",
+  "sujet": "L'Envers",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/10/",
+  "cat": "Gardien",
+  "sujet": "Étage 10 — La Chose du Puits",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/20/",
+  "cat": "Gardien",
+  "sujet": "Étage 20 — Le Ver de Fond",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/30/",
+  "cat": "Gardien",
+  "sujet": "Étage 30 — La Braise Marcheuse",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/40/",
+  "cat": "Gardien",
+  "sujet": "Étage 40 — Le Soufflet",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/50/",
+  "cat": "Gardien",
+  "sujet": "Étage 50 — La Mère des Spores",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/60/",
+  "cat": "Gardien",
+  "sujet": "Étage 60 — Le Chapeau Noir",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/70/",
+  "cat": "Gardien",
+  "sujet": "Étage 70 — Le Givre Assis",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/80/",
+  "cat": "Gardien",
+  "sujet": "Étage 80 — La Reine Blanche",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/90/",
+  "cat": "Gardien",
+  "sujet": "Étage 90 — Le Bruit",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/100/",
+  "cat": "Gardien",
+  "sujet": "Étage 100 — Le Trait Debout",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/110/",
+  "cat": "Gardien",
+  "sujet": "Étage 110 — L'Absence",
+  "prio": 3
+ },
+ {
+  "dossier": "img/gardien/120/",
+  "cat": "Gardien",
+  "sujet": "Étage 120 — Celui qui Regarde",
+  "prio": 3
+ }
+]

@@ -40,6 +40,12 @@
       window.Village.retirer(b.id);
     }
 
+    /* La Tour sombre est un morceau de l'île. Elle existe sur une partie
+       neuve comme sur une ancienne sauvegarde : cliquer sa silhouette
+       suffit pour préparer l'équipée et lancer le mode aventure. */
+    E().vus['carnet:descente'] = true;
+    window.Jeu.faireApparaitre('descente');
+
     /* ---- 4. les branchements ---- */
     /* ---- l'horloge murale ----
        La boucle de rendu s'arrête dès que l'onglet passe en arrière-plan :
@@ -49,6 +55,10 @@
        retard exactement comme au chargement. */
     let horloge = Date.now();
     window.Village.surTick(function (dt) {
+      /* LES HABITANTS DANS LE VILLAGE. Ils vivent sur la même horloge
+         que la scène : une image, un pas. Le module se débrouille seul
+         si le joueur les a coupés dans les réglages. */
+      if (window.Habitants3D) { try { window.Habitants3D.tick(dt); } catch (e) { } }
       const now = Date.now();
       const ecart = (now - horloge) / 1000;
       horloge = now;
@@ -269,6 +279,7 @@
   function rafraichirUI() {
     window.UIDock.majDock();
     window.UIDock.majBandeau();
+    window.UIDock.majProductions();
   }
 
   /* =================================================================
@@ -281,7 +292,7 @@
       if (k === 'o') window.UIDock.basculer();
       else if (k === 'c') window.UIFen.ouvrirChantier();
       else if (k === 'r') window.UIFen.ouvrirReserves();
-      else if (k === 'h') window.UIFen.ouvrirHabitants();
+      else if (k === 'h') window.UIFen.ouvrirHabitants('roles');
       else if (k === 'b') window.UIFen.ouvrirBourg();
       else if (k === 'g') window.UIFen.ouvrirReglages();
       else if (k === 'w') window.UI.fermerTout();

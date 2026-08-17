@@ -21,6 +21,11 @@
     gains: true,              // les gains qui montent au-dessus des ateliers
     gestes: true,             // les gestes de métier
     foule: 1,                 // 0 clairsemée · 1 dense · 2 foule
+    /* Le rendu des habitants dans le village : les sprites de la
+       compagnie (ceux des expéditions) ou de petits chats en volumes.
+       Les deux existent pour être comparés — l'un a le charme dessiné,
+       l'autre tourne vraiment sur lui-même. */
+    habitants: 'sprite',      // 'sprite' | 'bloc' | 'aucun'
     vitesseJour: 'normal',    // lent | normal | rapide | fige
     messages: 'tous',         // tous | importants | aucun
     confirmer: true,          // demander avant les gestes irréversibles
@@ -66,6 +71,7 @@
       window.Village.figerTemps(o.vitesseJour === 'fige');
       window.Village.densite(o.foule);
       window.Village.reglages({ gains: !!o.gains, gestes: !!o.gestes });
+    if (window.Habitants3D) window.Habitants3D.definirMode(o.habitants || 'sprite');
     }
   }
 

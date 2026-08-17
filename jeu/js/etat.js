@@ -231,6 +231,7 @@
       id: idVillage, type, niv: 1, xp: 0,
       outil: null,                       // { type:'outil'|'outilacier', restant:n }
       am: {},                            // améliorations d'atelier achetées
+      raff: {},                          // annexes bâties : { abattoir:true, … }
       postes: [], endommage: 0,
     };
     majPostes(b);
@@ -292,8 +293,19 @@
   /* De quoi nourrir la bouche de plus, d'avance : le coût monte avec la
      population, pour qu'un bourg de trente ne recrute pas comme un
      bourg de trois. */
+  /* CE QUE COÛTE UNE BOUCHE DE PLUS.
+
+     C'était 24 + 7 par habitant : trente et un repas pour le PREMIER,
+     soit une trentaine de poissons, quand le bourg n'a qu'un pêcheur et
+     qu'il mange déjà. Sept minutes de pêche pour une paire de pattes,
+     alors que les portes sont la principale source d'habitants — le
+     début de partie s'en trouvait bloqué net.
+
+     On garde la pente — chaque bouche rend la suivante plus chère,
+     c'est ce qui empêche d'empiler le bourg sans nourrir — mais on
+     abaisse la marche d'entrée. */
   function coutAccueil() {
-    return Math.round(24 + 7 * E.habitants.length);
+    return Math.round(12 + 6 * E.habitants.length);
   }
   function vivresDisponibles() {
     let p = 0;
@@ -301,19 +313,37 @@
     for (const id in POR) p += qte(id) * POR[id];
     return p;
   }
-  function payerAccueil() {
+  /* CE QUI VA RÉELLEMENT SORTIR DE LA GRANGE.
+
+     Le coût s'exprimait en « portions » — une unité qui n'existe nulle
+     part ailleurs dans le jeu, qu'aucun compteur n'affiche et qu'aucune
+     recette ne rend. Le joueur lisait « 24 portions » et n'avait aucun
+     moyen de savoir s'il en avait, ni comment en faire.
+
+     La quantité reste juste : c'est ainsi qu'on paie un repas selon ce
+     qui nourrit. Mais on peut MONTRER le panier exact avant de le
+     prendre — un poisson, deux blés — et l'abstraction disparaît.
+
+     `apercu` : on calcule sans rien dépenser. Le même code sert donc à
+     l'affichage et au paiement, et les deux ne peuvent pas diverger. */
+  function panierAccueil(apercu) {
     const POR = (window.Jeu && window.Jeu.PORTIONS) || {};
     let reste = coutAccueil();
     const ordre = (window.Jeu && window.Jeu.ORDRE_REPAS) || Object.keys(POR);
+    const panier = {};
     for (const id of ordre) {
       if (reste <= 0) break;
       const dispo = qte(id); if (dispo <= 0) continue;
       const pris = Math.min(dispo, Math.ceil(reste / POR[id]));
-      E.res[id] = dispo - pris; reste -= pris * POR[id];
+      panier[id] = pris;
+      reste -= pris * POR[id];
+      if (!apercu) E.res[id] = dispo - pris;
     }
-    invaliderCap();
-    return reste <= 0;
+    if (!apercu) invaliderCap();
+    return { panier, manque: Math.max(0, reste), suffit: reste <= 0 };
   }
+  function apercuAccueil() { return panierAccueil(true); }
+  function payerAccueil() { return panierAccueil(false).suffit; }
 
   /* L'ATTRAIT DU BOURG : ce qui décide de la qualité du tirage. */
   function attraitBourg() {
@@ -325,6 +355,7 @@
     }
     if (window.Jeu && window.Jeu.acquis) a += window.Jeu.acquis().immigration * 2;
     a -= (E.portes.renvois || 0) * 0.25;               // le bourg a une réputation
+    a -= Math.min(4, E.portes.refus || 0) * 0.35;       // faire venir puis refuser se sait aussi
     return Math.max(0, a);
   }
 
@@ -382,15 +413,33 @@
     return p;
   }
 
-  /* Renvoyer les trois : rien n'est gratuit. La rumeur court. */
+  /* Renvoyer les trois : ce n'est pas un bouton pour relancer le tirage.
+     Le premier refus ferme déjà les portes quatre heures réelles ; les
+     suivants durent davantage. Pendant ce temps le bourg perd du moral
+     et travaille moins vite. Le rattrapage hors-ligne fait bien avancer
+     cette attente, comme le reste de l'économie. */
+  function apercuRefus() {
+    const n = E.portes.refus || 0;
+    return {
+      duree: Math.round(4 * 3600 * Math.pow(1.35, Math.min(4, n))),
+      force: Math.min(0.35, 0.20 + 0.04 * Math.min(4, n)),
+      moral: Math.min(24, 12 + n * 3),
+    };
+  }
   function refuserTous() {
     if (!E.portes.postulants) return false;
+    const peine = apercuRefus();
     E.portes.postulants = null;
     E.portes.refus = (E.portes.refus || 0) + 1;
-    E.portes.barrees = E.tJeu + 120;
-    journal('Les trois voyageurs sont repartis. On en reparlera sur la route.', 'info');
+    E.portes.barrees = Math.max(E.portes.barrees || 0, E.tJeu + peine.duree);
+    E.malaise = { reste: peine.duree, total: peine.duree, force: peine.force,
+                  raison: 'refus aux portes' };
+    E.moralBonus = (E.moralBonus || 0) - peine.moral;
+    invaliderCap();
+    journal('Les trois voyageurs sont repartis. Les portes resteront closes ' +
+      Math.round(peine.duree / 3600) + ' h et le bourg tourne au ralenti.', 'alerte');
     prevenir('portes', null);
-    return true;
+    return peine;
   }
 
   /* =================================================================
@@ -584,7 +633,10 @@
       if (!d.memorial) d.memorial = [];
       d.v = VERSION;
       if (!d.recherches) d.recherches = {};
-      for (const bid in (d.bat || {})) if (!d.bat[bid].am) d.bat[bid].am = {};
+      for (const bid in (d.bat || {})) {
+        if (!d.bat[bid].am) d.bat[bid].am = {};
+        if (!d.bat[bid].raff) d.bat[bid].raff = {};   // sauvegarde d'avant les annexes
+      }
       if (!d.aventure) d.aventure = { profondeur: 0, record: 0, encours: null, sacoche: {} };
       if (!d.armee) d.armee = { unites: 0, xp: 0, palierArme: 0, palierArmure: 0, garnison: 0 };
       if (!d.territoires) d.territoires = [];
@@ -606,8 +658,8 @@
     batsDeType, nivDeType, aBatiment, creerBatiment, majPostes,
     habitant, habitantsLibres, ajouterHabitant, logementTotal, compteTrait,
     libererHabitant, affecterPoste, affecterChantier,
-    placesLibres, portesBarrees, coutAccueil, vivresDisponibles, attraitBourg,
-    peutOuvrirPortes, ouvrirPortes, accueillir, refuserTous,
+    placesLibres, portesBarrees, coutAccueil, vivresDisponibles, attraitBourg, apercuAccueil,
+    peutOuvrirPortes, ouvrirPortes, accueillir, apercuRefus, refuserTous,
     renvoyer, perdre, peineDeDepart, tickMalaise, facteurMalaise,
     rangMetier, progresMetier, gagnerXp,
     rangHabitant, gagnerXpHabitant, xpPourNiveau,

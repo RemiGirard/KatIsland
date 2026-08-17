@@ -115,22 +115,47 @@ body{
   z-index:20;
 }
 #bandeau .bloc{
-  display:flex;align-items:center;gap:9px;padding:0 13px;
-  border-radius:var(--r2);
-  cursor:pointer;transition:background .14s;
-  white-space:nowrap;position:relative;min-width:84px;
+  display:flex;align-items:center;gap:9px;padding:0 12px;
+  border-radius:3px;
+  cursor:pointer;transition:background .14s,box-shadow .14s;
+  white-space:nowrap;position:relative;min-width:76px;
 }
-#bandeau .bloc + .bloc::before{
-  content:'';position:absolute;left:-3px;top:8px;bottom:8px;width:1px;background:var(--bord);
-}
+/* Les groupes se séparent par un VIDE, pas par un filet de plus. Un
+   filet entre chaque bloc, c'est onze cloisons et aucune structure. */
+#bandeau .ecart{width:1px;margin:9px 7px;background:var(--bord);flex:none}
 #bandeau .bloc:hover{background:var(--panneau2)}
 #bandeau .bloc.inerte{cursor:default}
 #bandeau .bloc.inerte:hover{background:none}
-#bandeau .v{font-family:'Condense','Inter',sans-serif;font-size:19px;letter-spacing:.02em;
+
+/* TROIS RANGS DE LECTURE.
+   r1 — ce qu'on lit sans y penser : les bras, les portes, le chantier.
+   r2 — ce qu'on consulte : l'avoir, le moral.
+   r3 — ce qui doit se faire oublier : l'heure, les réglages, le calme.
+   La taille et l'encre suivent le rang ; rien d'autre ne les distingue. */
+#bandeau .v{font-family:'Condense','Inter',sans-serif;letter-spacing:.02em;
             color:var(--texte);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+#bandeau .r1 .v{font-size:21px}
+#bandeau .r2 .v{font-size:17px}
+#bandeau .r3 .v{font-size:14px;color:var(--doux)}
 #bandeau .v.bon{color:var(--vert)} #bandeau .v.mauvais{color:var(--corail)}
-#bandeau .k{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--faible);
+#bandeau .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faible);
             margin-top:3px;font-weight:600}
+#bandeau .r3 .k{opacity:.72}
+#bandeau .r3 img,#bandeau .r3 canvas{opacity:.6}
+
+/* UNE DÉCISION ATTEND — le seul motif de colorer quoi que ce soit.
+   `attente` : le joueur a un geste à faire, et il rapporte.
+   `alerte`  : quelque chose se gâte. */
+#bandeau .bloc.attente{background:rgba(127,176,105,.12);box-shadow:inset 0 0 0 1px rgba(127,176,105,.30)}
+#bandeau .bloc.attente .v{color:var(--vert)}
+#bandeau .bloc.attente:hover{background:rgba(127,176,105,.20)}
+#bandeau .bloc.alerte{background:rgba(224,98,92,.12);box-shadow:inset 0 0 0 1px rgba(224,98,92,.32)}
+#bandeau .bloc.alerte .v{color:var(--corail)}
+#bandeau .bloc.alerte:hover{background:rgba(224,98,92,.20)}
+/* un battement TRÈS lent : on doit le remarquer sans en être agacé */
+@keyframes respire{0%,100%{opacity:1}50%{opacity:.72}}
+#bandeau .bloc.attente .k,#bandeau .bloc.alerte .k{animation:respire 2.8s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){#bandeau .bloc .k{animation:none}}
 /* La jauge se glisse ENTRE la valeur et son intitulé : elle appartient au
    même bloc, elle ne flotte pas à côté. */
 #bandeau .col{display:flex;flex-direction:column;justify-content:center;gap:0}
@@ -426,6 +451,73 @@ button.b.pleine{width:100%}
 .item-res.baisse .q small{color:var(--corail)}
 
 /* ---------------------------------------------------------------
+   L'INVENTAIRE EN QUADRILLAGE
+   Une ligne par ressource donnait une colonne de quatre-vingt-dix-huit
+   entrées où l'on ne trouvait rien. Une CASE tient l'image et le
+   nombre ; tout le reste — débit, horizon, valeur — attend dans
+   l'infobulle. On reconnaît, on ne lit pas.
+   --------------------------------------------------------------- */
+.quadrillage-res{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));
+  gap:5px;
+}
+.case-res{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:2px;padding:9px 4px 6px;
+  border:1px solid var(--bord);background:var(--panneau);
+  border-radius:var(--r3);
+  transition:border-color .14s,background .14s;
+  cursor:default;
+}
+.case-res:hover{border-color:var(--bord3);background:var(--panneau2)}
+.case-res .im{height:40px;display:flex;align-items:center;justify-content:center}
+.case-res .im canvas,.case-res .im img{
+  width:40px;height:40px;display:block;object-fit:contain;
+}
+/* le nombre passe DEVANT l'image, en bas à droite : c'est ainsi qu'on
+   lit un inventaire, pas en colonne séparée */
+.case-res .q{
+  font-family:'Condense','Inter',sans-serif;font-size:16px;font-weight:700;
+  font-variant-numeric:tabular-nums;color:var(--texte);line-height:1;
+  margin-top:2px;
+}
+.case-res .nm{
+  font-size:9px;letter-spacing:.04em;color:var(--faible);
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-align:center;
+}
+.case-res.zero{opacity:.42}
+.case-res.zero .q{color:var(--faible)}
+.case-res.plein{border-color:var(--corail2)}
+.case-res.plein .q{color:var(--corail)}
+/* une flèche muette dans le coin : ça monte, ça baisse. Pas de chiffre
+   — le chiffre est dans l'infobulle. */
+.case-res.monte::after,.case-res.baisse::after{
+  content:'';position:absolute;top:5px;right:5px;
+  border-left:3px solid transparent;border-right:3px solid transparent;
+}
+.case-res.monte::after{border-bottom:5px solid var(--vert)}
+.case-res.baisse::after{border-top:5px solid var(--corail)}
+
+/* Une image de ressource ou de portrait déposée par le joueur. Elle
+   remplace l'icône dessinée sans que rien d'autre ne change. */
+.vig{display:block;object-fit:contain;image-rendering:auto}
+/* Pas d'ombre portée : sur une image déjà détourée, un halo sombre se
+   lit exactement comme le contour qu'on cherchait à éviter. */
+.vig-res{filter:none}
+
+/* Une image DÉPOSÉE n'est pas du pixel art : elle fait 275 px de côté et
+   descend à 16 dans une puce. Rendue « pixelated », l'échantillonnage
+   au plus proche voisin lui fabrique des dents — ce qui, à petite
+   taille, se lit encore comme un contour. Les règles de conteneur
+   (.puce img, .av img, .tache .ico img…) visent le canvas des icônes
+   dessinées ; on les désarme ici pour les vraies images. */
+img.vig,.puce img.vig,.av img.vig,.tache .ico img.vig,
+.item-res img.vig,.cat-item .vig img.vig,#bandeau img.vig{
+  image-rendering:auto;
+}
+
+/* ---------------------------------------------------------------
    POSTE DE TRAVAIL
    --------------------------------------------------------------- */
 .poste{border:1px solid var(--bord);background:var(--panneau);
@@ -448,6 +540,11 @@ button.b.pleine{width:100%}
 .av canvas,.av img{width:20px;height:20px;image-rendering:pixelated}
 .av.or{border-color:var(--or2)}
 .av.vert{border-color:var(--vert2)}
+/* Quand c'est un VISAGE et non une icône de métier, il remplit la
+   pastille au lieu de flotter dedans — et l'on cadre sur les yeux. */
+.av.face{overflow:hidden;background:var(--creux)}
+.av.face img{width:100%;height:100%;object-fit:cover;object-position:center 18%;
+             image-rendering:auto}
 
 /* une pastille de niveau */
 .niv{font-family:'Condense','Inter',sans-serif;font-size:12px;font-weight:700;
@@ -578,6 +675,24 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 
 .vide{padding:26px 12px;text-align:center;color:var(--faible);font-size:12px;line-height:1.8}
 
+/* La caserne : une fiche se lit comme une silhouette, pas comme un tableau. */
+.liste-unites{display:grid;gap:8px}
+.carte-unite{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:10px;border:1px solid var(--bord);border-radius:var(--r2);background:rgba(255,255,255,.025)}
+.carte-unite.en-colonne{border-color:rgba(214,177,73,.55);background:rgba(214,177,73,.07)}
+.unite-sceau{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;font:700 18px 'Condense','Inter',sans-serif;
+  color:#f4efe5;background:#6f6256;border:1px solid rgba(255,255,255,.13)}
+.unite-sceau.cat-tir{background:#496878}.unite-sceau.cat-magie{background:#65527a}
+.unite-sceau.cat-explosif{background:#84513e}.unite-sceau.cat-garde{background:#53645a}
+.unite-sceau.unite-image{position:relative;overflow:visible;background:rgba(255,255,255,.06)}
+.unite-sceau.unite-image .vig-unite{width:64px!important;height:64px!important;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.unite-quantite{position:absolute;right:-5px;bottom:-5px;min-width:20px;height:20px;padding:0 4px;border-radius:10px;background:#17232b;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.3)}
+.vig-bat,.vig-metier{object-fit:contain;display:block;filter:drop-shadow(0 3px 3px rgba(0,0,0,.22))}
+.unite-corps{min-width:0}.unite-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:var(--doux);font-size:10px}
+.unite-technique{margin-top:5px;color:var(--or);font-size:10px}.unite-technique.faible{color:var(--faible)}
+.ligne-deblocage{padding:7px 2px;border-bottom:1px solid var(--bord);font-size:11px}
+.cadre.technique{border-left:3px solid var(--bord2)}.cadre.technique.actif{border-left-color:var(--or)}
+
 /* ---------------------------------------------------------------
    PLATEAU PLEIN ÉCRAN
    --------------------------------------------------------------- */
@@ -586,8 +701,21 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 #plateau-tete{display:flex;align-items:center;gap:14px;padding:11px 16px;
   background:var(--panneau);border-bottom:1px solid var(--bord)}
 #plateau-tete .ti{flex:1}
+#plateau-corps{flex:1;min-height:0;display:grid;grid-template-columns:minmax(210px,280px) minmax(520px,1fr) minmax(230px,300px);gap:0}
 #plateau-scene{flex:1;position:relative;display:grid;place-items:center;overflow:hidden}
 #plateau-scene canvas{max-width:100%;max-height:100%;display:block;border-radius:var(--r2)}
+#plateau .plateau-cote{min-width:0;padding:14px 12px;overflow:auto;background:rgba(25,35,43,.82);border-right:1px solid var(--bord)}
+#plateau #plateau-droite{border-right:0;border-left:1px solid var(--bord)}
+.plateau-cote .cote-titre{margin-bottom:10px;font-family:'Condense','Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--doux)}
+.plateau-membre{padding:9px;border:1px solid var(--bord);border-radius:var(--r2);background:rgba(255,255,255,.025);margin-bottom:7px;cursor:pointer}
+.plateau-membre.choisi{border-color:rgba(214,177,73,.65);background:rgba(214,177,73,.07)}
+.plateau-portrait{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--panneau3);color:var(--or);font-weight:800;flex:none}
+.plateau-mini-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:8px}
+.plateau-mini-stats span{padding:5px 6px;border-radius:5px;background:rgba(255,255,255,.035);font-size:9px;color:var(--doux)}
+.plateau-pouvoir{padding:8px 0;border-bottom:1px solid var(--bord)}
+.plateau-pouvoir:last-child{border-bottom:0}
+.plateau-vie{height:4px;margin-top:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.plateau-vie i{display:block;height:100%;background:var(--vert)}
 #plateau-pied{padding:11px 16px;background:var(--panneau);border-top:1px solid var(--bord);
   display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
@@ -613,6 +741,14 @@ body.dock-droite #dock-poignee span{transform:scaleX(-1)}
   :root{--dock:250px}
   .fen{min-width:300px;max-width:95vw}
   #bandeau .bloc{padding:0 8px}
+}
+@media (max-width:1200px){
+  #plateau-corps{grid-template-columns:190px minmax(480px,1fr) 210px}
+  #plateau .plateau-cote{padding:10px 8px}
+}
+@media (max-width:880px){
+  #plateau-corps{grid-template-columns:1fr}
+  #plateau .plateau-cote{display:none}
 }
 
 /* ---------------------------------------------------------------
@@ -649,18 +785,74 @@ body.dock-droite #dock-poignee span{transform:scaleX(-1)}
 .cadre.fiche.r-legende{border-left-color:#e0625c}
 
 /* les trois voyageurs à la porte */
-.postulants{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:10px}
+/* ---------------------------------------------------------------
+   LE CHOIX DU NOUVEL HABITANT
+   Le seul écran où l'on décide QUI vit là. Le visage passe donc en
+   premier et prend toute la largeur ; sous lui, le nom, le métier, et
+   DEUX colonnes seulement — ce qu'il apporte, ce qu'il coûte. Les
+   angles sont vifs et les coins marqués : on est devant une carte
+   qu'on retourne, pas devant une ligne de tableau.
+   --------------------------------------------------------------- */
+.postulants{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
 .postulant{
   position:relative;border:1px solid var(--bord2);background:var(--panneau);
-  border-radius:var(--r2);padding:12px 12px 12px;overflow:hidden;
+  border-radius:2px;overflow:hidden;
   display:flex;flex-direction:column;
-  transition:border-color .14s,background .14s;
+  transition:border-color .14s,background .14s,transform .14s;
 }
-.postulant:hover{border-color:var(--bord3);background:var(--panneau2)}
-.postulant .liseret{position:absolute;inset:0 0 auto 0;height:3px}
+.postulant:hover{border-color:var(--bord3);transform:translateY(-2px)}
+/* les coins marqués, en équerre : quatre traits, aucune image */
+.postulant::before,.postulant::after{
+  content:'';position:absolute;width:11px;height:11px;pointer-events:none;
+  border-color:var(--bord3);opacity:.7;
+}
+.postulant::before{top:5px;left:5px;border-top:1px solid;border-left:1px solid}
+.postulant::after{bottom:5px;right:5px;border-bottom:1px solid;border-right:1px solid}
 .postulant.r-insigne{box-shadow:inset 0 0 0 1px rgba(230,192,105,.22)}
 .postulant.r-legende{box-shadow:inset 0 0 0 1px rgba(224,98,92,.28)}
-.postulant .b{margin-top:auto}
+
+/* le fanion de rareté, planté en haut à gauche */
+.postulant .fanion{
+  position:absolute;top:0;left:12px;z-index:2;
+  width:26px;padding:5px 0 8px;display:flex;justify-content:center;
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);
+}
+.postulant .fanion canvas,.postulant .fanion img{opacity:.92}
+
+/* LE VISAGE. Il est cadré serré et fondu vers le bas : le regard tombe
+   naturellement sur le nom qui suit. */
+.postulant .figure{
+  position:relative;height:172px;overflow:hidden;background:var(--creux);
+  display:flex;align-items:flex-start;justify-content:center;
+}
+.postulant .figure img{width:100%;height:100%;object-fit:cover;object-position:center 12%}
+.postulant .figure.sans{align-items:center;opacity:.4}
+.postulant .figure::after{
+  content:'';position:absolute;inset:auto 0 0 0;height:44px;
+  background:linear-gradient(to bottom,transparent,var(--panneau));
+}
+
+.postulant .corps{padding:2px 13px 12px;display:flex;flex-direction:column;gap:3px}
+.postulant .nom{
+  font-family:'Condense','Inter',sans-serif;font-size:20px;font-weight:700;
+  letter-spacing:.03em;text-transform:uppercase;line-height:1.1;
+}
+.postulant .role{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faible)}
+.postulant .filet{height:1px;background:var(--bord2);margin:7px 0 4px}
+
+.postulant .bloc-tr{margin-top:4px}
+.postulant .chap{
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px;
+}
+.postulant .chap.bon{color:var(--vert)}
+.postulant .chap.mal{color:var(--corail)}
+.postulant .tr{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--doux)}
+.postulant .tr .pt{width:4px;height:4px;flex:none;transform:rotate(45deg)}
+.postulant .tr.bon .pt{background:var(--vert)}
+.postulant .tr.mal .pt{background:var(--corail)}
+.postulant .tr .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.postulant .choisir{margin:auto 13px 13px;width:auto;border-radius:2px}
 
 /* la jauge des chances : une bande, cinq segments, aucune légende cachée */
 .jauge-raretes{display:flex;height:14px;border-radius:99px;overflow:hidden;
@@ -779,3 +971,698 @@ button.b.large{width:100%;justify-content:center}
 .nuance:hover{transform:translateY(-2px)}
 .nuance.choisie{border-color:#fff;transform:translateY(-2px);
   box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+
+/* ===============================================================
+   LES PANNEAUX CLAIRS
+   ===============================================================
+   Le décor est sombre : l'île, le ciel, le bandeau, le dock. Les
+   FENÊTRES, elles, passent au clair — parce que ce sont elles qu'on
+   lit, et qu'on lit mieux de l'encre sur du papier que l'inverse.
+
+   Tout le jeu est écrit avec les mêmes jetons (--panneau, --texte,
+   --bord…). On les redéfinit donc ICI, sur `.fen`, et les cent
+   composants qui vivent dedans basculent sans qu'on touche à une
+   seule de leurs règles.
+
+   Deux partis pris :
+     · ANGULEUX. Les rayons tombent à 2 px. Un panneau est une feuille
+       posée, pas une bulle.
+     · SOBRE. Les accents s'assombrissent pour tenir sur le clair ;
+       aucun aplat coloré ne vient meubler.
+   =============================================================== */
+.fen{
+  --panneau:#f4efe4;
+  --panneau2:#eae3d4;
+  --panneau3:#ded5c2;
+  --creux:#e6dfd0;
+  --bord:rgba(46,42,36,.13);
+  --bord2:rgba(46,42,36,.22);
+  --bord3:rgba(46,42,36,.38);
+
+  --texte:#2b2d33;
+  --doux:#5b5f68;
+  --faible:#78766f;
+
+  --corail:#b8483f;  --corail2:#d9a49f;
+  --or:#9a7620;      --or2:#d6bd84;
+  --vert:#587d3c;    --vert2:#a8c08e;
+  --bleu:#3a6d9c;    --bleu2:#9db9d4;
+  --violet:#6f5fa0;
+
+  background:#f4efe4;
+  border:1px solid rgba(46,42,36,.28);
+  border-radius:2px;
+  box-shadow:0 18px 48px rgba(0,0,0,.45);
+  backdrop-filter:none;
+  color:var(--texte);
+}
+.fen.active{border-color:rgba(46,42,36,.45)}
+
+/* la tête garde le ton sombre : c'est la poignée, elle appartient au
+   décor, pas à la feuille */
+.fen .fen-tete{
+  background:#2f333b;border-bottom:1px solid rgba(0,0,0,.35);
+  color:#efe9dc;
+}
+.fen .fen-tete h2,.fen .fen-tete .tt,.fen .fen-tete .nomv{color:#f3ede0}
+.fen .fen-tete .eti,.fen .fen-tete .sous{color:#a29d92}
+.fen .fen-x{color:#a29d92;border-color:rgba(255,255,255,.18)}
+.fen .fen-x:hover{color:#e8837a;border-color:rgba(232,131,122,.5);background:rgba(232,131,122,.12)}
+
+/* LA BARRE D'ONGLETS appartient à la tête sombre, elle aussi : sinon
+   l'onglet actif s'écrit en encre noire sur de la nuit. */
+.fen .fen-onglets{background:#262a32;border-bottom:1px solid rgba(0,0,0,.35)}
+.fen .fen-onglets button{color:#8b8f99}
+.fen .fen-onglets button:hover{color:#c6c2b8}
+.fen .fen-onglets button.on{color:#f3ede0}
+.fen .fen-onglets button.on::after{background:#c9605a}
+
+/* LES ACCENTS DE RARETÉ s'assombrissent pour tenir sur le crème. Les
+   teintes claires viennent des données ; on les rattrape ici. */
+.fen .rarete.r-commun{color:#6c6676}
+.fen .rarete.r-estime{color:#4e7536}
+.fen .rarete.r-rare{color:#356392}
+.fen .rarete.r-insigne{color:#8a6a12}
+.fen .rarete.r-legende{color:#b0433c}
+.fen .r-commun .pastille-r,.fen .r-estime .pastille-r{box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+
+/* les petits intitulés étaient trop pâles : sur du papier, un gris
+   clair n'est plus un gris, c'est un blanc. */
+.fen .k,.fen .eti,.fen .faible,.fen .vide{color:#77746c}
+
+/* ANGULEUX : plus rien n'est arrondi dans une fenêtre claire */
+.fen .cadre,.fen .poste,.fen .case-res,.fen .item-res,
+.fen .b,.fen button.b,.fen .ech-pas,.fen .stat,.fen .av{border-radius:2px}
+.fen .av{border-radius:2px}
+
+/* les creux et les barres se lisent en négatif sur le clair */
+.fen .jauge,.fen .jauge-mince{background:rgba(46,42,36,.12)}
+.fen .note{color:var(--doux)}
+.fen .note.faible{color:var(--faible)}
+.fen .vide{color:var(--faible)}
+
+/* une case d'inventaire sur fond clair n'a pas besoin d'un fond : le
+   filet suffit, et l'image respire */
+.fen .case-res{background:rgba(255,255,255,.55)}
+.fen .case-res:hover{background:#fff}
+.fen .case-res .im img{filter:none}
+
+/* les boutons : un aplat sobre, un filet, rien de plus */
+.fen button.b{background:rgba(46,42,36,.06);border-color:var(--bord2);color:var(--texte)}
+.fen button.b:hover{background:rgba(46,42,36,.12);border-color:var(--bord3)}
+.fen button.b.primaire{background:#4a6b33;border-color:#3c5729;color:#f2f0e6}
+.fen button.b.primaire:hover{background:#557a3a}
+.fen button.b.danger{background:#a8423a;border-color:#8a352e;color:#f6ece9}
+.fen button.b[disabled]{opacity:.42}
+
+/* L'ÉCRAN DE CHOIX reste sombre : trois visages sur du papier crème
+   n'ont plus rien d'un choix solennel. On lui rend son fond de nuit. */
+.fen .postulants{
+  --panneau:#232833;
+  --panneau2:#2b313e;
+  --creux:#191d26;
+  --bord:rgba(255,255,255,.09);
+  --bord2:rgba(255,255,255,.17);
+  --bord3:rgba(255,255,255,.32);
+  --texte:#e9e6de;
+  --doux:#a8a599;
+  --faible:#77746c;
+  --vert:#8fbf6a; --corail:#e0736a; --or:#e6c069;
+  padding:14px;background:#1b1f28;border:1px solid rgba(0,0,0,.4);
+}
+.fen .postulants .b.primaire{background:#4a6b33;border-color:#5d8342;color:#f2f0e6}
+
+/* les infobulles du navigateur suffisent — mais on veut qu'elles
+   viennent VITE et qu'elles se voient : le curseur d'aide le dit. */
+[title]{cursor:help}
+button[title],.b[title],a[title]{cursor:pointer}
+.case-res[title]{cursor:help}
+
+/* ---------------------------------------------------------------
+   L'INFOBULLE MAISON
+   Celle du navigateur met une seconde à venir, s'écrit dans la police
+   du système et ne tient qu'une ligne. Celle-ci vient en 140 ms, porte
+   un titre et un corps, et suit le curseur sans jamais le masquer.
+   --------------------------------------------------------------- */
+#bulle{
+  position:fixed;z-index:60;pointer-events:none;
+  opacity:0;transition:opacity .10s;
+  max-width:300px;
+  background:#191d26;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:3px;
+  padding:8px 11px 9px;
+  box-shadow:0 10px 30px rgba(0,0,0,.55);
+  color:#e9e6de;
+}
+#bulle.vu{opacity:1}
+#bulle .bt{
+  font-family:'Condense','Inter',sans-serif;font-size:13.5px;letter-spacing:.055em;
+  text-transform:uppercase;font-weight:700;color:#f2eee4;line-height:1.2;
+}
+#bulle .bd{font-size:11.5px;line-height:1.55;color:#b4b0a5;margin-top:5px}
+#bulle .bt + .bd{margin-top:6px}
+#bulle .bl{list-style:none;margin:6px 0 0;padding:0}
+#bulle .bl li{
+  font-size:11.5px;line-height:1.5;color:#b4b0a5;
+  padding-left:11px;position:relative;
+}
+#bulle .bl li::before{
+  content:'';position:absolute;left:0;top:7px;width:4px;height:4px;
+  background:#7f8570;transform:rotate(45deg);
+}
+/* un chiffre dans une bulle se lit en tabulaire, comme partout */
+#bulle .bd{font-variant-numeric:tabular-nums}
+
+/* le curseur d'aide n'a plus lieu d'être : la bulle vient toute seule,
+   et un curseur qui change à chaque survol est une agitation de plus */
+[title],[data-bulle]{cursor:inherit}
+.case-res[title],.case-res[data-bulle]{cursor:default}
+
+/* ---------------------------------------------------------------
+   LA BARRE D'APPEL
+   Un panneau qui constate un manque doit porter le geste qui le
+   comble, à côté du constat. Sinon le joueur lit « 2 postes sans
+   personne », referme, et va chercher ailleurs de quoi agir.
+   --------------------------------------------------------------- */
+.appel{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;margin:2px 0 8px;
+  border:1px solid var(--vert2);
+  border-left:3px solid var(--vert);
+  background:rgba(127,176,105,.10);
+  border-radius:2px;
+}
+.appel.calme{
+  border-color:var(--bord2);border-left-color:var(--faible);
+  background:rgba(46,42,36,.05);
+}
+.appel .tt{color:var(--texte)}
+.appel .eti{margin-top:2px;text-transform:none;letter-spacing:.02em;font-size:11px}
+.appel button{flex:none}
+
+/* le pied du dock devient une action quand il a quelque chose à dire */
+#dock-pied.appelable{
+  cursor:pointer;color:var(--vert);
+  background:rgba(127,176,105,.09);
+  transition:background .14s;
+}
+#dock-pied.appelable:hover{background:rgba(127,176,105,.18)}
+/* l'état vide n'est plus une remontrance : il porte son bouton */
+#dock-liste .vide{display:flex;flex-direction:column;align-items:center;
+                  text-align:center;padding:26px 16px}
+#dock-liste .vide .note{max-width:210px}
+#dock-pied.mauvais{color:var(--corail);background:rgba(224,98,92,.12);cursor:pointer}
+
+/* ---------------------------------------------------------------
+   LA POIGNÉE DE TAILLE
+   Deux traits en bas à droite : la convention est si répandue qu'elle
+   n'a pas besoin d'être expliquée. Elle ne se montre franchement
+   qu'au survol de la fenêtre.
+   --------------------------------------------------------------- */
+.fen{position:fixed}
+.fen-taille{
+  position:absolute;right:0;bottom:0;width:16px;height:16px;
+  cursor:nwse-resize;z-index:3;opacity:.28;transition:opacity .14s;
+}
+.fen:hover .fen-taille,.fen.active .fen-taille{opacity:.6}
+.fen-taille:hover{opacity:1}
+.fen-taille::before,.fen-taille::after{
+  content:'';position:absolute;right:3px;background:currentColor;
+}
+.fen-taille::before{bottom:3px;width:9px;height:1px}
+.fen-taille::after{bottom:3px;width:1px;height:9px}
+/* une fenêtre redimensionnée doit laisser défiler son corps, pas
+   déborder : c'est le corps qui absorbe la hauteur */
+.fen{display:flex;flex-direction:column}
+.fen-corps{flex:1;min-height:0;overflow-y:auto}
+
+/* un état vide se centre et porte son geste : jamais une impasse */
+.fen .vide{display:flex;flex-direction:column;align-items:center;text-align:center;
+           padding:22px 16px;gap:0}
+.fen .vide .note{max-width:280px}
+.fen .vide button{align-self:center}
+
+/* ---------------------------------------------------------------
+   LE FOCUS
+   Il n'y en avait aucun : jouer au clavier revenait à naviguer les
+   yeux fermés. On le montre franchement, mais SEULEMENT quand il
+   vient du clavier — `:focus-visible` s'en charge, la souris ne
+   déclenche donc aucun liseré.
+   --------------------------------------------------------------- */
+:focus{outline:none}
+:focus-visible{
+  outline:2px solid var(--or);
+  outline-offset:2px;
+  border-radius:2px;
+}
+.fen :focus-visible{outline-color:#9a7620}
+#bandeau .bloc:focus-visible,.tache:focus-visible,.case-res:focus-visible{
+  outline:2px solid var(--or);outline-offset:-1px;
+}
+/* un élément rendu focalisable par le noyau ne doit pas hériter du
+   curseur texte : il se comporte comme un bouton, il en a l'air */
+[role="button"]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+[role="button"].inerte{cursor:default}
+
+/* ===============================================================
+   REFONTE GÉNÉRALE — interface plate, calme et hiérarchisée
+   =============================================================== */
+:root{
+  --fond:#111a21;--fond2:#0b1217;
+  --panneau:#18242d;--panneau2:#21313c;--panneau3:#2b3d49;--creux:#101920;
+  --bord:rgba(226,235,237,.10);--bord2:rgba(226,235,237,.20);--bord3:rgba(226,235,237,.34);
+  --texte:#eef1ec;--doux:#b3bbb8;--faible:#7e8a89;
+  --corail:#df6b5b;--corail2:#8d4037;--or:#e1b956;--or2:#8a6d2c;
+  --vert:#8eaf65;--vert2:#4e6738;--bleu:#63a1c5;--bleu2:#365f78;--violet:#9586bd;
+  --r:7px;--r2:5px;--r3:4px;--dock:272px;--prod:310px;--bandeau:64px;
+}
+
+/* Barre supérieure : un vrai bandeau de navigation, sans capsules. */
+#bandeau{
+  top:0;left:0;right:0;height:var(--bandeau);gap:0;padding:0 14px;
+  background:#15232d;border:0;border-bottom:1px solid rgba(255,255,255,.10);
+  border-radius:0;backdrop-filter:none;box-shadow:0 4px 18px rgba(4,10,14,.22);
+}
+#bandeau .bloc{
+  min-width:76px;padding:0 13px;gap:8px;border-radius:0;
+  border-left:1px solid rgba(255,255,255,.075);transition:background .12s;
+}
+#bandeau .bloc:hover{background:#1d303b}
+#bandeau .ecart{display:none}
+#bandeau .grow{min-width:224px;flex:1;border-left:0;padding-left:4px}
+#bandeau .nomv{font-size:25px;color:#edf0e7;letter-spacing:.045em}
+#bandeau .v,#bandeau .r1 .v,#bandeau .r2 .v,#bandeau .r3 .v{font-size:18px;color:#f1f2ec}
+#bandeau .r3 .v{font-size:16px;color:#c7ccca}
+#bandeau .k{font-size:9px;margin-top:5px;letter-spacing:.13em;color:#879392}
+#bandeau .bloc.attente,#bandeau .bloc.alerte{box-shadow:none}
+#bandeau .bloc.attente{background:rgba(142,175,101,.10);border-bottom:3px solid var(--vert)}
+#bandeau .bloc.alerte{background:rgba(223,107,91,.10);border-bottom:3px solid var(--corail)}
+#bandeau .bloc.attente .k,#bandeau .bloc.alerte .k{animation:none}
+#bandeau .jauge-mince{margin-top:5px}
+
+/* Toutes les jauges sont des traits. Les libellés vivent au-dessus du
+   trait : aucune information n'est emprisonnée dans une barre colorée. */
+.jauge-mince{height:3px;border-radius:0;background:rgba(255,255,255,.12);box-shadow:none}
+.jauge-mince i{border-radius:0;transition:width .22s linear}
+.barre{
+  height:27px;background:transparent;border-radius:0;overflow:visible;box-shadow:none;
+  position:relative;
+}
+.barre::before{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--creux)}
+.barre i{
+  top:auto;bottom:0;height:3px;border-radius:0;background:var(--or);box-shadow:none;
+  transition:width .22s linear;z-index:1;
+}
+.barre i::before,.barre i::after{display:none}
+.barre.grande,.barre.enorme,.barre.mince{height:27px;border-radius:0}
+.barre.grande i,.barre.enorme i{border-radius:0}
+.barre .dedans,.barre.enorme .dedans{
+  inset:0 0 7px 0;height:18px;padding:0;align-items:center;
+  color:var(--doux);font-size:10.5px;font-weight:600;text-shadow:none;letter-spacing:.025em;
+}
+.barre .dedans .d{color:var(--texte);opacity:1}
+.barre:not(:has(.dedans)){height:4px;overflow:hidden;background:var(--creux)}
+.barre:not(:has(.dedans))::before{display:none}
+.barre:not(:has(.dedans)) i{height:4px}
+.barre.raye i{background-image:none}
+
+/* Le journal d'activité devient une colonne de statut, pas un second menu. */
+#dock{
+  left:16px;top:80px;bottom:16px;width:var(--dock);background:#15222b;
+  border:1px solid rgba(255,255,255,.10);border-radius:6px;backdrop-filter:none;
+  box-shadow:0 12px 34px rgba(4,10,14,.25);
+}
+#dock-tete{padding:15px 16px 13px;border-bottom:1px solid rgba(255,255,255,.09)}
+#dock-liste{padding:8px 10px}
+#dock-pied{padding:11px 14px}
+#dock-poignee{
+  left:288px;top:92px;width:23px;height:44px;background:#15222b;
+  border-color:rgba(255,255,255,.10);border-radius:0 4px 4px 0;
+}
+.tache{
+  margin:0;padding:11px 8px 12px 11px;background:transparent;border:0;
+  border-bottom:1px solid rgba(255,255,255,.08);border-radius:0;
+}
+.tache::before{width:2px;top:12px;bottom:12px}
+.tache:hover{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.08)}
+.tache .l1{margin-bottom:5px}.tache .nom{font-size:12px}.tache .tps{font-size:12px}
+.tache .l2{margin-top:7px}.tache .l2 .qu{font-size:10px}
+#dock-liste .vide{padding:30px 14px}
+
+/* Volet symétrique : on part de la ressource voulue, puis on remonte
+   jusqu'à la recette, au bâtiment et au travailleur. */
+#productions{
+  position:fixed;right:16px;top:80px;bottom:16px;width:var(--prod);
+  display:flex;flex-direction:column;background:#15222b;
+  border:1px solid rgba(255,255,255,.10);border-radius:6px;
+  box-shadow:0 12px 34px rgba(4,10,14,.25);z-index:15;overflow:hidden;
+  transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s;
+}
+#productions.replie{transform:translateX(calc(var(--prod) + 32px));opacity:0}
+#productions-tete{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 14px 13px;border-bottom:1px solid rgba(255,255,255,.09)}
+#productions-corps{flex:1;min-height:0;overflow:auto;padding:10px}
+#productions-poignee{
+  position:fixed;right:326px;top:92px;width:23px;height:44px;display:grid;place-items:center;
+  background:#15222b;border:1px solid rgba(255,255,255,.10);border-right:0;
+  border-radius:4px 0 0 4px;cursor:pointer;z-index:16;color:var(--or);
+  transition:right .2s cubic-bezier(.4,0,.2,1),background .12s;
+}
+#productions-poignee:hover{background:#20313c}
+.prod-intro{font-size:10.5px;line-height:1.5;color:#93a09f;padding:2px 3px 10px}
+#productions-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.prod-res{
+  min-width:0;display:flex;align-items:center;gap:7px;padding:7px 6px;
+  color:var(--texte);font:inherit;text-align:left;background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.075);border-radius:4px;cursor:pointer;
+  transition:background .12s,border-color .12s;
+}
+.prod-res:hover{background:rgba(255,255,255,.065);border-color:rgba(255,255,255,.16)}
+.prod-res.on{background:rgba(142,175,101,.11);border-color:rgba(142,175,101,.48)}
+.prod-res-ico{width:32px;height:32px;display:grid;place-items:center;flex:none}
+.prod-res-texte{min-width:0;display:block}.prod-res-texte b{display:block;font-size:10.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-res-texte i{display:block;margin-top:2px;font-style:normal;font-size:8.5px;color:#869391;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#production-detail{margin-top:10px;padding-top:11px;border-top:1px solid rgba(255,255,255,.10)}
+.prod-detail-titre{display:flex;align-items:center;gap:10px;padding:0 3px 10px}.prod-detail-titre .eti{margin-top:4px}
+.prod-source{padding:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:4px}
+.prod-source + .prod-source{margin-top:6px}
+.prod-source-haut{display:flex;align-items:center;gap:8px}.prod-source-nom{flex:1;min-width:0}
+.prod-source-nom b{display:block;font-size:11.5px;font-weight:650}.prod-source-nom span{display:block;margin-top:2px;font-size:9px;color:#899695;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod-actif{font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:var(--vert);flex:none}
+.prod-flux{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:8px 0}.prod-fleche{color:#6f7c7c}
+.prod-vide{padding:30px 16px;text-align:center}.prod-vide .note{margin-top:7px}
+
+/* Fenêtres : une feuille sobre, bien séparée du décor. */
+.fen{
+  --panneau:#f7f5ef;--panneau2:#efebe2;--panneau3:#e5dfd4;--creux:#d9d5cd;
+  --bord:rgba(31,43,48,.11);--bord2:rgba(31,43,48,.20);--bord3:rgba(31,43,48,.34);
+  --texte:#283238;--doux:#5f6a6c;--faible:#7d8583;
+  --corail:#b74f42;--corail2:#d9a79f;--or:#8d6b1e;--or2:#d4bd83;
+  --vert:#58753f;--vert2:#afc49d;--bleu:#3e7394;--bleu2:#a8c1d0;--violet:#6f6193;
+  min-width:450px;max-width:min(720px,94vw);background:#f7f5ef;
+  border:1px solid rgba(19,31,36,.24);border-radius:6px;
+  box-shadow:0 18px 52px rgba(3,10,14,.34);backdrop-filter:none;color:var(--texte);
+}
+.fen.large{min-width:min(760px,94vw);max-width:min(900px,96vw)}
+.fen.active{border-color:rgba(19,31,36,.36)}
+.fen .fen-tete{padding:15px 17px 13px;background:#1c2b35;border-bottom:0}
+.fen .fen-tete h2{font-size:21px;color:#f4f2e9;letter-spacing:.04em}
+.fen .fen-tete .sous{color:#98a5a4}
+.fen .fen-x{width:30px;height:30px;color:#aab4b2;border-color:rgba(255,255,255,.16)}
+.fen .fen-onglets{
+  padding:0 10px;background:#eae6dd;border-bottom:1px solid rgba(31,43,48,.13);
+  flex-wrap:nowrap;overflow-x:auto;
+}
+.fen .fen-onglets button{padding:12px 11px 10px;color:#777f7e;letter-spacing:.10em}
+.fen .fen-onglets button.on{color:#263238}
+.fen .fen-onglets button.on::after{left:11px;right:11px;height:2px;background:#597748}
+.fen-corps{padding:20px;max-height:min(68vh,680px)}
+.fen-corps > * + *{margin-top:14px}
+.fen .cadre,.fen .poste,.fen .item-res,.fen .case-res{
+  background:rgba(255,255,255,.38);border-color:rgba(31,43,48,.13);border-radius:4px;
+}
+.fen .cadre{padding:13px 14px}
+.fen .stats{gap:0;background:transparent;border:1px solid rgba(31,43,48,.13);border-radius:4px}
+.fen .stats > div{background:transparent;border-right:1px solid rgba(31,43,48,.10);padding:11px 13px}
+.fen .stats > div:last-child{border-right:0}
+.fen button.b{border-radius:4px;background:transparent;border-color:rgba(31,43,48,.22)}
+.fen button.b:hover:not(:disabled){background:rgba(31,43,48,.07)}
+.fen button.b.primaire{background:#536f42;border-color:#536f42;color:#fff}
+.fen button.b.primaire:hover:not(:disabled){background:#607f4c;border-color:#607f4c}
+.fen button.b.danger{background:transparent;border-color:#cda8a1;color:#a7473d}
+.fen .barre::before{background:#d7d3ca}
+.fen .barre .dedans{color:#667073}.fen .barre .dedans .d{color:#283238}
+
+/* Tableau d'affectation : une ligne = un choix, sans fiche encyclopédique. */
+.affect-ligne{
+  display:flex;align-items:center;gap:12px;min-height:58px;padding:9px 10px;
+  background:rgba(255,255,255,.34);border:1px solid rgba(31,43,48,.12);
+  border-radius:4px;cursor:pointer;transition:background .12s,border-color .12s;
+}
+.affect-ligne + .affect-ligne{margin-top:6px}
+.affect-ligne:hover{background:#fff;border-color:rgba(31,43,48,.25)}
+.affect-ico{width:34px;height:34px;display:grid;place-items:center;background:#e8e4da;border-radius:4px;flex:none}
+.affect-main{flex:1;min-width:0}.affect-main .eti{margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.affect-compte{font:700 14px 'Condense',sans-serif;color:#687170}.etat-ok{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#58753f}
+.affect-habitants{border:1px solid rgba(31,43,48,.12);border-radius:4px;overflow:hidden}
+.affect-habitant{display:flex;align-items:center;gap:10px;padding:9px 10px;background:rgba(255,255,255,.28)}
+.affect-habitant + .affect-habitant{border-top:1px solid rgba(31,43,48,.10)}
+.affect-habitant.libre{background:rgba(142,175,101,.08)}
+.affect-identite{flex:1;min-width:0}.affect-identite b{font-size:12.5px;color:#29343a}
+.affect-identite > span{display:block;font-size:10px;color:#737c7c;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.affect-appel{margin-top:0}
+.poste-details{margin-top:11px;border-top:1px solid rgba(31,43,48,.10);padding-top:8px}
+.poste-details summary{list-style:none;cursor:pointer;font-size:9.5px;letter-spacing:.10em;text-transform:uppercase;color:#697474;user-select:none}
+.poste-details summary::-webkit-details-marker{display:none}
+.poste-details summary::after{content:'+';float:right;font-size:14px;line-height:1}
+.poste-details[open] summary::after{content:'−'}
+.poste-details-corps{padding-top:5px}
+.aventure-avancee{margin-top:16px;border:1px solid rgba(31,43,48,.14);border-radius:4px;background:rgba(255,255,255,.24)}
+.aventure-avancee > summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;cursor:pointer;padding:13px 14px;font:700 13px 'Condense',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#334046}
+.aventure-avancee > summary::-webkit-details-marker{display:none}
+.aventure-avancee > summary::after{content:'+';font-size:18px;color:#74807f}.aventure-avancee[open] > summary::after{content:'−'}
+.aventure-avancee > summary .eti{margin-left:auto}
+.aventure-avancee-corps{padding:0 14px 14px;border-top:1px solid rgba(31,43,48,.10)}
+.aventure-avancee-corps > *{margin-top:12px}
+
+/* Ouverture des portes : un écran de décision, inspiré des trois cartes
+   de référence. Le village reste derrière, mais plus aucun panneau ne
+   concurrence les visages. */
+.habitants-fen:has(.postulants){
+  --panneau:#182632;--panneau2:#21313d;--creux:#101b24;
+  --bord:rgba(255,255,255,.10);--bord2:rgba(255,255,255,.20);--bord3:rgba(255,255,255,.38);
+  --texte:#f1f0e9;--doux:#aeb8b7;--faible:#7d8a8c;
+  --vert:#9cbc72;--corail:#e16f62;--or:#e2ba57;
+  left:0!important;top:var(--bandeau)!important;width:100vw!important;height:calc(100vh - var(--bandeau))!important;
+  min-width:0!important;max-width:none!important;background:#101b24;border:0;border-radius:0;box-shadow:none;
+}
+.habitants-fen:has(.postulants) .fen-tete,
+.habitants-fen:has(.postulants) .fen-onglets,
+.habitants-fen:has(.postulants) .fen-taille{display:none!important}
+.habitants-fen:has(.postulants) .fen-corps{
+  max-height:none;height:100%;padding:22px 32px 18px;background:#101b24;color:var(--texte);overflow:auto;
+}
+.choix-portes-tete{text-align:center;max-width:760px;margin:0 auto 16px}
+.choix-portes-sur{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#879596;font-weight:700}
+.choix-portes-titre{font:700 28px 'Condense',sans-serif;letter-spacing:.055em;text-transform:uppercase;color:#f0f1ea;line-height:1.1;margin-top:4px}
+.choix-portes-sous{font-size:12px;color:#aab5b4;margin-top:5px}
+.habitants-fen .postulants{
+  display:grid;grid-template-columns:repeat(3,minmax(0,350px));justify-content:center;align-items:stretch;gap:20px;
+  max-width:1090px;margin:0 auto;padding:0;background:transparent;border:0;
+}
+.habitants-fen .postulant{
+  background:#182632;border:1px solid rgba(255,255,255,.16);border-radius:3px;
+  box-shadow:0 12px 30px rgba(0,0,0,.18);transform:none;cursor:pointer;opacity:1;
+}
+.habitants-fen .postulant:hover{background:#1b2b37;border-color:rgba(255,255,255,.38);transform:translateY(-3px)}
+.habitants-fen .postulant.choisi{border-color:#9cbc72;box-shadow:0 0 0 2px #9cbc72,0 16px 36px rgba(0,0,0,.28);background:#1d2e39}
+.habitants-fen .postulant::before,.habitants-fen .postulant::after{display:none}
+.habitants-fen .postulant.choisi::after{display:block;content:'';position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:12px solid #9cbc72}
+.habitants-fen .postulant .figure{height:clamp(260px,40vh,390px);background:#0d171e;border-bottom:1px solid rgba(255,255,255,.10)}
+.habitants-fen .postulant .figure img{object-fit:cover;object-position:center 10%}
+.habitants-fen .postulant .figure::after{display:none}
+.habitants-fen .postulant .corps{padding:13px 18px 12px;min-height:145px}
+.habitants-fen .postulant .nom{font-size:24px;text-align:center}
+.habitants-fen .postulant .role{color:#8e9a9b;text-align:center;margin-top:3px}
+.habitants-fen .postulant .filet{background:rgba(255,255,255,.12)}
+.habitants-fen .postulant .tr{color:#b5bdbc}
+.choix-portes-actions{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px auto 0}
+.choix-portes-actions .confirmer-candidat{min-width:210px}
+.choix-portes-prix-refus{
+  margin:8px auto 0;text-align:center;font-size:9px;letter-spacing:.06em;
+  text-transform:uppercase;color:#d58a80;
+}
+.choix-portes-actions .refuser-candidats{min-width:150px}
+.habitants-fen:has(.postulants) button.b.danger{color:#c9968f;border-color:rgba(225,111,98,.35)}
+
+/* Sur un écran moins haut, les trois décisions et le bouton de confirmation
+   restent visibles ensemble. Les portraits demeurent néanmoins plus larges
+   que dans l'ancienne version. */
+@media (max-height:760px) and (min-width:861px){
+  .habitants-fen:has(.postulants) .fen-corps{padding-top:12px;padding-bottom:10px}
+  .choix-portes-tete{margin-bottom:10px}
+  .choix-portes-titre{font-size:26px}
+  .habitants-fen .postulant .figure{height:230px}
+  .habitants-fen .postulant .corps{padding-top:9px;padding-bottom:8px;min-height:126px}
+  .habitants-fen .postulant .nom{font-size:21px}
+  .choix-portes-actions{margin-top:10px}
+}
+
+@media (max-width:860px){
+  .habitants-fen:has(.postulants) .fen-corps{padding:18px 14px}
+  .habitants-fen .postulants{grid-template-columns:minmax(240px,420px)}
+  .habitants-fen .postulant .figure{height:210px}
+  .choix-portes-actions{position:sticky;bottom:0;background:#101b24;padding:10px 0}
+}
+
+/* Construction : une palette basse nette, dont les icônes restent le héros. */
+#bulles{bottom:16px;gap:6px}
+#bulles-rail{
+  gap:2px;padding:5px;background:#172630;border:1px solid rgba(255,255,255,.11);
+  border-radius:6px;backdrop-filter:none;box-shadow:0 10px 28px rgba(4,10,14,.25);
+}
+.bulle{width:66px;padding:8px 3px 7px;border:0;border-radius:3px;background:transparent}
+.bulle:hover{background:rgba(255,255,255,.07);border-color:transparent;transform:none}
+.bulle.neuve{border:0;border-bottom:2px solid var(--or)}
+
+@media (max-width:1100px){
+  #bandeau{padding:0 8px}#bandeau .grow{min-width:180px}
+  #bandeau .bloc{min-width:66px;padding:0 9px}
+  #bandeau .r3:not(:last-child){display:none}
+}
+@media (max-width:780px){
+  :root{--dock:244px;--prod:286px;--bandeau:58px}
+  #bandeau .grow{min-width:150px}#bandeau .nomv{font-size:20px}
+  #bandeau .bloc{display:none}#bandeau .bloc.grow,#bandeau .bloc.attente,#bandeau .bloc.alerte{display:flex}
+  #dock{left:8px;top:68px;bottom:8px}#dock-poignee{left:252px;top:78px}
+  #productions{right:8px;top:68px;bottom:8px}#productions-poignee{right:294px;top:78px}
+  .fen,.fen.large{min-width:0;width:calc(100vw - 16px)!important;max-width:none!important;left:8px!important;top:68px!important;height:calc(100vh - 76px)!important}
+  .fen-corps{max-height:none}.fen .stats{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ===============================================================
+   INTERFACE DE SUIVI — plus claire, plus visuelle
+   =============================================================== */
+:root{--dock:240px;--menace-ui:18px}
+
+/* Le décor reste visible derrière la navigation. */
+#bandeau{
+  background:rgba(24,42,53,.78);border-bottom-color:rgba(255,255,255,.18);
+  backdrop-filter:blur(14px) saturate(1.08);box-shadow:0 3px 14px rgba(4,10,14,.16);
+}
+#bandeau .bloc{border-left-color:rgba(255,255,255,.11)}
+#bandeau .bloc:hover{background:rgba(75,101,112,.34)}
+#bandeau .grow{min-width:196px}
+#bandeau .bloc[data-cle^="suivi:"]{min-width:82px;padding-left:10px;padding-right:10px}
+#bandeau .bloc[data-cle="stocks"]{min-width:48px;padding-left:9px;padding-right:9px}
+#bandeau .bloc[data-cle="stocks"] .v{font-size:21px;color:#cbd5d2}
+#bandeau .bloc[data-cle="stocks"] .k{letter-spacing:.08em}
+
+/* La menace est un horizon continu sous le bandeau. Elle ne prend plus
+   une case de navigation et sa progression reste visible partout. */
+#menace-ligne{
+  position:fixed;left:0;right:0;top:var(--bandeau);height:var(--menace-ui);z-index:19;
+  display:block;padding:0;border:0;background:rgba(18,31,39,.46);color:#dce4e0;
+  font:inherit;cursor:pointer;overflow:hidden;backdrop-filter:blur(8px);
+}
+.menace-piste{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.12)}
+.menace-piste i{display:block;height:100%;background:#d99a55;transition:width .3s linear}
+#menace-ligne.alerte .menace-piste i{background:var(--corail)}
+.menace-legende{
+  position:absolute;right:12px;top:1px;font-size:8.5px;line-height:13px;
+  letter-spacing:.11em;text-transform:uppercase;color:#c2cdca;text-shadow:0 1px 2px #132028;
+}
+
+/* Le panneau d'activité est plus clair et ne montre que l'essentiel. */
+#dock{
+  left:14px;top:calc(var(--bandeau) + var(--menace-ui) + 12px);bottom:14px;width:var(--dock);
+  background:rgba(32,52,63,.91);border-color:rgba(255,255,255,.17);
+  box-shadow:0 10px 28px rgba(4,10,14,.18);backdrop-filter:blur(10px);
+}
+#dock-tete{padding:12px 13px 10px;border-color:rgba(255,255,255,.13)}
+#dock-liste{padding:5px 9px}
+#dock-pied{padding:8px 12px;color:#c4cecb;border-color:rgba(255,255,255,.12)}
+#dock-poignee{
+  left:254px;top:calc(var(--bandeau) + var(--menace-ui) + 22px);
+  background:rgba(32,52,63,.94);border-color:rgba(255,255,255,.17);
+}
+.tache{
+  min-height:82px;margin:0;padding:10px 7px;display:grid;
+  grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;
+  border-bottom:1px solid rgba(255,255,255,.11);background:transparent;
+}
+.tache::before{display:none}
+.tache:hover{background:rgba(255,255,255,.07)}
+.tache-visuel{width:48px;height:48px;display:grid;place-items:center}
+.tache-visuel canvas,.tache-visuel img{max-width:46px;max-height:46px;object-fit:contain}
+.tache-lecture{min-width:0}
+.tache-mini{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.tache-mini span{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:#d6dedb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tache-mini i{font-style:normal;font-size:9px;color:#9eadaa;font-variant-numeric:tabular-nums}
+.tache .barre.grande{height:8px;background:rgba(6,15,20,.42);overflow:hidden;border-radius:2px}
+.tache .barre.grande::before{display:none}
+.tache .barre.grande i{top:0;height:100%;border-radius:2px;background:#e8b64e}
+.tache.poste .barre.grande i{background:#80a864}
+.tache.bloquee .barre.grande i{background:var(--corail)}
+.tache-gain{margin-top:5px;font-size:15px;line-height:1;font-weight:750;color:#f2f3ed;font-variant-numeric:tabular-nums}
+.tache.bloquee .tache-gain{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#ef9b8e}
+
+/* Épingles du stock. */
+.case-suivre{
+  position:absolute;left:5px;top:4px;width:22px;height:22px;padding:0;border:0;
+  background:transparent;color:#8b8c86;font-size:16px;line-height:20px;cursor:pointer;z-index:2;
+}
+.case-suivre:hover,.case-suivre.on{color:#a77b13}
+.case-res.suivie{border-color:rgba(154,118,32,.48);background:rgba(214,189,132,.13)}
+.suivi-aide{margin:4px 0 8px;font-size:10px;color:var(--faible);letter-spacing:.02em}
+
+/* Carnet inférieur : une seule famille de plans à la fois, avec accès
+   direct à la file et aux ouvriers. */
+#bulles{bottom:12px;width:min(720px,calc(100vw - 590px));min-width:520px;gap:5px}
+#chantier-bas{
+  width:100%;overflow:hidden;background:rgba(245,243,236,.93);color:#29343a;
+  border:1px solid rgba(25,38,44,.24);border-radius:6px;
+  box-shadow:0 8px 24px rgba(4,10,14,.20);backdrop-filter:blur(12px);
+}
+#bulles-nav{height:34px;display:flex;align-items:stretch;border-bottom:1px solid rgba(31,43,48,.13)}
+.chantier-tab,.chantier-carnet,.chantier-replier,.chantier-filtre,.chantier-action,.chantier-job{
+  font:inherit;color:#526066;background:transparent;border:0;cursor:pointer;
+}
+.chantier-tab{padding:0 14px;font-size:9.5px;font-weight:750;letter-spacing:.10em;text-transform:uppercase;border-bottom:2px solid transparent}
+.chantier-tab:hover{background:rgba(31,43,48,.05)}
+.chantier-tab.on{color:#263238;border-bottom-color:#68804e}
+.chantier-carnet,.chantier-replier{width:34px;margin-left:auto;font-size:15px;border-left:1px solid rgba(31,43,48,.10)}
+.chantier-replier{margin-left:0}
+#bulles.replie #bulles-nav{border-bottom:0}
+#bulles.replie #chantier-bas{width:max-content;min-width:390px}
+#bulles.replie #bulles-filtres,#bulles.replie #bulles-rail{display:none}
+#bulles-filtres{display:flex;align-items:center;justify-content:center;gap:2px;min-height:28px;padding:3px 7px;background:rgba(31,43,48,.035)}
+#bulles-filtres:empty{display:none}
+.chantier-filtre{padding:4px 10px;border-radius:3px;font-size:9px;letter-spacing:.05em;text-transform:uppercase}
+.chantier-filtre:hover{background:rgba(31,43,48,.07)}
+.chantier-filtre.on{background:#dde4d7;color:#3e5934}
+#bulles-rail{
+  width:100%;height:68px;display:flex;align-items:stretch;justify-content:flex-start;
+  flex-wrap:nowrap;gap:2px;padding:4px 6px;overflow-x:auto;overflow-y:hidden;
+  background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;
+}
+.bulle{width:62px;min-width:62px;padding:5px 3px 4px;color:#263238}
+.bulle:hover{background:rgba(31,43,48,.07)}
+.bulle .n{color:#586469;font-size:8px}
+.bulle.pauvre{opacity:.38}
+.bulle .point{width:6px;height:6px;top:4px;right:5px;box-shadow:0 0 0 2px rgba(245,243,236,.95)}
+.chantier-vide{display:flex;align-items:center;padding:0 12px;color:#77807f;font-size:10px;white-space:nowrap}
+.chantier-action{align-self:center;min-width:max-content;height:32px;padding:0 12px;margin:0 2px;border:1px solid rgba(31,43,48,.16);border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.chantier-action:hover{background:rgba(31,43,48,.06)}
+.chantier-action.primaire{background:#657d4e;color:#fff;border-color:#657d4e}
+.chantier-action:disabled{opacity:.35;cursor:default}
+.chantier-job{position:relative;min-width:132px;padding:7px 9px;text-align:left;border-right:1px solid rgba(31,43,48,.10)}
+.chantier-job span{display:block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:650;color:#344147}
+.chantier-job i{display:block;position:relative;height:4px;margin-top:6px;background:#d5d8d2;overflow:hidden}
+.chantier-job i b{position:absolute;inset:0 auto 0 0;background:#d4a73f}
+.chantier-job small{display:block;margin-top:3px;color:#7c8583;font-size:8px}
+.chantier-bras{min-width:120px;display:grid;grid-template-columns:auto 1fr;align-content:center;column-gap:6px;padding:5px 10px}
+.chantier-bras b{grid-row:1/3;font:700 28px 'Condense',sans-serif;color:#3f5238}
+.chantier-bras span{align-self:end;font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+.chantier-bras i{font-style:normal;font-size:9px;color:#7c8583}
+
+#productions{top:calc(var(--bandeau) + var(--menace-ui) + 12px);background:rgba(28,46,56,.94);border-color:rgba(255,255,255,.15)}
+#productions-poignee{top:calc(var(--bandeau) + var(--menace-ui) + 22px);background:rgba(28,46,56,.96)}
+#messages{top:calc(var(--bandeau) + var(--menace-ui) + 10px)}
+
+@media (max-width:1100px){
+  #bandeau .grow{min-width:168px}
+  #bandeau .bloc[data-cle^="suivi:"]{min-width:68px;padding-left:7px;padding-right:7px}
+  #bandeau .bloc[data-cle^="suivi:"] .k{max-width:54px;overflow:hidden;text-overflow:ellipsis}
+  #bulles{width:min(620px,calc(100vw - 520px));min-width:430px}
+}
+@media (max-width:780px){
+  :root{--dock:244px;--prod:286px;--bandeau:58px;--menace-ui:18px}
+  #menace-ligne{top:var(--bandeau)}
+  #dock{left:8px;top:calc(var(--bandeau) + var(--menace-ui) + 8px);bottom:8px}
+  #dock-poignee{left:252px;top:calc(var(--bandeau) + var(--menace-ui) + 18px)}
+  #productions{right:8px;top:calc(var(--bandeau) + var(--menace-ui) + 8px);bottom:8px}
+  #productions-poignee{right:294px;top:calc(var(--bandeau) + var(--menace-ui) + 18px)}
+  #bulles{width:calc(100vw - 16px);min-width:0;bottom:8px}
+  #bulles.replie #chantier-bas{min-width:0;width:100%}
+}

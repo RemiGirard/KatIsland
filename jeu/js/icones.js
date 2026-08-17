@@ -243,6 +243,18 @@
     p(5,4,6,1,cl(a,.2)); p(5,9,6,1,b);
     p.ligne(8,3,8,10,b);
   };
+  /* LE FRUIT : rond, une feuille penchée, une queue courte. On mord
+     dedans du regard — c'est tout ce qu'on lui demande. */
+  F.fruit = (p,c)=>{
+    const a=c[0]||'#c4443a', b=c[1]||'#8a2a24';
+    for(let j=0;j<9;j++){
+      const t=j/8, w=Math.round(4+6*Math.sin(Math.PI*(0.18+0.82*t)));
+      p(8-Math.round(w/2),5+j,w,1, j<3?cl(a,.22):(j>6?b:a));
+    }
+    p(7,3,1,3,'#4a3a26');                 // la queue
+    p(8,3,3,2,'#5d7247'); p(8,3,3,1,cl('#5d7247',.25));   // la feuille
+    p(5,7,2,2,cl(a,.34));                 // le reflet
+  };
   F.champignon = (p,c)=>{
     const a=c[0]||'#a8563f', b=c[1]||'#e8dcc4';
     p(3,5,10,4,a); p(4,4,8,1,cl(a,.2)); p(3,8,10,1,om(a,.26));

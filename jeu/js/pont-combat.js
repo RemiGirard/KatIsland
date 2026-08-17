@@ -51,19 +51,21 @@ const TRAD_RES = {
 function versBourg(id) { return TRAD_RES[id] || (window.RES[id] ? id : 'ossuaire'); }
 
 /* ---------------------------------------------------------------
-   LE RAVITAILLEMENT DE LA DESCENTE. Le barème d'origine se comptait en
-   milliers d'unités d'une ressource « food » abstraite ; le bourg, lui,
-   compte des poissons fumés et des tourtes, et sa grange a un plafond.
-   On réécrit donc le coût dans la monnaie du jeu — et l'on en profite
-   pour en faire une PORTE : sans fumoir, pas de descente profonde.
+   LE RAVITAILLEMENT DE LA DESCENTE. Les dix premiers étages ne demandent
+   QUE du poisson : la Tour fait partie du commencement, pas de la fin de
+   la chaîne alimentaire. Puis chaque dizaine ajoute progressivement une
+   préparation que le village vient justement d'apprendre à produire.
    --------------------------------------------------------------- */
 GD.descentCost = function (checkpoint, party) {
   const n = Math.max(1, (party | 0) || 1);
-  const t = 1 + Math.floor((Math.max(1, checkpoint) - 1) / 10);
-  const c = { poissonfume: Math.ceil(3 * Math.pow(1.75, t - 1) * n) };
-  if (t >= 2) c.potion = Math.ceil(1 * Math.pow(1.5, t - 2) * n);
-  if (t >= 3) c.tourte = Math.ceil(2 * Math.pow(1.55, t - 3) * n);
-  if (t >= 5) c.huile = Math.ceil(2 * Math.pow(1.4, t - 5) * n);
+  const cp = Math.max(1, checkpoint | 0);
+  const t = 1 + Math.floor((cp - 1) / 10);
+  const c = { poisson: Math.ceil((7 + cp * 0.8 + Math.pow(t, 1.35)) * n) };
+  if (t >= 2) c.planche = Math.ceil((2 + 1.5 * (t - 2)) * n);
+  if (t >= 3) c.poissonfume = Math.ceil((2 + Math.pow(1.45, t - 3)) * n);
+  if (t >= 4) c.potion = Math.ceil(Math.pow(1.35, t - 4) * n);
+  if (t >= 5) c.tourte = Math.ceil((1 + Math.pow(1.35, t - 5)) * n);
+  if (t >= 7) c.huile = Math.ceil(Math.pow(1.3, t - 7) * n);
   return c;
 };
 

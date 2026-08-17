@@ -16,8 +16,9 @@
   const U = () => window.UI, el = () => window.UI.el;
   const E = () => window.Etat.E;
 
-  let ouvert = false, tArene = 0, accHorsEcran = 0;
-  let plateau, scene, cvA, titre, sous, boutons, pied;
+  let ouvert = false, tArene = 0, accHorsEcran = 0, accCotes = 0;
+  let plateau, scene, cvA, titre, sous, boutons, pied, gauche, droite;
+  let choisiCote = '__general';
 
   /* =================================================================
      LE TICK — deux régimes
@@ -36,6 +37,8 @@
       window.GameState.generalTick(dt);
       try { window.Adventure.draw(tArene); } catch (e) { console.warn('arène :', e.message); }
       majPied();
+      accCotes += dt;
+      if (accCotes >= 0.45) { accCotes = 0; majCotes(); }
     } else {
       accHorsEcran += dt;
       if (accHorsEcran >= 20) { window.GameState.generalTick(accHorsEcran); accHorsEcran = 0; }
@@ -63,6 +66,8 @@
     sous = document.getElementById('plateau-sous');
     boutons = document.getElementById('plateau-boutons');
     pied = document.getElementById('plateau-pied');
+    gauche = document.getElementById('plateau-gauche');
+    droite = document.getElementById('plateau-droite');
   }
 
   function ouvrir() {
@@ -76,6 +81,7 @@
     brancherPointeur();
     majTete();
     majPied();
+    majCotes();
   }
   function fermer() {
     ouvert = false;
@@ -173,7 +179,7 @@
     if (n) {
       window.Etat.journal('La compagnie remonte : ' +
         Object.keys(recu).map(id => recu[id] + ' ' + window.RES[id].nom.toLowerCase()).join(', '), 'butin');
-      U().dire('Butin remonté du Puits.', 'butin', 4000);
+      U().dire('Butin remonté de la Tour sombre.', 'butin', 4000);
     }
     if (r && r.loot && r.loot.plans && r.loot.plans.length) {
       for (const pid of r.loot.plans) window.Etat.gagner('plan', 1);
@@ -186,6 +192,53 @@
   /* =================================================================
      LE PANNEAU DU PUITS
      ================================================================= */
+  /* ==================================================================
+     LE COÛT D'UN PALIER D'ARMEMENT
+
+     Il coûtait `1 + palier` armes, et rien d'autre. Trois défauts :
+     la dépense restait dérisoire au bout de dix paliers ; elle ne
+     réclamait jamais mieux que la première épée forgée ; et l'acier,
+     le harnois, le mithril n'avaient donc aucune raison d'exister.
+
+     La porte de l'aventure s'ouvre tôt — c'est voulu. Ce qui doit
+     monter LENTEMENT, c'est l'équipement : chaque cran demande plus,
+     et bientôt demande MIEUX. Le joueur descend d'abord mal armé, et
+     chaque palier suivant le renvoie travailler au bourg.
+     ================================================================== */
+  const ECHELLE_ARMEMENT = {
+    /* palier atteint -> ce que le cran suivant réclame en plus */
+    arme: [
+      { des: 0, add: {} },                          // les premières lames
+      { des: 3, add: { lingotfer: 4 } },            // il faut du fer en propre
+      { des: 5, add: { acier: 2, charbonbois: 4 } },// la trempe
+      { des: 8, add: { acier: 6, limaille: 8 } },   // la manufacture
+      { des: 12, add: { mithril: 1 } },             // ce qui ne s'use pas
+    ],
+    armure: [
+      { des: 0, add: {} },
+      { des: 3, add: { cuir: 4 } },
+      { des: 5, add: { bouclier: 2, drap: 2 } },
+      { des: 8, add: { armure: 3, acier: 4 } },
+      { des: 12, add: { mithril: 1, bijou: 1 } },
+    ],
+  };
+
+  function coutArmement(res, p) {
+    /* la quantité de base croît par paliers de trois : 1, 1, 1, 2, 2,
+       2, 3… — franchement, mais sans mur */
+    const cout = {};
+    cout[res] = 1 + Math.floor(p / 3) + Math.floor(p / 7);
+    for (const cran of ECHELLE_ARMEMENT[res] || []) {
+      if (p < cran.des) continue;
+      for (const k in cran.add) {
+        /* ce qu'un cran ajoute grossit lui aussi, mais doucement */
+        const n = Math.ceil(cran.add[k] * (1 + 0.25 * (p - cran.des)));
+        cout[k] = (cout[k] || 0) + n;
+      }
+    }
+    return cout;
+  }
+
   function rendre(c) {
     const A = el();
     const g = window.GameState.gen();
@@ -196,7 +249,7 @@
       A('div', { class: 'rangee entre' },
         A('span', { class: 'tt', text: d ? 'Étage ' + d.floor : 'Aucune descente' }),
         A('span', { class: 'eti-or', text: 'record ' + rec })),
-      A('div', { class: 'note', style: 'margin-top:6px',
+      A('div', { class: 'note', style: 'margin-top:8px',
         text: d ? 'La compagnie tient l\'étage ' + d.floor + '. Devant l\'écran elle descend ; en votre absence elle rejoue son étage et rapporte du butin sans progresser.'
                 : "On n'a jamais trouvé le fond. On a seulement trouvé jusqu'où l'on pouvait descendre." })));
 
@@ -240,7 +293,7 @@
           A('button', { class: 'b primaire', text: 'Descendre', disabled: !!refus,
             onclick: () => {
               if (!window.GameState.startDescent()) { U().dire('Impossible de partir.', 'alerte'); return; }
-              window.Etat.journal('La compagnie descend au Puits (étage ' + cp + ').', 'guerre');
+              window.Etat.journal('La compagnie descend dans la Tour sombre (étage ' + cp + ').', 'guerre');
               ouvrir();
             } }))));
     }
@@ -254,29 +307,39 @@
     c.appendChild(U().section('L\'équipée'));
     c.appendChild(paveEquipee());
 
+    /* L'essentiel tient au-dessus : partir, comprendre le péril, choisir
+       l'équipée. Gardiens, armement et collection de compagnons restent
+       disponibles dans un seul volet, sans charger chaque ouverture. */
+    const avancee = A('details', { class: 'aventure-avancee' });
+    avancee.appendChild(A('summary', {},
+      A('span', { text: 'Progression, gardiens et équipement' }),
+      A('span', { class: 'eti', text: 'options avancées' })));
+    const avanceeCorps = A('div', { class: 'aventure-avancee-corps' });
+    avancee.appendChild(avanceeCorps);
+
     /* ---- LES GARDIENS ---- */
-    c.appendChild(U().section('Les gardiens'));
-    c.appendChild(paveGardiens());
+    avanceeCorps.appendChild(U().section('Les gardiens'));
+    avanceeCorps.appendChild(paveGardiens());
 
     /* ---- CEUX QUI SONT RESTÉS EN BAS ---- */
     if (window.Tour.tombes.length) {
-      c.appendChild(U().section('Restés en bas'));
-      c.appendChild(paveTombes());
+      avanceeCorps.appendChild(U().section('Restés en bas'));
+      avanceeCorps.appendChild(paveTombes());
     }
 
     /* ---- l'armement fourni par le bourg ---- */
-    c.appendChild(A('div', { class: 'sep' }));
-    c.appendChild(A('div', { class: 'eti-or', text: 'ce que le bourg fournit' }));
-    c.appendChild(A('div', { class: 'note',
-      text: "La forge et l'armurerie ne descendent pas : elles ÉQUIPENT. Chaque palier d'armement ajoute aux caractéristiques de toute la compagnie, définitivement." }));
+    avanceeCorps.appendChild(A('div', { class: 'sep' }));
+    avanceeCorps.appendChild(A('div', { class: 'eti-or', text: 'ce que le bourg fournit' }));
+    avanceeCorps.appendChild(A('div', { class: 'note',
+      text: "La forge et l'armurerie ne descendent pas : elles ÉQUIPENT. Chaque palier d'armement ajoute aux caractéristiques de toute la compagnie, définitivement — et réclame, à mesure, de meilleures matières." }));
     for (const [res, cle, stat, lib] of [['arme', 'palierArme', 'dmg', 'dégâts'], ['armure', 'palierArmure', 'hp', 'PV']]) {
       const p = E().armee[cle] || 0;
-      const cout = {}; cout[res] = 1 + p;
-      c.appendChild(A('div', { class: 'cadre' },
+      const cout = coutArmement(res, p);
+      avanceeCorps.appendChild(A('div', { class: 'cadre' },
         A('div', { class: 'rangee entre' },
           A('span', { class: 'tt', text: window.RES[res].nom + ' — palier ' + p }),
           A('span', { class: 'eti-or', text: '+' + (p * (stat === 'hp' ? 14 : 3)) + ' ' + lib })),
-        A('div', { class: 'rangee entre', style: 'margin-top:7px' },
+        A('div', { class: 'rangee entre', style: 'margin-top:8px' },
           U().listeRes(cout, { verifier: true }),
           A('button', { class: 'b', text: 'Équiper la compagnie', disabled: !window.Etat.assez(cout),
             onclick: () => {
@@ -289,12 +352,12 @@
     }
 
     /* ---- la compagnie ---- */
-    c.appendChild(U().section('La compagnie'));
-    c.appendChild(A('div', { class: 'cadre' },
+    avanceeCorps.appendChild(U().section('La compagnie'));
+    avanceeCorps.appendChild(A('div', { class: 'cadre' },
       A('div', { class: 'rangee entre' },
         A('div', {},
           A('div', { class: 'tt', style: 'font-size:14px', text: 'Le maître d\'œuvre' }),
-          A('div', { class: 'eti', style: 'margin-top:3px',
+          A('div', { class: 'eti', style: 'margin-top:4px',
             text: 'niveau ' + g.lvl + '  ·  ' + U().fmt(g.xp) + ' xp  ·  ' +
                   g.roster.length + ' compagnon(s)  ·  ' + g.party.length + ' en ligne' })),
         A('button', { class: 'b mini primaire', text: 'Équipement et talents',
@@ -302,7 +365,7 @@
       A('div', { style: 'margin-top:8px' },
         U().barre(Math.min(1, (g.xp || 0) / Math.max(1, window.GameData.GENERAL.xpFor(g.lvl))), 'bleu',
           'expérience', U().fmt(g.xp) + ' / ' + U().fmt(window.GameData.GENERAL.xpFor(g.lvl)))),
-      g.fatigue > 0.05 ? A('div', { style: 'margin-top:7px' },
+      g.fatigue > 0.05 ? A('div', { style: 'margin-top:8px' },
         U().barre(g.fatigue / window.GameData.GENERAL.fatigueMax, 'rouge', 'fatigue',
           (Math.round(g.fatigue * 10) / 10) + ' / ' + window.GameData.GENERAL.fatigueMax)) : null));
     /* `roster` contient des FICHES, `party` des identifiants : on ne peut
@@ -314,7 +377,7 @@
       if (!def || !hs) continue;
       const nomH = (typeof def.name === 'string') ? def.name : (def.name.cats || def.name.birds || hid);
       const dedans = g.party.indexOf(hid) >= 0;
-      c.appendChild(A('div', { class: 'cadre' + (dedans ? ' actif' : '') },
+      avanceeCorps.appendChild(A('div', { class: 'cadre' + (dedans ? ' actif' : '') },
         A('div', { class: 'rangee entre' },
           A('div', {}, A('div', { class: 'tt', text: nomH }),
             A('div', { class: 'eti', text: (window.GameData.HERO_CLASSES[def.cls] || {}).name + ' · niveau ' + (hs.lvl || 1) })),
@@ -322,7 +385,74 @@
             onclick: () => { window.GameState.toggleParty(hid); } }))));
     }
     if (!g.roster.length)
-      c.appendChild(A('div', { class: 'note faible', text: 'Personne encore. Les compagnons se recrutent dans le donjon lui-même — le premier attend au deuxième étage.' }));
+      avanceeCorps.appendChild(A('div', { class: 'note faible', text: 'Personne encore. Les compagnons se recrutent dans le donjon lui-même — le premier attend au deuxième étage.' }));
+    c.appendChild(avancee);
+  }
+
+  function nomDe(x) {
+    if (typeof x === 'string') return x;
+    return x && (x.cats || x.birds) || '';
+  }
+
+  function membresEnLigne() {
+    const g = window.GameState.gen();
+    const out = [{ id:'__general', nom:"Maître d'œuvre", cls:'general', lvl:g.lvl || 1 }];
+    for (const id of (g.party || [])) {
+      const def = window.GameData.heroById(id), hs = window.GameState.heroState(id);
+      if (def && hs) out.push({ id, nom:nomDe(def.name), cls:def.cls, lvl:hs.lvl || 1 });
+    }
+    return out;
+  }
+
+  function majCotes() {
+    if (!gauche || !droite || !ouvert) return;
+    const A = el(), membres = membresEnLigne();
+    if (!membres.some(m => m.id === choisiCote)) choisiCote = membres[0].id;
+    const hp = window.Adventure && window.Adventure.partyHp ? window.Adventure.partyHp() : {};
+    U().vide(gauche);
+    gauche.appendChild(A('div', { class:'cote-titre', text:'Compagnie en ligne' }));
+    for (const m of membres) {
+      const st = window.GameState.combatStats(m.id);
+      const vie = hp && hp[m.id] != null ? hp[m.id] : st.hp;
+      const pct = Math.max(0, Math.min(1, vie / Math.max(1, st.hp)));
+      gauche.appendChild(A('div', { class:'plateau-membre' + (m.id === choisiCote ? ' choisi' : ''), onclick:() => { choisiCote = m.id; majCotes(); } },
+        A('div', { class:'rangee' },
+          A('div', { class:'plateau-portrait', text:m.nom.slice(0,1).toUpperCase() }),
+          A('div', { style:'min-width:0;flex:1' },
+            A('div', { class:'tt', text:m.nom }),
+            A('div', { class:'eti', text:m.cls + ' · niveau ' + m.lvl }))),
+        A('div', { class:'plateau-vie' }, A('i', { style:'width:' + Math.round(pct * 100) + '%' })),
+        A('div', { class:'rangee entre', style:'margin-top:4px' },
+          A('span', { class:'eti', text:Math.round(vie) + ' / ' + Math.round(st.hp) + ' PV' }),
+          A('span', { class:'eti', text:Math.round(st.armor || 0) + ' armure' }))));
+    }
+
+    const m = membres.find(x => x.id === choisiCote), st = window.GameState.combatStats(m.id);
+    const owner = window.GameState.talentOwner(m.id);
+    const talents = owner ? owner.holder.talents || [] : [];
+    U().vide(droite);
+    droite.appendChild(A('div', { class:'cote-titre', text:'Fiche de combat' }));
+    droite.appendChild(A('div', { class:'plateau-membre choisi' },
+      A('div', { class:'tt', text:m.nom }),
+      A('div', { class:'plateau-mini-stats' },
+        A('span', { text:Math.round(st.hp) + ' PV' }), A('span', { text:Math.round(st.dmg * 10) / 10 + ' dégâts' }),
+        A('span', { text:Math.round(st.armor || 0) + ' armure' }), A('span', { text:Math.round(st.mspd || 0) + ' vitesse' }),
+        A('span', { text:Math.round(st.range || 0) + ' portée' }), A('span', { text:window.GameState.talentPts(m.id) + ' pts libres' }))));
+    droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Pouvoirs' }));
+    const pouvoirs = window.GameState.heroPowers(m.id);
+    if (!pouvoirs.length) droite.appendChild(A('div', { class:'note faible', text:'Aucun pouvoir équipé.' }));
+    for (const p of pouvoirs) droite.appendChild(A('div', { class:'plateau-pouvoir' },
+      A('div', { class:'tt', text:p.name || p.nom || p.id }),
+      A('div', { class:'note', text:p.desc || '' })));
+    droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Arbre de compétences' }));
+    const arbre = window.GameData.talentTree(m.cls);
+    if (arbre) for (const br of arbre.branches) {
+      const acquis = br.nodes.filter(n => talents.indexOf(n.id) >= 0).length;
+      droite.appendChild(A('div', { class:'rangee entre ligne-deblocage' },
+        A('span', { text:br.name || br.nom || br.id }), A('span', { class:acquis ? 'eti-or' : 'eti', text:acquis + ' / ' + br.nodes.length })));
+    }
+    droite.appendChild(A('button', { class:'b primaire', style:'width:100%;margin-top:12px', text:'Équipement et arbre complet',
+      onclick:() => window.UICompagnie.ouvrir(m.id) }));
   }
 
   /* ==================================================================
@@ -339,7 +469,7 @@
     box.appendChild(A('div', { class: 'rangee entre' },
       A('span', { class: 'tt', style: 'font-size:15px', text: p.nom }),
       A('span', { class: 'eti-or', text: 'étages ' + p.de + (p.a > 900 ? ' et au-delà' : ' à ' + p.a) })));
-    box.appendChild(A('div', { class: 'note', style: 'margin-top:5px', text: p.desc }));
+    box.appendChild(A('div', { class: 'note', style: 'margin-top:4px', text: p.desc }));
     box.appendChild(A('div', { class: 'note ' + (pen.pare || !p.garde ? '' : 'mauvais'),
       style: 'margin-top:4px', text: p.peril }));
     if (!p.garde) {
@@ -357,7 +487,7 @@
     box.appendChild(A('div', { style: 'margin-top:8px' },
       U().barre(Math.min(1, auto / 20), 'grande ' + (auto >= 10 ? 'vert' : (auto ? '' : 'rouge')),
         r.nom.toLowerCase(), auto === Infinity ? '—' : auto + ' étages')));
-    if (!pen.pare) box.appendChild(A('div', { class: 'note mauvais', style: 'margin-top:6px',
+    if (!pen.pare) box.appendChild(A('div', { class: 'note mauvais', style: 'margin-top:8px',
       text: 'Sans garde : ×' + pen.degats.toFixed(1).replace('.', ',') + ' de dégâts subis, ' +
             Math.round(pen.butin * 100) + ' % du butin, et ' + Math.round(pen.perte * 100) +
             ' % de chances par étage d\'y laisser quelqu\'un.' }));
@@ -413,7 +543,7 @@
             A('div', { class: 'av or' }, U().ico(meta.ico, 20)),
             A('div', {},
               A('div', { class: 'tt', style: 'font-size:14px', text: h.nom }),
-              A('div', { class: 'eti', style: 'margin-top:3px',
+              A('div', { class: 'eti', style: 'margin-top:4px',
                 text: 'niveau ' + (h.niv || 1) + '  ·  ×' +
                       (window.HAB.produit(h, 'pv') * window.HAB.produit(h, 'degats')).toFixed(2).replace('.', ',') +
                       ' au combat' }))),
@@ -427,7 +557,7 @@
     const libres = window.Etat.E.habitants.filter(h => !T.dansEquipee(h.id) && T.disponible(h))
       .sort((a, b) => (b.niv || 1) - (a.niv || 1)).slice(0, 8);
     if (eq.length < places && libres.length) {
-      box.appendChild(A('div', { class: 'eti', style: 'margin-top:10px', text: 'à emmener' }));
+      box.appendChild(A('div', { class: 'eti', style: 'margin-top:12px', text: 'à emmener' }));
       const g = A('div', { class: 'rangee enroule' });
       for (const h of libres) {
         const val = (window.HAB.produit(h, 'pv') * window.HAB.produit(h, 'degats'));
@@ -446,14 +576,14 @@
     /* les convalescents */
     const bl = Object.keys(T.blesses);
     if (bl.length) {
-      box.appendChild(A('div', { class: 'eti', style: 'margin-top:10px', text: 'en convalescence' }));
+      box.appendChild(A('div', { class: 'eti', style: 'margin-top:12px', text: 'en convalescence' }));
       for (const id of bl) {
         const h = window.Etat.habitant(id); if (!h) continue;
         box.appendChild(A('div', { 'data-cle': 'bl' + id, class: 'cadre' },
           A('div', { class: 'rangee entre' },
             A('span', { class: 'tt', style: 'font-size:13px', text: h.nom }),
             A('span', { class: 'eti', text: U().duree(T.convalescence(id)) })),
-          A('div', { style: 'margin-top:6px' },
+          A('div', { style: 'margin-top:8px' },
             U().barre(1 - T.convalescence(id) / 300, 'rouge', 'se remet', U().duree(T.convalescence(id))))));
       }
     }
@@ -477,7 +607,7 @@
       box.appendChild(A('div', { class: 'cadre' },
         A('div', { class: 'tt', style: 'font-size:14px', text: 'Prochain : ' + (g ? g.nom : '—') }),
         A('div', { class: 'eti', style: 'margin-top:4px', text: 'étage ' + suivant }),
-        A('div', { class: 'note', style: 'margin-top:5px', text: g ? g.desc : '' })));
+        A('div', { class: 'note', style: 'margin-top:4px', text: g ? g.desc : '' })));
       return box;
     }
     for (const e of ouverts.slice().reverse()) {
@@ -490,10 +620,10 @@
           A('span', { class: 'tt', style: 'font-size:14px', text: g.nom }),
           A('span', { class: 'eti-or', text: 'étage ' + e + '  ·  ' + (fiche.fois || 0) + ' fois' })),
         A('div', { class: 'note', style: 'margin-top:4px', text: g.desc }),
-        A('div', { style: 'margin-top:7px' },
+        A('div', { style: 'margin-top:8px' },
           U().barre(ch, 'grande ' + (ch > 0.65 ? 'vert' : (ch > 0.35 ? '' : 'rouge')),
             'chances de l\'emporter', Math.round(ch * 100) + ' %')),
-        A('div', { class: 'rangee enroule', style: 'margin-top:7px' },
+        A('div', { class: 'rangee enroule', style: 'margin-top:8px' },
           A('span', { class: 'eti', text: 'butin' }),
           ...Object.keys(g.butin).map(k => U().puce(k, g.butin[k], { mini: true, gain: true }))),
         A('div', { class: 'rangee entre', style: 'margin-top:8px' },

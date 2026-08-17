@@ -28,7 +28,26 @@
       n.__rep[type] = ev => { const h = n.__ev && n.__ev[type]; if (h) h.call(n, ev); };
       n.addEventListener(type, n.__rep[type]);
     }
+    /* LE CLAVIER, GRATUITEMENT.
+
+       Une bonne moitié des choses cliquables du jeu sont des <div> :
+       les blocs du bandeau, les cartes de tâche, les cases. Elles
+       étaient inatteignables autrement qu'à la souris. Comme TOUT
+       passe par ici, on les rend focalisables et l'on fait d'Entrée et
+       d'Espace des synonymes du clic — une fois, au bon endroit,
+       plutôt que cent fois à la main. */
+    if (type === 'click' && !NATIF[n.nodeName] && !n.hasAttribute('tabindex')) {
+      n.setAttribute('tabindex', '0');
+      if (!n.hasAttribute('role')) n.setAttribute('role', 'button');
+      n.addEventListener('keydown', ev => {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        ev.preventDefault();
+        const h = n.__ev && n.__ev.click;
+        if (h) h.call(n, ev);
+      });
+    }
   }
+  const NATIF = { BUTTON: 1, A: 1, INPUT: 1, SELECT: 1, TEXTAREA: 1, SUMMARY: 1 };
   function el(tag, attrs) {
     const n = document.createElement(tag);
     if (attrs) for (const k in attrs) {
@@ -36,6 +55,14 @@
       else if (k === 'html') n.innerHTML = attrs[k];
       else if (k === 'text') n.textContent = attrs[k];
       else if (k === 'style') n.setAttribute('style', attrs[k]);
+      else if (k === 'title') {
+        /* `title` est la façon d'ÉCRIRE une infobulle dans tout le jeu ;
+           `data-bulle` est la façon de la STOCKER. La conversion se fait
+           ici, une fois — sinon la réconciliation, qui recopie les
+           attributs du brouillon, ferait revenir la bulle du navigateur
+           par-dessus la nôtre au bout d'une seconde. */
+        if (attrs[k]) n.setAttribute('data-bulle', attrs[k]);
+      }
       else if (k.slice(0, 2) === 'on') brancher(n, k.slice(2), attrs[k]);
       else if (attrs[k] != null && attrs[k] !== false) n.setAttribute(k, attrs[k]);
     }
@@ -166,7 +193,12 @@
   function ico(spec, taille) {
     return window.Icones.image(spec, taille || 24);
   }
+  /* LE POINT DE BASCULE. Si le joueur a déposé une image pour cette
+     ressource, on la sert ; sinon on retombe sur l'icône dessinée. Tout
+     le jeu passe par ici — puces de coût, stocks, tables de butin — donc
+     tout bascule d'un coup, sans qu'aucun appelant ait à le savoir. */
   function icoRes(id, taille) {
+    if (window.Img) return window.Img.icoRes(id, taille || 24);
     const r = window.RES[id];
     return ico(r ? r.ico : { f: 'cube', c: ['#8a8272'] }, taille);
   }
@@ -180,7 +212,7 @@
               + (opts.butin ? ' butin' : '') + (opts.mini ? ' mini' : '');
     const txt = opts.texte != null ? opts.texte : (n != null ? fmt(n) : '');
     const p = el('span', { class: cls, title: r.nom + (r.desc ? ' — ' + r.desc : '') },
-      ico(r.ico || { f: 'cube', c: ['#8a8272'] }, 15),
+      icoRes(id, 16),
       txt ? el('b', { text: txt }) : null);
     if (opts.avecNom) p.appendChild(el('span', { class: 'faible', text: ' ' + r.nom }));
     return p;
@@ -270,7 +302,21 @@
      ================================================================= */
   const ouvertes = new Map();
   let zTop = 30;
-  const positions = {};
+
+  /* LE PLAN DE TRAVAIL. Il vit dans la sauvegarde : arranger ses
+     fenêtres une fois et les retrouver au retour fait partie du
+     confort qu'on attend d'un jeu qu'on laisse tourner des heures. */
+  function plans() {
+    const E = window.Etat && window.Etat.E;
+    if (!E) return {};
+    if (!E.options) E.options = {};
+    if (!E.options.fenetres) E.options.fenetres = {};
+    return E.options.fenetres;
+  }
+  const positions = new Proxy({}, {
+    get: (_, k) => plans()[k],
+    set: (_, k, v) => { plans()[k] = v; return true; },
+  });
 
   function ouvrir(cle, cfg) {
     if (ouvertes.has(cle)) { const f = ouvertes.get(cle); avant(f); if (cfg.onglet) f.choisir(cfg.onglet); f.rafraichir(); return f; }
@@ -336,6 +382,8 @@
     const w = fen.offsetWidth || 360, h = fen.offsetHeight || 300;
     let x, y;
     const mem = positions[cle];
+    if (mem && mem.w) { fen.style.width = mem.w + 'px'; }
+    if (mem && mem.h) { fen.style.height = mem.h + 'px'; }
     if (mem && mem.x != null) { x = mem.x; y = mem.y; }
     else if (cfg.ancre) {
       x = cfg.ancre.cx - w / 2;
@@ -348,6 +396,7 @@
     fen.style.top = Math.round(y) + 'px';
     avant(F);
     glisser(fen, tete, cle);
+    redimensionner(fen, cle);
     return F;
   }
 
@@ -379,9 +428,72 @@
     });
     poignee.addEventListener('pointerup', () => {
       actif = false;
-      positions[cle] = { x: fen.offsetLeft, y: fen.offsetTop };
+      retenir(fen, cle);
     });
   }
+
+  /* On retient TOUT d'un coup : bouger puis redimensionner ne doit pas
+     effacer ce que l'autre geste venait d'apprendre. */
+  function retenir(fen, cle) {
+    positions[cle] = {
+      x: fen.offsetLeft, y: fen.offsetTop,
+      w: Math.round(fen.getBoundingClientRect().width),
+      h: Math.round(fen.getBoundingClientRect().height),
+    };
+  }
+
+  /* ------------------------------------------------------------------
+     LA POIGNÉE DE TAILLE.
+     En bas à droite, comme partout ailleurs. On borne aux dimensions
+     utiles : sous 300 px de large la mise en page se casse, au-delà de
+     l'écran elle ne sert plus.
+     ------------------------------------------------------------------ */
+  function redimensionner(fen, cle) {
+    const p = el('div', { class: 'fen-taille',
+      title: ['Redimensionner',
+              "Tirez pour agrandir. Double-clic pour revenir à la taille d'origine."].join('\n') });
+    fen.appendChild(p);
+    let x0 = 0, y0 = 0, w0 = 0, h0 = 0, actif = false;
+    p.addEventListener('pointerdown', ev => {
+      actif = true;
+      const r = fen.getBoundingClientRect();
+      x0 = ev.clientX; y0 = ev.clientY; w0 = r.width; h0 = r.height;
+      p.setPointerCapture(ev.pointerId);
+      ev.preventDefault(); ev.stopPropagation();
+    });
+    p.addEventListener('pointermove', ev => {
+      if (!actif) return;
+      const w = Math.max(300, Math.min(w0 + (ev.clientX - x0), innerWidth - fen.offsetLeft - 8));
+      const h = Math.max(200, Math.min(h0 + (ev.clientY - y0), innerHeight - fen.offsetTop - 8));
+      fen.style.width = Math.round(w) + 'px';
+      fen.style.height = Math.round(h) + 'px';
+      fen.style.maxWidth = 'none'; fen.style.maxHeight = 'none';
+    });
+    p.addEventListener('pointerup', () => { actif = false; retenir(fen, cle); });
+    /* le double-clic rend sa taille naturelle : une porte de sortie
+       pour qui s'est mis dans un mauvais cas */
+    p.addEventListener('dblclick', ev => {
+      ev.stopPropagation();
+      fen.style.width = ''; fen.style.height = '';
+      fen.style.maxWidth = ''; fen.style.maxHeight = '';
+      const m = positions[cle] || {};
+      positions[cle] = { x: m.x, y: m.y };
+    });
+  }
+
+  /* L'ÉCRAN CHANGE DE TAILLE — une fenêtre laissée hors-champ est une
+     fenêtre perdue : le joueur ne sait pas qu'elle est encore ouverte. */
+  addEventListener('resize', () => {
+    for (const [cle, F] of ouvertes) {
+      const f = F.noeud, r = f.getBoundingClientRect();
+      if (r.width > innerWidth - 16) { f.style.width = ''; f.style.maxWidth = ''; }
+      const x = Math.max(4, Math.min(f.offsetLeft, innerWidth - r.width - 8));
+      const y = Math.max(36, Math.min(f.offsetTop, innerHeight - 60));
+      f.style.left = Math.round(x) + 'px';
+      f.style.top = Math.round(y) + 'px';
+      retenir(f, cle);
+    }
+  });
 
   /* Rafraîchissement périodique : cinq fois par seconde suffit à voir
      bouger les barres, et laisse le canvas tranquille. */
@@ -394,6 +506,113 @@
       if (l.length) l[l.length - 1].fermer();
     }
   });
+
+  /* =================================================================
+     LES INFOBULLES
+
+     L'infobulle du navigateur arrive au bout d'une seconde, s'affiche
+     dans la police du système, ne tient pas la mise en forme et
+     disparaît au premier mouvement. Sur un jeu où chaque chiffre a
+     besoin d'être expliqué, c'est une infirmité.
+
+     On garde pourtant `title=` comme façon d'ÉCRIRE : cent endroits en
+     posent déjà, et c'est le repli si ce module tombe. Au premier
+     survol, on lui vole son attribut — le navigateur n'a donc plus
+     rien à afficher — et l'on rend la bulle nous-mêmes.
+
+     Convention d'écriture : la PREMIÈRE ligne est le titre, les
+     suivantes le corps. Une ligne qui commence par « · » devient une
+     entrée de liste.
+     ================================================================= */
+  const BULLE = (function () {
+    let boite = null, cible = null, minuteur = 0;
+    const DELAI = 140;            // assez court pour servir, assez long pour ne pas harceler
+
+    function creer() {
+      boite = el('div', { id: 'bulle' });
+      document.body.appendChild(boite);
+      return boite;
+    }
+
+    function contenu(txt) {
+      const lignes = String(txt).split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+      if (!lignes.length) return null;
+      const f = document.createDocumentFragment();
+      f.appendChild(el('div', { class: 'bt', text: lignes[0] }));
+      let liste = null;
+      for (const l of lignes.slice(1)) {
+        if (l[0] === '·' || l[0] === '-') {
+          if (!liste) { liste = el('ul', { class: 'bl' }); f.appendChild(liste); }
+          liste.appendChild(el('li', { text: l.slice(1).trim() }));
+        } else {
+          liste = null;
+          f.appendChild(el('div', { class: 'bd', text: l }));
+        }
+      }
+      return f;
+    }
+
+    function placer(e) {
+      if (!boite) return;
+      const r = boite.getBoundingClientRect();
+      const m = 10;
+      /* on se pose SOUS le curseur par défaut, au-dessus si l'on
+         déborderait — et jamais sous le pointeur, qui masquerait */
+      let x = e.clientX - r.width / 2;
+      let y = e.clientY + 20;
+      if (y + r.height > innerHeight - m) y = e.clientY - r.height - 14;
+      x = Math.max(m, Math.min(x, innerWidth - r.width - m));
+      y = Math.max(m, y);
+      boite.style.left = Math.round(x) + 'px';
+      boite.style.top = Math.round(y) + 'px';
+    }
+
+    function montrer(el2, txt, e) {
+      const c = contenu(txt);
+      if (!c) return;
+      if (!boite) creer();
+      vide(boite);
+      boite.appendChild(c);
+      boite.classList.add('vu');
+      cible = el2;
+      placer(e);
+    }
+
+    function cacher() {
+      clearTimeout(minuteur);
+      if (boite) boite.classList.remove('vu');
+      cible = null;
+    }
+
+    document.addEventListener('pointerover', e => {
+      const t = e.target && e.target.closest ? e.target.closest('[title],[data-bulle]') : null;
+      if (!t || t === cible) return;
+      cacher();
+      /* on VOLE le title : sans quoi la bulle du navigateur viendrait
+         se superposer à la nôtre une seconde plus tard. */
+      if (t.hasAttribute('title')) {
+        const v = t.getAttribute('title');
+        if (v) t.setAttribute('data-bulle', v);
+        t.removeAttribute('title');
+      }
+      const txt = t.getAttribute('data-bulle');
+      if (!txt) return;
+      minuteur = setTimeout(() => montrer(t, txt, e), DELAI);
+    }, true);
+
+    document.addEventListener('pointermove', e => {
+      if (cible && boite && boite.classList.contains('vu')) placer(e);
+    }, true);
+
+    document.addEventListener('pointerout', e => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-bulle]') : null;
+      if (t === cible) cacher();
+    }, true);
+    document.addEventListener('pointerdown', cacher, true);
+    addEventListener('blur', cacher);
+
+    return { cacher };
+  })();
 
   window.UI = {
     el, vide, fmt, duree, heure, ico, icoRes, puce, listeRes, barre, dire,

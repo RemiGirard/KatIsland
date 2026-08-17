@@ -225,6 +225,11 @@
     return {
       id, nom,
       rarete: rid,
+      /* Le sexe ne change rien aux chiffres : il ne sert qu'à choisir le
+         visage. On le tire ici pour qu'il soit fixé une fois pour
+         toutes — un habitant ne doit pas changer de figure d'une
+         session à l'autre. */
+      sexe: rng() < 0.5 ? 'homme' : 'femme',
       talent: metiers[(rng() * metiers.length) | 0],
       traits,
       niv: R.niv, xp: 0, cycles: 0,

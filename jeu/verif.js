@@ -15,12 +15,14 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const ctx = { window: {}, console };
 ctx.window.window = ctx.window;
 vm.createContext(ctx);
-for (const f of ['donnees/ressources.js', 'donnees/batiments.js', 'donnees/butins.js']) {
+for (const f of ['donnees/ressources.js', 'donnees/batiments.js', 'donnees/butins.js',
+                 'donnees/raffinages.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, f), 'utf8'), ctx, { filename: f });
 }
 const RES = ctx.window.RES, BAT = ctx.window.BAT, REC = ctx.window.REC;
 const ORDRE = ctx.window.RES_ORDRE, UTIL = ctx.window.BatUtil;
 const BUTINS = ctx.window.BUTINS || {}, PU = ctx.window.PerilUtil || {};
+const RAFF = ctx.window.RAFFINAGES || [];
 
 let fautes = 0, alertes = 0;
 const err = m => { fautes++; console.log('  FAUTE   ' + m); };
@@ -74,6 +76,34 @@ for (const b of (ctx.window.PERILS || [])) {
 }
 for (const g of (PU.GARDIENS || []))
   for (const k in g.butin) if (!RES[k]) err('gardien ' + g.nom + ' : butin inconnu ' + k);
+
+console.log('\n=== 1 ter. Annexes (raffinages) ===');
+{
+  const parBat = {};
+  for (const r of RAFF) {
+    if (!BAT[r.bat]) err('annexe ' + r.id + ' : bâtiment inconnu ' + r.bat);
+    for (const k in r.cout) if (!RES[k]) err('annexe ' + r.id + ' : coût en ressource inconnue ' + k);
+    const cle = r.bat + '/' + r.id;
+    if (parBat[cle]) err('annexe en double : ' + cle);
+    parBat[cle] = true;
+  }
+  /* Une recette marquée `raff` doit désigner une annexe qui existe SUR
+     SON bâtiment. Sinon elle dort pour toujours, sans que rien ne le
+     signale au joueur — la pire des pannes, celle qu'on ne voit pas. */
+  for (const id in REC) {
+    const r = REC[id];
+    if (!r.raff) continue;
+    if (!parBat[r.bat + '/' + r.raff])
+      err('recette ' + id + ' : annexe « ' + r.raff + ' » inconnue sur ' + r.bat);
+  }
+  for (const r of RAFF) {
+    const n = Object.keys(REC).filter(id => REC[id].bat === r.bat && REC[id].raff === r.id).length;
+    if (!n && !Object.keys(r.effet).length)
+      warn('annexe ' + r.bat + '/' + r.id + ' : ni recette ni effet.');
+  }
+  console.log('  ' + RAFF.length + ' annexes sur ' +
+              new Set(RAFF.map(r => r.bat)).size + ' bâtiments');
+}
 
 console.log('\n=== 2. Recettes : entrées connues, sorties connues ===');
 for (const id in REC) {
@@ -135,7 +165,9 @@ while (tour++ < 60) {
     if (niv === 0) {
       if (!coutOk(t, 1)) continue;
       bati[t] = 1; bouge = true; ouverts.push(t);
-      for (const rid of UTIL.recettesDe(t, 1)) ouvrir(rid);
+      /* les recettes d'annexe comptent : rien n'empêche le joueur de
+         bâtir l'annexe une fois le bâtiment debout. */
+      for (const rid of (BAT[t].recettes || [])) if (REC[rid] && REC[rid].niv <= 1) ouvrir(rid);
     } else if (niv < (BAT[t].nivMax || 10)) {
       /* on ne monte un niveau que s'il ouvre quelque chose de neuf */
       const avant = UTIL.recettesDe(t, niv).length;
@@ -143,7 +175,7 @@ while (tour++ < 60) {
       if (apres > avant || (BAT[t].deblocage && true)) {
         if (!coutOk(t, niv + 1)) continue;
         bati[t] = niv + 1; bouge = true;
-        for (const rid of UTIL.recettesDe(t, niv + 1)) ouvrir(rid);
+        for (const rid of (BAT[t].recettes || [])) if (REC[rid] && REC[rid].niv <= niv + 1) ouvrir(rid);
       }
     }
   }
