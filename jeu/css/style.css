@@ -691,6 +691,15 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .unite-portrait .vig-unite{width:52px!important;height:52px!important;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .vig-bat,.vig-metier{object-fit:contain;display:block;filter:drop-shadow(0 3px 3px rgba(0,0,0,.22))}
 .tache-image{width:44px!important;height:44px!important;object-fit:contain}
+.collection-filtres{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.collection-compte{font-size:11px;color:#6f7a78;margin:4px 0 10px}
+.collection-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.carte-habitant{position:relative;min-height:156px;padding:10px 6px 8px;border:1px solid rgba(78,105,109,.22);border-radius:10px;background:rgba(255,255,255,.32);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:inherit}
+.carte-habitant:hover{border-color:#d19b4a;transform:translateY(-2px)}
+.collection-avatar{width:82px;height:82px;margin-bottom:2px}.collection-avatar .vig{width:82px!important;height:82px!important;object-fit:cover;border-radius:9px}
+.collection-nom{font-weight:700;font-size:12px;white-space:nowrap;max-width:108px;overflow:hidden;text-overflow:ellipsis}
+.collection-meta{font-size:10px;color:#6f7a78}.collection-badge{font-size:9px;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.06em}.collection-niveau{font-size:10px;color:#67716e}
+.fiche-hab-tete{display:flex;gap:14px;align-items:center;padding:4px 0 12px}.fiche-avatar{width:96px;height:96px}.fiche-avatar .vig{width:96px!important;height:96px!important;object-fit:cover;border-radius:12px}.fiche-hab-identite h2{margin:0 0 5px;font-size:22px}.fiche-jauge,.fiche-attribut{margin:8px 0}.fiche-jauge .barre,.fiche-attribut .barre{margin-top:4px}
 .unite-corps{min-width:0}.unite-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:var(--doux);font-size:10px}
 .unite-technique{margin-top:5px;color:var(--or);font-size:10px}.unite-technique.faible{color:var(--faible)}
 .ligne-deblocage{padding:7px 2px;border-bottom:1px solid var(--bord);font-size:11px}
@@ -1714,3 +1723,70 @@ button[title],.b[title],a[title]{cursor:pointer}
   color:var(--texte);text-shadow:0 1px 2px #000;font-variant-numeric:tabular-nums;
 }
 #renforts .ren-part{display:flex;align-items:center;gap:5px}
+
+/* ---------------------------------------------------------------
+   LA CARTE MARITIME
+
+   Choisir une île se faisait sur une pile de blocs identiques, où la
+   distance n'était qu'un nombre de plus. C'est pourtant elle la
+   contrainte du port : elle se paie en temps de mer. La carte la
+   rend visible — le bourg au centre, les îles autour, un anneau
+   tous les cinq lieues.
+
+   Tout est en SVG, donc tout se peint d'ici : la feuille de style
+   reste le seul endroit où le jeu choisit ses couleurs, et la carte
+   suit les variables comme le reste de l'interface. Aucune teinte
+   n'est écrite dans le dessin.
+   --------------------------------------------------------------- */
+.carte-mer{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+/* la carte prend trois parts pour une à la fiche ; sous ~660 px la
+   fiche passe dessous d'elle-même plutôt que de tout étrangler */
+.mer-toile{flex:3 1 380px;min-width:0;outline:none}
+.mer-fiche{flex:1 1 260px;min-width:0}
+.mer-fiche .cadre{margin-top:0}
+.mer-carte{display:block;width:100%;height:auto}
+/* une fenêtre plus large que les autres : la carte a besoin d'air, et
+   la fiche tient à côté sans écraser la mer */
+.fen.carte{min-width:min(900px,95vw);max-width:min(1000px,96vw)}
+
+.mer-fond{fill:var(--creux);stroke:var(--bord)}
+.mer-rhumbs line{stroke:var(--bord);stroke-width:1}
+.mer-anneau{fill:none;stroke:var(--bord2);stroke-width:1;stroke-dasharray:2 7}
+/* les textes de la carte portent un halo de mer : ils coupent le trait
+   qui passe dessous au lieu de se battre avec lui */
+.mer-carte text{
+  paint-order:stroke;stroke:var(--creux);stroke-width:3;stroke-linejoin:round;
+  font-family:inherit;font-weight:600;
+}
+.mer-lieues{fill:var(--faible);font-size:8.5px;letter-spacing:.14em;text-anchor:middle}
+
+.mer-route{stroke:var(--or2);stroke-width:1.2;stroke-dasharray:4 4}
+
+.mer-bourg-terre{fill:var(--panneau3);stroke:var(--or2);stroke-width:1.2}
+.mer-bourg-tour{fill:var(--panneau2);stroke:var(--or);stroke-width:1.2}
+.mer-bourg-fanion{fill:var(--or)}
+.mer-bourg-nom{fill:var(--or);font-size:9.5px;letter-spacing:.18em;text-anchor:middle}
+
+.mer-ile{cursor:pointer}
+.mer-zone{fill:none;pointer-events:all}
+.mer-terre{fill:var(--panneau2);stroke-width:1.4;transition:fill .14s}
+/* la teinte répond à « est-ce à ma portée ? » ; la taille, elle, est
+   dessinée par le script et dit la force au pixel près */
+.mer-ile.douce   .mer-terre{stroke:var(--vert)}
+.mer-ile.rude    .mer-terre{stroke:var(--or)}
+.mer-ile.ardente .mer-terre{stroke:var(--corail)}
+.mer-mat{stroke:var(--or);stroke-width:1.2}
+.mer-fanion{fill:var(--or)}
+.mer-nom{fill:var(--doux);font-size:9px;letter-spacing:.04em}
+.mer-ile:hover .mer-terre{fill:var(--panneau3)}
+.mer-ile:hover .mer-nom{fill:var(--texte)}
+/* une île tenue est remplie de l'or du bourg — et le reste sous le
+   curseur : les règles de survol passent avant, donc celles-ci après */
+.mer-ile.prise .mer-terre{fill:var(--or2)}
+.mer-ile.prise:hover .mer-terre{fill:var(--or)}
+.mer-halo{fill:none;stroke:var(--or);stroke-width:1;stroke-dasharray:3 3}
+.mer-ile.choisie .mer-nom{fill:var(--or)}
+
+.mer-rose line{stroke:var(--bord2);stroke-width:1}
+.mer-rose-nord{fill:var(--doux);opacity:.55}
+.mer-rose-n{fill:var(--faible);font-size:9px;letter-spacing:.1em;text-anchor:middle}

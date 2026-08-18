@@ -97,24 +97,47 @@
   function estPrise(id) { return prises().indexOf(id) >= 0; }
   function prochaine() { return ZONES.find(z => !estPrise(z.id)) || null; }
 
+  /* ==================================================================
+     CE QUI EST TENU, ET QUI DONNE UN AVANTAGE
+
+     Deux registres, pour une raison d'histoire : l'ancienne conquête de
+     ZONE inscrivait sa prise dans `E().territoires` (plus bas dans ce
+     fichier), tandis qu'une victoire d'île — la seule qui se joue
+     encore — s'inscrit dans `E().port.prises` (port.js). Les trois
+     fonctions ci-dessous ne lisaient que le premier registre : le
+     joueur prenait une île, le bilan lui promettait « toutes les tâches
+     de pêche gagnent 14 % de cadence », et le multiplicateur restait à
+     1,00 pour toujours. On lit donc les DEUX, et l'on dédoublonne : une
+     île et sa zone portent le même identifiant et le même bonus.
+     ================================================================== */
+  function avantages() {
+    const vus = Object.create(null), out = [];
+    const ajouter = (id, b) => { if (!b || vus[id]) return; vus[id] = 1; out.push(b); };
+    for (const id of prises()) { const z = zoneById(id); if (z) ajouter(id, z.bonus); }
+    const p = E().port && E().port.prises;
+    if (p && window.IleUtil) for (const id of p) {
+      const i = window.IleUtil.parId(id); if (i) ajouter(id, i.bonus);
+    }
+    return out;
+  }
+
   /* Les bonus permanents, lus par le moteur de production. */
   function bonusMetier(metier) {
     let m = 1;
-    for (const id of prises()) {
-      const z = zoneById(id); if (!z) continue;
-      if (z.bonus.metier === metier) m *= 1 + z.bonus.pct;
-      if (z.bonus.global) m *= 1 + z.bonus.global;
+    for (const b of avantages()) {
+      if (b.metier === metier) m *= 1 + b.pct;
+      if (b.global) m *= 1 + b.global;
     }
     return m;
   }
   function bonusButin() {
     let b = 0;
-    for (const id of prises()) { const z = zoneById(id); if (z && z.bonus.butin) b += z.bonus.butin; }
+    for (const x of avantages()) if (x.butin) b += x.butin;
     return b;
   }
   function facteurMenace() {
     let f = 1;
-    for (const id of prises()) { const z = zoneById(id); if (z && z.bonus.menaceTaux) f *= 1 + z.bonus.menaceTaux; }
+    for (const b of avantages()) if (b.menaceTaux) f *= 1 + b.menaceTaux;
     return f;
   }
 
@@ -314,9 +337,8 @@
 
       /* LES POINTS DE CONTRÔLE À TENIR pour l'emporter, plus nombreux
          à mesure que les cartes grandissent. */
-      controlWinPoints: (window.GameData.BALANCE.controlWinPointsByStage
-        ? window.GameData.BALANCE.controlWinPointsByStage(z.diff)
-        : window.GameData.BALANCE.controlWinPoints),
+      controlWinPoints: (window.GameData.BALANCE.controlWinPointsByStage || [])[z.diff - 1]
+        || window.GameData.BALANCE.controlWinPoints,
 
       /* LES RENFORTS PAR VAGUES. Sans eux, toute la garnison adverse
          tombait d'un bloc au début : on gagnait ou l'on perdait dans la
@@ -498,11 +520,31 @@
     return out;
   }
 
+  /* LA FIN DE BATAILLE
+
+     Chaque issue a ses comptes à rendre — le port pour une île, la
+     jauge de Menace pour une sortie, la carte des territoires pour une
+     conquête — mais TOUTES sortent par la même porte. La bataille
+     d'île sortait autrefois par un `return` prématuré : elle réglait
+     ses comptes, ouvrait son bilan, et laissait le plateau plein écran
+     affiché sur un champ de bataille mort. Le joueur restait enfermé
+     devant. On calcule donc ce qu'il y a à calculer, puis on ferme, et
+     seulement ensuite on montre le bilan.
+     ================================================================= */
   function terminer(gagne) {
     const z = zoneEnCours;
     const E2 = E();
     E2.expedition = null;
     if (!z) { fermer(); return; }
+
+    /* Ce que le bilan aura à montrer. Chaque chemin le remplit à sa
+       façon ; aucun ne s'échappe avant la fermeture commune.
+       `faits` porte ce que la victoire a VRAIMENT changé : le bilan
+       annonçait autrefois quarante-cinq points de menace et une
+       garnison écrits en dur, alors que le chemin d'île en retire
+       `ile.menace` — huit aux Basses Berges — et ne poste personne. */
+    let recu = null;
+    const faits = { menace: 0 };
 
     /* UNE BATAILLE D'ÎLE APPARTIENT AU PORT. C'est lui qui fait
        retomber la Nuée, remplit la cale de butin et renvoie le navire
@@ -511,14 +553,19 @@
       /* CE QUI RESTE DEBOUT, compté et non estimé. On additionne les
          garnisons encore à nous sur toute la carte, et l'on y rajoute
          la réserve jamais débarquée : c'est exactement ce qui remonte
-         à bord. Ce qui est tombé ne rentre pas. */
+         à bord. Ce qui est tombé ne rentre pas.
+         `survivants()` lit la bataille et la colonne : il faut donc
+         l'appeler AVANT que la fermeture ne les efface. */
       const nav = navireEnCours; navireEnCours = null;
+      /* C'est `Port.resultat` qui retire la menace de l'île, et la jauge
+         bute sur zéro : on relève la baisse RÉELLE de part et d'autre
+         plutôt que de la recopier depuis la table. */
+      const avant = E2.menace;
       window.Port.resultat(nav.id, gagne, survivants());
+      faits.menace = Math.round(avant - E2.menace);
       if (window.Armee) window.Armee.gagnerXp(colonneEnCours, gagne ? 55 + z.diff * 16 : 18 + z.diff * 5);
-      montrerBilan(gagne, z, gagne ? (z.butin || {}) : {});
-      return;
-    }
-    if (gagne && z.sortie) {
+      recu = gagne ? (z.butin || {}) : {};
+    } else if (gagne && z.sortie) {
       /* Une sortie ne rapporte pas de terre : elle rachète du temps. */
       const av = E2.menace;
       E2.menace = Math.max(0, E2.menace - z.gainMenace);
@@ -526,22 +573,23 @@
       if (window.Armee) window.Armee.pertes(colonneEnCours, pertes); else E2.armee.unites = Math.max(0, E2.armee.unites - pertes);
       if (window.Armee) window.Armee.gagnerXp(colonneEnCours, 35 + z.diff * 12);
       E2.sorties = (E2.sorties || 0) + 1;
-      const recu = window.Etat.gagnerLot(z.butin);
+      recu = window.Etat.gagnerLot(z.butin);
       window.Etat.journal('Sortie victorieuse : la Menace retombe de ' +
         Math.round(av - E2.menace) + ' points.', 'guerre');
       U().dire('La Nuée reflue. Menace ' + Math.round(av) + ' → ' + Math.round(E2.menace) + '.', 'bien', 5000);
-      montrerBilan(true, z, recu);
     } else if (gagne) {
       if (!estPrise(z.id)) E2.territoires.push(z.id);
+      const avant = E2.menace;
       E2.menace = Math.max(0, E2.menace - 45);
+      faits.menace = Math.round(avant - E2.menace);
+      faits.garnison = true;
       const pertes = Math.ceil(colonneEnCours.reduce((n,x) => n + x.n, 0) * 0.22);
       if (window.Armee) window.Armee.pertes(colonneEnCours, pertes); else E2.armee.unites = Math.max(0, E2.armee.unites - pertes);
       if (window.Armee) window.Armee.gagnerXp(colonneEnCours, 55 + z.diff * 16);
       E2.armee.garnison += 1;
-      const recu = window.Etat.gagnerLot(z.butin);
+      recu = window.Etat.gagnerLot(z.butin);
       window.Etat.journal('Victoire à ' + z.nom + '. Le territoire est au bourg.', 'guerre');
       U().dire('Victoire — ' + z.nom + ' est prise.', 'bien', 5000);
-      montrerBilan(true, z, recu);
     } else {
       E2.menace = Math.min(100, E2.menace + (z.sortie ? 4 : 8));
       /* Une défaite coûte des bras, pas la partie : on doit pouvoir
@@ -551,15 +599,31 @@
       if (window.Armee) window.Armee.gagnerXp(colonneEnCours, 18 + z.diff * 5);
       window.Etat.journal('Défaite à ' + z.nom + '. La colonne rentre décimée.', 'alerte');
       U().dire('Défaite. La colonne rentre décimée.', 'alerte', 5000);
-      montrerBilan(false, z, null);
     }
-    zoneEnCours = null;
-    colonneEnCours = [];
-    if (bataille) { bataille.destroy(); bataille = null; }
-    setTimeout(fermer, 200);
+
+    /* LE PLATEAU D'ABORD, LE BILAN ENSUITE.
+
+       `fermer()` retire la classe 'vu' du plateau, détruit la bataille
+       et vide les côtés : c'est le seul geste qui rend la main au
+       joueur, et il doit passer quelle que soit l'issue. Le bilan, lui,
+       est une fenêtre de l'interface ordinaire — il n'appartient pas au
+       plateau et survit donc à sa fermeture, posé sur le bourg
+       retrouvé.
+
+       On ferme franchement, sans différé : `terminer()` est appelé
+       depuis le dernier geste de l'`update` du moteur, il ne reste rien
+       à faire derrière nous. */
+    fermer();
+    montrerBilan(gagne, z, recu, faits);
   }
 
-  function montrerBilan(gagne, z, recu) {
+  function montrerBilan(gagne, z, recu, faits) {
+    faits = faits || { menace: 0 };
+    /* `ouvrir()` sur une clé DÉJÀ ouverte ne fait que remettre l'ancienne
+       fenêtre au premier plan : elle garde sa configuration d'origine.
+       Un joueur qui laisse traîner son bilan verrait donc le compte
+       rendu de la bataille PRÉCÉDENTE. On ferme l'ancienne d'abord. */
+    U().fermer('bilan-exp');
     U().ouvrir('bilan-exp', {
       titre: gagne ? 'Territoire pris' : 'La colonne rentre',
       sous: z.nom,
@@ -575,15 +639,36 @@
           c.appendChild(U().listeRes(recu || {}, { gain: true }));
           c.appendChild(A('div', { class: 'note',
             text: 'Aucun territoire : une sortie ne prend rien, elle rachète du temps.' }));
+        } else if (gagne && z.ile) {
+          /* UNE ÎLE N'EST PAS UNE ZONE. La menace retombe de ce que
+             l'île vaut, personne ne reste en garnison, et le butin ne
+             tombe pas dans les magasins : il est en cale et le restera
+             jusqu'à ce que le navire touche le quai. Dire autre chose
+             ferait attendre au joueur des ressources qui ne viennent
+             qu'au retour, et une baisse de jauge qui n'a pas eu lieu. */
+          c.appendChild(A('div', { class: 'eti-or', text: 'avantage permanent' }));
+          c.appendChild(A('div', { class: 'note', text: libelleBonus(z) }));
+          c.appendChild(A('div', { class: 'eti-or', text: 'chargé en cale' }));
+          c.appendChild(U().listeRes(recu || {}, { gain: true }));
+          c.appendChild(A('div', { class: 'note',
+            text: 'La Nuée retombe de ' + faits.menace + ' points. Le butin est à bord : il sera débarqué quand le navire rentrera au bourg.' }));
         } else if (gagne) {
           c.appendChild(A('div', { class: 'eti-or', text: 'avantage permanent' }));
           c.appendChild(A('div', { class: 'note', text: libelleBonus(z) }));
           c.appendChild(A('div', { class: 'eti-or', text: 'butin' }));
           c.appendChild(U().listeRes(recu || {}, { gain: true }));
-          c.appendChild(A('div', { class: 'note', text: 'La menace retombe de 45 points, et un détachement reste en garnison.' }));
+          c.appendChild(A('div', { class: 'note',
+            text: 'La menace retombe de ' + faits.menace + ' points' +
+                  (faits.garnison ? ', et un détachement reste en garnison.' : '.') }));
         } else {
           c.appendChild(A('div', { class: 'note mauvais', text: 'Unités perdues, menace en hausse. Formez du monde au terrain d\'entraînement avant de repartir.' }));
         }
+        /* LA PORTE DE SORTIE. Une fenêtre de fin qu'on ne peut quitter
+           que par la croix du coin est un cul-de-sac : on la referme
+           d'un bouton qui dit où l'on retourne. */
+        c.appendChild(A('div', { class: 'rangee', style: 'margin-top:14px' },
+          A('button', { class: 'b primaire', text: 'Retour au bourg',
+            onclick: () => U().fermer('bilan-exp') })));
       } }],
     });
   }
@@ -645,18 +730,24 @@
        quel dès la première image, pas seulement après un clic. */
     boutons.appendChild(A('button', { class: 'b' + (auto ? ' primaire' : ''),
       text: auto ? 'IA aux commandes' : 'Commandes manuelles',
-      onclick: function () {
+      onclick: () => {
         auto = !auto;
         if (bataille) bataille.setAutoPilot(auto);
-        this.textContent = auto ? 'IA aux commandes' : 'Commandes manuelles';
-        this.className = 'b' + (auto ? ' primaire' : '');
+        /* On REBÂTIT la tête au lieu de retoucher ce seul bouton : la
+           retraite dépend elle aussi de qui commande, et elle doit
+           apparaître ou disparaître dans le même geste. */
+        majTete();
       } }));
     for (const r of [0.25, 0.5, 1]) {
       boutons.appendChild(A('button', { class: 'b mini', text: Math.round(r * 100) + ' %',
         title: 'Proportion de garnison envoyée à chaque ordre',
         onclick: () => { if (bataille) bataille.setSendRatio(r); } }));
     }
-    boutons.appendChild(A('button', { class: 'b danger', text: 'Battre en retraite',
+    /* L'IA NE BAT JAMAIS EN RETRAITE. Quand le pilote automatique tient
+       la barre, il mène la bataille à son terme, quoi qu'il arrive : le
+       bouton n'a donc pas à exister. On abandonne quand on commande, pas
+       quand on regarde. */
+    if (!auto) boutons.appendChild(A('button', { class: 'b danger', text: 'Battre en retraite',
       onclick: () => { if (confirm('Abandonner la bataille ?')) terminer(false); } }));
   }
 

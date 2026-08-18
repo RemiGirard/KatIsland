@@ -617,7 +617,7 @@
     /* La Nuée observe dès le premier feu, très lentement d'abord. La
        jauge enseigne ainsi sa règle dès le départ, puis la croissance
        du bourg et les territoires la rendent plus pressante. */
-    let t = 0.0035 + 0.00145 * Math.max(0, n - 1) + 0.007 * E.territoires.length;
+    let t = 0.0035 + 0.00145 * Math.max(0, n - 1) + 0.007 * window.Etat.nbConquetes();
     for (const bid in E.bat) {
       if (E.bat[bid].type === 'tour') t *= (1 - Math.min(0.45, 0.10 * E.bat[bid].niv));
     }
@@ -661,7 +661,7 @@
   }
   function declencherRaid() {
     const E = S();
-    const force = 14 + 5 * nbBatiments() + E.territoires.length * 14 + E.raids * 6;
+    const force = 14 + 5 * nbBatiments() + window.Etat.nbConquetes() * 14 + E.raids * 6;
     const def = defenseTotale();
     const premier = E.raids === 0;
     E.menace = 22;
@@ -876,7 +876,15 @@
        garde exactement la place qu'il faudra. */
     const b = window.Village.poserChantier(type, vx, r, null,
                                            opts && opts.coul, opts && opts.niveau);
-    if (!b) return { ok: false, raison: 'Pas de parcelle libre à cet endroit.' };
+    if (!b) {
+      /* Dire LAQUELLE des deux règles a refusé : la Pêcherie et le Port
+         veulent la rive, et une place d'intérieur parfaitement vide les
+         refuse quand même. */
+      const rive = window.Village.bordEau && window.Village.bordEau(type);
+      return { ok: false, raison: rive
+        ? 'Ce bâtiment se pose au bord de l\'eau : il lui faut une parcelle qui touche la mer.'
+        : 'Pas de parcelle libre à cet endroit.' };
+    }
     window.Etat.depenser(cout);
     E.chantier.file.push({
       k: 'construire', type, bat: b.id, r: b.r, xr: b.xr, L: b.L || 0,

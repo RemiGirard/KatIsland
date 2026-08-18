@@ -60,17 +60,68 @@ GameData.ALLY_NAMES = {
           'Gerfaut', 'Busard', 'Milan', 'Faucheur', 'Roitelet', 'Chevêche'],
 };
 
-/* ---------------- constantes lues par les moteurs ---------------- */
+/* ---------------- constantes lues par les moteurs ----------------
+   Les moteurs de bataille repris tels quels (`battle-core`,
+   `battle-mapgen`, les cuiseurs de `sprites/`) ont été équilibrés
+   CONTRE ces nombres. Les réécrire « au jugé » ici ne recalibre rien :
+   cela désaccorde un moteur qu'on n'a pas touché. La référence est donc
+   le bloc BALANCE de l'ancien jeu (old/KatsVsBirds/.../data-world.js,
+   lignes 688-712), recopié valeur par valeur ci-dessous. */
 GameData.BALANCE = {
-  agentCap: 400,                 // plafond d'unités simultanées en bataille
-  aoeMaxTargets: 14,
-  combatScale: 1,
-  controlWinPoints: 3,
-  controlWinPointsByStage: s => Math.min(6, 3 + Math.floor((s || 0) / 6)),
-  citySimCapSec: 3600,
-  depositBatch: 5,
-  pixelArt: 1.6,                 // grain des sprites cuits
-  towerRange: 170,
+  agentCap: 400,                 // plafond d'unités simultanées en bataille (inchangé depuis l'original)
+
+  /* L'ÉCHELLE DE TOUTE LA SCÈNE DE BATAILLE. `battle-core` en dérive le
+     rayon des nœuds, le rayon de mêlée et la taille des unités. À 1, la
+     carte entière était rendue à 64 % de sa taille d'origine : c'est le
+     « tout est trop petit » signalé. 1.56 est la valeur de référence. */
+  combatScale: 1.56,
+
+  /* Cibles maximales d'un impact de zone. 14 laissait un seul tir de
+     zone effacer une salve entière ; l'original en touche 4, ce que
+     confirme AOE_DECAY dans battle-core (quatre paliers : 1, .7, .4, .2). */
+  aoeMaxTargets: 4,
+
+  /* Points de contrôle à accumuler pour l'emporter. À 3, la majorité des
+     drapeaux donnant 1 pt/s, une bataille se terminait en une poignée de
+     secondes — les batailles « finies en 40 s ». 120 est la durée pleine
+     d'origine. */
+  controlWinPoints: 120,
+  /* Les premières étapes enseignent la prise de drapeaux sans imposer
+     deux minutes d'attente une fois la carte comprise. Dès l'étape 7, la
+     course rejoint la durée complète ci-dessus (le tableau s'arrête à
+     six entrées, et le lanceur retombe alors sur controlWinPoints).
+     C'est un TABLEAU indexé par l'étape, pas une fonction : le lanceur
+     d'expédition le lit ainsi. */
+  controlWinPointsByStage: [30, 45, 60, 75, 90, 105],
+
+  /* Portée UNIFIÉE des tours de garde. battle-core la lit sans fallback
+     implicite : la rogner à 170 rendait les tours plus courtes que la
+     distance à laquelle les cartes générées les posent des couloirs. */
+  towerRange: 185,
+
+  /* Taille du bloc pixel-art (px écran, fractionnaire) : filtre de scène
+     ET grain cuit des sprites (`bakePx` dans sprites-core). 0 = off,
+     rendu lisse partout — c'est le réglage d'origine. La valeur 1.6
+     rallumait le filtre sur tout le jeu, d'où le « il y a un effet pixel
+     art ? ». 1 = grain léger sur écrans DPR>1 ; 1.1-1.2 = visible partout. */
+  pixelArt: 0,
+
+  /* Coup critique de la papouille (le clic du chef). Ces deux clés
+     avaient disparu : tout lecteur devait donc inventer son propre taux,
+     et deux écrans pouvaient annoncer deux multiplicateurs différents.
+     Valeurs d'origine, conservées comme source unique. */
+  critChance: 0.05, critMult: 10,
+
+  /* Plafond de simulation d'une ville laissée seule, lu par
+     battle-mapgen. 3600 coupait le rattrapage à une heure là où
+     l'original en accorde six. */
+  citySimCapSec: 6 * 3600,
+
+  /* Tailles de lot du parachutage de renforts. L'interface d'expédition
+     itère dessus (`for (const n of depositBatch)`) pour construire ses
+     boutons : le nombre nu qui figurait ici n'est pas itérable et faisait
+     tomber la construction du HUD. */
+  depositBatch: [1, 5, 25, 100],
 };
 
 /* ---------------- bosses de carte d'expédition ----------------

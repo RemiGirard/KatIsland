@@ -44,6 +44,31 @@
 <script src="aventure/data-general.js"></script>
 <script src="jeu/donnees/gd-sorts-riches.js"></script>
 
+<!-- Les skins validés au terrain-lab. Ils doivent précéder sprites-buildings.js
+     et sprites-world.js : ces deux-là interrogent window.LabSkins au moment de
+     dessiner un bâtiment, et sans lui retombent sur les sprites historiques.
+     Les bibliothèques remplissent LAB_BUILDINGS / LAB_ELEMENTS, skins-config.js
+     arbitre ensuite les variantes retenues — d'où sa place en dernier. -->
+<script src="sprites/skins/elements/nature.js"></script>
+<script src="sprites/skins/elements/arbres2.js"></script>
+<script src="sprites/skins/elements/arbres3.js"></script>
+<script src="sprites/skins/elements/rochers2.js"></script>
+<script src="sprites/skins/elements/rochers3.js"></script>
+<script src="sprites/skins/elements/eau.js"></script>
+<script src="sprites/skins/elements/eau2.js"></script>
+<script src="sprites/skins/buildings/hq-chats.js"></script>
+<script src="sprites/skins/buildings/serie3-divers.js"></script>
+<script src="sprites/skins/buildings/amelioration.js"></script>
+<script src="sprites/skins/buildings/casernes.js"></script>
+<script src="sprites/skins/buildings/serie4-caserne-chats.js"></script>
+<script src="sprites/skins/buildings/tour-oiseaux.js"></script>
+<script src="sprites/skins/buildings/serie4-tour-chats.js"></script>
+<script src="sprites/skins/buildings/avant-postes.js"></script>
+<script src="sprites/skins/buildings/serie2-avant-postes.js"></script>
+<script src="sprites/skins/buildings/serie2-totems.js"></script>
+<script src="sprites/skins/buildings/serie4-controle.js"></script>
+<script src="sprites/skins/skins-config.js"></script>
+
 <script src="sprites/model3d.js"></script>
 <script src="sprites/sprites-core.js"></script>
 <script src="sprites/sprites-weapons.js"></script>
@@ -93,6 +118,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="jeu/3d/village-doc.js"></script>
 <script src="jeu/3d/village3d.js"></script>
+<script src="jeu/3d/port3d.js"></script>
 <script src="jeu/3d/habitants3d.js"></script>
 <script src="jeu/js/reglages.js"></script>
 <script src="jeu/js/ui-noyau.js"></script>

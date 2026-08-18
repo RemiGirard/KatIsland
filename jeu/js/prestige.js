@@ -77,7 +77,7 @@
   function sceauxGagnables() {
     const E = S();
     const prof = E.aventure.record || 0;
-    const terr = E.territoires.length;
+    const terr = window.Etat.nbConquetes();
     const rech = Object.keys(E.recherches || {}).length;
     const bat = Object.keys(E.bat).length;
     const hab = E.habitants.length;

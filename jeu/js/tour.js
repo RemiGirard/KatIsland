@@ -168,7 +168,16 @@
       window.Etat.journal(g.nom + ' tombe une fois de plus (' + fiche.fois + ').', 'butin');
       for (const hid of T().equipe) {
         const h = window.Etat.habitant(hid);
-        if (h) window.Etat.gagnerXpHabitant(h, Math.round(8 + etage * 0.8));
+        if (h) {
+          const xp = Math.round(8 + etage * 0.8);
+          window.Etat.gagnerXpHabitant(h, xp);
+          /* La pratique laisse une trace individuelle : un combattant
+             aguerri gagne force et dextérité, pas seulement un compteur
+             global de compagnie. */
+          window.Etat.gagnerAttribut(h, 'force', 1);
+          window.Etat.gagnerAttribut(h, 'dexterite', etage % 3 === 0 ? 1 : 0);
+          window.Etat.gagnerAttribut(h, 'intelligence', etage % 5 === 0 ? 1 : 0);
+        }
       }
       return { ok: true, gagne: true, butin: recu, chance: ch };
     }
@@ -241,6 +250,7 @@
   function blesser(hid, duree) {
     const h = window.Etat.habitant(hid); if (!h) return null;
     T().blesses[hid] = { jusqua: E().tJeu + duree, depuis: E().tJeu };
+    if (h) window.Etat.gagnerAttribut(h, 'endurance', 1);
     laisser(hid);
     window.Etat.libererHabitant(hid);
     window.Etat.journal(h.nom + ' remonte mal en point : convalescence.', 'alerte');

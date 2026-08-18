@@ -103,11 +103,11 @@
   o('g1', 'conquerir', 'La première colonne', 'Former dix unités à la caserne.',
     10, () => E().armee.unites, { ecu: 1500 });
   o('g2', 'conquerir', 'Les Basses Berges', 'Prendre un territoire.',
-    1, () => E().territoires.length, { ecu: 5000, medaille: 2 });
+    1, () => window.Etat.nbConquetes(), { ecu: 5000, medaille: 2 });
   o('g3', 'conquerir', 'Le comté', 'Prendre six territoires.',
-    6, () => E().territoires.length, { ecu: 40000, medaille: 6 });
+    6, () => window.Etat.nbConquetes(), { ecu: 40000, medaille: 6 });
   o('g4', 'conquerir', 'Toute la vallée', 'Prendre les douze territoires.',
-    12, () => E().territoires.length, { ecu: 250000, relique: 2, plan: 3 });
+    12, () => window.Etat.nbConquetes(), { ecu: 250000, relique: 2, plan: 3 });
   o('g5', 'conquerir', 'Rempart tenu', 'Repousser un raid sans un dégât.',
     1, () => E().raidsRepousses || 0, { ecu: 10000 });
   o('g6', 'conquerir', 'Le mur', 'Porter la défense du bourg à cent.',

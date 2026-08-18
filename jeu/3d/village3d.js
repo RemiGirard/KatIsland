@@ -34,7 +34,7 @@
     pecherie:'Pêcherie', mine:'Mine', scierie:'Scierie', laiterie:'Laiterie',
     champ:'Blé', herboristerie:'Légumes', rucher:'Fleurs',
     alchimie:'Alchimie', taverne:'Auberge', pepiniere:'Pépinière',
-    descente:'Tour sombre', caserne:'Caserne',
+    descente:'Tour sombre', caserne:'Caserne', port:'Port',
   };
   /* la teinte d'une maison ordinaire, par catégorie du jeu — pour que
      le bourg se lise même là où le document n'a pas de modèle */
@@ -83,7 +83,18 @@
   function empilable(type){
     const d = window.BAT && window.BAT[type];
     return !(d && (d.cat === 'recolte' || d.cat === 'elevage')) &&
-           type !== 'descente';
+           type !== 'descente' && !surLaRive(type);
+  }
+
+  /* Les modèles `bordEau` du document — la Pêcherie, le Port — jettent
+     un ponton dans la mer depuis leur face avant. Posés sur un toit, le
+     tablier et ses pilotis pendraient à mi-ciel : ils restent au sol, et
+     seulement sur une cellule qui touche l'eau. */
+  function surLaRive(type){
+    const doc = D();
+    if(!doc) return false;
+    const t = indexDoc(type);
+    return t >= 0 && !!doc.TYPES[t].bordEau;
   }
 
   /* Les parcelles d'accueil, de la plus proche du bourg à la plus
@@ -116,7 +127,24 @@
 
     const avant = occupees();
     let pose = null;
+    /* LE CHANTIER DOIT TENIR LA PLACE DU BÂTIMENT FINI.
+
+       Il se pose en bloc nu : `typeCourant` vaut -1, et le document
+       n'applique donc AUCUNE règle du modèle. Sans garde-fou on ouvrait
+       un chantier de port en plein bourg, et le port fini, refusé là,
+       allait se bâtir à l'autre bout de l'île.
+
+       « La cellule touche l'eau » ne suffisait pas : `placementOk`
+       exige EN PLUS que la face avant donne sur le large à une rotation
+       donnée, et que les trois autres parts trouvent des cellules
+       libres et non protégées. Sur un angle de côte — deux faces sans
+       voisin — le chantier passait et le port non : le joueur payait,
+       voyait l'échafaudage, et retrouvait son port ailleurs à
+       l'achèvement. On demande donc au document la règle du bâtiment
+       FINI ; `meilleureRotation` l'essaie dans les quatre sens et rend
+       -1 si aucun ne tient. */
     for(const c of candidats(cellPref, L)){
+      if(pour && t >= 0 && doc.meilleureRotation(c, L, t) < 0) continue;
       if(doc.poser({c, L})){ pose = c; break; }
     }
     doc.typeCourant = -1;
@@ -150,6 +178,34 @@
     return bat;
   }
 
+  /* ================================================================
+     REJOUER UN BÂTIMENT DU PLAN — SANS JAMAIS LE PERDRE
+
+     Une sauvegarde garde la cellule d'ancrage, pas la règle qui l'avait
+     autorisée. Or la règle change : le port se posait autrefois en
+     maison ordinaire — une cellule, n'importe où, y compris empilée sur
+     un toit — et il est depuis un modèle `bordEau` de quatre parts qui
+     exige la rive. Rejoué tel quel, il était refusé sur sa cellule
+     d'origine et disparaissait de l'île tout en restant dans l'état du
+     jeu : plus rien à cliquer, plus de ponton, donc plus de flotte du
+     tout. Même chose pour les bâtiments rejoués APRÈS un modèle qui
+     s'est mis à occuper plus de place qu'avant.
+
+     Un plan ne doit jamais perdre un bâtiment. On essaie donc sa
+     parcelle, puis n'importe quelle parcelle, puis le sol.
+     ================================================================ */
+  function rejouer(e){
+    const L = e.L || 0;
+    const essais = [[e.cell != null ? e.cell : null, L]];
+    if(e.cell != null) essais.push([null, L]);
+    if(L > 0) essais.push([null, 0]);
+    for(const [cell, LL] of essais){
+      const b = poserInterne(e.type, cell, e.id, e.pour || null, e.niv || 1, e.coul, LL);
+      if(b) return b;
+    }
+    return null;
+  }
+
   function retirerInterne(id){
     const bat = bats.get(id);
     if(!bat) return false;
@@ -166,6 +222,69 @@
     }
     bats.delete(id);
     return true;
+  }
+
+  /* ================================================================
+     LE PONTON — le contrat avec les navires
+
+     Un modèle `bordEau` du document porte une part marquée
+     `ponton:true`. Le document jette ce ponton à la construction et
+     n'en garde aucune trace : rien, dans `__VDOC`, ne dit où le tablier
+     s'arrête. On le RECALCULE ici, avec la même géométrie que
+     `ponton()` dans village-doc.js :
+
+       - l'arête monde d'une face locale `f` vaut `(f + sp.r) % 4`, et
+         le ponton part de la face locale 0 — celle que `bordEau` force
+         à donner sur le large ;
+       - le tablier part du MILIEU de cette arête, suit la normale
+         sortante de la cellule (du centre vers le milieu de l'arête)
+         et court de 0,05 à 1,60 ;
+       - il est posé à `niveau × H + 0,02`.
+
+     Ces trois nombres sont les seuls qu'on duplique. S'ils bougent dans
+     `ponton()`, il faut les corriger ici — et nulle part ailleurs.
+
+     `pontonDe(idBâtiment)` renvoie, ou `null` si ce bâtiment n'a pas de
+     ponton (ce qui est le cas de tous sauf la pêcherie et le port) :
+
+       { x, z   position monde du BOUT du tablier
+         y      hauteur du tablier, dans le repère du document
+         dx, dz vecteur unitaire du tablier vers le large
+         cap    le même cap en radians, `Math.atan2(dz, dx)`
+         cell   indice de la cellule qui porte le ponton
+         L      niveau de cette part
+         id     le bâtiment, pour ne pas avoir à le repasser }
+
+     Un navire qui accoste vient donc en (x, z) par le cap opposé
+     (`cap + Math.PI`) ; un navire qui appareille sort suivant `cap`.
+     ================================================================ */
+  const PONTON_DEBUT = 0.05, PONTON_LONG = 1.55, PONTON_Y = 0.02;
+
+  function pontonDe(x){
+    const b = typeof x === 'string' ? bats.get(x) : (x && x.id ? bats.get(x.id) : null);
+    const doc = D();
+    if(!b || !doc) return null;
+    const cs = doc.cellules, TY = doc.TYPES;
+    for(const slot of (b.slots || [])){
+      const c = cs[slot.cell];
+      const sp = c && c.sp ? c.sp[slot.L] : null;
+      if(!sp) continue;
+      const T = TY[sp.t];
+      const part = T && T.parts[sp.p];
+      if(!part || !part.ponton) continue;
+      const i = sp.r % 4;
+      const A = doc.P[c.q[i]], B = doc.P[c.q[(i+1)%4]];
+      const mx = (A[0]+B[0])/2, mz = (A[1]+B[1])/2;
+      let dx = mx - c.cx, dz = mz - c.cz;
+      const l = Math.hypot(dx, dz) || 1;
+      dx /= l; dz /= l;
+      const bout = PONTON_DEBUT + PONTON_LONG;
+      return { x: mx + dx*bout, z: mz + dz*bout,
+               y: slot.L * doc.H + PONTON_Y,
+               dx, dz, cap: Math.atan2(dz, dx),
+               cell: c.i, L: slot.L, id: b.id };
+    }
+    return null;
   }
 
   /* ================================================================
@@ -275,6 +394,16 @@
     nomPalier(niv){ return NOMS_PALIER[palierDe(niv)]; },
     batiments(){ return [...bats.values()]; },
     batiment(id){ return bats.get(id) || null; },
+
+    /* ---- les pontons : voir le contrat plus haut ---- */
+    pontonDe(id){ return pontonDe(id); },
+    /* tous les pontons du bourg, dans l'ordre des bâtiments — de quoi
+       répartir une flotte sans avoir à deviner qui a un quai */
+    pontons(){
+      const out = [];
+      for(const id of bats.keys()){ const p = pontonDe(id); if(p) out.push(p); }
+      return out;
+    },
     plan(){
       return [...bats.values()].map(b => ({
         id: b.id, type: b.type, pour: b.pour || null,
@@ -285,9 +414,7 @@
     chargerPlan(p){
       bats.clear(); parCell.clear(); SEQ = 0;
       D().vider();
-      for(const e of (p || []))
-        poserInterne(e.type, e.cell != null ? e.cell : null, e.id,
-                     e.pour || null, e.niv || 1, e.coul, e.L || 0);
+      for(const e of (p || [])) rejouer(e);
       D().demanderRebati();
       D().recentrer();
       return this;
@@ -295,6 +422,11 @@
     possible(){
       return D().cellules.some(c => !parCell.has(cle(c, 0)) && !((c.b || [])[0] >= 0));
     },
+    /* Le moteur en a besoin pour EXPLIQUER un refus : une parcelle
+       d'intérieur est bien libre, il lui manque seulement la mer. Sans
+       cela le joueur relit « pas de parcelle libre » sur une place vide
+       et cherche une erreur qui n'existe pas. */
+    bordEau(type){ return surLaRive(type); },
 
     /* ---- le mode construction ---- */
     modeConstruction(type){

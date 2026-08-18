@@ -226,6 +226,30 @@
   }
 
   /* =================================================================
+     CE QUI EST CONQUIS
+
+     Deux registres pour une raison d'histoire. L'ancienne conquête de
+     ZONE inscrivait sa prise dans `territoires` ; depuis que le portail
+     a disparu et que toute la guerre part du port, une victoire s'écrit
+     dans `port.prises`. Or huit lecteurs — les trois objectifs de
+     conquête, la montée de la Nuée, la force des raids, le prestige et
+     deux affichages — comptaient encore le seul premier registre, qui
+     ne bouge donc plus jamais. Le joueur prenait douze îles et voyait
+     « Territoires : 0 », avec trois objectifs indécrochables.
+
+     On expose ici LA source unique, dédoublonnée : une île et l'ancienne
+     zone qui lui correspond portent le même identifiant, et ne doivent
+     compter que pour une.
+     ================================================================= */
+  function conquetes() {
+    const vus = Object.create(null), out = [];
+    for (const id of (E.territoires || [])) if (!vus[id]) { vus[id] = 1; out.push(id); }
+    for (const id of ((E.port && E.port.prises) || [])) if (!vus[id]) { vus[id] = 1; out.push(id); }
+    return out;
+  }
+  function nbConquetes() { return conquetes().length; }
+
+  /* =================================================================
      BÂTIMENTS
      ================================================================= */
   function batsDeType(type) {
@@ -690,6 +714,7 @@
     prevenir,
     qte, assez, manque, depenser, gagner, gagnerLot,
     plafonds, plafondDe, invaliderCap,
+    conquetes, nbConquetes,
     batsDeType, nivDeType, aBatiment, creerBatiment, majPostes,
     habitant, habitantsLibres, ajouterHabitant, logementTotal, compteTrait,
     libererHabitant, affecterPoste, affecterChantier,

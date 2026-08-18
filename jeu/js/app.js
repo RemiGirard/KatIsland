@@ -59,6 +59,11 @@
          que la scène : une image, un pas. Le module se débrouille seul
          si le joueur les a coupés dans les réglages. */
       if (window.Habitants3D) { try { window.Habitants3D.tick(dt); } catch (e) { } }
+      /* LES NAVIRES AU PONTON. Même horloge, même principe. Le branchement
+         se fait ici et nulle part ailleurs : `Village.surTick` n'accepte
+         qu'un seul abonné et l'écrase à chaque appel, donc un module qui
+         s'abonnerait de son côté ferait taire les habitants. */
+      if (window.Port3D) { try { window.Port3D.tick(dt); } catch (e) { } }
       const now = Date.now();
       const ecart = (now - horloge) / 1000;
       horloge = now;

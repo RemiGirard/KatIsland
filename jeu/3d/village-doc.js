@@ -221,7 +221,32 @@ const TYPES = [
         faces:['deco','deco','mur','deco'] },
       { df:2, fortifie:true, faces:['ouvert','mur','mur','mur'], mur:'#85827b' },
       { df:2, dl:1, fortifie:true, sommet:true, pignon:true, pente:0.96,
-        mur:'#7b7973', toit:'#504d49', faces:['mur','mur','mur','mur'] } ] }
+        mur:'#7b7973', toit:'#504d49', faces:['mur','mur','mur','mur'] } ] },
+
+  /* LE PORT. Toujours en dernier : les sauvegardes stockent l'INDICE du type,
+     une insertion plus haut décalerait tout le bourg déjà bâti.
+     Il partage avec la pêcherie le `bordEau` et le ponton — c'est le même
+     rivage —, mais il s'ÉTALE au lieu de monter : aucune part n'a de `dl`,
+     tout tient au sol sur quatre cellules. Un magasin de quai au pignon
+     tourné vers le large, une halle en retour, le quai dallé où l'on charge,
+     et la vigie du capitaine. Les toits sont volontairement plats de pente
+     (0,58 et 0,66, contre 1,30 à la pêcherie) : ce sont des hangars, pas des
+     maisons. */
+  { nom:'Port', mur:'#a29b8c', toit:'#4f5a5e', bordEau:true, parts:[
+      /* Le magasin. Sa face 0 est celle que `bordEau` force à donner sur le
+         large : elle porte le ponton, et au-dessus une galerie de bois d'où
+         l'on descend les charges. Mur plein côté mer, la grande porte est de
+         flanc, sur le quai. */
+      { faces:['deco','ouvert','mur','mur'], ponton:true, galerie:true,
+        sommet:true, pignon:true, pente:0.58 },
+      // le quai dallé, au flanc du magasin : c'est là que les habitants chargent
+      { df:1, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
+      // la halle en retour, son appentis à marchandises ouvert côté terre
+      { df:2, sommet:true, pignon:true, pente:0.66, appentis:0,
+        mur:'#968f7e', toit:'#475256', faces:['mur','mur','mur','mur'] },
+      // la vigie du capitaine : tour basse coiffée d'un cône, en bout de môle
+      { df:3, sommet:true, rond:true, cone:true, haut:0.52,
+        mur:'#9c9689', toit:'#455054', faces:['mur','mur','mur','mur'] } ] }
 ];
 
 const TYPE_CASERNE = TYPES.findIndex(t => t.nom === 'Caserne');

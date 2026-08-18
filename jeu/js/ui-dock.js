@@ -84,6 +84,8 @@
     tete.appendChild(el('div', {},
       el('div', { class: 'tt', text: 'En cours' }),
       el('div', { class: 'eti', id: 'dock-compte', text: '' })));
+    tete.appendChild(el('button', { class: 'b mini', text: 'Habitants', title: 'Voir la collection des habitants',
+      onclick: () => window.UIFen.ouvrirHabitants('collection') }));
     tete.appendChild(el('button', { class: 'b mini', text: 'Replier', onclick: basculer }));
   }
 
@@ -317,7 +319,7 @@
       titre: libres
         ? libres + ' habitant(s) ne font rien. Un habitant libre est un poste qui ne tourne pas — placez-les.'
         : E2.habitants.length + ' habitants, tous au travail.',
-      action: () => window.UIFen.ouvrirHabitants('roles'),
+      action: () => window.UIFen.ouvrirHabitants('collection'),
     }));
 
     /* LES PORTES. Un toit libre est une décision qui attend : le bandeau
