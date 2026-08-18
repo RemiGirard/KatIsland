@@ -198,9 +198,13 @@ if (!filtre || filtre === 'ordre') {
   if (jamais.length) err('bâtiments inatteignables : ' + jamais.join(', '));
 
   /* LES DEUX PORTES DE L'AVENTURE. Elles doivent s'ouvrir tôt : c'est
-     par elles qu'arrive tout ce que le village ne produit pas. */
+     par elles qu'arrive tout ce que le village ne produit pas.
+
+     LE PORT compte double : c'est la seule chose qui fasse retomber la
+     Nuée. S'il ouvre tard, le joueur subit la jauge sans recours. */
   console.log('\n  --- les portes ---');
-  for (const p of ['descente', 'portail', 'entrainement', 'caserne']) {
+  for (const p of ['descente', 'port', 'entrainement', 'caserne']) {
+    if (!BAT[p]) continue;
     const v = batVague[p];
     console.log('  ' + pad(BAT[p].nom, 24) + 'vague ' + padg(v == null ? '—' : v, 2) +
                 '   ' + (v == null ? '' : '(' + Math.round(v / VAGUE_MAX * 100) + ' % de la profondeur)'));

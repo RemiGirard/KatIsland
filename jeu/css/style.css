@@ -690,6 +690,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .unite-portrait{position:relative;overflow:visible;display:grid;place-items:center}
 .unite-portrait .vig-unite{width:52px!important;height:52px!important;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .vig-bat,.vig-metier{object-fit:contain;display:block;filter:drop-shadow(0 3px 3px rgba(0,0,0,.22))}
+.tache-image{width:44px!important;height:44px!important;object-fit:contain}
 .unite-corps{min-width:0}.unite-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:var(--doux);font-size:10px}
 .unite-technique{margin-top:5px;color:var(--or);font-size:10px}.unite-technique.faible{color:var(--faible)}
 .ligne-deblocage{padding:7px 2px;border-bottom:1px solid var(--bord);font-size:11px}
@@ -705,7 +706,16 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 #plateau-tete .ti{flex:1}
 #plateau-corps{flex:1;min-height:0;display:grid;grid-template-columns:minmax(210px,280px) minmax(520px,1fr) minmax(230px,300px);gap:0}
 #plateau-scene{flex:1;position:relative;display:grid;place-items:center;overflow:hidden}
-#plateau-scene canvas{max-width:100%;max-height:100%;display:block;border-radius:var(--r2)}
+/* L'ANCIEN JEU FORÇAIT `width:100%;height:100%` sur ce canevas — nous
+   n'avions que `max-width/max-height:100%`, qui ne fait que l'empêcher
+   de déborder SANS jamais l'étirer pour remplir la scène. Résultat :
+   le canevas s'affichait à sa taille intrinsèque (ses attributs
+   width/height, fixés par `resize()` du moteur de bataille), plus
+   petite que l'espace réellement disponible. On reprend la règle
+   d'origine à l'identique : le canevas remplit TOUJOURS sa scène, le
+   moteur choisit sa résolution interne, le CSS choisit sa taille
+   affichée — les deux ne se disputent plus. */
+#plateau-scene canvas{width:100%;height:100%;display:block;border-radius:var(--r2)}
 #plateau .plateau-cote{min-width:0;padding:14px 12px;overflow:auto;background:rgba(25,35,43,.82);border-right:1px solid var(--bord)}
 #plateau #plateau-droite{border-right:0;border-left:1px solid var(--bord)}
 .plateau-cote .cote-titre{margin-bottom:10px;font-family:'Condense','Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--doux)}
@@ -1673,3 +1683,34 @@ button[title],.b[title],a[title]{cursor:pointer}
 .force{display:flex;gap:2px}
 .force i{width:8px;height:12px;background:var(--bord2);border-radius:1px;display:block}
 .force i.on{background:var(--corail)}
+
+/* ---------------------------------------------------------------
+   LA BARRE DE RENFORTS
+   En bas de l'écran de bataille : ce qui attend en chaloupe. On
+   choisit un type, on clique la carte, il débarque.
+   --------------------------------------------------------------- */
+#renforts{
+  position:absolute;left:50%;bottom:12px;transform:translateX(-50%);
+  z-index:6;display:flex;flex-direction:column;gap:6px;align-items:center;
+  background:rgba(20,16,29,.90);border:1px solid var(--bord2);
+  border-radius:3px;padding:8px 12px;backdrop-filter:blur(6px);
+  max-width:min(720px,92vw);
+}
+#renforts .ren-tt{display:flex;align-items:center;gap:10px}
+#renforts .ren-tt .n{font-size:11px;color:var(--doux);font-variant-numeric:tabular-nums}
+#renforts .ren-vide{font-size:11.5px;color:var(--faible)}
+#renforts .ren-liste{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+#renforts .ren-u{
+  position:relative;width:46px;height:46px;padding:0;
+  background:var(--panneau);border:1px solid var(--bord2);border-radius:2px;
+  display:grid;place-items:center;cursor:pointer;
+  transition:border-color .12s,background .12s;
+}
+#renforts .ren-u:hover{border-color:var(--bord3);background:var(--panneau2)}
+#renforts .ren-u.choisi{border-color:var(--or);background:rgba(230,192,105,.14)}
+#renforts .ren-u canvas,#renforts .ren-u img{display:block;image-rendering:pixelated}
+#renforts .ren-u .n{
+  position:absolute;right:2px;bottom:1px;font-size:10px;font-weight:700;
+  color:var(--texte);text-shadow:0 1px 2px #000;font-variant-numeric:tabular-nums;
+}
+#renforts .ren-part{display:flex;align-items:center;gap:5px}

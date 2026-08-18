@@ -261,6 +261,7 @@
     const nav = navire(id);
     if (!nav) return { ok: false, pourquoi: 'Navire inconnu.' };
     if (nav.etat !== 'mouillage') return { ok: false, pourquoi: 'Le navire n\'est pas devant l\'île.' };
+    if (nav.combattu) return { ok: false, pourquoi: 'L\'île est déjà prise. Poussez plus loin, ou rentrez.' };
     if (E().expedition) return { ok: false, pourquoi: 'Une bataille est déjà en cours.' };
     return { ok: true, ile: window.IleUtil.parId(nav.ile) };
   }
@@ -273,45 +274,114 @@
     return { ok: true };
   }
 
-  /* Appelé par le module d'expédition quand la bataille se termine. */
-  function resultat(navId, gagne, pertes) {
+  /* Appelé par le module d'expédition quand la bataille se termine.
+     `vivants` : { type -> nombre } compté dans les garnisons réelles. */
+  function resultat(navId, gagne, vivants) {
     const nav = navire(navId);
     if (!nav) return;
     const ile = window.IleUtil.parId(nav.ile);
     const s = E();
 
-    /* les pertes se prennent dans la cale : ce qui est mort ne rentre pas */
-    if (pertes && pertes > 0) {
-      let reste = pertes;
-      for (const c of nav.cargo.slice()) {
-        const pris = Math.min(c.n, reste);
-        c.n -= pris; reste -= pris;
-        if (c.n <= 0) nav.cargo.splice(nav.cargo.indexOf(c), 1);
-        if (reste <= 0) break;
-      }
-      if (window.Armee) window.Armee.pertes(null, pertes);
-    }
+    /* LA CALE DEVIENT CE QUI TIENT DEBOUT. On ne rogne plus un
+       pourcentage au hasard : ce qui est tombé sur l'île y reste, et
+       le bourg perd ces unités pour de bon. */
+    const avant = {};
+    for (const c of nav.cargo) avant[c.type] = c.n;
+    nav.cargo = [];
+    for (const t in (vivants || {}))
+      if (vivants[t] > 0) nav.cargo.push({ type: t, n: Math.floor(vivants[t]) });
+
+    let morts = 0;
+    for (const t in avant) morts += Math.max(0, avant[t] - ((vivants && vivants[t]) || 0));
+    if (morts > 0 && window.Armee) window.Armee.pertes(null, morts);
 
     if (gagne && ile) {
       /* LA SEULE FAÇON DE FAIRE RETOMBER LA NUÉE. */
       const av = s.menace;
       s.menace = Math.max(0, s.menace - ile.menace);
-      nav.butin = Object.assign({}, ile.butin);
+      /* le butin s'AJOUTE à ce que la cale porte déjà : un navire qui
+         enchaîne deux îles rentre chargé des deux. */
+      nav.butin = nav.butin || {};
+      for (const k in ile.butin) nav.butin[k] = (nav.butin[k] || 0) + ile.butin[k];
       const p = assure();
       if (p.prises.indexOf(ile.id) < 0) p.prises.push(ile.id);
       p.expeditions++;
       window.Etat.journal('Victoire à ' + ile.nom + ' : la Nuée retombe de ' +
-        Math.round(av - s.menace) + ' points.', 'guerre');
+        Math.round(av - s.menace) + ' points' +
+        (morts ? ', ' + morts + ' des nôtres restent à terre' : ', sans une perte') + '.', 'guerre');
     } else if (ile) {
       s.menace = Math.min(100, s.menace + 4);
-      window.Etat.journal('Échec devant ' + ile.nom + '. Le navire rentre allégé.', 'alerte');
+      window.Etat.journal('Échec devant ' + ile.nom +
+        (morts ? ' — ' + morts + ' perdus.' : '.'), 'alerte');
     }
 
-    /* on repart, quoi qu'il arrive : la mer ne garde pas les vaincus */
+    /* LE NAVIRE RESTE AU MOUILLAGE. C'est au joueur de décider : pousser
+       plus loin avec ce qui lui reste, ou mettre le cap sur le bourg.
+       S'il n'a plus personne, la question ne se pose pas. */
+    if (!nav.cargo.length) {
+      window.Etat.journal(nav.nom + ' n\'a plus d\'équipage à débarquer : il rentre.', 'alerte');
+      repartir(nav);
+    } else {
+      nav.etat = 'mouillage';
+      nav.combattu = true;
+      nav.gagne = !!gagne;      // l'île est-elle prise, ou seulement quittée ?
+    }
+    window.Etat.prevenir('port', nav);
+  }
+
+  /* METTRE LE CAP SUR LE BOURG. */
+  function repartir(nav) {
+    const ile = window.IleUtil.parId(nav.ile);
     nav.etat = 'retour';
+    nav.combattu = false;
     nav.total = window.IleUtil.traversee(ile ? ile.lieues : 4, nav.palier);
     nav.reste = nav.total;
     window.Etat.prevenir('port', nav);
+  }
+  function rentrerAuBourg(id) {
+    const nav = navire(id);
+    if (!nav || nav.etat !== 'mouillage') return { ok: false, pourquoi: 'Le navire n\'est pas au mouillage.' };
+    repartir(nav);
+    return { ok: true };
+  }
+
+  /* POUSSER PLUS LOIN. Le navire ne repasse pas par le bourg : il fait
+     route d'île en île avec les survivants. La traversée se compte
+     depuis l'île où il est, pas depuis le port — c'est tout l'intérêt
+     d'enchaîner, et c'est aussi le risque. */
+  function peutContinuer(id, versId) {
+    const nav = navire(id);
+    if (!nav) return { ok: false, pourquoi: 'Navire inconnu.' };
+    if (nav.etat !== 'mouillage') return { ok: false, pourquoi: 'Le navire n\'est pas au mouillage.' };
+    if (!nav.cargo.length) return { ok: false, pourquoi: 'Plus personne à bord.' };
+    const dest = window.IleUtil.parId(versId);
+    if (!dest) return { ok: false, pourquoi: 'Île inconnue.' };
+    if (dest.id === nav.ile) return { ok: false, pourquoi: 'Le navire y est déjà.' };
+    if (!window.Etat.assez(dest.cout))
+      return { ok: false, pourquoi: 'Ravitaillement insuffisant.', manque: window.Etat.manque(dest.cout) };
+    return { ok: true, dest, lieues: ecart(nav.ile, versId) };
+  }
+  /* La distance entre deux îles : l'écart de leurs éloignements, jamais
+     moins de deux lieues — deux îles voisines restent deux îles. */
+  function ecart(a, b) {
+    const A = window.IleUtil.parId(a), B = window.IleUtil.parId(b);
+    if (!A || !B) return 4;
+    return Math.max(2, Math.abs(A.lieues - B.lieues));
+  }
+  function continuer(id, versId) {
+    const v = peutContinuer(id, versId);
+    if (!v.ok) return v;
+    const nav = navire(id);
+    window.Etat.depenser(v.dest.cout);
+    nav.ile = v.dest.id;
+    nav.etat = 'mer';
+    nav.combattu = false;
+    nav.total = window.IleUtil.traversee(v.lieues, nav.palier);
+    nav.reste = nav.total;
+    window.Etat.journal(nav.nom + ' ne rentre pas : cap sur ' + v.dest.nom +
+      ', ' + v.lieues + ' lieues de plus.', 'guerre');
+    window.Etat.prevenir('port', nav);
+    return { ok: true };
   }
 
   /* ==================================================================
@@ -334,6 +404,7 @@
     peutArmer, armerNavire, peutAgrandir, agrandir,
     placesPrises, disponible, typesEmbarquables, charger, decharger, viderCale,
     peutAppareiller, appareiller, peutCombattre, combattre, resultat,
+    peutContinuer, continuer, rentrerAuBourg, ecart,
     tick, etatNavire, ileDe, estPrise,
   };
 

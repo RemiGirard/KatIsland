@@ -14,6 +14,7 @@
   const U = window.UI, el = U.el;
   const E = () => window.Etat.E;
   let postulantChoisi = null;
+  let collectionFiltre = 'tous', habFicheId = null;
 
   /* =================================================================
      OUTILS D'AFFICHAGE PARTAGÉS
@@ -836,9 +837,24 @@
         title: ag.ok ? 'Passer à ' + ag.vers.nom + ' — ' + ag.vers.places + ' places' : ag.pourquoi,
         onclick: () => { const r = P.agrandir(n.id);
           U.dire(r.ok ? 'La cale est agrandie.' : r.pourquoi, r.ok ? 'bien' : 'alerte'); } }));
-    } else if (n.etat === 'mouillage') {
+    } else if (n.etat === 'mouillage' && !n.combattu) {
       actions.appendChild(el('button', { class: 'b primaire large', text: 'Lancer la bataille',
         onclick: () => { window.Port.combattre(n.id); } }));
+    } else if (n.etat === 'mouillage' && n.combattu) {
+      /* L'ÎLE EST PRISE. Le navire ne rentre pas d'office : on pousse
+         plus loin avec les survivants, ou l'on met le cap sur le bourg.
+         C'est le seul moment du jeu où l'on joue son avance. */
+      box.appendChild(el('div', { class: 'appel', style: 'margin-top:12px' },
+        el('div', { style: 'flex:1;min-width:0' },
+          el('div', { class: 'tt', style: 'font-size:13px',
+            text: n.gagne ? 'L\'île est prise' : 'La bataille est perdue' }),
+          el('div', { class: 'eti',
+            text: P.placesPrises(n.cargo) + ' survivants à bord — on peut enchaîner' }))));
+      actions.appendChild(el('button', { class: 'b primaire', text: 'Pousser plus loin',
+        onclick: () => ouvrirSuite(n.id) }));
+      actions.appendChild(el('button', { class: 'b', text: 'Rentrer au bourg',
+        onclick: () => { window.Port.rentrerAuBourg(n.id);
+          U.dire('Le navire met le cap sur le bourg.', 'bien'); } }));
     }
     if (actions.children.length) box.appendChild(actions);
     return box;
@@ -938,6 +954,49 @@
           if (r.ok) { U.fermer('destination'); U.dire('Le navire appareille.', 'bien'); }
           else U.dire(r.pourquoi, 'alerte'); } })));
     return box;
+  }
+
+  /* POUSSER PLUS LOIN. Les distances se comptent depuis l'île où l'on
+     est, pas depuis le port : enchaîner deux îles voisines coûte deux
+     lieues, pas vingt. C'est l'intérêt de ne pas rentrer — et le
+     risque, puisqu'on repart avec ce qui a survécu. */
+  function ouvrirSuite(navId) {
+    U.ouvrir('suite', {
+      titre: 'Pousser plus loin', sous: 'Sans repasser par le bourg', classe: 'large',
+      onglets: [{ id: 's', nom: 'Cap suivant', rendu: c => {
+        const P = window.Port, n = P.navire(navId);
+        if (!n) return;
+        const ici = window.IleUtil.parId(n.ile);
+        c.appendChild(el('div', { class: 'note',
+          text: 'Le navire mouille devant ' + (ici ? ici.nom : '—') + ' avec '
+              + P.placesPrises(n.cargo) + ' unités encore debout. Les distances se comptent '
+              + 'depuis ici : une île voisine est à deux pas, et l\'on ne repasse pas par le port.' }));
+        c.appendChild(el('div', { class: 'rangee enroule', style: 'margin-top:8px' },
+          ...n.cargo.map(x => el('span', { class: 'puce mini',
+            text: x.n + ' × ' + nomUnite(x.type) }))));
+        for (const ile of window.ILES) {
+          if (ile.id === n.ile) continue;
+          const v = P.peutContinuer(n.id, ile.id);
+          const lieues = P.ecart(n.ile, ile.id);
+          const duree = window.IleUtil.traversee(lieues, n.palier);
+          c.appendChild(el('div', { class: 'cadre' },
+            el('div', { class: 'rangee entre' },
+              el('span', { class: 'tt', style: 'font-size:14px', text: ile.nom }),
+              el('span', { class: 'eti', text: lieues + ' lieues d\'ici · ' + U.duree(duree) })),
+            el('div', { class: 'rangee entre', style: 'margin-top:6px' },
+              el('span', { class: 'eti', text: 'force' }),
+              el('div', { class: 'force' },
+                ...Array.from({ length: 10 }, (_, i) =>
+                  el('i', { class: i < ile.force ? 'on' : '' })))),
+            el('div', { class: 'rangee entre', style: 'margin-top:8px' },
+              el('span', { class: 'eti', text: v.ok ? '−' + ile.menace + ' de Nuée' : v.pourquoi }),
+              el('button', { class: 'b primaire', text: 'Mettre le cap', disabled: !v.ok,
+                onclick: () => { const r = P.continuer(n.id, ile.id);
+                  if (r.ok) { U.fermer('suite'); U.dire('Le navire ne rentre pas.', 'bien'); }
+                  else U.dire(r.pourquoi, 'alerte'); } }))));
+        }
+      } }],
+    });
   }
 
   /* L'onglet « Les îles » : la carte du monde, sans navire attaché. */
@@ -1042,7 +1101,7 @@
     const cout = window.Jeu.coutConstruction(type);
     const abordable = window.Etat.assez(cout);
     const dejaUn = window.Etat.batsDeType(type).length;
-    const unique = ['portail', 'descente', 'chateau', 'moulinEau'].includes(type);
+    const unique = ['port', 'descente', 'chateau', 'moulinEau'].includes(type);
     const bloque = unique && dejaUn > 0;
     const carte = el('div', { class: 'cat-item' + (abordable && !bloque ? '' : ' impossible'),
       onclick: () => { if (bloque) { U.dire('Le bourg n\'en a qu\'un.', 'alerte'); return; }
@@ -1353,12 +1412,17 @@
      LES HABITANTS
      ================================================================= */
   function ouvrirHabitants(onglet) {
+    if (typeof onglet === 'string' && onglet.indexOf('fiche:') === 0) {
+      habFicheId = onglet.slice(6); onglet = 'fiche';
+    }
     U.ouvrir('habitants', {
       onglet: typeof onglet === 'string' ? onglet : undefined,
       titre: 'Les habitants', sous: 'Qui fait quoi', classe: 'habitants-fen',
       sousVif: () => { const n = E().habitants.length, l = window.Etat.habitantsLibres().length;
         return n + (n > 1 ? ' habitants' : ' habitant') + ' · ' + l + (l > 1 ? ' libres' : ' libre'); },
       onglets: [
+        { id: 'collection', nom: 'Collection', rendu: rendreCollection },
+        ...(habFicheId ? [{ id: 'fiche', nom: 'Fiche', rendu: rendreFicheHabitant }] : []),
         { id: 'portes', nom: 'Les portes', rendu: rendrePortes },
         { id: 'roles', nom: 'Affectations', rendu: rendreRoles },
         { id: 'metiers', nom: 'Métiers du bourg', rendu: rendreMetiers },
@@ -1366,6 +1430,64 @@
         { id: 'memorial', nom: 'Ceux qui sont partis', rendu: rendreMemorial },
       ],
     });
+  }
+
+  function progressionIndividu(h, metier) {
+    const xp = (h.metierXp && h.metierXp[metier]) || 0;
+    let rang = 1, seuil = 100, cum = 0;
+    while (cum + seuil <= xp && rang < 60) { cum += seuil; seuil = Math.round(seuil * 1.35); rang++; }
+    return { rang, dans: xp - cum, pour: seuil };
+  }
+
+  function rendreCollection(c) {
+    const habitants = E().habitants.slice().sort((a, b) => (b.niv || 1) - (a.niv || 1));
+    const filtres = [{ id:'tous', nom:'Tous' }, { id:'libres', nom:'Libres' }, { id:'travail', nom:'Au travail' }]
+      .concat(Object.keys(window.HAB.RARETES || {}).map(id => ({ id, nom: window.HAB.RARETES[id].nom })));
+    c.appendChild(el('div', { class:'collection-filtres' }, filtres.map(f =>
+      el('button', { class:'b mini' + (collectionFiltre === f.id ? ' primaire' : ''), text:f.nom,
+        onclick:() => { collectionFiltre = f.id; ouvrirHabitants('collection'); } }))));
+    const vus = habitants.filter(h => collectionFiltre === 'tous' ||
+      (collectionFiltre === 'libres' && !h.aff) || (collectionFiltre === 'travail' && h.aff) || h.rarete === collectionFiltre);
+    c.appendChild(el('div', { class:'collection-compte', text: vus.length + ' habitant' + (vus.length > 1 ? 's' : '') }));
+    const grille = el('div', { class:'collection-grille' });
+    for (const h of vus) {
+      const R = window.HAB.RARETES[h.rarete] || window.HAB.RARETES.commun;
+      grille.appendChild(el('button', { class:'carte-habitant', onclick:() => ouvrirHabitants('fiche:' + h.id), title:'Ouvrir la fiche de ' + h.nom },
+        avatarHab(h, 74, 'collection-avatar'),
+        el('span', { class:'collection-nom', text:h.nom }),
+        el('span', { class:'collection-meta', text:(window.METIERS[h.talent] || {}).nom || '—' }),
+        el('span', { class:'collection-badge r-' + R.id, text:R.nom }),
+        el('span', { class:'collection-niveau', text:'Niv. ' + (h.niv || 1) })));
+    }
+    c.appendChild(grille);
+  }
+
+  function rendreFicheHabitant(c) {
+    const h = window.Etat.habitant(habFicheId) || E().habitants[0];
+    if (!h) { c.appendChild(el('div', { class:'vide', text:'Aucun habitant.' })); return; }
+    window.Etat.assurerProgression(h);
+    const R = window.HAB.RARETES[h.rarete] || window.HAB.RARETES.commun;
+    c.appendChild(el('div', { class:'fiche-hab-tete' }, avatarHab(h, 86, 'fiche-avatar'),
+      el('div', { class:'fiche-hab-identite' }, el('h2', { text:h.nom }), etiqRarete(h),
+        el('div', { class:'eti', text:((window.METIERS[h.talent] || {}).nom || '—') + ' · niveau ' + (h.niv || 1) }),
+        bandeTraits(h))));
+    c.appendChild(U.section('Expérience générale', 'niveau ' + (h.niv || 1)));
+    const niveauPct = Math.min(1, (h.xp || 0) / window.Etat.xpPourNiveau(h.niv || 1));
+    c.appendChild(U.barre(niveauPct, 'grande vert', Math.round(niveauPct * 100) + '%', U.fmt(h.xp || 0) + ' / ' + U.fmt(window.Etat.xpPourNiveau(h.niv || 1))));
+    c.appendChild(U.section('Maîtrise des métiers'));
+    for (const m of Object.keys(window.METIERS)) {
+      const p = progressionIndividu(h, m), pct = p.dans / p.pour;
+      c.appendChild(el('div', { class:'fiche-jauge' },
+        el('div', { class:'rangee entre' }, el('span', { text:window.METIERS[m].nom }), el('span', { class:'eti-or', text:'rang ' + p.rang })),
+        U.barre(pct, 'vert', '', U.fmt(p.dans) + ' / ' + U.fmt(p.pour))));
+    }
+    c.appendChild(U.section('Attributs d’aventure', 'progression par pratique'));
+    const A = h.aventure || {};
+    for (const [id, nom] of [['force','Force'], ['dexterite','Dextérité'], ['endurance','Endurance'], ['intelligence','Intelligence']]) {
+      const val = A[id] || 1;
+      c.appendChild(el('div', { class:'fiche-attribut' }, el('span', { text:nom }), U.barre(Math.min(1, val / 25), 'grande or', 'Niv. ' + val, '')));
+    }
+    c.appendChild(el('button', { class:'b', style:'margin-top:14px', text:'Retour à la collection', onclick:() => ouvrirHabitants('collection') }));
   }
   function rendreRoles(c) {
     const E2 = E();

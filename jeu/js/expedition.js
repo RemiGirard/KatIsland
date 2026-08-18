@@ -1,18 +1,15 @@
 /* ============================================================
    LE BOURG — js/expedition.js
-   L'EXPÉDITION. Le portail ne sert pas à « faire des batailles » : il
-   sert à trois choses très concrètes, et c'est ce qui lui donne sa
-   place dans une partie d'idle.
+   LA BATAILLE D'ÎLE.
 
-   1. LE TERRITOIRE. Chaque zone prise donne au bourg un avantage
-      PERMANENT sur un métier — c'est la seule façon de faire monter
-      certaines cadences au-delà de ce que les niveaux permettent.
-   2. LA MENACE. Aller au-devant de la colonne fait retomber la jauge
-      d'un coup ; l'ignorer, c'est laisser venir le raid.
-   3. LES MÉDAILLES, qu'aucun métier ne fabrique et qui paient les
-      choses que le bourg ne sait pas faire.
+   On ne part plus par une porte : le bourg est sur une île, et toute
+   la guerre passe par LE PORT. Ce module ne décide de rien — il MÈNE
+   la bataille que le port a préparée, avec la cale que le joueur a
+   remplie, et rend le résultat au port.
 
-   Le moteur de bataille (`battle-core.js`) est conservé tel quel.
+   Le moteur est celui de l'ancien jeu (`expedition/battle-core.js`),
+   avec sa configuration complète : IA progressive, renforts par
+   vagues, statistiques d'arme et d'armure par catégorie.
    ============================================================ */
 "use strict";
 (function () {
@@ -78,6 +75,9 @@
   ];
 
   let bataille = null, zoneEnCours = null, colonneEnCours = [], ouvert = false, tB = 0, tCotes = 0;
+  /* LE JEU MANUEL : ce qui reste en chaloupe, et le type qu'on tient
+     au bout du doigt. `auto` dit qui commande. */
+  let reserve = {}, typeChoisi = null, auto = true, barreRenforts = null;
   let plateau, scene, cvB, titre, sous, boutons, pied, gauche, droite;
 
   function refs() {
@@ -330,9 +330,18 @@
 
       onEvent: evenement,
     });
-    /* La compagnie n'est pas là pour être micro-gérée : par défaut l'IA
-       du bourg tient la barre, et le joueur reprend la main s'il veut. */
-    bataille.setAutoPilot(true);
+    /* LE JOUEUR TIENT LA BARRE. L'ancien mode était manuel : on gardait
+       une réserve et on la versait où il fallait. Le pilote automatique
+       reste, d'un clic, pour les batailles qu'on ne veut pas mener. */
+    auto = false;
+    bataille.setAutoPilot(false);
+    typeChoisi = Object.keys(reserve)[0] || null;
+    construireRenforts();
+    /* SANS CECI, RIEN NE RÉPOND. `brancherPointeur()` pose les écouteurs
+       de souris sur le canevas — pointerdown/move/up. Il n'était appelé
+       que dans le chemin de reprise ; une bataille lancée depuis le
+       port démarrait donc sourde à tout clic. */
+    brancherPointeur();
     E2.expedition = { zone: z.id, zoneSpec:z, ligne:ligne, prog: 0, sortie: !!z.sortie,
                       nom: (z.sortie ? 'Sortie — ' : 'Expédition — ') + z.nom };
     window.Etat.journal(z.sortie
@@ -366,10 +375,24 @@
     return { bourg, nuee: Math.round(bourg * (0.50 + 0.075 * z.diff)) };
   }
 
+  /* CE QUI DÉBARQUE, ET CE QUI ATTEND.
+
+     Verser toute la cale au premier instant ne laissait rien à décider.
+     On débarque UN TIERS — de quoi tenir la tête de pont — et le reste
+     forme la réserve : le joueur la place où il veut, quand il veut.
+     C'est le cœur du jeu manuel de l'ancien mode. */
+  const PART_DEBARQUEE = 0.34;
+
   function equilibrer(map, z, ligne) {
     const compo = ligne.map(x => x.type);
     const g = {};
-    for (const x of ligne) g[x.type] = x.n;
+    reserve = {};
+    for (const x of ligne) {
+      const debarque = Math.max(1, Math.round(x.n * PART_DEBARQUEE));
+      g[x.type] = Math.min(x.n, debarque);
+      const reste = x.n - g[x.type];
+      if (reste > 0) reserve[x.type] = reste;
+    }
     const total = ligne.reduce((n, x) => n + x.n, 0);
     /* LA DIFFICULTÉ EST UN RAPPORT, pas un coefficient absolu. On mesure
        ce que le bourg aligne, on décide ce que doit aligner la Nuée —
@@ -412,6 +435,69 @@
     else if (ev.type === 'capture') U().dire('Position prise.', 'bien', 1400);
   }
 
+  /* LES UNITÉS ENCORE VIVANTES, par type.
+
+     On additionne les garnisons qui nous appartiennent, plus la réserve
+     jamais débarquée. Mais ATTENTION : sur cette carte, une position
+     tenue PRODUIT des unités toute la bataille. Compter les garnisons
+     telles quelles donnait quarante-trois survivants pour vingt
+     embarqués — le navire rentrait plus plein qu'il n'était parti.
+
+     Ces renforts-là sont des levées locales : elles tiennent l'île,
+     elles ne montent pas à bord. On PLAFONNE donc chaque type à ce
+     qu'on avait embarqué. On peut revenir avec moins, jamais avec
+     plus. */
+  function survivants() {
+    const brut = {};
+    for (const t in reserve) if (reserve[t] > 0) brut[t] = reserve[t];
+    try {
+      const s = bataille && bataille.serialize ? bataille.serialize() : null;
+      for (const n of ((s && s.nodes) || [])) {
+        if (n.owner !== 'cats') continue;
+        for (const t in (n.garrison || {})) {
+          const q = Math.floor(n.garrison[t] || 0);
+          if (q > 0) brut[t] = (brut[t] || 0) + q;
+        }
+      }
+    } catch (e) { }
+
+    const embarque = {};
+    for (const x of colonneEnCours) embarque[x.type] = (embarque[x.type] || 0) + x.n;
+
+    /* LES MORTS, COMPTÉS PAR LE MOTEUR. Plafonner aux effectifs
+       embarqués ne suffisait pas : les positions tenues produisent sans
+       cesse, si bien que les garnisons restaient pleines et que trois
+       défaites de suite ne coûtaient pas une seule unité. On retire
+       donc les pertes RÉELLES du camp.
+
+       Approximation assumée : le moteur ne distingue pas nos embarqués
+       des levées faites sur place, donc une levée tombée compte comme
+       un des nôtres. L'erreur va dans le sens de l'usure, ce qui est le
+       bon sens pour une expédition qu'on veut faire durer. */
+    let morts = 0;
+    try { morts = (bataille && bataille.getPlayerLosses) ? bataille.getPlayerLosses() : 0; }
+    catch (e) { morts = 0; }
+
+    const out = {};
+    const ordre = Object.keys(embarque);
+    /* on retire d'abord des types les plus nombreux : une compagnie
+       fond par son gros, pas par ses spécialistes */
+    ordre.sort((a, b) => (embarque[b] || 0) - (embarque[a] || 0));
+    const reste = {};
+    for (const t of ordre) reste[t] = Math.min(brut[t] || 0, embarque[t] || 0);
+    let aRetirer = morts;
+    while (aRetirer > 0) {
+      let touche = false;
+      for (const t of ordre) {
+        if (aRetirer <= 0) break;
+        if (reste[t] > 0) { reste[t]--; aRetirer--; touche = true; }
+      }
+      if (!touche) break;                 // il ne reste plus personne
+    }
+    for (const t in reste) if (reste[t] > 0) out[t] = reste[t];
+    return out;
+  }
+
   function terminer(gagne) {
     const z = zoneEnCours;
     const E2 = E();
@@ -422,10 +508,12 @@
        retomber la Nuée, remplit la cale de butin et renvoie le navire
        au bourg — le module d'expédition ne fait que la mener. */
     if (z.ile && window.Port && navireEnCours) {
-      const total = colonneEnCours.reduce((n, x) => n + x.n, 0);
-      const pertes = Math.ceil(total * (gagne ? 0.20 : 0.38));
+      /* CE QUI RESTE DEBOUT, compté et non estimé. On additionne les
+         garnisons encore à nous sur toute la carte, et l'on y rajoute
+         la réserve jamais débarquée : c'est exactement ce qui remonte
+         à bord. Ce qui est tombé ne rentre pas. */
       const nav = navireEnCours; navireEnCours = null;
-      window.Port.resultat(nav.id, gagne, pertes);
+      window.Port.resultat(nav.id, gagne, survivants());
       if (window.Armee) window.Armee.gagnerXp(colonneEnCours, gagne ? 55 + z.diff * 16 : 18 + z.diff * 5);
       montrerBilan(gagne, z, gagne ? (z.butin || {}) : {});
       return;
@@ -511,6 +599,7 @@
   }
 
   function fermer() {
+    if (barreRenforts) { barreRenforts.remove(); barreRenforts = null; }
     ouvert = false;
     if (plateau) plateau.classList.remove('vu');
     if (bataille) { bataille.destroy(); bataille = null; }
@@ -536,9 +625,14 @@
       const c = bataille.getControl ? bataille.getControl() : null;
       if (c) E().expedition.prog = Math.min(1, (c.cats || 0) / Math.max(1, (c.cats || 0) + (c.birds || 0)));
     }
-    majPied();
+    /* MAJPIED VIDAIT ET RECONSTRUISAIT SON PIED SOIXANTE FOIS PAR
+       SECONDE — un rythme que rien ne justifie pour trois chiffres de
+       contrôle. `majCotes()` était déjà limité à 0,45 s ; `majPied()`
+       ne l'était pas, et tournait donc en pure perte à chaque image de
+       la bataille pendant qu'un plateau chargé lui dispute déjà le
+       processeur. On l'aligne sur le même rythme. */
     tCotes += dt;
-    if (tCotes >= 0.45) { tCotes = 0; majCotes(); }
+    if (tCotes >= 0.45) { tCotes = 0; majPied(); majCotes(); }
   }
 
   function majTete() {
@@ -546,8 +640,11 @@
     titre.textContent = zoneEnCours ? zoneEnCours.nom : 'Expédition';
     sous.textContent = zoneEnCours ? 'difficulté ' + zoneEnCours.diff + ' · ' + zoneEnCours.noeuds + ' positions' : '';
     U().vide(boutons);
-    let auto = true;
-    boutons.appendChild(A('button', { class: 'b primaire', text: 'IA aux commandes',
+    /* Le libellé initial doit dire ce qui EST, pas ce qui pourrait être :
+       le joueur commande par défaut, le bouton doit donc s'afficher tel
+       quel dès la première image, pas seulement après un clic. */
+    boutons.appendChild(A('button', { class: 'b' + (auto ? ' primaire' : ''),
+      text: auto ? 'IA aux commandes' : 'Commandes manuelles',
       onclick: function () {
         auto = !auto;
         if (bataille) bataille.setAutoPilot(auto);
@@ -632,9 +729,92 @@
       return { x: (ev.clientX - r.left) * (cvB.width / r.width),
                y: (ev.clientY - r.top) * (cvB.height / r.height) };
     };
-    cvB.addEventListener('pointerdown', ev => { if (!bataille) return; const p = pos(ev); bataille.pointerDown(p.x, p.y); });
+    cvB.addEventListener('pointerdown', ev => {
+      if (!bataille) return;
+      const p = pos(ev);
+      bataille.pointerDown(p.x, p.y);
+      /* DÉBARQUER ICI. Le moteur vient de sélectionner la position
+         cliquée ; si l'on tient un type en réserve, on l'y verse. On ne
+         débarque QUE sur une position à nous — ailleurs, le clic garde
+         son sens habituel. */
+      if (!typeChoisi || !(reserve[typeChoisi] > 0)) return;
+      const n = bataille.getSelectedNode ? bataille.getSelectedNode() : null;
+      if (!n || n.owner !== 'cats') { U().dire('On ne débarque que sur une position tenue.', 'alerte', 1800); return; }
+      const lot = Math.max(1, Math.ceil(reserve[typeChoisi] * partRenfort));
+      if (bataille.deploy(n.id, typeChoisi, lot)) {
+        reserve[typeChoisi] -= lot;
+        if (reserve[typeChoisi] <= 0) { delete reserve[typeChoisi];
+          typeChoisi = Object.keys(reserve)[0] || null; }
+        majRenforts();
+      }
+    });
     cvB.addEventListener('pointermove', ev => { if (!bataille) return; const p = pos(ev); bataille.pointerMove(p.x, p.y); });
     cvB.addEventListener('pointerup', ev => { if (!bataille) return; const p = pos(ev); bataille.pointerUp(p.x, p.y); });
+  }
+
+  /* ==================================================================
+     LA BARRE DE RENFORTS
+
+     En bas de l'écran de bataille : un bouton par type encore en
+     chaloupe, avec ce qu'il en reste. On en choisit un, on clique la
+     carte, il débarque. C'est tout le jeu manuel — et il n'a pas besoin
+     d'être plus compliqué.
+     ================================================================== */
+  let partRenfort = 0.5;
+
+  function construireRenforts() {
+    if (!plateau) return;
+    if (!barreRenforts) {
+      barreRenforts = el()('div', { id: 'renforts' });
+      plateau.appendChild(barreRenforts);
+    }
+    majRenforts();
+  }
+
+  function majRenforts() {
+    if (!barreRenforts) return;
+    const A = el();
+    U().rendreDans(barreRenforts, h => {
+      const types = Object.keys(reserve).filter(t => reserve[t] > 0);
+      const totalRes = types.reduce((n, t) => n + reserve[t], 0);
+
+      h.appendChild(A('div', { class: 'ren-tt' },
+        A('span', { class: 'eti-or', text: 'en chaloupe' }),
+        A('span', { class: 'n', text: totalRes ? totalRes + ' unités' : 'plus rien à débarquer' })));
+
+      if (!types.length) {
+        h.appendChild(A('div', { class: 'ren-vide',
+          text: auto ? 'Tout est engagé. Le capitaine mène la bataille.'
+                     : 'Tout est engagé. À vous de jouer avec ce qui est à terre.' }));
+      } else {
+        const g = A('div', { class: 'ren-liste' });
+        for (const t of types) {
+          const u = window.GameData.UNIT_TYPES[t];
+          const b = A('button', {
+            'data-cle': t,
+            class: 'ren-u' + (t === typeChoisi ? ' choisi' : ''),
+            title: (u ? u.name.cats : t) + '\n' + reserve[t] + ' encore à bord.\n'
+                 + 'Choisissez-le, puis cliquez une position que vous tenez.',
+            onclick: () => { typeChoisi = t; majRenforts(); },
+          });
+          const ic = window.Sprites && window.Sprites.getUnitIcon
+            ? (() => { try { return window.Sprites.getUnitIcon({ faction:'cats', type:t }, 26); }
+                       catch (e) { return null; } })() : null;
+          if (ic) b.appendChild(ic);
+          b.appendChild(A('span', { class: 'n', text: String(reserve[t]) }));
+          g.appendChild(b);
+        }
+        h.appendChild(g);
+
+        /* combien on verse d'un coup */
+        h.appendChild(A('div', { class: 'ren-part' },
+          A('span', { class: 'eti', text: 'par vague' }),
+          ...[0.25, 0.5, 1].map(r => A('button', {
+            class: 'b mini' + (Math.abs(partRenfort - r) < 0.01 ? ' primaire' : ''),
+            text: Math.round(r * 100) + ' %',
+            onclick: () => { partRenfort = r; majRenforts(); } }))));
+      }
+    });
   }
 
   /* =================================================================

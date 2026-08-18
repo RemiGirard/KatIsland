@@ -40,8 +40,17 @@
 
   function xpPourNiveau(n) { return Math.round(60 * Math.pow(1.30, Math.max(0, n - 1))); }
   function rangHabitant(h) { return (h && h.niv) || 1; }
-  function gagnerXpHabitant(h, n) {
+  const ATTRS_AVENTURE = ['endurance', 'intelligence', 'dexterite', 'force'];
+  function assurerProgression(h) {
+    if (!h) return;
+    if (!h.metierXp || typeof h.metierXp !== 'object') h.metierXp = {};
+    if (!h.aventure || typeof h.aventure !== 'object') h.aventure = {};
+    for (const a of ATTRS_AVENTURE) if (typeof h.aventure[a] !== 'number') h.aventure[a] = 1;
+  }
+  function gagnerXpHabitant(h, n, metier) {
     if (!h || !n) return;
+    assurerProgression(h);
+    if (metier) h.metierXp[metier] = (h.metierXp[metier] || 0) + n;
     h.xp = (h.xp || 0) + n * (1 + ((window.Jeu && window.Jeu.acquis) ? window.Jeu.acquis().xp : 0));
     let garde = 0;
     while (h.xp >= xpPourNiveau(h.niv || 1) && (h.niv || 1) < 25 && garde++ < 40) {
@@ -50,6 +59,12 @@
       journal(h.nom + ' passe au niveau ' + h.niv + '.', 'rang');
       prevenir('niveauHabitant', h);
     }
+  }
+  function gagnerAttribut(h, attribut, n) {
+    if (!h || !ATTRS_AVENTURE.includes(attribut) || !n) return;
+    assurerProgression(h);
+    h.aventure[attribut] = Math.max(1, (h.aventure[attribut] || 1) + n);
+    prevenir('attributHabitant', h);
   }
 
   /* ---------------- l'état neuf ---------------- */
@@ -616,6 +631,7 @@
         if (!h.talent) h.talent = metiers[(rng() * metiers.length) | 0];
         if (typeof h.niv !== 'number') h.niv = 1;
         if (typeof h.xp !== 'number') h.xp = 0;
+        assurerProgression(h);
         if (typeof h.cycles !== 'number') h.cycles = 0;
         if (!h.traits || !h.traits.length) {
           const garde = (h.trait && window.HAB.TRAITS[h.trait]) ? [h.trait] : [];
@@ -636,6 +652,25 @@
       for (const bid in (d.bat || {})) {
         if (!d.bat[bid].am) d.bat[bid].am = {};
         if (!d.bat[bid].raff) d.bat[bid].raff = {};   // sauvegarde d'avant les annexes
+      }
+      /* LE PORTAIL EST DEVENU LE PORT. Depuis que la guerre passe par la
+         mer, le portail d'expédition n'a plus d'objet — mais le joueur
+         l'a payé, et il tenait exactement ce rôle. On le convertit donc
+         au lieu de l'effacer ; s'il a déjà un port, on retire le
+         doublon. Sans cette migration, le jeu plante au chargement sur
+         un type qui n'existe plus. */
+      {
+        const aDejaPort = Object.keys(d.bat || {}).some(k => d.bat[k].type === 'port');
+        for (const bid of Object.keys(d.bat || {})) {
+          if (d.bat[bid].type !== 'portail') continue;
+          if (aDejaPort) { delete d.bat[bid]; continue; }
+          d.bat[bid].type = 'port';
+          d.bat[bid].postes = [];
+        }
+        /* et l'on nettoie tout type devenu inconnu : mieux vaut perdre
+           une bâtisse qu'un jeu qui ne démarre plus. */
+        for (const bid of Object.keys(d.bat || {}))
+          if (!window.BAT[d.bat[bid].type]) delete d.bat[bid];
       }
       if (!d.aventure) d.aventure = { profondeur: 0, record: 0, encours: null, sacoche: {} };
       if (!d.armee) d.armee = { unites: 0, xp: 0, palierArme: 0, palierArmure: 0, garnison: 0 };
@@ -662,7 +697,7 @@
     peutOuvrirPortes, ouvrirPortes, accueillir, apercuRefus, refuserTous,
     renvoyer, perdre, peineDeDepart, tickMalaise, facteurMalaise,
     rangMetier, progresMetier, gagnerXp,
-    rangHabitant, gagnerXpHabitant, xpPourNiveau,
+    rangHabitant, gagnerXpHabitant, gagnerAttribut, assurerProgression, xpPourNiveau,
     TRAITS, TRAITS_IDS,
     journal,
     nomHabitant, mulberry,

@@ -803,7 +803,7 @@
   b('port', {
     nom:'Le Port', metier:'Capitaine', cat:'porte', rangees:[0,1], nivMax:6,
     desc:"Un môle de pierre, deux ducs-d'Albe et une grue à chèvre. Tant que le bourg n'a pas de port, la Nuée choisit seule le moment de venir.",
-    cout:{planche:40,poutre:4,corde:20,pierretaille:16}, temps:220, postes:P(1,1,1,2,2,2),
+    cout:{bois:34,poisson:26}, temps:150, postes:P(1,1,1,2,2,2),
     recettes:['carener','cordages'],
   });
   x('carener', { bat:'port', nom:'Caréner la coque', metier:'bois', duree:70,
@@ -946,13 +946,6 @@
     effet:{moral:6,attrait:0.2},
   });
 
-  b('portail', {
-    nom:"Portail d'expédition", metier:'—', cat:'porte', rangees:[0], nivMax:5,
-    desc:"Trois pierres levées que le bourg n'a pas taillées, et entre elles un voile de lumière qui ne tient à rien. C'est par là que part la colonne — et par là que revient le territoire.",
-    cout:{bois:28,poisson:22}, temps:90, postes:P(0),
-    porte:'expedition',
-  });
-
   b('descente', {
     nom:'Tour sombre', metier:'—', cat:'porte', rangees:[0,1], nivMax:5,
     desc:"Une tour cyclopéenne et un escalier qui plonge dans un noir que rien n'éclaire. On n'a jamais trouvé le fond ; on a seulement trouvé jusqu'où l'on pouvait descendre.",
@@ -972,9 +965,11 @@
     /* PREMIÈRE BOUCLE : poisson -> bois -> caserne -> Tour / expédition.
        Elle tient en quelques minutes et ne demande aucune transformation. */
     caserne:       { bat:{scierie:1} },
-    portail:       { bat:{caserne:1} },
-    /* LE PORT s'ouvre tôt : c'est par lui que passe toute la guerre. */
-    port:          { bat:{pecherie:2} },
+    /* LE PORT s'ouvre TÔT — dès qu'on sait pêcher et scier. C'est par
+       lui que passe toute la guerre, et rien ne fait retomber la Nuée
+       tant qu'il n'est pas debout : le retarder, c'est condamner le
+       joueur à subir la jauge pendant tout le début de partie. */
+    port:          { bat:{scierie:1} },
     champ:         { bat:{caserne:1} },
     grange:        { bat:{champ:1} },
 
@@ -1031,6 +1026,7 @@
      idle. Les ateliers mûrs prennent plus longtemps à sortir de terre et
      chaque niveau creuse nettement l'écart. */
   function coutNiveau(bid, niv) {
+    if (!BAT[bid]) return {};
     const base = BAT[bid].cout || {};
     const k = Math.pow(1.85, Math.max(0, niv - 1));
     const out = {};
@@ -1038,7 +1034,7 @@
     return out;
   }
   function tempsNiveau(bid, niv) {
-    const rapides = ['pecherie','scierie','maison','caserne','portail'];
+    const rapides = ['pecherie','scierie','maison','caserne','port'];
     const transition = ['champ','grange'];
     const intermediaires = ['carriere','potager','puits','entrepot','bergerie',
       'tournesol','moulin','entrainement','tour'];
@@ -1047,15 +1043,21 @@
         : (intermediaires.indexOf(bid) >= 0 ? 1.6 : 2));
     return Math.round((BAT[bid].temps || 30) * phase * Math.pow(1.55, Math.max(0, niv - 1)));
   }
+  /* Un type inconnu — une sauvegarde qui cite un bâtiment retiré depuis —
+     ne doit JAMAIS jeter : ces fonctions sont appelées des dizaines de
+     fois par seconde et une exception ici fige le jeu au chargement. */
   function postesDe(bid, niv) {
+    if (!BAT[bid]) return 0;
     const p = BAT[bid].postes || [0];
     return p[Math.min(p.length - 1, Math.max(0, niv - 1))] || 0;
   }
   function logementDe(bid, niv) {
+    if (!BAT[bid]) return 0;
     const l = BAT[bid].logement; if (!l) return 0;
     return l[Math.min(l.length - 1, Math.max(0, niv - 1))] || 0;
   }
   function stockDe(bid, niv) {
+    if (!BAT[bid]) return null;
     const s = BAT[bid].stock; if (!s) return null;
     const out = {}; for (const c in s) out[c] = Math.round(s[c] * (1 + 0.55 * (niv - 1)));
     return out;
@@ -1064,6 +1066,7 @@
      passe le bâtiment INSTANCIÉ en troisième argument quand on l'a —
      sans lui, on ne montre que ce qui ne demande aucune annexe. */
   function recettesDe(bid, niv, b) {
+    if (!BAT[bid]) return [];
     return (BAT[bid].recettes || []).filter(rid => {
       const r = REC[rid];
       if (!r || r.niv > niv) return false;

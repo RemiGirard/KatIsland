@@ -448,6 +448,10 @@
     let pixTmp = null;       // §pixel : tampon pour le filtre pixel-art plein écran
     let soulHead = 0;        // curseur d'anneau du pool d'âmes
     let playerKills = 0;
+    /* AJOUT : les pertes du camp du joueur. Le moteur savait dire
+       combien il avait tué, jamais combien il avait perdu — or c'est
+       ce chiffre qui décide de ce qui remonte à bord. */
+    let playerLosses = 0;
     let espionLoot = 0; // §7 : butin de food ramassé sur les captures avec espion
 
     // ---- BOSS DE CARTE (DESIGN9 §Bataille) v2 : présences NEUTRES, INVULNÉRABLES,
@@ -1022,6 +1026,7 @@
         spawnSoul(a.f, a.x, a.y, Math.max(12, 40 * a.scale)); // §B5 : âme au champ
         if (spellFx.length) spellDeathHook(a); // §D4 ames : moisson d'âmes
         if (byFaction === pf) playerKills++;
+        if (a.f === pf) playerLosses++;
         // throttle des morts en chaîne : au-delà du budget, on meurt discrètement
         if (deathFxBudget > 0) {
           deathFxBudget--;
@@ -5106,6 +5111,7 @@
       getControlWinPoints: () => ctrlWin,
       serialize,
       takePlayerKills: () => { const k = playerKills; playerKills = 0; return k; },
+      getPlayerLosses: () => playerLosses,
       takeEspionLoot: () => { const f = espionLoot; espionLoot = 0; return f; }, // §7 : butin food ramassé par l'espion
       getSelectedNode: () => (selectedId >= 0 ? nById[selectedId] : null),
       isEnded: () => ended,

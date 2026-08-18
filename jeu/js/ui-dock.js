@@ -425,7 +425,7 @@
      cinquante ateliers ne coûte alors que les deux barres qui bougent. */
   function signature(x) {
     return x.k + '|' + x.nom + '|' + x.bloque + '|' + (x.attente || 0) + '|' + x.hab +
-           '|' + (x.detail || '') + '|' + x.lieu + '|' + (x.res || '') + '|' + (x.debit || 0) +
+           '|' + (x.detail || '') + '|' + x.lieu + '|' + (x.res || '') + '|' + (x.type || '') + '|' + (x.unite || '') + '|' + (x.debit || 0) +
            '|' + Math.round((x.prog || 0) * 400) + '|' + Math.round(x.reste || 0);
   }
   const vues = new Map();
@@ -505,9 +505,27 @@
       : (x.reste != null ? U.duree(x.reste) : pct + '%');
     const titre = [x.nom, x.lieu, x.hab, x.detail, x.bloque ? 'En attente' : U.duree(x.reste)]
       .filter(Boolean).join('\n');
+    let visuel = null;
+    if (x.unite && window.Img && window.Img.unite) {
+      const src = window.Img.unite(x.unite);
+      if (src) visuel = window.Img.vignette(src, 44, x.nom, 'vig-unite tache-image');
+    }
+    if (!visuel && x.k === 'chantier' && x.type && window.Img && window.Img.bat) {
+      const src = window.Img.bat(x.type);
+      if (src) visuel = window.Img.vignette(src, 44, x.lieu || x.nom, 'vig-bat tache-image');
+    }
+    /* Une production classique doit rester identifiée par sa ressource
+       (bois, poisson, etc.) : le bâtiment ne prend sa place que pour les
+       chantiers sans sortie, ou les tâches spéciales sans ressource. */
+    if (!visuel && x.res) visuel = U.icoRes(x.res, 44);
+    if (!visuel && x.bat && window.Img && window.Img.bat) {
+      const b = E().bat[x.bat], src = b ? window.Img.bat(b.type) : null;
+      if (src) visuel = window.Img.vignette(src, 44, x.lieu || x.nom, 'vig-bat tache-image');
+    }
+    if (!visuel) visuel = U.ico(x.ico, 38);
     return el('div', { class: cls, 'data-cle': x.id, 'data-id': x.id, title: titre,
       'aria-label': x.nom + ', ' + gain, onclick: () => ouvrirDe(x) },
-      el('span', { class: 'tache-visuel' }, x.res ? U.icoRes(x.res, 44) : U.ico(x.ico, 38)),
+      el('span', { class: 'tache-visuel' }, visuel),
       el('div', { class: 'tache-lecture' },
         el('div', { class: 'tache-mini' },
           el('span', { text: x.res && window.RES[x.res] ? window.RES[x.res].nom : x.nom }),

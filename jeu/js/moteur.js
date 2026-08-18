@@ -460,7 +460,7 @@
        partout où on l'affecte ensuite. */
     if (hab) {
       hab.cycles = (hab.cycles || 0) + 1;
-      window.Etat.gagnerXpHabitant(hab, Math.max(1, Math.round(rec.xp * 0.35)));
+      window.Etat.gagnerXpHabitant(hab, Math.max(1, Math.round(rec.xp * 0.35)), rec.metier);
     }
 
     /* Effets particuliers : certaines recettes ne produisent pas une
@@ -1151,6 +1151,7 @@
           reste: p.bloque ? null : Math.max(0, (rec.duree - p.prog) / Math.max(0.001, v)),
           bloque: p.bloque, manque: p.bloque ? window.Etat.manque(rec.in) : null,
           res: resPrincipale,
+          unite: rec.uniteType || null,
           debit: resPrincipale && !p.bloque ? (rec.out[resPrincipale] || 0) * cyclesMin : 0,
           ico: window.METIERS[rec.metier].ico,
         });
@@ -1166,6 +1167,7 @@
         prog: Math.min(1, E.chantier.prog / job.temps),
         reste: v > 0 ? (job.temps - E.chantier.prog) / v : null,
         bloque: v <= 0, attente: E.chantier.file.length - 1,
+        type: job.type || null,
         ico: window.METIERS.batisse.ico,
       });
     }
