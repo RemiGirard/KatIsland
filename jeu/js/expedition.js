@@ -378,7 +378,36 @@
     if (!ex) return;
     const z = ex.zoneSpec || zoneById(ex.zone) || (ex.sortie ? zoneSortie() : null);
     if (!z) { E().expedition = null; U().dire('Cette ancienne expédition ne peut pas être reprise.', 'alerte'); return; }
+    /* UNE REPRISE D'ÎLE DOIT RETROUVER SON NAVIRE. Le rechargement de la
+       page a perdu `navireEnCours` : sans lui, `terminer()` ignorait le
+       port — pas de survivants comptés, pas de butin en cale, et le
+       navire restait mouillé devant l'île pour l'éternité. */
+    if (z.ile && window.Port) {
+      navireEnCours = window.Port.navires().find(n => n.etat === 'mouillage' && n.ile === z.ile) || null;
+    }
     lancer(z, { reprise:true });
+  }
+
+  /* LA PORTE DE SECOURS. La bataille est enregistrée mais le joueur ne
+     veut — ou ne peut — pas la rejouer : on la solde sans combat. Le
+     navire reprend son équipage tel quel (personne n'est tombé dans une
+     bataille qui n'a pas eu lieu) et reste au mouillage, libre de
+     repartir. Sans elle, une expédition bloquée tenait le port en
+     otage : « une bataille est déjà en cours », sans porte de sortie. */
+  function abandonnerReprise() {
+    const ex = E().expedition;
+    if (!ex) return;
+    const z = ex.zoneSpec || {};
+    if (z.ile && window.Port) {
+      const nav = window.Port.navires().find(n => n.etat === 'mouillage' && n.ile === z.ile);
+      if (nav) {
+        const vivants = {};
+        for (const c of nav.cargo) vivants[c.type] = c.n;
+        window.Port.resultat(nav.id, false, vivants);
+      }
+    }
+    E().expedition = null;
+    window.Etat.journal('L\'expédition est abandonnée avant d\'avoir été menée.', 'alerte');
   }
 
   /* ------------------------------------------------------------------
@@ -956,10 +985,13 @@
     if (E2.expedition) {
       c.appendChild(A('div', { class: 'cadre actif' },
         A('div', { class: 'tt', text: 'Bataille en cours' }),
-        A('div', { style: 'margin-top:8px' },
+        A('div', { class: 'rangee', style: 'margin-top:8px;gap:6px' },
           A('button', { class: 'b primaire', text: 'Rejoindre la bataille', onclick: () => {
             if (!bataille) { reprendre(); return; }
             refs(); ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur();
+          } }),
+          A('button', { class: 'b danger', text: 'Abandonner', onclick: () => {
+            if (confirm('Abandonner cette expédition ? Le navire reprend son équipage, sans butin.')) abandonnerReprise();
           } }))));
     }
 
@@ -1007,7 +1039,7 @@
 
   window.UIExpedition = { rendre, ouvrir: () => { refs(); if (E().expedition) { if (!bataille) reprendre(); else { ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur(); } } },
     fermer, tick, ZONES, bonusMetier, bonusButin, facteurMenace, estPrise, prises,
-    lancerSortie, zoneSortie, forces, lancerIle, zoneDeLIle };
+    lancerSortie, zoneSortie, forces, lancerIle, zoneDeLIle, reprendre, abandonnerReprise };
   window.Expedition = { tick, bonusMetier, bonusButin, facteurMenace, lancerSortie, zoneSortie,
                         forces, pannesVues };
 

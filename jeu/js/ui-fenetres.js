@@ -899,8 +899,24 @@
         onclick: () => { const r = P.agrandir(n.id);
           U.dire(r.ok ? 'La cale est agrandie.' : r.pourquoi, r.ok ? 'bien' : 'alerte'); } }));
     } else if (n.etat === 'mouillage' && !n.combattu) {
-      actions.appendChild(el('button', { class: 'b primaire large', text: 'Lancer la bataille',
-        onclick: () => { window.Port.combattre(n.id); } }));
+      /* UNE BATAILLE DÉJÀ OUVERTE — typiquement après un rechargement de
+         la page, qui a gardé l'expédition mais perdu l'écran. Renvoyer le
+         joueur vers elle, avec une porte de secours, au lieu du refus sec
+         « une bataille est déjà en cours » qui le laissait enfermé dehors. */
+      if (E().expedition) {
+        actions.appendChild(el('button', { class: 'b primaire large', text: 'Rejoindre la bataille',
+          onclick: () => window.UIExpedition.ouvrir() }));
+        actions.appendChild(el('button', { class: 'b danger', text: 'Abandonner',
+          onclick: () => {
+            if (confirm('Abandonner cette expédition ? Le navire reprend son équipage, sans butin.')) {
+              window.UIExpedition.abandonnerReprise();
+              U.dire('Expédition abandonnée : l\'équipage est resté à bord.', 'info');
+            }
+          } }));
+      } else {
+        actions.appendChild(el('button', { class: 'b primaire large', text: 'Lancer la bataille',
+          onclick: () => { window.Port.combattre(n.id); } }));
+      }
     } else if (n.etat === 'mouillage' && n.combattu) {
       /* L'ÎLE EST PRISE. Le navire ne rentre pas d'office : on pousse
          plus loin avec les survivants, ou l'on met le cap sur le bourg.
