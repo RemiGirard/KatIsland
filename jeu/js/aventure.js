@@ -331,25 +331,21 @@
     avanceeCorps.appendChild(A('div', { class: 'sep' }));
     avanceeCorps.appendChild(A('div', { class: 'eti-or', text: 'ce que le bourg fournit' }));
     avanceeCorps.appendChild(A('div', { class: 'note',
-      text: "La forge et l'armurerie ne descendent pas : elles ÉQUIPENT. Chaque palier d'armement ajoute aux caractéristiques de toute la compagnie, définitivement — et réclame, à mesure, de meilleures matières." }));
-    for (const [res, cle, stat, lib] of [['arme', 'palierArme', 'dmg', 'dégâts'], ['armure', 'palierArmure', 'hp', 'PV']]) {
-      const p = E().armee[cle] || 0;
-      const cout = coutArmement(res, p);
+      text: "La forge équipe séparément les combattants de mêlée, de distance et de magie. Ses 40 paliers commencent avec les matières du rivage puis réclament les trouvailles de la tour." }));
+    for (const [type, nom] of [['melee', 'Corps à corps'], ['distance', 'Distance'], ['magie', 'Magie']]) {
+      const arme = window.Armee.tierEquipement(type, 'arme');
+      const armure = window.Armee.tierEquipement(type, 'armure');
       avanceeCorps.appendChild(A('div', { class: 'cadre' },
         A('div', { class: 'rangee entre' },
-          A('span', { class: 'tt', text: window.RES[res].nom + ' — palier ' + p }),
-          A('span', { class: 'eti-or', text: '+' + (p * (stat === 'hp' ? 14 : 3)) + ' ' + lib })),
-        A('div', { class: 'rangee entre', style: 'margin-top:8px' },
-          U().listeRes(cout, { verifier: true }),
-          A('button', { class: 'b', text: 'Équiper la compagnie', disabled: !window.Etat.assez(cout),
-            onclick: () => {
-              if (!window.Etat.depenser(cout)) return;
-              E().armee[cle] = p + 1;
-              const gg = window.GameState.gen();
-              gg.stats[stat] = (gg.stats[stat] || 0) + (stat === 'hp' ? 14 : 3);
-              U().dire('La compagnie est mieux équipée.', 'bien');
-            } }))));
+          A('span', { class: 'tt', text: nom }),
+          A('span', { class: 'eti-or', text: 'arme T' + arme + ' · armure T' + armure })),
+        A('div', { class: 'rangee', style: 'margin-top:8px' },
+          A('img', { src: window.Armee.imageEquipement(type, 'arme', arme), style: 'width:54px;height:42px;object-fit:contain' }),
+          A('img', { src: window.Armee.imageEquipement(type, 'armure', armure), style: 'width:54px;height:42px;object-fit:contain' }))));
     }
+    const forge = window.Etat.batsDeType('forge')[0];
+    if (forge) avanceeCorps.appendChild(A('button', { class: 'b primaire', text: 'Ouvrir l’arsenal de la forge',
+      onclick: () => window.UIFen.ouvrirBatiment(forge.id) }));
 
     /* ---- la compagnie ---- */
     avanceeCorps.appendChild(U().section('La compagnie'));

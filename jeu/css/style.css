@@ -83,6 +83,10 @@ body{
    --------------------------------------------------------------- */
 .eti{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faible);font-weight:600}
 .eti-or{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--or);font-weight:600}
+/* Le pendant rouge de .eti-or : sert à chiffrer ce qui MANQUE, là où
+   l'or chiffre ce qu'on a. Même graisse, même casse, seule la teinte
+   change — la lecture reste la même. */
+.eti-corail{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--corail);font-weight:600}
 .tt{font-family:'Condense','Inter',sans-serif;font-size:16px;letter-spacing:.055em;
     text-transform:uppercase;color:var(--texte);font-weight:700;line-height:1.15}
 .tt.corail{color:var(--corail)}
@@ -699,6 +703,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .collection-avatar{width:82px;height:82px;margin-bottom:2px}.collection-avatar .vig{width:82px!important;height:82px!important;object-fit:cover;border-radius:9px}
 .collection-nom{font-weight:700;font-size:12px;white-space:nowrap;max-width:108px;overflow:hidden;text-overflow:ellipsis}
 .collection-meta{font-size:10px;color:#6f7a78}.collection-badge{font-size:9px;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.06em}.collection-niveau{font-size:10px;color:#67716e}
+.collection-badge.r-commun{color:#6c6676;background:rgba(108,102,118,.12)}.collection-badge.r-estime{color:#4e7536;background:rgba(78,117,54,.12)}.collection-badge.r-rare{color:#356392;background:rgba(53,99,146,.12)}.collection-badge.r-insigne{color:#8a6a12;background:rgba(138,106,18,.14)}.collection-badge.r-legende{color:#b0433c;background:rgba(176,67,60,.14)}
 .fiche-hab-tete{display:flex;gap:14px;align-items:center;padding:4px 0 12px}.fiche-avatar{width:96px;height:96px}.fiche-avatar .vig{width:96px!important;height:96px!important;object-fit:cover;border-radius:12px}.fiche-hab-identite h2{margin:0 0 5px;font-size:22px}.fiche-jauge,.fiche-attribut{margin:8px 0}.fiche-jauge .barre,.fiche-attribut .barre{margin-top:4px}
 .unite-corps{min-width:0}.unite-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:var(--doux);font-size:10px}
 .unite-technique{margin-top:5px;color:var(--or);font-size:10px}.unite-technique.faible{color:var(--faible)}
@@ -1787,6 +1792,66 @@ button[title],.b[title],a[title]{cursor:pointer}
 .mer-halo{fill:none;stroke:var(--or);stroke-width:1;stroke-dasharray:3 3}
 .mer-ile.choisie .mer-nom{fill:var(--or)}
 
-.mer-rose line{stroke:var(--bord2);stroke-width:1}
-.mer-rose-nord{fill:var(--doux);opacity:.55}
+/* LA ROSE DES VENTS. Huit aires, la branche du nord marquée : c'est le
+   seul ornement de la carte, et il sert — on y lit l'orientation d'un
+   coup d'œil, sans compter les rhumbs. */
+.mer-rose-branche{fill:var(--doux);opacity:.34}
+.mer-rose-branche.nord{fill:var(--or);opacity:.75}
+.mer-rose-moyeu{fill:var(--panneau3);stroke:var(--bord2);stroke-width:1}
 .mer-rose-n{fill:var(--faible);font-size:9px;letter-spacing:.1em;text-anchor:middle}
+
+/* L'ÉCHELLE : une carte sans échelle oblige à compter les anneaux. */
+.mer-echelle line{stroke:var(--bord2);stroke-width:1.2}
+.mer-echelle-nom{fill:var(--faible);font-size:8px;letter-spacing:.14em}
+
+/* LA HOULE. Elle ne dit rien, et c'est son rôle : une carte marine sans
+   mer dessinée n'est qu'un diagramme. Très discrète — elle doit se voir
+   sans jamais se lire. */
+.mer-vague{fill:none;stroke:var(--bord);stroke-width:1;opacity:.5}
+
+/* LE RESSAC, autour de chaque terre : un liseré clair qui la détache du
+   fond sans avoir à la cerner d'un trait dur. */
+.mer-ressac{fill:none;stroke:var(--bord2);stroke-width:2.5;opacity:.35}
+
+/* LA LIMITE DE PORTÉE. La seule ligne de la carte qui parle du JOUEUR
+   et non du monde : au-delà, le capitaine refuse d'appareiller. On la
+   trace au lieu de l'écrire, pour qu'on voie du même coup ce que le
+   prochain gréement irait chercher. */
+.mer-portee{fill:none;stroke:var(--corail);stroke-width:1.2;
+            stroke-dasharray:7 5;opacity:.55}
+.mer-portee-nom{fill:var(--corail);font-size:8px;letter-spacing:.16em;
+                text-anchor:middle;opacity:.8}
+
+/* LES CONTINENTS DU GRAND LARGE. Ce sont des fonds de carte : les
+   villes se posent dessus, donc ils restent sourds — assez présents
+   pour qu'on lise « de la terre », assez sobres pour ne pas manger les
+   villes qui les tiennent. */
+.mer-continent{fill:var(--panneau2);stroke:var(--bord2);stroke-width:1;opacity:.55}
+.mer-continent:hover{opacity:.72}
+.mer-continent-nom{fill:var(--faible);font-size:10px;letter-spacing:.30em;opacity:.7}
+
+/* UNE VILLE N'EST PAS UNE ÎLE : beffroi et toits, pour que la côte se
+   lise comme habitée et non comme un chapelet de cailloux. */
+.mer-ville-tour{fill:var(--panneau3);stroke:var(--or2);stroke-width:1}
+.mer-ville-toit{fill:var(--panneau3);stroke:var(--bord2);stroke-width:.8}
+.mer-ile.ville .mer-terre{stroke-dasharray:none;stroke-width:1.6}
+
+/* HORS DE PORTÉE : la terre existe, on la voit, on ne peut pas y aller.
+   On la ternit au lieu de la cacher — c'est ce qui donne envie du
+   gréement suivant. */
+.mer-ile.loin{opacity:.42}
+.mer-ile.loin .mer-terre{stroke-dasharray:3 3}
+.mer-ile.loin:hover{opacity:.68}
+/* ARSENAL — deux pièces lisibles par famille, avec l'illustration canvas
+   comme information principale. */
+.arsenal-entete{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;margin-bottom:14px;background:rgba(210,186,132,.12);border:1px solid rgba(210,186,132,.22);border-radius:6px}
+.arsenal-limite{flex:none;padding:7px 10px;border-radius:4px;background:#33442d;color:#dfe9c8;font-weight:800;letter-spacing:.08em;font-size:11px}
+.arsenal-famille{margin:14px 0 20px}.arsenal-famille>h3{margin:0 0 8px;color:#d6c397;font-size:13px;letter-spacing:.09em;text-transform:uppercase}
+.arsenal-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.arsenal-carte{min-width:0;overflow:hidden;border:1px solid rgba(186,174,146,.25);border-radius:6px;background:rgba(238,232,214,.055)}
+.arsenal-visuel{height:132px;position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 50%,rgba(204,179,112,.16),transparent 66%),rgba(8,18,25,.34)}
+.arsenal-visuel img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:auto}
+.arsenal-tier{position:absolute;right:8px;top:8px;padding:4px 7px;border-radius:3px;background:rgba(9,19,25,.8);color:#e4ca82;font-size:10px;font-weight:900;letter-spacing:.06em}
+.arsenal-corps{padding:11px}.arsenal-nom{margin:3px 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.arsenal-suivant{margin-top:10px;padding-top:9px;border-top:1px solid rgba(186,174,146,.18)}
+.arsenal-suivant .liste-res{margin:8px 0}.arsenal-suivant .b{width:100%}
+@media(max-width:680px){.arsenal-grille{grid-template-columns:1fr}.arsenal-visuel{height:112px}}

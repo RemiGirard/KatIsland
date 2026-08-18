@@ -101,7 +101,10 @@
     c.appendChild(U.stats([
       ['formations', ligne.length + ' / 5'], ['soldats', A().nombreColonne()],
       ['puissance estimée', Math.round(A().puissance(ligne))],
-      ['arme / armure', (E().armee.palierArme || 0) + ' / ' + (E().armee.palierArmure || 0)],
+      ['équipement', ['melee','distance','magie'].map(t => {
+        const n = t === 'melee' ? 'M' : (t === 'distance' ? 'D' : 'S');
+        return n + ' ' + A().tierEquipement(t, 'arme') + '/' + A().tierEquipement(t, 'armure');
+      }).join(' · ')],
     ]));
     c.appendChild(el('div', { class: 'note' },
       'C’est cette colonne — et seulement elle — qui part en expédition. Les unités laissées au bourg ne risquent aucune perte.'));

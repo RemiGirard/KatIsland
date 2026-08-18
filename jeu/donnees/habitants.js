@@ -234,7 +234,7 @@
       traits,
       niv: R.niv, xp: 0, cycles: 0,
       metierXp: {},
-      aventure: { endurance: 1, intelligence: 1, dexterite: 1, force: 1 },
+      caracXp: { endurance: 0, intelligence: 0, dexterite: 0, force: 0 },
       aff: null,
     };
   }

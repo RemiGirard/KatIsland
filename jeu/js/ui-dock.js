@@ -508,6 +508,8 @@
     const titre = [x.nom, x.lieu, x.hab, x.detail, x.bloque ? 'En attente' : U.duree(x.reste)]
       .filter(Boolean).join('\n');
     let visuel = null;
+    if (x.image && window.Img && window.Img.vignette)
+      visuel = window.Img.vignette(x.image, 44, x.nom, 'tache-image');
     if (x.unite && window.Img && window.Img.unite) {
       const src = window.Img.unite(x.unite);
       if (src) visuel = window.Img.vignette(src, 44, x.nom, 'vig-unite tache-image');
@@ -541,6 +543,10 @@
     else if (x.k === 'chantier') window.UIFen.ouvrirChantier('file');
     else if (x.k === 'aventure') window.UIAventure.ouvrir();
     else if (x.k === 'expedition') window.UIExpedition.ouvrir();
+    else if (x.k === 'forge') {
+      const b = window.Etat.batsDeType('forge')[0];
+      if (b) window.UIFen.ouvrirBatiment(b.id);
+    }
   }
 
   function majPied() {

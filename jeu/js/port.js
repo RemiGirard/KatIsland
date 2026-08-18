@@ -39,8 +39,11 @@
         seq: 0,
         prises: [],          // îles déjà tenues
         expeditions: 0,
+        greement: 0,         // le chantier naval : vitesse ET portée
       };
     }
+    /* Une sauvegarde d'avant le Grand Large n'a pas de gréement. */
+    if (s.port.greement == null) s.port.greement = 0;
     /* Le PREMIER navire est offert avec le port : sans lui le bâtiment
        ne servirait à rien, et l'on ferait payer deux fois la même
        chose. Une barque de vingt places — assez pour aller voir, pas
@@ -76,9 +79,52 @@
 
   /* Combien de navires on a le droit d'armer : le port en autorise un
      de plus par palier de deux niveaux. Une flotte se mérite. */
+  /* LE NOMBRE DE POSTES. Il suit la LONGUEUR DE LA JETÉE, pas une règle
+     à part : le joueur compte les bittes d'amarrage sur le môle et sait
+     ce que son port tiendra. La table vit dans port3d.js, qui bâtit la
+     jetée ; on la lit s'il est chargé, et l'on retombe sinon sur la même
+     suite écrite à la main — le port doit rester jouable si la 3D est
+     coupée dans les réglages. */
+  const QUAIS = [1, 2, 2, 3, 4, 6];
   function quaisMax() {
     const b = window.Etat.batsDeType('port')[0];
-    return b ? 1 + Math.floor((b.niv - 1) / 2) : 0;
+    if (!b) return 0;
+    const niv = Math.max(1, Math.min(QUAIS.length, b.niv | 0));
+    return QUAIS[niv - 1];
+  }
+
+  /* ==================================================================
+     LE CHANTIER NAVAL
+
+     Un seul gréement pour toute la flotte : c'est le bourg qui sait
+     construire, pas tel ou tel navire. Chaque palier donne de la
+     vitesse ET de la portée — et c'est la portée qui compte, puisque
+     c'est elle qui décide où le capitaine accepte d'aller.
+     ================================================================== */
+  function greement() { const s = assure(); return s.greement | 0; }
+  function portee() {
+    return window.Greement ? window.Greement.porteeDe(greement()) : 30;
+  }
+  function peutGreer() {
+    if (!aLePort()) return { ok: false, pourquoi: 'Il faut un port.' };
+    const G = window.Greement;
+    if (!G) return { ok: false, pourquoi: 'Chantier indisponible.' };
+    const suiv = G.suivant(greement());
+    if (!suiv) return { ok: false, pourquoi: 'La flotte ne peut plus être améliorée.' };
+    if (!window.Etat.assez(suiv.cout))
+      return { ok: false, pourquoi: 'Matériaux insuffisants.', palier: suiv,
+               manque: window.Etat.manque(suiv.cout) };
+    return { ok: true, palier: suiv };
+  }
+  function greer() {
+    const v = peutGreer();
+    if (!v.ok) return v;
+    window.Etat.depenser(v.palier.cout);
+    const s = assure();
+    s.greement = (s.greement | 0) + 1;
+    window.Etat.journal('Le chantier livre : ' + v.palier.nom + '. La flotte porte à ' +
+      portee() + ' lieues.', 'guerre');
+    return { ok: true, palier: v.palier };
   }
 
   function peutArmer() {
@@ -188,17 +234,52 @@
   /* ==================================================================
      APPAREILLER
      ================================================================== */
+  /* Ce que cette traversée-ci demande à manger : la distance et le
+     nombre de bouches embarquées. On le calcule ici pour que la fenêtre
+     du port et le départ lui-même lisent EXACTEMENT le même chiffre. */
+  function rationsPour(nav, ile) {
+    if (!nav || !ile || !window.IleUtil) return 0;
+    return window.IleUtil.rationsRequises(ile.lieues, placesPrises(nav.cargo));
+  }
+  /* Le détail du prélèvement, pour l'afficher avant que le joueur ne
+     s'engage : on montre ce qui sortira des réserves, pas un total. */
+  function ravitaillement(id, ileId) {
+    const nav = navire(id), ile = window.IleUtil.parId(ileId);
+    if (!nav || !ile) return null;
+    const n = rationsPour(nav, ile);
+    const pr = window.IleUtil.prelevementPour(n);
+    return { rations: n, cout: pr.cout, manque: pr.manque,
+             enStock: window.IleUtil.rationsDisponibles() };
+  }
+
   function peutAppareiller(id, ileId) {
     const nav = navire(id);
     const ile = window.IleUtil.parId(ileId);
     if (!nav) return { ok: false, pourquoi: 'Navire inconnu.' };
     if (nav.etat !== 'quai') return { ok: false, pourquoi: 'Ce navire est déjà en mer.' };
     if (!ile) return { ok: false, pourquoi: 'Île inconnue.' };
+    /* LA PORTÉE. Un capitaine ne part pas pour trois cents lieues avec
+       une voile carrée : c'est le gréement, et lui seul, qui ouvre le
+       Grand Large. On le dit clairement, sinon le joueur croit à un bug
+       de la carte. */
+    if (ile.lieues > portee())
+      return { ok: false, pourquoi: 'Trop loin pour ce gréement : ' + ile.lieues +
+               ' lieues, la flotte en porte ' + portee() + '. Améliorez le chantier naval.' };
     if (!nav.cargo.length) return { ok: false, pourquoi: 'La cale est vide : on n\'attaque pas à mains nues.' };
+    /* Le matériel de siège, s'il en faut : c'est le seul péage fixe. */
     if (!window.Etat.assez(ile.cout))
-      return { ok: false, pourquoi: 'Ravitaillement insuffisant pour la traversée.',
+      return { ok: false, pourquoi: 'Matériel de siège insuffisant.',
                manque: window.Etat.manque(ile.cout) };
-    return { ok: true, ile };
+    /* LES VIVRES. Non plus un aliment imposé mais des rations, prises
+       sur n'importe quelle nourriture. Exiger du pain à la troisième île
+       revenait à exiger un four, un moulin, trois niveaux de champ et un
+       puits — un mur juste après que le joueur a construit son port. */
+    const rav = ravitaillement(id, ileId);
+    if (rav && rav.manque > 0)
+      return { ok: false, rations: rav.rations,
+               pourquoi: 'Vivres insuffisants : la traversée demande ' + rav.rations +
+                         ' rations, le bourg en réunit ' + rav.enStock + '.' };
+    return { ok: true, ile, rations: rav ? rav.rations : 0, vivres: rav ? rav.cout : {} };
   }
 
   function appareiller(id, ileId) {
@@ -206,6 +287,9 @@
     if (!v.ok) return v;
     const nav = navire(id), ile = v.ile;
     window.Etat.depenser(ile.cout);
+    /* Les vivres sont recalculés à l'instant du départ : la cale a pu
+       changer depuis que la fiche a été affichée. */
+    if (v.vivres) window.Etat.depenser(v.vivres);
     nav.etat = 'mer'; nav.ile = ile.id;
     nav.total = window.IleUtil.traversee(ile.lieues, nav.palier);
     nav.reste = nav.total;
@@ -403,6 +487,8 @@
     assure, aLePort, navires, navire, quaisMax,
     peutArmer, armerNavire, peutAgrandir, agrandir,
     placesPrises, disponible, typesEmbarquables, charger, decharger, viderCale,
+    rationsPour, ravitaillement,
+    greement, portee, peutGreer, greer,
     peutAppareiller, appareiller, peutCombattre, combattre, resultat,
     peutContinuer, continuer, rentrerAuBourg, ecart,
     tick, etatNavire, ileDe, estPrise,

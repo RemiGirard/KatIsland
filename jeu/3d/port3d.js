@@ -79,14 +79,40 @@
   const MARGE_BORD = 0.10;
 
   /* LA SORTIE. Un navire ne traverse pas l'océan sous les yeux du
-     joueur : il sort du champ. On lui donne huit unités de course — plus
-     de deux fois la longueur du plus gros — puis on le laisse partir.
-     Le temps de cette sortie est un QUART de la traversée, plafonné :
-     une traversée de cinq minutes ne doit pas donner un bateau qui rampe
-     pendant une minute et quart. */
-  const SORTIE     = 8.2;
+     joueur : il sort du champ. Le temps de cette sortie est un QUART de
+     la traversée, plafonné : une traversée de cinq minutes ne doit pas
+     donner un bateau qui rampe pendant une minute et quart.
+
+     La course était de huit unités — à peine plus de deux fois la
+     longueur d'une nef. Le navire s'évanouissait donc en pleine rade, et
+     cela se lisait comme une panne d'affichage, pas comme un départ. On
+     l'envoie maintenant deux fois plus loin, et on le fait PASSER SOUS
+     L'HORIZON au lieu de l'éteindre : la coque s'enfonce d'abord, la
+     mâture disparaît en dernier. C'est ainsi qu'un bateau s'en va — et
+     cela évite de toucher aux matières, qui sont mises en cache et
+     partagées avec la jetée. */
+  const SORTIE     = 16.5;
   const VUE_PART   = 0.25;
   const VUE_MAX    = 26;
+  const PLONGEE    = 0.30;     // part de la course où la coque passe sous l'eau
+  const FOND       = 0.95;     // de combien on l'enfonce, en unités de monde
+
+  /* LE MÔLE. Le document ne jette qu'un appontement court — celui de la
+     pêcherie, quinze pas sur pilotis. Un PORT, lui, s'allonge : c'est sa
+     seule façon de montrer qu'il grandit, et c'est ce qui rend lisible le
+     nombre de navires qu'il peut tenir. On le bâtit donc ici, depuis le
+     bout du tablier du document et vers le large, et on le rallonge à
+     chaque niveau. La longueur est calculée pour que les postes
+     d'amarrage tombent SUR le bois et non au-delà : un bateau amarré
+     dans le vide se voit tout de suite.
+
+     Six niveaux, six longueurs. Le premier môle tient une barque, le
+     dernier une flotte de six. */
+  const MOLE_BASE  = 2.2;
+  const MOLE_PAS   = 1.45;
+  const MOLE_QUAIS = [1, 2, 2, 3, 4, 6];   // navires tenus, par niveau de port
+
+
 
   /* Le sillage : des nappes d'écume semées derrière la poupe, qui
      s'élargissent en s'effaçant. Sept suffisent — au-delà on ne lit plus
@@ -131,6 +157,7 @@
   const flotteurs = new Map();           // id de navire -> son bateau
   let horloge = 0;
   let quai = null, quaiT = 1e9;          // le ponton du port, relu de loin en loin
+  let mole = null, moleNiv = -1;         // la jetée bâtie, et pour quel niveau
 
   /* ==================================================================
      LES COULEURS
@@ -263,6 +290,116 @@
       g.add(l);
     }
     return g;
+  }
+
+  /* ------------------------------------------------------------------
+     LE MÔLE
+
+     Repère local identique à celui des navires : +X vers le large, la
+     ligne de flottaison à y = 0. On le pose au bout du tablier du
+     document et on l'oriente sur le cap du ponton, exactement comme un
+     bateau — ainsi la jetée et la flotte ne peuvent pas diverger.
+     ------------------------------------------------------------------ */
+  function longueurMole(niv) {
+    return MOLE_BASE + Math.max(0, (niv | 0) - 1) * MOLE_PAS;
+  }
+  function quaisDuNiveau(niv) {
+    const k = Math.max(1, Math.min(MOLE_QUAIS.length, niv | 0));
+    return MOLE_QUAIS[k - 1];
+  }
+
+  function creerMole(niv) {
+    geometries();
+    const Lm = longueurMole(niv);
+    const g = new THREE.Group();
+    g.userData.niv = niv;
+    g.userData.L = Lm;
+    const yd = 0.02;                       // le tablier affleure le document
+
+    /* LE TABLIER, en lattes. On les pose une par une plutôt qu'en un
+       seul pavé : le village entier est fait d'aplats à arêtes franches,
+       et une planche unique de neuf unités se lirait comme un radeau. */
+    const n = Math.max(6, Math.round(Lm / 0.17));
+    for (let k = 0; k < n; k++) {
+      const l0 = Lm * k / n, l1 = Lm * (k + 1) / n - 0.012;
+      const lame = boite(l1 - l0, 0.035, QUAI_DEMI * 2,
+                         (k % 3 === 0) ? '#9c8058' : PLANCHE);
+      lame.position.set((l0 + l1) / 2, yd, 0);
+      g.add(lame);
+    }
+
+    /* LES PILOTIS. Par paires, sous les deux rives du tablier, plantés
+       jusque sous l'eau — c'est ce qui donne au môle son épaisseur vue
+       de la berge. */
+    for (let l = 0.32; l < Lm; l += 0.86) {
+      for (const w of [-QUAI_DEMI, QUAI_DEMI]) {
+        const pieu = boite(0.06, 0.72, 0.06, SOMBRE);
+        pieu.position.set(l, yd - 0.36, w);
+        g.add(pieu);
+      }
+    }
+
+    /* LES BOLLARDS, un par poste et par bord : le joueur compte les
+       bittes d'amarrage et sait combien de navires le port tiendra. */
+    const quais = quaisDuNiveau(niv);
+    for (let i = 0; i < quais; i++) {
+      const l = Math.min(Lm - 0.22, 0.55 + Math.floor(i / 2) * 2.6 + 0.5);
+      const w = (i % 2 ? 1 : -1) * (QUAI_DEMI - 0.05);
+      const bitte = boite(0.075, 0.16, 0.075, '#6d5a44');
+      bitte.position.set(l, yd + 0.08, w);
+      g.add(bitte);
+      const tete = boite(0.11, 0.035, 0.11, '#5d4835');
+      tete.position.set(l, yd + 0.17, w);
+      g.add(tete);
+    }
+
+    /* LA GRUE À CHÈVRE, au bout. Deux jambes, une flèche inclinée, un
+       palan : c'est elle qui dit « port » et non « appontement ». */
+    const pied = Lm - 0.42;
+    for (const w of [-0.17, 0.17]) {
+      const jambe = boite(0.055, 0.62, 0.055, BOIS);
+      jambe.position.set(pied, yd + 0.31, w);
+      jambe.rotation.z = w > 0 ? -0.10 : 0.10;
+      g.add(jambe);
+    }
+    const fleche = boite(0.72, 0.05, 0.05, BOIS);
+    fleche.position.set(pied + 0.22, yd + 0.68, 0);
+    fleche.rotation.z = -0.42;
+    g.add(fleche);
+    const palan = boite(0.03, 0.26, 0.03, SOMBRE);
+    palan.position.set(pied + 0.50, yd + 0.72, 0);
+    g.add(palan);
+    const crochet = boite(0.09, 0.09, 0.09, '#6d5a44');
+    crochet.position.set(pied + 0.50, yd + 0.58, 0);
+    g.add(crochet);
+
+    /* Deux caisses et un tonneau : le quai sert à quelque chose. */
+    const caisse = boite(0.17, 0.15, 0.15, '#8a6a4e');
+    caisse.position.set(Lm * 0.36, yd + 0.09, -0.10);
+    g.add(caisse);
+    const tonneau = boite(0.14, 0.17, 0.14, '#7a6248');
+    tonneau.position.set(Lm * 0.52, yd + 0.10, 0.12);
+    g.add(tonneau);
+    return g;
+  }
+
+  /* On ne rebâtit la jetée que si le port a CHANGÉ DE NIVEAU : c'est une
+     géométrie fixe, elle n'a rien à faire dans la boucle d'images. */
+  function assurerMole() {
+    const b = window.Etat.batsDeType('port')[0];
+    const niv = b ? (b.niv || 1) : 1;
+    const g = poser();
+    if (mole && moleNiv === niv) { placerMole(); return; }
+    if (mole) { g.remove(mole); liberer(mole); }
+    mole = creerMole(niv);
+    moleNiv = niv;
+    g.add(mole);
+    placerMole();
+  }
+  function placerMole() {
+    if (!mole || !quai) return;
+    mole.position.set(quai.x, MER, quai.z);
+    mole.rotation.y = -quai.cap;
   }
 
   function creerNavire(nav) {
@@ -637,7 +774,14 @@
     f.vitesse += (v - f.vitesse) * Math.min(1, dt * 4);
     f.xp = f.x; f.zp = f.z;
 
-    f.objet.position.set(f.x, MER, f.z);
+    /* HULL DOWN. Sur la fin de la course, le navire s'enfonce sous la
+       ligne d'horizon : c'est la disparition d'un bateau qui s'éloigne, et
+       non un objet qu'on éteint. Le même calcul sert au retour, joué à
+       l'envers puisque `d` y décroît — il émerge donc en approchant. */
+    const part = Math.min(1, d / SORTIE);
+    const sous = part <= 1 - PLONGEE ? 0
+               : Math.pow((part - (1 - PLONGEE)) / PLONGEE, 1.7) * FOND;
+    f.objet.position.set(f.x, MER - sous, f.z);
     f.objet.rotation.y = -f.cap;
   }
 
@@ -854,6 +998,10 @@
 
     horloge += dt;
     accorder(flotte);
+    /* LA JETÉE. Elle suit le niveau du port et non la flotte : on la
+       vérifie une fois par image, mais on ne la rebâtit qu'au niveau
+       suivant. */
+    assurerMole();
     groupe.visible = true;
 
     for (const nav of flotte) {
@@ -885,11 +1033,17 @@
        un navire sans avoir à ouvrir la scène */
     quai() { return quai ? { x: quai.x, z: quai.z, cap: quai.cap, bat: quai.id } : null; },
     get compte() { return flotteurs.size; },
+    /* la jetée telle qu'elle est bâtie : longueur et postes */
+    mole() { return mole ? { niv: moleNiv, L: +mole.userData.L.toFixed(2),
+                             quais: quaisDuNiveau(moleNiv) } : null; },
     etats() {
       const out = [];
       for (const [id, f] of flotteurs)
         out.push({ id, rang: f.rang, x: +f.x.toFixed(3), z: +f.z.toFixed(3),
                    cap: +f.cap.toFixed(3), vitesse: +f.vitesse.toFixed(3),
+                   /* la hauteur de coque : nulle au quai, négative quand
+                      le navire passe sous l'horizon */
+                   y: f.objet ? +f.objet.position.y.toFixed(3) : 0,
                    deploi: +f.deploi.toFixed(2), aBord: f.aBord,
                    visible: !!(f.objet && f.objet.visible),
                    /* d'où part la traversée en cours, et où passe le

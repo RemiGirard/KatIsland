@@ -127,12 +127,24 @@
   function forceEquipee() {
     const g = window.GameState && window.GameState.gen ? window.GameState.gen() : null;
     let f = 6 + (g ? (g.lvl || 1) * 2 : 0);
-    f += (E().armee.palierArme || 0) * 3.5;
-    f += (E().armee.palierArmure || 0) * 2.5;
+    if (window.Armee) {
+      const familles = ['melee', 'distance', 'magie'];
+      f += familles.reduce((n, t) => n + window.Armee.tierEquipement(t, 'arme'), 0) * 1.2;
+      f += familles.reduce((n, t) => n + window.Armee.tierEquipement(t, 'armure'), 0) * 0.85;
+    } else {
+      f += (E().armee.palierArme || 0) * 3.5;
+      f += (E().armee.palierArmure || 0) * 2.5;
+    }
     for (const hid of T().equipe) {
       const h = window.Etat.habitant(hid); if (!h) continue;
+      const force = window.Etat.progresAttributHabitant(h, 'force').niveau;
+      const dexterite = window.Etat.progresAttributHabitant(h, 'dexterite').niveau;
+      const endurance = window.Etat.progresAttributHabitant(h, 'endurance').niveau;
+      const intelligence = window.Etat.progresAttributHabitant(h, 'intelligence').niveau;
+      const pratique = 1 + (force - 1) * 0.055 + (dexterite - 1) * 0.035
+                         + (endurance - 1) * 0.045 + (intelligence - 1) * 0.025;
       f += (2 + (h.niv || 1) * 0.9)
-         * window.HAB.produit(h, 'degats') * window.HAB.produit(h, 'pv');
+         * window.HAB.produit(h, 'degats') * window.HAB.produit(h, 'pv') * pratique;
     }
     return Math.round(f);
   }

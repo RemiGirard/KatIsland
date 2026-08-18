@@ -319,10 +319,10 @@
     if (!E.furTint) return Object.assign({}, base);
     const p = {};
     for (const k of ['fur', 'furHi', 'stripe', 'shade']) {
-      p[k] = base[k] ? mix(base[k], E.furTint, E.t) : null;
+      p[k] = base[k] ? GameData.mix(base[k], E.furTint, E.t) : null;
     }
     p.eye = base.eye;
-    if (evo >= 3) p.shade = shade(p.shade, -0.15);
+    if (evo >= 3) p.shade = GameData.shade(p.shade, -0.15);
     return p;
   };
   GameData.evoName = function (faction, type, evo) {

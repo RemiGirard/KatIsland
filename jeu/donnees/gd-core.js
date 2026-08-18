@@ -32,6 +32,9 @@ const GameData = {};
 
 GameData.mix = gdMix;
 GameData.shade = gdShade;
+// CONTRAT.md §utilitaires : mix() et shade() doivent aussi exister en identifiants nus —
+// d'anciens moteurs (et des copies en cache) les appellent sans passer par GameData.
+if (typeof window !== 'undefined') { window.mix = gdMix; window.shade = gdShade; }
 GameData.other = f => (f === 'cats' ? 'birds' : 'cats');
 
 /* ---------------- les deux camps ----------------

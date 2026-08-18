@@ -203,6 +203,8 @@
     if (!h) return 1;
     const H = window.HAB;
     let f = 1 + 0.025 * ((h.niv || 1) - 1);
+    const pratique = window.Etat.progresMetierHabitant(h, rec.metier);
+    f *= 1 + 0.025 * (pratique.niveau - 1);
     /* Le métier de prédilection : ce qu'il sait faire depuis toujours.
        Une Légende le sait mieux encore. */
     if (h.talent === rec.metier) f *= (h.rarete === 'legende' ? 1.35 : 1.20);
@@ -550,6 +552,10 @@
     E.chantier.prog += dt * v;
     window.Etat.gagnerXp('batisse', dt * v * 0.9);
     if (E.chantier.prog >= job.temps) {
+      for (const hid of E.chantier.ouvriers) {
+        const h = window.Etat.habitant(hid);
+        if (h) window.Etat.gagnerXpHabitant(h, Math.max(1, Math.round(job.temps * 0.05)), 'batisse');
+      }
       E.chantier.prog = 0;
       f.shift();
       acheverOuvrage(job);
@@ -727,6 +733,7 @@
     if (window.Port) window.Port.tick(dt);
     tickPostes(dt);
     tickChantier(dt);
+    if (window.Armee) window.Armee.avancerForge(dt);
     tickMenace(dt);
     E.moral = moralEffectif();
     if (E.moralBonus > 0) E.moralBonus = Math.max(0, E.moralBonus - dt * 0.02);
@@ -1177,6 +1184,18 @@
         bloque: v <= 0, attente: E.chantier.file.length - 1,
         type: job.type || null,
         ico: window.METIERS.batisse.ico,
+      });
+    }
+    if (E.armee && E.armee.forge) {
+      const job = E.armee.forge;
+      const objet = window.Armee && window.Armee.objetEquipement(job.type, job.slot, job.tier);
+      out.unshift({
+        k: 'forge', id: 'forge-equipement', nom: objet ? objet.name : 'Équipement', lieu: 'Forge', hab: '',
+        detail: (job.slot === 'arme' ? 'arme' : 'armure') + ' · ' + job.type + ' · palier ' + job.tier,
+        prog: Math.min(1, (job.prog || 0) / Math.max(1, job.duree)),
+        reste: Math.max(0, job.duree - (job.prog || 0)), bloque: false,
+        image: window.Armee ? window.Armee.imageEquipement(job.type, job.slot, job.tier) : null,
+        ico: { f: job.slot === 'arme' ? 'epee' : 'plastron', c: ['#c9cdd2', '#8a8f96'] },
       });
     }
     if (E.aventure.encours) {

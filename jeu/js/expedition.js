@@ -531,6 +531,25 @@
      devant. On calcule donc ce qu'il y a à calculer, puis on ferme, et
      seulement ensuite on montre le bilan.
      ================================================================= */
+  /* LES PANNES DE BATAILLE, DITES UNE FOIS.
+
+     Une exception dans la boucle de bataille se répète à chaque image.
+     La signaler à chaque fois noierait la console ; la taire laisse le
+     joueur devant un champ de bataille à moitié peint sans explication.
+     On garde donc la PREMIÈRE de chaque sorte, avec sa pile, et l'on
+     compte les suivantes — c'est ce compte qui dit si la panne est
+     ponctuelle ou permanente. */
+  const pannes = {};
+  function signalerPanne(quoi, e) {
+    if (!pannes[quoi]) {
+      pannes[quoi] = 1;
+      console.error('Bataille — panne de ' + quoi + ' :', e && e.message, e);
+      U().dire('La bataille a rencontré une panne de ' + quoi + '. Voyez la console.', 'alerte', 5000);
+    } else pannes[quoi]++;
+  }
+  /* Ce que le harnais de contrôle interroge après coup. */
+  function pannesVues() { return Object.assign({}, pannes); }
+
   function terminer(gagne) {
     const z = zoneEnCours;
     const E2 = E();
@@ -701,10 +720,23 @@
        référence et l'on vérifie qu'elle vaut encore quelque chose avant
        de dessiner, sinon on peint dans le vide. */
     const b = bataille;
+    /* METTRE À JOUR ET PEINDRE SONT DEUX CHOSES.
+
+       Elles partageaient un seul `try`, et l'erreur finissait dans un
+       `console.warn` sans pile. Deux ennuis : une exception au calcul
+       emportait le dessin de l'image, et une exception au dessin laissait
+       une image à moitié peinte — le décor et les chemins, puis plus rien
+       — sans que RIEN ne le dise, soixante fois par seconde.
+
+       On les sépare donc, et l'on garde la pile de la PREMIÈRE erreur de
+       chaque sorte : répéter le même message soixante fois par seconde ne
+       renseigne personne, mais le perdre non plus. */
     try {
       b.update(dt);
-      if (bataille === b) b.render();          // toujours vivante : on peint
-    } catch (e) { console.warn('bataille :', e.message); }
+    } catch (e) { signalerPanne('calcul', e); }
+    if (bataille === b) {
+      try { b.render(); } catch (e) { signalerPanne('dessin', e); }
+    }
     if (!bataille) return;
     if (E().expedition) {
       const c = bataille.getControl ? bataille.getControl() : null;
@@ -976,6 +1008,7 @@
   window.UIExpedition = { rendre, ouvrir: () => { refs(); if (E().expedition) { if (!bataille) reprendre(); else { ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur(); } } },
     fermer, tick, ZONES, bonusMetier, bonusButin, facteurMenace, estPrise, prises,
     lancerSortie, zoneSortie, forces, lancerIle, zoneDeLIle };
-  window.Expedition = { tick, bonusMetier, bonusButin, facteurMenace, lancerSortie, zoneSortie, forces };
+  window.Expedition = { tick, bonusMetier, bonusButin, facteurMenace, lancerSortie, zoneSortie,
+                        forces, pannesVues };
 
 })();

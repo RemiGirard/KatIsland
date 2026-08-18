@@ -41,11 +41,41 @@
   function xpPourNiveau(n) { return Math.round(60 * Math.pow(1.30, Math.max(0, n - 1))); }
   function rangHabitant(h) { return (h && h.niv) || 1; }
   const ATTRS_AVENTURE = ['endurance', 'intelligence', 'dexterite', 'force'];
+  function progressionInfinie(xp, base, croissance) {
+    xp = Math.max(0, Number(xp) || 0);
+    base = Math.max(1, base || 100);
+    croissance = Math.max(1.01, croissance || 1.30);
+    let niveau = 1, seuil = base, restant = xp, garde = 0;
+    while (restant >= seuil && garde++ < 100000) {
+      restant -= seuil;
+      niveau++;
+      seuil = Math.max(1, Math.round(seuil * croissance));
+    }
+    return { niveau, dans: restant, pour: seuil, pct: Math.min(1, restant / seuil) };
+  }
   function assurerProgression(h) {
     if (!h) return;
     if (!h.metierXp || typeof h.metierXp !== 'object') h.metierXp = {};
-    if (!h.aventure || typeof h.aventure !== 'object') h.aventure = {};
-    for (const a of ATTRS_AVENTURE) if (typeof h.aventure[a] !== 'number') h.aventure[a] = 1;
+    if (!h.caracXp || typeof h.caracXp !== 'object') h.caracXp = {};
+    /* Migration des premières sauvegardes où les caractéristiques étaient
+       stockées directement comme niveaux. */
+    for (const a of ATTRS_AVENTURE) {
+      if (typeof h.caracXp[a] !== 'number') {
+        const ancienNiveau = h.aventure && typeof h.aventure[a] === 'number' ? h.aventure[a] : 1;
+        let xp = 0, seuil = 20;
+        for (let n = 1; n < ancienNiveau; n++) { xp += seuil; seuil = Math.round(seuil * 1.28); }
+        h.caracXp[a] = xp;
+      }
+    }
+    if (h.aventure) delete h.aventure;
+  }
+  function progresMetierHabitant(h, metier) {
+    assurerProgression(h);
+    return progressionInfinie(h && h.metierXp ? h.metierXp[metier] : 0, 100, 1.35);
+  }
+  function progresAttributHabitant(h, attribut) {
+    assurerProgression(h);
+    return progressionInfinie(h && h.caracXp ? h.caracXp[attribut] : 0, 20, 1.28);
   }
   function gagnerXpHabitant(h, n, metier) {
     if (!h || !n) return;
@@ -53,7 +83,7 @@
     if (metier) h.metierXp[metier] = (h.metierXp[metier] || 0) + n;
     h.xp = (h.xp || 0) + n * (1 + ((window.Jeu && window.Jeu.acquis) ? window.Jeu.acquis().xp : 0));
     let garde = 0;
-    while (h.xp >= xpPourNiveau(h.niv || 1) && (h.niv || 1) < 25 && garde++ < 40) {
+    while (h.xp >= xpPourNiveau(h.niv || 1) && garde++ < 100000) {
       h.xp -= xpPourNiveau(h.niv || 1);
       h.niv = (h.niv || 1) + 1;
       journal(h.nom + ' passe au niveau ' + h.niv + '.', 'rang');
@@ -63,7 +93,7 @@
   function gagnerAttribut(h, attribut, n) {
     if (!h || !ATTRS_AVENTURE.includes(attribut) || !n) return;
     assurerProgression(h);
-    h.aventure[attribut] = Math.max(1, (h.aventure[attribut] || 1) + n);
+    h.caracXp[attribut] = Math.max(0, (h.caracXp[attribut] || 0) + n);
     prevenir('attributHabitant', h);
   }
 
@@ -97,7 +127,10 @@
       jours: 0,
       raids: 0,
 
-      armee: { unites: 0, xp: 0, palierArme: 0, palierArmure: 0, garnison: 0 },
+      armee: { unites: 0, xp: 0, palierArme: 0, palierArmure: 0, garnison: 0,
+        equipement: {
+          melee: { arme: 0, armure: 0 }, distance: { arme: 0, armure: 0 }, magie: { arme: 0, armure: 0 },
+        }, forge: null },
       territoires: [],               // zones conquises en expédition
       expedition: null,              // bataille en cours (sérialisée)
       aventure: { profondeur: 0, record: 0, encours: null, sacoche: {} },
@@ -722,7 +755,8 @@
     peutOuvrirPortes, ouvrirPortes, accueillir, apercuRefus, refuserTous,
     renvoyer, perdre, peineDeDepart, tickMalaise, facteurMalaise,
     rangMetier, progresMetier, gagnerXp,
-    rangHabitant, gagnerXpHabitant, gagnerAttribut, assurerProgression, xpPourNiveau,
+    rangHabitant, gagnerXpHabitant, gagnerAttribut, assurerProgression,
+    progresMetierHabitant, progresAttributHabitant, progressionInfinie, xpPourNiveau,
     TRAITS, TRAITS_IDS,
     journal,
     nomHabitant, mulberry,
