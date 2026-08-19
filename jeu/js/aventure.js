@@ -396,6 +396,14 @@
     return x && (x.cats || x.birds) || '';
   }
 
+  function puceStat(A, id, valeur, suffixe) {
+    const def = window.GameData.GEN_STATS[id] || {};
+    return A('span', { class:'plateau-stat-illustree', title:(def.name || id) + (def.desc ? ' — ' + def.desc : '') },
+      def.image ? A('img', { src:def.image, alt:'' }) : null,
+      A('b', { text:String(valeur) }),
+      suffixe ? A('i', { text:suffixe }) : null);
+  }
+
   function membresEnLigne() {
     const g = window.GameState.gen();
     const out = [{ id:'__general', nom:"Maître d'œuvre", cls:'general', lvl:g.lvl || 1 }];
@@ -425,8 +433,8 @@
             A('div', { class:'eti', text:m.cls + ' · niveau ' + m.lvl }))),
         A('div', { class:'plateau-vie' }, A('i', { style:'width:' + Math.round(pct * 100) + '%' })),
         A('div', { class:'rangee entre', style:'margin-top:4px' },
-          A('span', { class:'eti', text:Math.round(vie) + ' / ' + Math.round(st.hp) + ' PV' }),
-          A('span', { class:'eti', text:Math.round(st.armor || 0) + ' armure' }))));
+          puceStat(A, 'hp', Math.round(vie) + ' / ' + Math.round(st.hp), 'PV'),
+          puceStat(A, 'armor', Math.round(st.armor || 0), 'armure'))));
     }
 
     const m = membres.find(x => x.id === choisiCote), st = window.GameState.combatStats(m.id);
@@ -437,9 +445,10 @@
     droite.appendChild(A('div', { class:'plateau-membre choisi' },
       A('div', { class:'tt', text:m.nom }),
       A('div', { class:'plateau-mini-stats' },
-        A('span', { text:Math.round(st.hp) + ' PV' }), A('span', { text:Math.round(st.dmg * 10) / 10 + ' dégâts' }),
-        A('span', { text:Math.round(st.armor || 0) + ' armure' }), A('span', { text:Math.round(st.mspd || 0) + ' vitesse' }),
-        A('span', { text:Math.round(st.range || 0) + ' portée' }), A('span', { text:window.GameState.talentPts(m.id) + ' pts libres' }))));
+        puceStat(A, 'hp', Math.round(st.hp), 'PV'), puceStat(A, 'dmg', Math.round(st.dmg * 10) / 10, 'dégâts'),
+        puceStat(A, 'armor', Math.round(st.armor || 0), 'armure'), puceStat(A, 'mspd', Math.round(st.mspd || 0), 'vitesse'),
+        puceStat(A, 'range', Math.round(st.range || 0), 'portée'),
+        A('span', { class:'plateau-stat-illustree', text:window.GameState.talentPts(m.id) + ' pts libres' }))));
     droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Pouvoirs' }));
     const pouvoirs = window.GameState.heroPowers(m.id);
     if (!pouvoirs.length) droite.appendChild(A('div', { class:'note faible', text:'Aucun pouvoir équipé.' }));

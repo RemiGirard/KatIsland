@@ -1126,7 +1126,7 @@
     /* La carte locale est une feuille CARRÉE, bien plus grande que sa
        fenêtre. Chaque tier ajoute une couronne sans déplacer celles déjà
        connues — et la fenêtre ne glisse que jusqu'au tier découvert. */
-    local: { L: 2200, H: 2200, cx: 1100, cy: 1100,
+    local: { L: 40000, H: 40000, cx: 20000, cy: 20000,
              r0: 110, pas: 85, lieuesMax: 10, anneau: 1,
              unite: 'TIER', libelle: 'Les eaux explorées' },
     large: { L: 880, H: 620, cx: 440, cy: 310,
@@ -1174,6 +1174,45 @@
      la teinte répond à la seule question qu'on se pose devant la carte :
      est-ce à ma portée ? */
   const teinteForce = f => f <= 3 ? 'douce' : (f <= 6 ? 'rude' : 'ardente');
+
+  /* QUATRE CERCLES PAR TIER, GROUPÉS PAR FORCE. Le premier cercle porte
+     les forces 1-2, le deuxième 3-4-5, le troisième 6-7-8, le quatrième
+     9-10 ; puis le tier suivant reprend quatre cercles plus loin, et
+     ainsi de suite. Les rayons sont CALCULÉS, pas décorés : chaque
+     cercle est assez large pour que les images de ses îles ne se
+     touchent pas (corde), et assez loin du précédent pour que deux
+     cercles voisins ne se mordent jamais (somme des demi-emprises).
+     Même force, même cercle, même place — pour toujours. */
+  const CERCLES_FORCES = [[1, 2], [3, 4, 5], [6, 7, 8], [9, 10]];
+  /* les îles de la couronne se lisent de loin : elles sont dessinées
+     plus grandes que celles du Grand Large, et les cercles s'écartent
+     d'autant — calculés depuis cette même emprise, rien ne se touche */
+  const TAILLE_LOCAL = 3.4;
+  let cerclesMemo = null;
+  function cerclesLocal() {
+    if (cerclesMemo) return cerclesMemo;
+    const out = [];
+    let rPrev = 44, sPrev = 0;                 // le bourg et son fanion
+    for (let tier = 1; tier <= 10; tier++)
+      for (let g = 0; g < 4; g++) {
+        const grp = CERCLES_FORCES[g];
+        /* l'image fait 2,55 × la taille : la demi-emprise réelle */
+        const s = tailleIle(grp[grp.length - 1]) * TAILLE_LOCAL * 1.275 + 6;
+        const n = grp.length;
+        const corde = (2 * s + 44) / (2 * Math.sin(Math.PI / n));
+        const r = Math.max(corde, rPrev + sPrev + s + 48);
+        out.push({ r, s, n, tier, g, forces: grp });
+        rPrev = r; sPrev = s;
+      }
+    cerclesMemo = out;
+    return out;
+  }
+  /* le bord extérieur d'un tier : le dernier cercle, plus sa plus grande
+     île, plus une respiration — c'est lui qui borne la fenêtre */
+  function bordTier(ti) {
+    const c = cerclesLocal()[Math.max(1, Math.min(10, ti)) * 4 - 1];
+    return c.r + c.s + 26;
+  }
 
   /* CE QUI OCCUPE VRAIMENT LA PLACE, C'EST LE NOM. Un îlot fait six
      pixels de rayon, son nom en fait cent : caler les cailloux les uns
@@ -1226,10 +1265,20 @@
        qu'on ne dessine pas : les vraies s'écarteront d'elles-mêmes de
        l'échelle au lieu de venir s'asseoir dessus. */
     const pris = [];
-    for (let l = CARTE.anneau; l <= CARTE.lieuesMax; l += CARTE.anneau) {
-      const y = CARTE.cy - rayonLieues(l) + 3, w = (l + ' ' + CARTE.unite).length * 5.6 + 6;
-      const b = { x1: CARTE.cx - w / 2, y1: y - 9.5, x2: CARTE.cx + w / 2, y2: y + 4 };
-      pris.push({ pave: b, boite: b });
+    if (t === 'local') {
+      /* un libellé par tier, posé sur son quatrième cercle */
+      for (let ti = 1; ti <= 10; ti++) {
+        const r = cerclesLocal()[ti * 4 - 1].r;
+        const y = CARTE.cy - r + 3, w = (ti + ' ' + CARTE.unite).length * 5.6 + 6;
+        const b = { x1: CARTE.cx - w / 2, y1: y - 9.5, x2: CARTE.cx + w / 2, y2: y + 4 };
+        pris.push({ pave: b, boite: b });
+      }
+    } else {
+      for (let l = CARTE.anneau; l <= CARTE.lieuesMax; l += CARTE.anneau) {
+        const y = CARTE.cy - rayonLieues(l) + 3, w = (l + ' ' + CARTE.unite).length * 5.6 + 6;
+        const b = { x1: CARTE.cx - w / 2, y1: y - 9.5, x2: CARTE.cx + w / 2, y2: y + 4 };
+        pris.push({ pave: b, boite: b });
+      }
     }
     pris.push({ pave: { x1: CARTE.cx - 34, y1: CARTE.cy - 34, x2: CARTE.cx + 34, y2: CARTE.cy + 36 },
                 boite: { x1: CARTE.cx - 34, y1: CARTE.cy + 20, x2: CARTE.cx + 34, y2: CARTE.cy + 36 } });
@@ -1246,66 +1295,28 @@
       a0: ile.secteur != null ? ile.secteur : 0,
       fixe: ile.secteur != null,
     }));
-    /* UNE BANDE PAR TIER, PAS UN CERCLE. Le tier 1 s'étale entre le
-       bourg et sa limite, le tier 2 entre la limite du 1 et la sienne,
-       et ainsi de suite. Dans sa bande, chaque île a SA distance : les
-       faciles côté bourg, les dures côté large — la difficulté se lit
-       à la règle, sans légende. L'angle vient du rang de force : même
-       île, même place, pour toujours ; les couronnes paires tournent
-       d'un demi-pas pour ne pas s'aligner en rayons. */
+    /* QUATRE CERCLES PAR TIER. Chaque île rejoint le cercle de son groupe
+       de force — 1-2, 3-4-5, 6-7-8, 9-10 — et s'y pose à intervalle
+       régulier, dans l'ordre de la force depuis le nord. Les couronnes
+       paires tournent d'un demi-pas pour ne pas s'aligner en rayons. */
     if (t === 'local') {
-      /* UNE BANDE PAR TIER, ET LA BANDE OUVERTE PREND TOUTE LA MER.
-
-         Le placement d'origine posait chaque île entre l'anneau de son
-         tier et le précédent. Tant qu'une seule couronne est ouverte —
-         c'est-à-dire pendant toute la découverte du jeu — les dix îles
-         se partageaient donc une bande de quelques dizaines de pixels :
-         un collier autour du bourg, avec toute la carte vide autour.
-
-         La bande la plus extérieure OUVERTE s'étend maintenant jusqu'au
-         bord de la carte. Avec un seul tier, les dix îles occupent tout
-         le plan ; à mesure que les couronnes s'ouvrent, chacune reprend
-         sa part et l'ensemble se resserre naturellement.
-
-         LA DIFFICULTÉ SE LIT TOUJOURS À LA RÈGLE : la force décide de
-         l'éloignement, les faciles près du bourg. On y ajoute seulement
-         un ÉCART tiré de l'identifiant — jamais du hasard — pour que la
-         rangée cesse d'être un arc parfait. Même île, même place, d'une
-         partie à l'autre. */
-      /* LA BORNE EST CELLE DE LA VUE, PAS DE LA FEUILLE. La feuille fait
-         2200 de cote ; la fenetre, elle, ne montre que le tier decouvert —
-         494 au premier. Borner sur la feuille envoyait donc huit iles sur
-         dix hors du cadre, invisibles et incliquables. `cadreMer` donne le
-         demi-cote reellement visible : c'est lui qui fait loi.
-
-         On garde une marge d'une demi-ile plus le fanion, sinon la plus
-         lointaine est coupee par le bord. */
-      const vueDemi = cadreMer('local', rayonOuvert).demi;
-      const rMaxUtile = vueDemi - 46;
       for (const p of l) {
         const ti = p.ile.tier || 1;
         const f = Math.max(1, Math.min(10, p.ile.force || 1));
-        /* LE TROU CENTRAL. `rayonLieues(0)` vaut 110 — un vide de la
-           moitie du rayon visible, pour un bourg qui en occupe trente.
-           La premiere couronne se retrouvait coincee entre 136 et 201 :
-           une bande de soixante pixels, d'ou le collier. On la fait
-           commencer juste au large du bourg ; les couronnes suivantes
-           gardent leur anneau, qui sert alors vraiment a les separer. */
-        const dedans = (ti <= 1) ? 84 : rayonLieues(ti - 1) + 26;
-        const dehors = (ti >= rayonOuvert) ? rMaxUtile : rayonLieues(ti) - 14;
-        const large = Math.max(1, dehors - dedans);
-        /* deux tirages indépendants : l'un décale le long du rayon,
-           l'autre le long de l'arc. Sans le second, les écarts radiaux
-           se liraient encore comme une file. */
-        const jr = hachage(p.ile.id + '#r'), ja = hachage(p.ile.id + '#a');
-        const part = (f - 1) / 9;
-        p.r = dedans + large * (0.10 + part * 0.80 + (jr - 0.5) * 0.16);
-        p.r = Math.max(dedans, Math.min(dehors, p.r));
-        p.taille = Math.min(p.taille, 2 * Math.PI * p.r / 10 * 0.42);
-        const pas = (Math.PI * 2 - NORD) / 10;
+        const ci = (ti - 1) * 4
+          + CERCLES_FORCES.findIndex(gr => f <= gr[gr.length - 1]);
+        const c = cerclesLocal()[ci];
+        const i = Math.max(0, c.forces.indexOf(f));
+        /* CHAQUE CERCLE TOURNE D'UN PAS DIFFÉRENT. Sans cette rotation,
+           tous les cercles partaient du même relèvement : les îles de
+           même rang se suivaient vers le large — des lignes, pas une
+           répartition. Le pas est fixe (3/8 de tour de slot) : même
+           île, même place, pour toujours. */
+        const off = (ci * 0.375) % 1;
+        p.r = c.r;
+        p.taille = tailleIle(f) * TAILLE_LOCAL;
         p.a0 = -Math.PI / 2 + NORD / 2
-          + (f - 1 + (ti % 2 ? 0 : 0.5)) * pas
-          + (ja - 0.5) * pas * 0.75;
+          + ((i + off) / c.n) * (Math.PI * 2 - NORD);
       }
     }
     for (const p of l) {
@@ -1408,19 +1419,25 @@
     const C = CARTES[t];
     if (t !== 'local') {
       const demi = Math.max(C.L, C.H) / 2;
-      return { demi, x0: C.cx - demi, x1: C.cx - demi, y0: C.cy - demi, y1: C.cy - demi };
+      return { minDemi: demi, defDemi: demi, maxDemi: demi };
     }
-    const demi = C.r0 + C.pas + 52;                   // le tier 1, entier, immobile
-    const marge = Math.max(0, rayon - 1) * C.pas;     // un anneau de glisse par tier
-    return { demi, x0: C.cx - demi - marge, x1: C.cx - demi + marge,
-                   y0: C.cy - demi - marge, y1: C.cy - demi + marge };
+    const r = cerclesLocal();
+    /* PAR DÉFAUT, LA MER PROCHE : les deux premiers cercles, gros et
+       lisibles — c'est là qu'on décide sa première sortie. La molette
+       zoome du premier cercle jusqu'au tier découvert entier, la
+       glisse complète ce qui déborde ; rien n'est hors d'atteinte. */
+    return {
+      minDemi: r[0].r + r[0].s + 40,
+      defDemi: r[1].r + r[1].s + 30,
+      maxDemi: bordTier(rayon),
+    };
   }
   function bride(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
   function dessinerMer(nav, choisi, theatre, vue) {
     const t = theatre || 'local';
     const memoire = CARTE; CARTE = CARTES[t];
-    const C = CARTE, rMax = rayonLieues(C.lieuesMax);
+    const C = CARTE, rMax = t === 'local' ? bordTier(10) : rayonLieues(C.lieuesMax);
     const vb = vue || { x: 0, y: 0, demi: Math.max(C.L, C.H) / 2 };
     const P = window.Port;
     const portee = P && P.portee ? P.portee() : 9999;
@@ -1431,10 +1448,16 @@
       viewBox: ar(vb.x) + ' ' + ar(vb.y) + ' ' + ar(vb.demi * 2) + ' ' + ar(vb.demi * 2),
       role: 'img', 'aria-label': 'Carte marine — ' + C.libelle });
     const defs = sv('defs');
+    /* LE PARCHAMIN À SA TAILLE NATURELLE. Le motif fait 512 px à l'écran,
+       quel que soit le zoom : c'est du papier, pas un objet du monde.
+       On convertit donc les pixels écran en unités de la feuille d'après
+       l'étendue vue — sans ça, la grande carte montrait un papier
+       minuscule, réduit comme un timbre. */
+    const tuile = ar(512 * (2 * vb.demi) / 950);
     const motif = sv('pattern', { id: 'papier-mer-' + t, patternUnits: 'userSpaceOnUse',
-      width: 512, height: 512 });
+      width: tuile, height: tuile });
     motif.appendChild(sv('image', { href: 'img/iles/fond-carte-parchemin-tuile.png',
-      x: 0, y: 0, width: 512, height: 512, preserveAspectRatio: 'none' }));
+      x: 0, y: 0, width: tuile, height: tuile, preserveAspectRatio: 'none' }));
     defs.appendChild(motif); carte.appendChild(defs);
     carte.appendChild(sv('rect', { class: 'mer-fond', x: 0.5, y: 0.5,
       width: C.L - 1, height: C.H - 1, rx: 5,
@@ -1456,9 +1479,12 @@
        ne disent rien non plus, et c'est leur seul rôle — une carte
        marine sans mer dessinée n'est qu'un diagramme. */
     const houle = sv('g', { class: 'mer-houle' });
-    for (let i = 0; i < 34; i++) {
+    /* la houle ne seme que la mer VUE : au large toute la feuille, dans
+       la couronne seulement ce que le tier découvert ouvre */
+    const rHoule = t === 'local' ? bordTier(porteeCarte) : rMax;
+    for (let i = 0; i < 48; i++) {
       const a = hachage('h' + i) * Math.PI * 2;
-      const r = 70 + hachage('hr' + i) * (rMax - 90);
+      const r = 70 + hachage('hr' + i) * Math.max(60, rHoule - 90);
       const x = C.cx + Math.cos(a) * r, y = C.cy + Math.sin(a) * r;
       houle.appendChild(sv('path', { class: 'mer-vague',
         d: 'M' + ar(x - 7) + ',' + ar(y) + ' q3.5,-2.6 7,0 q3.5,2.6 7,0' }));
@@ -1488,11 +1514,21 @@
        nord : le halo de mer que porte le texte coupe l'anneau derrière
        lui, comme sur une carte gravée. */
     const anneaux = sv('g', { class: 'mer-anneaux' });
-    for (let l = C.anneau; l <= C.lieuesMax; l += C.anneau) {
-      const r = rayonLieues(l);
-      anneaux.appendChild(sv('circle', { class: 'mer-anneau', cx: C.cx, cy: C.cy, r: ar(r) }));
-      anneaux.appendChild(sv('text', { class: 'mer-lieues',
-        x: C.cx, y: ar(C.cy - r + 3), text: l + ' ' + C.unite }));
+    if (t === 'local') {
+      /* QUARANTE CERCLES, dix tiers × quatre : le trait se lit comme une
+         règle, et le libellé du tier se pose sur le quatrième cercle. */
+      for (const c of cerclesLocal()) {
+        anneaux.appendChild(sv('circle', { class: 'mer-anneau', cx: C.cx, cy: C.cy, r: ar(c.r) }));
+        if (c.g === 3) anneaux.appendChild(sv('text', { class: 'mer-lieues',
+          x: C.cx, y: ar(C.cy - c.r + 3), text: c.tier + ' ' + C.unite }));
+      }
+    } else {
+      for (let l = C.anneau; l <= C.lieuesMax; l += C.anneau) {
+        const r = rayonLieues(l);
+        anneaux.appendChild(sv('circle', { class: 'mer-anneau', cx: C.cx, cy: C.cy, r: ar(r) }));
+        anneaux.appendChild(sv('text', { class: 'mer-lieues',
+          x: C.cx, y: ar(C.cy - r + 3), text: l + ' ' + C.unite }));
+      }
     }
     carte.appendChild(anneaux);
 
@@ -1501,7 +1537,8 @@
        vaut mieux que de le dire, parce qu'on voit du même coup ce que le
        prochain gréement irait chercher. */
     if (porteeCarte < C.lieuesMax * 1.4 && porteeCarte > 0) {
-      const rp = rayonLieues(Math.min(porteeCarte, C.lieuesMax));
+      const rp = t === 'local' ? bordTier(porteeCarte)
+                               : rayonLieues(Math.min(porteeCarte, C.lieuesMax));
       carte.appendChild(sv('circle', { class: 'mer-portee', cx: C.cx, cy: C.cy, r: ar(rp) }));
       carte.appendChild(sv('text', { class: 'mer-portee-nom',
         x: C.cx, y: ar(C.cy + rp - 6), text: 'PORTÉE DE LA FLOTTE' }));
@@ -1603,15 +1640,19 @@
     carte.appendChild(rose);
 
     /* L'ÉCHELLE. Une carte sans échelle oblige à compter les anneaux ;
-       avec elle, on mesure une distance à l'œil. */
-    const eL = CARTE.anneau * CARTE.pas;
-    const ex = vb.x + vb.demi * 2 - 40 - eL, ey = vb.y + vb.demi * 2 - 34;
-    carte.appendChild(sv('g', { class: 'mer-echelle' },
-      sv('line', { x1: ar(ex), y1: ey, x2: ar(ex + eL), y2: ey }),
-      sv('line', { x1: ar(ex), y1: ey - 4, x2: ar(ex), y2: ey + 4 }),
-      sv('line', { x1: ar(ex + eL), y1: ey - 4, x2: ar(ex + eL), y2: ey + 4 }),
-      sv('text', { class: 'mer-echelle-nom', x: ar(ex + eL / 2), y: ey - 8,
-        'text-anchor': 'middle', text: CARTE.anneau + ' ' + CARTE.unite })));
+       avec elle, on mesure une distance à l'œil. Dans la couronne, les
+       quarante cercles étiquetés SONT l'échelle : un trait de plus ne
+       mesurerait rien, leurs pas n'étant pas égaux. */
+    if (t !== 'local') {
+      const eL = CARTE.anneau * CARTE.pas;
+      const ex = vb.x + vb.demi * 2 - 40 - eL, ey = vb.y + vb.demi * 2 - 34;
+      carte.appendChild(sv('g', { class: 'mer-echelle' },
+        sv('line', { x1: ar(ex), y1: ey, x2: ar(ex + eL), y2: ey }),
+        sv('line', { x1: ar(ex), y1: ey - 4, x2: ar(ex), y2: ey + 4 }),
+        sv('line', { x1: ar(ex + eL), y1: ey - 4, x2: ar(ex + eL), y2: ey + 4 }),
+        sv('text', { class: 'mer-echelle-nom', x: ar(ex + eL / 2), y: ey - 8,
+          'text-anchor': 'middle', text: CARTE.anneau + ' ' + CARTE.unite })));
+    }
 
     CARTE = memoire;
     return carte;
@@ -1629,8 +1670,8 @@
           text: 'Le bourg est au centre, chaque anneau révèle un nouveau tier. '
               + "Plus une île est grosse, plus sa garnison l'est : verte on y va, "
               + "or on se prépare, corail il faut une flotte. Le fanion d'or marque "
-              + 'les îles déjà prises. Faites glisser le parchemin pour naviguer — '
-              + 'il ne s\'ouvre que jusqu\'au dernier tier découvert.' }),
+              + 'les îles déjà prises. Faites glisser le parchemin pour naviguer, '
+              + 'molette pour zoomer — il ne s\'ouvre que jusqu\'au dernier tier découvert.' }),
         el('div', { class: 'note', style: 'margin-top:8px',
           text: "Survolez une île pour l'essentiel, cliquez-la pour le détail." })));
       return boite;
@@ -1782,7 +1823,11 @@
   function rendreCarteMer(c, o) {
     const P = window.Port;
     if (!P) return;
-    const nav = o.navId ? P.navire(o.navId) : null;
+    /* SANS NAVIRE DÉSIGNÉ, LE PREMIER À QUAI FAIT L'AFFAIRE : c'est lui
+       qui prendrait le cap — et la fiche de droite peut alors offrir le
+       bouton « Appareiller » dès qu'une île est choisie et la cale prête. */
+    const nav = o.navId ? P.navire(o.navId)
+      : (P.navires().find(n => n.etat === 'quai') || null);
     if (o.navId && !nav) return;
     const choisi = choixIle[o.cle] ? window.IleUtil.parId(choixIle[o.cle]) : null;
     /* LE GRAND LARGE NE S'AFFICHE QUE QUAND IL EXISTE. Tant que la
@@ -1833,9 +1878,19 @@
     const rayonCarte = (t === 'local' && P.rayon) ? Math.max(1, Math.min(10, P.rayon())) : 1;
     const cadre = cadreMer(t, rayonCarte);
     let vue = vueMer[o.cle];
-    if (!vue || vue.t !== t) vue = vueMer[o.cle] = { t, x: 0, y: 0 };
-    vue.x = bride(vue.x, cadre.x0, cadre.x1);
-    vue.y = bride(vue.y, cadre.y0, cadre.y1);
+    if (!vue || vue.t !== t || vue.demi == null)
+      vue = vueMer[o.cle] = { t, demi: cadre.defDemi,
+        x: CARTES[t].cx - cadre.defDemi, y: CARTES[t].cy - cadre.defDemi };
+    vue.demi = bride(vue.demi, cadre.minDemi, cadre.maxDemi);
+    /* LA VUE NE QUITTE JAMAIS LA MER OUVERTE : quel que soit le zoom,
+       les bords restent dans le tier découvert. */
+    const bx0 = CARTES[t].cx - cadre.maxDemi, by0 = CARTES[t].cy - cadre.maxDemi;
+    const bx1 = () => CARTES[t].cx + cadre.maxDemi - 2 * vue.demi;
+    const by1 = () => CARTES[t].cy + cadre.maxDemi - 2 * vue.demi;
+    vue.x = bride(vue.x, bx0, bx1());
+    vue.y = bride(vue.y, by0, by1());
+    const poserVue = n => { if (n) n.setAttribute('viewBox',
+      ar(vue.x) + ' ' + ar(vue.y) + ' ' + ar(vue.demi * 2) + ' ' + ar(vue.demi * 2)); };
     let drag = null;
     const toile = el('div', { class: 'mer-toile', tabindex: '-1',
       onpointerdown: ev => {
@@ -1854,17 +1909,31 @@
           try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) { }
         }
         if (!drag.bouge) return;
-        const k = (2 * cadre.demi) / Math.max(1, ev.currentTarget.clientWidth);
-        vue.x = bride(drag.vx - dx * k, cadre.x0, cadre.x1);
-        vue.y = bride(drag.vy - dy * k, cadre.y0, cadre.y1);
-        const feuille = ev.currentTarget.querySelector('svg');
-        if (feuille) feuille.setAttribute('viewBox',
-          ar(vue.x) + ' ' + ar(vue.y) + ' ' + ar(cadre.demi * 2) + ' ' + ar(cadre.demi * 2));
+        const k = (2 * vue.demi) / Math.max(1, ev.currentTarget.clientWidth);
+        vue.x = bride(drag.vx - dx * k, bx0, bx1());
+        vue.y = bride(drag.vy - dy * k, by0, by1());
+        poserVue(ev.currentTarget.querySelector('svg'));
       },
       onpointerup: ev => {
         if (drag && drag.bouge) glisseMer[o.cle] = performance.now();
         drag = null;
         if (ev.currentTarget.hasPointerCapture(ev.pointerId)) ev.currentTarget.releasePointerCapture(ev.pointerId);
+      },
+      /* LA MOLETTE ZOOME : près du premier cercle les îles sont
+         grandes, dézoomé le tier entier tient dans la fenêtre. Le
+         point sous le curseur ne bouge pas. */
+      onwheel: ev => {
+        if (cadre.minDemi >= cadre.maxDemi) return;
+        ev.preventDefault();
+        const rect = ev.currentTarget.getBoundingClientRect();
+        const fx = (ev.clientX - rect.left) / Math.max(1, rect.width);
+        const fy = (ev.clientY - rect.top) / Math.max(1, rect.height);
+        const wx = vue.x + fx * 2 * vue.demi, wy = vue.y + fy * 2 * vue.demi;
+        vue.demi = bride(vue.demi * (ev.deltaY > 0 ? 1.18 : 1 / 1.18),
+                         cadre.minDemi, cadre.maxDemi);
+        vue.x = bride(wx - fx * 2 * vue.demi, bx0, bx1());
+        vue.y = bride(wy - fy * 2 * vue.demi, by0, by1());
+        poserVue(ev.currentTarget.querySelector('svg'));
       },
       onclick: ev => {
       if (glisseMer[o.cle] && performance.now() - glisseMer[o.cle] < 180) return;
@@ -1874,7 +1943,7 @@
       choixIle[o.cle] = choixIle[o.cle] === id ? null : id;
       if (o.rafraichir) o.rafraichir();
     } });
-    toile.appendChild(dessinerMer(nav, choisi, t, { x: vue.x, y: vue.y, demi: cadre.demi }));
+    toile.appendChild(dessinerMer(nav, choisi, t, { x: vue.x, y: vue.y, demi: vue.demi }));
     /* TROIS COLONNES en pleine page : les commandes du port à gauche, la
        mer au milieu, la terre choisie à droite. Dans une fenêtre ordinaire
        — l'onglet « Les îles » d'un autre écran — on garde les deux

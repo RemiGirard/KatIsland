@@ -180,7 +180,8 @@
       const meta = window.METIERS[s.rec.metier];
       const ligne = el('div', { class: 'prod-source' },
         el('div', { class: 'prod-source-haut' },
-          meta ? U.ico(meta.ico, 20) : null,
+          s.rec.image ? el('img', { src:s.rec.image, alt:'', class:'prod-recette-art' })
+                      : (meta ? U.ico(meta.ico, 20) : null),
           el('div', { class: 'prod-source-nom' },
             el('b', { text: s.rec.nom }),
             el('span', { text: window.BAT[s.b.type].nom + ' · ' + s.rec.out[item.id] + ' par cycle · ' + U.duree(s.rec.duree) })),

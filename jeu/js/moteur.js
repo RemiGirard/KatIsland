@@ -1166,6 +1166,7 @@
           reste: p.bloque ? null : Math.max(0, (rec.duree - p.prog) / Math.max(0.001, v)),
           bloque: p.bloque, manque: p.bloque ? window.Etat.manque(rec.in) : null,
           res: resPrincipale,
+          image: rec.image || null,
           unite: rec.uniteType || null,
           debit: resPrincipale && !p.bloque ? (rec.out[resPrincipale] || 0) * cyclesMin : 0,
           ico: window.METIERS[rec.metier].ico,

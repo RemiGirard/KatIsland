@@ -747,7 +747,7 @@
   x('potion_rage', { bat:'alchimie', nom:'Tonique de rage', metier:'savoir', duree:96, niv:4,
     image:'img/objets/alchimie/rage.png', in:{viande:2,racine:3,potion:1}, out:{potion:3},
     desc:"On ne recommande ni le goût, ni la conversation qui suit." });
-  x('potion_precision', { bat:'alchimie', nom:'Élixir de l'œil clair', metier:'savoir', duree:112, niv:5,
+  x('potion_precision', { bat:'alchimie', nom:"Élixir de l'œil clair", metier:'savoir', duree:112, niv:5,
     image:'img/objets/alchimie/precision.png', in:{ambre:1,herbe:4,fiole:1}, out:{potion:2},
     desc:"Le monde ralentit juste assez pour que la flèche trouve sa place." });
   x('potion_bouclier', { bat:'alchimie', nom:'Bouclier en fiole', metier:'savoir', duree:138, niv:6,

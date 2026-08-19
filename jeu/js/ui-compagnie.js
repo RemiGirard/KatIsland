@@ -94,6 +94,12 @@
     const nom = b ? (nomDe(b.cats) || nomDe(b.name) || it.base) : it.base;
     return nom + '  ·  T' + it.tier;
   }
+  function illustrationObjet(it, taille) {
+    const b = it && GD().baseById(it.base);
+    if (!b || !b.image) return null;
+    return el('img', { src:b.image, alt:'', class:'objet-aventure-art',
+      style:'width:' + (taille || 62) + 'px;height:' + (taille || 62) + 'px' });
+  }
   function carteObjet(it, actions) {
     const R = GD().rarityById(it.rarity);
     const col = COUL_RARETE[it.rarity] || '#8b8378';
@@ -107,7 +113,8 @@
     }
     const carte = el('div', { class: 'cadre', style: 'border-left:3px solid ' + col },
       el('div', { class: 'rangee entre' },
-        el('span', { class: 'tt', style: 'font-size:13px', text: libelleObjet(it) }),
+        el('div', { class:'rangee' }, illustrationObjet(it, 58),
+          el('span', { class: 'tt', style: 'font-size:13px', text: libelleObjet(it) })),
         el('span', { class: 'eti', style: 'color:' + col, text: R.name })),
       lignes);
     if (actions) carte.appendChild(el('div', { class: 'rangee enroule', style: 'margin-top:8px' }, actions));
