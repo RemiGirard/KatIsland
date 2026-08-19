@@ -168,6 +168,7 @@
       '.pg-potion:active{transform:translateY(1px);box-shadow:none;}',
       '.pg-potion.aim{border-color:var(--acc-dark);box-shadow:0 2px 0 var(--acc-dark);background:var(--acc-soft);}',
       '.pg-potion:disabled{opacity:.4;cursor:not-allowed;}',
+      '.pg-potion-art{display:block;width:30px;height:30px;margin:1px;object-fit:contain;}',
       '.pg-potion .n{position:absolute;bottom:-5px;right:-5px;background:var(--ink);color:#f8f2e4;',
       ' font-weight:800;font-size:9px;border-radius:999px;padding:1px 4px;z-index:1;}',
       '.pg-potion .cdo{position:absolute;inset:0;display:none;align-items:center;justify-content:center;',
@@ -1730,7 +1731,11 @@
       const b = document.createElement('button');
       b.className = 'pg-potion';
       b.title = def.name[f] + ' — ' + def.desc;
-      b.textContent = def.icon;
+      if (def.image) {
+        const art = document.createElement('img');
+        art.src = def.image; art.alt = ''; art.className = 'pg-potion-art';
+        b.appendChild(art);
+      } else b.textContent = def.icon;
       const cnt = document.createElement('span');
       cnt.className = 'n';
       cnt.textContent = '0';

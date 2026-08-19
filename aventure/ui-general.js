@@ -51,6 +51,17 @@
       const part = String(slot.dataset.genitem).split('|');
       const size = parseInt(slot.dataset.gensize || '30', 10);
       try {
+        const base = UGD.baseById(part[0]);
+        if (base && base.image) {
+          const img = document.createElement('img');
+          img.src = base.image; img.alt = '';
+          img.className = 'gen-item-art';
+          img.style.width = img.style.height = size + 'px';
+          slot.textContent = '';
+          slot.appendChild(img);
+          slot.dataset.filled = '1';
+          return;
+        }
         const cv = document.createElement('canvas');
         cv.width = cv.height = size;
         cv.style.width = cv.style.height = size + 'px';
@@ -60,6 +71,11 @@
         slot.dataset.filled = '1';
       } catch (e) { }
     });
+  }
+
+  function genDefIcon(def, cls) {
+    if (def && def.image) return `<img class="${cls || 'gen-def-icon'}" src="${def.image}" alt="">`;
+    return def && def.icon ? def.icon : '';
   }
   function fillGenPortraits(root) {
     if (!root || !root.querySelectorAll) return;
@@ -85,7 +101,7 @@
     const s = GameState.state;
     const base = UGD.baseById(it.base);
     const nm = base ? (base[s.faction] || base.cats) : '?';
-    return (base ? base.icon + ' ' : '') + nm;
+    return (base && base.icon ? base.icon + ' ' : '') + nm;
   }
   // la rareté d'une pièce : couleur, nom, nombre de lignes
   function genRarity(it) { return UGD.rarityById(it && it.rarity); }
@@ -112,11 +128,13 @@
   function genStatBits(it, sep) {
     const st = genItemStats(it);
     const bits = [];
-    for (const k of UGD.GEN_STAT_ORDER) {
+    const keys = UGD.GEN_STAT_ORDER.concat(Object.keys(st).filter(k => UGD.GEN_STAT_ORDER.indexOf(k) < 0));
+    for (const k of keys) {
       if (!st[k]) continue;
       const d = UGD.GEN_STATS[k];
+      if (!d) continue;
       const v = st[k] > 0 ? '+' + UGD.genStatFmt(k, st[k]) : UGD.genStatFmt(k, st[k]);
-      bits.push(`<i class="${st[k] < 0 ? 'bad' : ''}">${d.icon} ${v}</i>`);
+      bits.push(`<i class="${st[k] < 0 ? 'bad' : ''}">${genDefIcon(d, 'gen-stat-icon')} ${v}</i>`);
     }
     return bits.join(sep || ' ');
   }
@@ -176,7 +194,7 @@
     let stats = '';
     for (const k of UGD.GEN_STAT_ORDER) {
       const d = UGD.GEN_STATS[k];
-      stats += `<span class="gn-stat" title="${d.name} — ${d.desc}">${d.icon} <b>${st[k]}</b></span>`;
+      stats += `<span class="gn-stat" title="${d.name} — ${d.desc}">${genDefIcon(d, 'gen-stat-icon')} <b>${st[k]}</b></span>`;
     }
     return `<div class="gn-head">
       <span class="gn-por" data-genpor="__general" data-gensize="64"></span>
@@ -627,14 +645,14 @@
     const base = UGD.baseById(it.base);
     if (base) {
       const S = UGD.GEN_STATS[base.stat];
-      lines.push({ icon: S ? S.icon : '✚', main: 1, stat: base.stat, val: it.power || 0,
+      lines.push({ icon: S ? genDefIcon(S, 'gen-stat-icon') : '✚', main: 1, stat: base.stat, val: it.power || 0,
                    txt: '+' + UGD.genStatFmt(base.stat, it.power || 0) + ' ' + (S ? S.name : base.stat) });
     }
     for (const L of (it.lines || [])) {
       const def = UGD.lineById(L.id);
       if (!def) continue;
       const S = UGD.GEN_STATS[def.stat];
-      lines.push({ icon: def.icon, val: L.val,
+      lines.push({ icon: S ? genDefIcon(S, 'gen-stat-icon') : def.icon, val: L.val,
                    stat: S ? def.stat : null, affix: S ? null : def.stat,
                    txt: S ? '+' + UGD.genStatFmt(def.stat, L.val) + ' ' + S.name : UGD.lineFmt(def, L.val) });
     }
@@ -650,7 +668,7 @@
     const base = UGD.baseById(it.base);
     const nm = base ? (base[GameState.state.faction] || base.cats) : '?';
     const R = genRarity(it);
-    let h = `<div class="tip-h" style="color:${R.col}">${base ? base.icon : '🎒'} <b>${nm}</b> <span class="tip-tier">T${it.tier}</span></div>`;
+    let h = `<div class="tip-h" style="color:${R.col}">${base ? genDefIcon(base, 'gen-item-icon') : '🎒'} <b>${nm}</b> <span class="tip-tier">T${it.tier}</span></div>`;
     h += `<div class="tip-slot muted">${UGD.GENERAL.slotName[it.slot] || it.slot} · ${genItemSub(it)}</div>`;
     const lines = genItemFullStats(it);
     const curLines = current ? genItemFullStats(current) : [];
@@ -1062,9 +1080,9 @@
     let items = '';
     for (const it of r.loot.items) items += `<div class="gr-row">🎒 ${genItemLine(it)}</div>`;
     let plans = '';
-    for (const id of r.loot.plans) { const p = UGD.planById(id); if (p) plans += `<div class="gr-row">${p.icon} <b>${p.name[GameState.state.faction] || p.name.cats}</b></div>`; }
+    for (const id of r.loot.plans) { const p = UGD.planById(id); if (p) plans += `<div class="gr-row">${genDefIcon(p)} <b>${p.name[GameState.state.faction] || p.name.cats}</b></div>`; }
     let relics = '';
-    for (const id of r.loot.relics) { const rl = UGD.relicById(id); if (rl) relics += `<div class="gr-row">${rl.icon} <b>${rl.name[GameState.state.faction] || rl.name.cats}</b></div>`; }
+    for (const id of r.loot.relics) { const rl = UGD.relicById(id); if (rl) relics += `<div class="gr-row">${genDefIcon(rl)} <b>${rl.name[GameState.state.faction] || rl.name.cats}</b></div>`; }
     let heroes = '';
     for (const id of r.loot.heroes) { const h = UGD.heroById(id); if (h) heroes += `<div class="gr-row">${h.icon} <b>${genHeroName(h)}</b> rejoint la compagnie !</div>`; }
     UI.popup({
@@ -1088,7 +1106,7 @@
       if (!r) continue;
       const on = g.placed.indexOf(id) >= 0;
       rows += `<button class="gn-bagrow ${on ? 'on' : ''}" data-genrelic="${id}">
-        <span class="gb-ico">${r.icon}</span>
+        <span class="gb-ico">${genDefIcon(r, 'gen-relic-icon')}</span>
         <span class="gb-tx"><b>${r.name[GameState.state.faction] || r.name.cats}</b> <i class="muted">— ${r.txt}</i></span>
         <span class="gb-go">${on ? '✅ posée' : 'poser'}</span></button>`;
     }
@@ -1111,7 +1129,7 @@
     for (const p of UGD.PLANS) {
       const has = !!g.plans[p.id];
       rows += `<div class="gn-bagrow static ${has ? 'on' : 'dim'}">
-        <span class="gb-ico">${has ? p.icon : '❔'}</span>
+        <span class="gb-ico">${has ? genDefIcon(p, 'gen-relic-icon') : '❔'}</span>
         <span class="gb-tx">${has ? `<b>${p.name[GameState.state.faction] || p.name.cats}</b> <i class="muted">— ${p.txt}</i>` : `<span class="muted">Plan T${p.tier} — pas trouvé</span>`}</span></div>`;
     }
     UI.popup({ title: '📐 Les plans', html: `<div class="gn-baglist">${rows}</div>`, buttons: [{ label: 'Fermer', cls: 'ghost' }] });

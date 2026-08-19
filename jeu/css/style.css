@@ -605,6 +605,16 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .cat-item .vig{width:46px;height:46px;flex:none;border:1px solid var(--bord);background:var(--creux);
   display:grid;place-items:center;line-height:0;border-radius:var(--r2)}
 .cat-item .vig canvas,.cat-item .vig img{width:32px;height:32px;display:block;image-rendering:pixelated}
+.cat-item .vig img.illustration-recette{width:42px;height:42px;object-fit:contain;image-rendering:auto}
+
+/* Illustrations peintes de l'aventure : elles remplacent les anciens glyphes
+   et les aperçus canvas dans les emplacements, les statistiques et les butins. */
+.gen-item-art{display:block;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 1px 2px rgba(15,20,24,.28))}
+.gen-def-icon,.gen-item-icon,.gen-stat-icon,.gen-relic-icon{display:inline-block;object-fit:contain;vertical-align:middle;image-rendering:auto}
+.gen-def-icon{width:24px;height:24px}
+.gen-item-icon{width:34px;height:34px;margin-right:5px}
+.gen-stat-icon{width:20px;height:20px;margin-right:3px}
+.gen-relic-icon{width:44px;height:44px}
 
 /* ---------------------------------------------------------------
    FILE DU CHANTIER

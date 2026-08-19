@@ -306,21 +306,26 @@
       w: cvB.width, h: cvB.height,
     });
     const compo = equilibrer(map, z, ligne);
-    const diffMult = (1 + z.diff * 0.06) * (z.biome === 'guerriere' ? 1.30 : 1);
+    /* LA DIFFICULTÉ. La couronne fixe le socle, la force module à
+       l'intérieur — même découpage que pour les types et l'équipement,
+       pour que les trois disent la même chose au joueur. */
+    const diffMult = (1 + ((z.tier || 1) - 1) * 0.42 + ((z.force || 1) - 1) * 0.05)
+                   * (z.biome === 'guerriere' ? 1.30 : 1);
     /* L'ÉQUIPEMENT DE LA NUÉE. L'ancien jeu tirait ces indices d'un
        « look » complet — une ligne par catégorie d'unité. On le
        reconstitue : sans lui, les archers ennemis se battaient avec
        l'arme de mêlée du premier palier. */
+    /* L'ÉQUIPEMENT DE LA NUÉE sort maintenant de la COURONNE et de la
+       FORCE, non plus de `diff` qui mélangeait les deux. Elle s'arme aux
+       mêmes tables de forge que le bourg : ce que le joueur a devant lui
+       est ce qu'il pourrait forger, et il peut donc le juger. */
+    const pf = palierForge(z.tier || 1, z.force || 1);
     const look = {
-      weapon: Math.min(30, z.diff * 2),
-      armor:  Math.min(30, z.diff * 2),
-      ranged: Math.min(30, z.diff * 2),
-      staff:  Math.min(30, z.diff * 2),
-      ordnance: Math.min(30, z.diff * 2),
-      robe:   Math.min(30, z.diff * 2),
-      vest:   Math.min(30, z.diff * 2),
-      suit:   Math.min(30, z.diff * 2),
-      evo:    Math.min(3, (z.diff / 6) | 0),
+      weapon: pf, armor: pf, ranged: pf, staff: pf,
+      ordnance: pf, robe: pf, vest: pf, suit: pf,
+      /* l'évolution monte avec la couronne seule : c'est le rang de la
+         bête, pas son fourbi. */
+      evo: Math.max(0, Math.min(3, Math.floor(((z.tier || 1) - 1) / 3))),
     };
     bataille = window.Battle.create({
       canvas: cvB, map, mode: 'personal', playerFaction: 'cats',
@@ -438,6 +443,58 @@
      C'est le cœur du jeu manuel de l'ancien mode. */
   const PART_DEBARQUEE = 0.34;
 
+  /* ==================================================================
+     CE QUE LA NUÉE ALIGNE
+
+     Deux nombres décrivent une île, et ils ne disent pas la même chose.
+
+     LE TIER DE LA CARTE dit QUELLES unités on trouve. Au premier, la
+     Nuée n'a que ses bandes de base ; chaque couronne franchie lui ouvre
+     un palier de plus, jusqu'aux héros et aux chronarques du dixième.
+     C'est la seule progression qui change la NATURE du combat.
+
+     LA FORCE DE L'ÎLE (1 à 10) dit COMBIEN, et avec quel équipement. À
+     l'intérieur d'une couronne on retrouve donc la même gamme d'unités
+     du plus faible au plus fort — ce qui rend une couronne lisible : on
+     sait ce qu'on va croiser, on ne sait pas encore combien.
+
+     Sans cette séparation, `diff` mélangeait les deux : une île faible
+     d'une couronne haute alignait des chronarques en guenilles, et une
+     île forte d'une couronne basse des lanciers en armure de fin de
+     partie. Ni l'un ni l'autre ne se lisait.
+     ================================================================== */
+  /* Six paliers d'unités pour dix couronnes : on en ouvre un peu plus
+     d'un tous les deux tiers, et le dernier n'arrive qu'au bout. */
+  function palierMax(tier) {
+    return Math.max(1, Math.min(6, 1 + Math.ceil((tier || 1) * 0.55)));
+  }
+  /* L'ÉQUIPEMENT DE FORGE. Trois crans par couronne, plus trois que la
+     force distribue à l'intérieur : une île 10 d'un tier vaut à peu près
+     une île 1 du suivant, ce qui donne une pente continue sur trente
+     paliers sans marche brutale au passage d'une couronne. */
+  function palierForge(tier, force) {
+    const t = Math.max(1, tier || 1), f = Math.max(1, Math.min(10, force || 1));
+    return Math.max(0, Math.min(30, Math.round((t - 1) * 3 + (f - 1) / 3)));
+  }
+  /* Les types que la Nuée peut aligner à cette profondeur, RANGÉS DU
+     PLUS COMMUN AU PLUS RARE. Le tri est nécessaire : `UNIT_TYPES` est
+     dans l'ordre où il a été écrit, pas dans celui des paliers — les
+     recrues y figurent en dernier. Sans tri, le reliquat d'arrondi
+     tombait sur le dernier venu, c'est-à-dire au hasard. */
+  function typesNuee(tier) {
+    const GD = window.GameData;
+    const max = palierMax(tier);
+    const out = [];
+    for (const t in (GD.UNIT_TYPES || {})) {
+      const p = GD.unitTier ? GD.unitTier(t) : 1;
+      if (p <= max) out.push({ type: t, palier: p });
+    }
+    /* jamais vide : une couronne sans type jouable rendrait la carte
+       infranchissable au lieu de difficile. */
+    out.sort((a, b) => a.palier - b.palier || (a.type < b.type ? -1 : 1));
+    return out.length ? out : [{ type: 'lancier', palier: 2 }];
+  }
+
   function equilibrer(map, z, ligne) {
     const compo = ligne.map(x => x.type);
     const g = {};
@@ -471,6 +528,53 @@
         const kk = a.hq ? k * 1.15 : k * 0.85;
         for (const t in a.gg) a.gg[t] = Math.max(1, Math.round(a.gg[t] * kk));
       }
+    }
+    /* ON REPEUPLE LES GARNISONS AVEC CE QUE LA COURONNE AUTORISE.
+
+       `generateMap` tire ses types d'un `stage` générique, sans rien
+       savoir de nos couronnes : une île du premier tier pouvait donc
+       aligner des assassins. On garde les EFFECTIFS qu'il a calculés —
+       c'est lui qui sait équilibrer une carte — et l'on remplace les
+       TYPES par ceux du palier permis.
+
+       La force de l'île décide de la part d'unités hautes : à force 1 on
+       ne voit que le bas du panier, à force 10 le palier maximal domine.
+       Le tirage est déterministe (position du nœud) : deux ouvertures de
+       la même île donnent la même garnison. */
+    const dispo = typesNuee(z.tier || 1);
+    const fr = Math.max(1, Math.min(10, z.force || 1));
+    /* LE CENTRE DE GRAVITÉ DES PALIERS SUIT LA FORCE.
+
+       Premier jet : je pondérais par `pow(force/10, palierMax - palier)`.
+       C'était à l'envers — une île de force 1 au dixième tier alignait
+       douze chronarques, et une île de force 10 au premier tier n'avait
+       que des recrues. Exactement le défaut que je prétendais corriger.
+
+       On vise donc un PALIER CIBLE qui glisse du plus bas au plus haut à
+       mesure que la force monte, et l'on répartit en cloche autour de
+       lui. Une île faible aligne le bas du panier, une île forte le haut,
+       et entre les deux on croise un mélange — ce qui rend une couronne
+       lisible : on sait ce qui attend, on découvre en quelle proportion. */
+    const pMin = dispo[0].palier;
+    const pMax = dispo[dispo.length - 1].palier;
+    const palierVise = pMin + (pMax - pMin) * ((fr - 1) / 9);
+    for (const a of adverses) {
+      const total = Math.max(1, Math.round(a.s));
+      const poids = dispo.map(d => 1 / (1 + 2.2 * Math.abs(d.palier - palierVise)));
+      const somme2 = poids.reduce((n, x) => n + x, 0) || 1;
+      /* le reliquat d'arrondi va au palier le PLUS PROCHE du palier vise, pas
+         au dernier du tableau : sinon il grossissait toujours le haut. */
+      let pivot = 0;
+      for (let i = 1; i < dispo.length; i++)
+        if (Math.abs(dispo[i].palier - palierVise) < Math.abs(dispo[pivot].palier - palierVise)) pivot = i;
+      const neuf = {};
+      let reste = total;
+      for (let i = 0; i < dispo.length && reste > 0; i++) {
+        const n = Math.min(reste, Math.round(total * poids[i] / somme2));
+        if (n > 0) { neuf[dispo[i].type] = (neuf[dispo[i].type] || 0) + n; reste -= n; }
+      }
+      if (reste > 0) neuf[dispo[pivot].type] = (neuf[dispo[pivot].type] || 0) + reste;
+      a.n.garrison = neuf; a.n.g = neuf;
     }
     return compo;
   }

@@ -1,0 +1,1652 @@
+[
+  {
+    "sheet": "img/planches/objets/alchimie-potions-01.png",
+    "icons": [
+      {
+        "id": "soin",
+        "file": "img/objets/alchimie/soin.png",
+        "opaqueBox": [
+          61,
+          27,
+          322,
+          357
+        ]
+      },
+      {
+        "id": "antidote",
+        "file": "img/objets/alchimie/antidote.png",
+        "opaqueBox": [
+          67,
+          27,
+          316,
+          357
+        ]
+      },
+      {
+        "id": "givre",
+        "file": "img/objets/alchimie/givre.png",
+        "opaqueBox": [
+          85,
+          27,
+          298,
+          357
+        ]
+      },
+      {
+        "id": "garde-feu",
+        "file": "img/objets/alchimie/garde-feu.png",
+        "opaqueBox": [
+          79,
+          27,
+          305,
+          357
+        ]
+      },
+      {
+        "id": "garde-ombre",
+        "file": "img/objets/alchimie/garde-ombre.png",
+        "opaqueBox": [
+          86,
+          27,
+          297,
+          357
+        ]
+      },
+      {
+        "id": "garde-foudre",
+        "file": "img/objets/alchimie/garde-foudre.png",
+        "opaqueBox": [
+          93,
+          27,
+          290,
+          357
+        ]
+      },
+      {
+        "id": "peau-pierre",
+        "file": "img/objets/alchimie/peau-pierre.png",
+        "opaqueBox": [
+          73,
+          27,
+          310,
+          357
+        ]
+      },
+      {
+        "id": "celerite",
+        "file": "img/objets/alchimie/celerite.png",
+        "opaqueBox": [
+          81,
+          27,
+          303,
+          357
+        ]
+      },
+      {
+        "id": "rage",
+        "file": "img/objets/alchimie/rage.png",
+        "opaqueBox": [
+          79,
+          27,
+          304,
+          357
+        ]
+      },
+      {
+        "id": "precision",
+        "file": "img/objets/alchimie/precision.png",
+        "opaqueBox": [
+          87,
+          27,
+          297,
+          357
+        ]
+      },
+      {
+        "id": "regeneration",
+        "file": "img/objets/alchimie/regeneration.png",
+        "opaqueBox": [
+          85,
+          27,
+          299,
+          357
+        ]
+      },
+      {
+        "id": "bouclier-arcane",
+        "file": "img/objets/alchimie/bouclier-arcane.png",
+        "opaqueBox": [
+          87,
+          27,
+          296,
+          357
+        ]
+      },
+      {
+        "id": "invisibilite",
+        "file": "img/objets/alchimie/invisibilite.png",
+        "opaqueBox": [
+          61,
+          27,
+          323,
+          357
+        ]
+      },
+      {
+        "id": "bombe-alchimique",
+        "file": "img/objets/alchimie/bombe-alchimique.png",
+        "opaqueBox": [
+          62,
+          27,
+          322,
+          357
+        ]
+      },
+      {
+        "id": "glu",
+        "file": "img/objets/alchimie/glu.png",
+        "opaqueBox": [
+          41,
+          27,
+          342,
+          357
+        ]
+      },
+      {
+        "id": "rappel-vital",
+        "file": "img/objets/alchimie/rappel-vital.png",
+        "opaqueBox": [
+          72,
+          27,
+          311,
+          357
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/alchimie-potions-02.png",
+    "icons": [
+      {
+        "id": "totem-soin",
+        "file": "img/objets/alchimie/totem-soin.png",
+        "opaqueBox": [
+          71,
+          27,
+          312,
+          357
+        ]
+      },
+      {
+        "id": "totem-rage",
+        "file": "img/objets/alchimie/totem-rage.png",
+        "opaqueBox": [
+          58,
+          27,
+          325,
+          357
+        ]
+      },
+      {
+        "id": "confusion",
+        "file": "img/objets/alchimie/confusion.png",
+        "opaqueBox": [
+          76,
+          27,
+          308,
+          357
+        ]
+      },
+      {
+        "id": "bombe-gel",
+        "file": "img/objets/alchimie/bombe-gel.png",
+        "opaqueBox": [
+          63,
+          27,
+          321,
+          357
+        ]
+      },
+      {
+        "id": "zone-soin",
+        "file": "img/objets/alchimie/zone-soin.png",
+        "opaqueBox": [
+          70,
+          27,
+          314,
+          357
+        ]
+      },
+      {
+        "id": "leurre",
+        "file": "img/objets/alchimie/leurre.png",
+        "opaqueBox": [
+          68,
+          27,
+          315,
+          357
+        ]
+      },
+      {
+        "id": "nuage-toxique",
+        "file": "img/objets/alchimie/nuage-toxique.png",
+        "opaqueBox": [
+          79,
+          27,
+          305,
+          357
+        ]
+      },
+      {
+        "id": "purification",
+        "file": "img/objets/alchimie/purification.png",
+        "opaqueBox": [
+          65,
+          27,
+          318,
+          357
+        ]
+      },
+      {
+        "id": "force-geant",
+        "file": "img/objets/alchimie/force-geant.png",
+        "opaqueBox": [
+          87,
+          27,
+          297,
+          357
+        ]
+      },
+      {
+        "id": "esprit-vif",
+        "file": "img/objets/alchimie/esprit-vif.png",
+        "opaqueBox": [
+          71,
+          27,
+          312,
+          357
+        ]
+      },
+      {
+        "id": "vision-nocturne",
+        "file": "img/objets/alchimie/vision-nocturne.png",
+        "opaqueBox": [
+          97,
+          27,
+          287,
+          357
+        ]
+      },
+      {
+        "id": "chance",
+        "file": "img/objets/alchimie/chance.png",
+        "opaqueBox": [
+          95,
+          27,
+          288,
+          357
+        ]
+      },
+      {
+        "id": "peau-fer",
+        "file": "img/objets/alchimie/peau-fer.png",
+        "opaqueBox": [
+          64,
+          27,
+          320,
+          357
+        ]
+      },
+      {
+        "id": "bombe-feu",
+        "file": "img/objets/alchimie/bombe-feu.png",
+        "opaqueBox": [
+          65,
+          27,
+          318,
+          357
+        ]
+      },
+      {
+        "id": "acide",
+        "file": "img/objets/alchimie/acide.png",
+        "opaqueBox": [
+          51,
+          27,
+          332,
+          357
+        ]
+      },
+      {
+        "id": "phoenix",
+        "file": "img/objets/alchimie/phoenix.png",
+        "opaqueBox": [
+          82,
+          27,
+          301,
+          357
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/cuisine-recettes-01.png",
+    "icons": [
+      {
+        "id": "pain-rustique",
+        "file": "img/objets/cuisine/pain-rustique.png",
+        "opaqueBox": [
+          27,
+          43,
+          357,
+          340
+        ]
+      },
+      {
+        "id": "poisson-fume",
+        "file": "img/objets/cuisine/poisson-fume.png",
+        "opaqueBox": [
+          27,
+          36,
+          357,
+          347
+        ]
+      },
+      {
+        "id": "tourte-poisson",
+        "file": "img/objets/cuisine/tourte-poisson.png",
+        "opaqueBox": [
+          27,
+          53,
+          357,
+          330
+        ]
+      },
+      {
+        "id": "galettes-miel",
+        "file": "img/objets/cuisine/galettes-miel.png",
+        "opaqueBox": [
+          27,
+          42,
+          357,
+          342
+        ]
+      },
+      {
+        "id": "confiture-baies",
+        "file": "img/objets/cuisine/confiture-baies.png",
+        "opaqueBox": [
+          43,
+          27,
+          341,
+          357
+        ]
+      },
+      {
+        "id": "tourte-farine-claire",
+        "file": "img/objets/cuisine/tourte-farine-claire.png",
+        "opaqueBox": [
+          34,
+          27,
+          349,
+          357
+        ]
+      },
+      {
+        "id": "marmite-pecheur",
+        "file": "img/objets/cuisine/marmite-pecheur.png",
+        "opaqueBox": [
+          38,
+          27,
+          346,
+          357
+        ]
+      },
+      {
+        "id": "brochette-poisson",
+        "file": "img/objets/cuisine/brochette-poisson.png",
+        "opaqueBox": [
+          37,
+          27,
+          347,
+          357
+        ]
+      },
+      {
+        "id": "soupe-legumes",
+        "file": "img/objets/cuisine/soupe-legumes.png",
+        "opaqueBox": [
+          38,
+          27,
+          346,
+          357
+        ]
+      },
+      {
+        "id": "pain-fromage",
+        "file": "img/objets/cuisine/pain-fromage.png",
+        "opaqueBox": [
+          27,
+          53,
+          357,
+          330
+        ]
+      },
+      {
+        "id": "chausson-champignons",
+        "file": "img/objets/cuisine/chausson-champignons.png",
+        "opaqueBox": [
+          27,
+          53,
+          357,
+          330
+        ]
+      },
+      {
+        "id": "ration-marche",
+        "file": "img/objets/cuisine/ration-marche.png",
+        "opaqueBox": [
+          27,
+          39,
+          357,
+          345
+        ]
+      },
+      {
+        "id": "bouillie-lait-miel",
+        "file": "img/objets/cuisine/bouillie-lait-miel.png",
+        "opaqueBox": [
+          28,
+          27,
+          356,
+          357
+        ]
+      },
+      {
+        "id": "tarte-verger",
+        "file": "img/objets/cuisine/tarte-verger.png",
+        "opaqueBox": [
+          27,
+          47,
+          357,
+          337
+        ]
+      },
+      {
+        "id": "plateau-fromage",
+        "file": "img/objets/cuisine/plateau-fromage.png",
+        "opaqueBox": [
+          27,
+          38,
+          357,
+          346
+        ]
+      },
+      {
+        "id": "racines-roties",
+        "file": "img/objets/cuisine/racines-roties.png",
+        "opaqueBox": [
+          27,
+          41,
+          357,
+          343
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/cuisine-recettes-02.png",
+    "icons": [
+      {
+        "id": "chaudree-marin",
+        "file": "img/objets/cuisine/chaudree-marin.png",
+        "opaqueBox": [
+          27,
+          50,
+          357,
+          334
+        ]
+      },
+      {
+        "id": "planche-fumee",
+        "file": "img/objets/cuisine/planche-fumee.png",
+        "opaqueBox": [
+          27,
+          47,
+          357,
+          337
+        ]
+      },
+      {
+        "id": "roti-miel",
+        "file": "img/objets/cuisine/roti-miel.png",
+        "opaqueBox": [
+          27,
+          52,
+          357,
+          331
+        ]
+      },
+      {
+        "id": "champignons-farcis",
+        "file": "img/objets/cuisine/champignons-farcis.png",
+        "opaqueBox": [
+          27,
+          57,
+          357,
+          326
+        ]
+      },
+      {
+        "id": "tarte-creme-baies",
+        "file": "img/objets/cuisine/tarte-creme-baies.png",
+        "opaqueBox": [
+          27,
+          44,
+          357,
+          340
+        ]
+      },
+      {
+        "id": "cidre-epice",
+        "file": "img/objets/cuisine/cidre-epice.png",
+        "opaqueBox": [
+          27,
+          37,
+          357,
+          347
+        ]
+      },
+      {
+        "id": "galette-tournesol",
+        "file": "img/objets/cuisine/galette-tournesol.png",
+        "opaqueBox": [
+          27,
+          76,
+          357,
+          308
+        ]
+      },
+      {
+        "id": "tourte-legumes",
+        "file": "img/objets/cuisine/tourte-legumes.png",
+        "opaqueBox": [
+          27,
+          54,
+          357,
+          329
+        ]
+      },
+      {
+        "id": "petit-dejeuner-pecheur",
+        "file": "img/objets/cuisine/petit-dejeuner-pecheur.png",
+        "opaqueBox": [
+          34,
+          27,
+          350,
+          357
+        ]
+      },
+      {
+        "id": "ragout-epice",
+        "file": "img/objets/cuisine/ragout-epice.png",
+        "opaqueBox": [
+          27,
+          59,
+          357,
+          325
+        ]
+      },
+      {
+        "id": "quenelles-fromage",
+        "file": "img/objets/cuisine/quenelles-fromage.png",
+        "opaqueBox": [
+          27,
+          40,
+          357,
+          344
+        ]
+      },
+      {
+        "id": "tourte-fete",
+        "file": "img/objets/cuisine/tourte-fete.png",
+        "opaqueBox": [
+          27,
+          44,
+          357,
+          340
+        ]
+      },
+      {
+        "id": "fruits-confits",
+        "file": "img/objets/cuisine/fruits-confits.png",
+        "opaqueBox": [
+          27,
+          29,
+          357,
+          354
+        ]
+      },
+      {
+        "id": "ration-secours",
+        "file": "img/objets/cuisine/ration-secours.png",
+        "opaqueBox": [
+          27,
+          56,
+          357,
+          327
+        ]
+      },
+      {
+        "id": "soupe-aventurier",
+        "file": "img/objets/cuisine/soupe-aventurier.png",
+        "opaqueBox": [
+          27,
+          62,
+          357,
+          322
+        ]
+      },
+      {
+        "id": "banquet-village",
+        "file": "img/objets/cuisine/banquet-village.png",
+        "opaqueBox": [
+          27,
+          42,
+          357,
+          342
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/aventure-stats-01.png",
+    "icons": [
+      {
+        "id": "hp",
+        "file": "img/objets/aventure/stats/hp.png",
+        "opaqueBox": [
+          27,
+          31,
+          357,
+          353
+        ]
+      },
+      {
+        "id": "esh",
+        "file": "img/objets/aventure/stats/esh.png",
+        "opaqueBox": [
+          61,
+          27,
+          322,
+          357
+        ]
+      },
+      {
+        "id": "dmg",
+        "file": "img/objets/aventure/stats/dmg.png",
+        "opaqueBox": [
+          27,
+          32,
+          357,
+          351
+        ]
+      },
+      {
+        "id": "aspd",
+        "file": "img/objets/aventure/stats/aspd.png",
+        "opaqueBox": [
+          27,
+          37,
+          357,
+          347
+        ]
+      },
+      {
+        "id": "mspd",
+        "file": "img/objets/aventure/stats/mspd.png",
+        "opaqueBox": [
+          35,
+          27,
+          348,
+          357
+        ]
+      },
+      {
+        "id": "armor",
+        "file": "img/objets/aventure/stats/armor.png",
+        "opaqueBox": [
+          27,
+          39,
+          357,
+          345
+        ]
+      },
+      {
+        "id": "range",
+        "file": "img/objets/aventure/stats/range.png",
+        "opaqueBox": [
+          27,
+          42,
+          357,
+          341
+        ]
+      },
+      {
+        "id": "esh-regen",
+        "file": "img/objets/aventure/stats/esh-regen.png",
+        "opaqueBox": [
+          27,
+          36,
+          357,
+          348
+        ]
+      },
+      {
+        "id": "lifesteal",
+        "file": "img/objets/aventure/stats/lifesteal.png",
+        "opaqueBox": [
+          67,
+          27,
+          316,
+          357
+        ]
+      },
+      {
+        "id": "armor-pen",
+        "file": "img/objets/aventure/stats/armor-pen.png",
+        "opaqueBox": [
+          53,
+          27,
+          331,
+          357
+        ]
+      },
+      {
+        "id": "loot",
+        "file": "img/objets/aventure/stats/loot.png",
+        "opaqueBox": [
+          54,
+          27,
+          329,
+          357
+        ]
+      },
+      {
+        "id": "item-find",
+        "file": "img/objets/aventure/stats/item-find.png",
+        "opaqueBox": [
+          60,
+          27,
+          323,
+          357
+        ]
+      },
+      {
+        "id": "rarity",
+        "file": "img/objets/aventure/stats/rarity.png",
+        "opaqueBox": [
+          27,
+          38,
+          357,
+          346
+        ]
+      },
+      {
+        "id": "res-fire",
+        "file": "img/objets/aventure/stats/res-fire.png",
+        "opaqueBox": [
+          27,
+          29,
+          357,
+          355
+        ]
+      },
+      {
+        "id": "res-cold",
+        "file": "img/objets/aventure/stats/res-cold.png",
+        "opaqueBox": [
+          27,
+          31,
+          357,
+          353
+        ]
+      },
+      {
+        "id": "res-poison",
+        "file": "img/objets/aventure/stats/res-poison.png",
+        "opaqueBox": [
+          27,
+          30,
+          357,
+          353
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/aventure-armes-01.png",
+    "icons": [
+      {
+        "id": "epee",
+        "file": "img/objets/aventure/armes/epee.png",
+        "opaqueBox": [
+          41,
+          27,
+          343,
+          357
+        ]
+      },
+      {
+        "id": "hache",
+        "file": "img/objets/aventure/armes/hache.png",
+        "opaqueBox": [
+          44,
+          27,
+          339,
+          357
+        ]
+      },
+      {
+        "id": "lance",
+        "file": "img/objets/aventure/armes/lance.png",
+        "opaqueBox": [
+          51,
+          27,
+          332,
+          357
+        ]
+      },
+      {
+        "id": "masse",
+        "file": "img/objets/aventure/armes/masse.png",
+        "opaqueBox": [
+          36,
+          27,
+          347,
+          357
+        ]
+      },
+      {
+        "id": "dagues",
+        "file": "img/objets/aventure/armes/dagues.png",
+        "opaqueBox": [
+          52,
+          27,
+          331,
+          357
+        ]
+      },
+      {
+        "id": "arc",
+        "file": "img/objets/aventure/armes/arc.png",
+        "opaqueBox": [
+          76,
+          27,
+          307,
+          357
+        ]
+      },
+      {
+        "id": "arbalete",
+        "file": "img/objets/aventure/armes/arbalete.png",
+        "opaqueBox": [
+          27,
+          42,
+          357,
+          342
+        ]
+      },
+      {
+        "id": "baton",
+        "file": "img/objets/aventure/armes/baton.png",
+        "opaqueBox": [
+          72,
+          27,
+          312,
+          357
+        ]
+      },
+      {
+        "id": "sceptre",
+        "file": "img/objets/aventure/armes/sceptre.png",
+        "opaqueBox": [
+          82,
+          27,
+          301,
+          357
+        ]
+      },
+      {
+        "id": "bombe",
+        "file": "img/objets/aventure/armes/bombe.png",
+        "opaqueBox": [
+          69,
+          27,
+          315,
+          357
+        ]
+      },
+      {
+        "id": "rapiere",
+        "file": "img/objets/aventure/armes/rapiere.png",
+        "opaqueBox": [
+          57,
+          27,
+          327,
+          357
+        ]
+      },
+      {
+        "id": "couperet",
+        "file": "img/objets/aventure/armes/couperet.png",
+        "opaqueBox": [
+          57,
+          27,
+          326,
+          357
+        ]
+      },
+      {
+        "id": "arme-hast",
+        "file": "img/objets/aventure/armes/arme-hast.png",
+        "opaqueBox": [
+          67,
+          27,
+          317,
+          357
+        ]
+      },
+      {
+        "id": "marteau",
+        "file": "img/objets/aventure/armes/marteau.png",
+        "opaqueBox": [
+          47,
+          27,
+          336,
+          357
+        ]
+      },
+      {
+        "id": "arc-recourbe",
+        "file": "img/objets/aventure/armes/arc-recourbe.png",
+        "opaqueBox": [
+          64,
+          27,
+          320,
+          357
+        ]
+      },
+      {
+        "id": "baguette",
+        "file": "img/objets/aventure/armes/baguette.png",
+        "opaqueBox": [
+          42,
+          27,
+          342,
+          357
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/aventure-armures-01.png",
+    "icons": [
+      {
+        "id": "casque-plaque",
+        "file": "img/objets/aventure/armures/casque-plaque.png",
+        "opaqueBox": [
+          69,
+          27,
+          314,
+          357
+        ]
+      },
+      {
+        "id": "casque-maille",
+        "file": "img/objets/aventure/armures/casque-maille.png",
+        "opaqueBox": [
+          47,
+          27,
+          336,
+          357
+        ]
+      },
+      {
+        "id": "casque-cuir",
+        "file": "img/objets/aventure/armures/casque-cuir.png",
+        "opaqueBox": [
+          46,
+          27,
+          338,
+          357
+        ]
+      },
+      {
+        "id": "casque-robe",
+        "file": "img/objets/aventure/armures/casque-robe.png",
+        "opaqueBox": [
+          44,
+          27,
+          340,
+          357
+        ]
+      },
+      {
+        "id": "armure-plaque",
+        "file": "img/objets/aventure/armures/armure-plaque.png",
+        "opaqueBox": [
+          36,
+          27,
+          348,
+          357
+        ]
+      },
+      {
+        "id": "armure-maille",
+        "file": "img/objets/aventure/armures/armure-maille.png",
+        "opaqueBox": [
+          27,
+          34,
+          357,
+          350
+        ]
+      },
+      {
+        "id": "armure-cuir",
+        "file": "img/objets/aventure/armures/armure-cuir.png",
+        "opaqueBox": [
+          27,
+          36,
+          357,
+          347
+        ]
+      },
+      {
+        "id": "armure-robe",
+        "file": "img/objets/aventure/armures/armure-robe.png",
+        "opaqueBox": [
+          36,
+          27,
+          348,
+          357
+        ]
+      },
+      {
+        "id": "gants-plaque",
+        "file": "img/objets/aventure/armures/gants-plaque.png",
+        "opaqueBox": [
+          44,
+          27,
+          340,
+          357
+        ]
+      },
+      {
+        "id": "gants-maille",
+        "file": "img/objets/aventure/armures/gants-maille.png",
+        "opaqueBox": [
+          37,
+          27,
+          346,
+          357
+        ]
+      },
+      {
+        "id": "gants-cuir",
+        "file": "img/objets/aventure/armures/gants-cuir.png",
+        "opaqueBox": [
+          27,
+          42,
+          357,
+          341
+        ]
+      },
+      {
+        "id": "gants-robe",
+        "file": "img/objets/aventure/armures/gants-robe.png",
+        "opaqueBox": [
+          27,
+          64,
+          357,
+          320
+        ]
+      },
+      {
+        "id": "bottes-plaque",
+        "file": "img/objets/aventure/armures/bottes-plaque.png",
+        "opaqueBox": [
+          42,
+          27,
+          341,
+          357
+        ]
+      },
+      {
+        "id": "bottes-maille",
+        "file": "img/objets/aventure/armures/bottes-maille.png",
+        "opaqueBox": [
+          27,
+          50,
+          357,
+          334
+        ]
+      },
+      {
+        "id": "bottes-cuir",
+        "file": "img/objets/aventure/armures/bottes-cuir.png",
+        "opaqueBox": [
+          27,
+          55,
+          357,
+          328
+        ]
+      },
+      {
+        "id": "bottes-robe",
+        "file": "img/objets/aventure/armures/bottes-robe.png",
+        "opaqueBox": [
+          27,
+          41,
+          357,
+          343
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/aventure-accessoires-01.png",
+    "icons": [
+      {
+        "id": "bouclier",
+        "file": "img/objets/aventure/accessoires/bouclier.png",
+        "opaqueBox": [
+          60,
+          27,
+          323,
+          357
+        ]
+      },
+      {
+        "id": "pavois",
+        "file": "img/objets/aventure/accessoires/pavois.png",
+        "opaqueBox": [
+          77,
+          27,
+          306,
+          357
+        ]
+      },
+      {
+        "id": "amulette",
+        "file": "img/objets/aventure/accessoires/amulette.png",
+        "opaqueBox": [
+          91,
+          27,
+          293,
+          357
+        ]
+      },
+      {
+        "id": "anneau",
+        "file": "img/objets/aventure/accessoires/anneau.png",
+        "opaqueBox": [
+          37,
+          27,
+          346,
+          357
+        ]
+      },
+      {
+        "id": "fetiche",
+        "file": "img/objets/aventure/accessoires/fetiche.png",
+        "opaqueBox": [
+          51,
+          27,
+          332,
+          357
+        ]
+      },
+      {
+        "id": "longue-vue",
+        "file": "img/objets/aventure/accessoires/longue-vue.png",
+        "opaqueBox": [
+          39,
+          27,
+          345,
+          357
+        ]
+      },
+      {
+        "id": "sac-aventurier",
+        "file": "img/objets/aventure/accessoires/sac-aventurier.png",
+        "opaqueBox": [
+          27,
+          38,
+          357,
+          346
+        ]
+      },
+      {
+        "id": "carte-donjon",
+        "file": "img/objets/aventure/accessoires/carte-donjon.png",
+        "opaqueBox": [
+          27,
+          39,
+          357,
+          345
+        ]
+      },
+      {
+        "id": "cle-ancienne",
+        "file": "img/objets/aventure/accessoires/cle-ancienne.png",
+        "opaqueBox": [
+          84,
+          27,
+          300,
+          357
+        ]
+      },
+      {
+        "id": "boussole",
+        "file": "img/objets/aventure/accessoires/boussole.png",
+        "opaqueBox": [
+          75,
+          27,
+          308,
+          357
+        ]
+      },
+      {
+        "id": "lanterne",
+        "file": "img/objets/aventure/accessoires/lanterne.png",
+        "opaqueBox": [
+          52,
+          27,
+          332,
+          357
+        ]
+      },
+      {
+        "id": "grappin",
+        "file": "img/objets/aventure/accessoires/grappin.png",
+        "opaqueBox": [
+          27,
+          40,
+          357,
+          344
+        ]
+      },
+      {
+        "id": "crochets",
+        "file": "img/objets/aventure/accessoires/crochets.png",
+        "opaqueBox": [
+          38,
+          27,
+          345,
+          357
+        ]
+      },
+      {
+        "id": "grimoire",
+        "file": "img/objets/aventure/accessoires/grimoire.png",
+        "opaqueBox": [
+          27,
+          37,
+          357,
+          347
+        ]
+      },
+      {
+        "id": "orbe",
+        "file": "img/objets/aventure/accessoires/orbe.png",
+        "opaqueBox": [
+          27,
+          51,
+          357,
+          332
+        ]
+      },
+      {
+        "id": "ceinture-potions",
+        "file": "img/objets/aventure/accessoires/ceinture-potions.png",
+        "opaqueBox": [
+          27,
+          38,
+          357,
+          346
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/aventure-reliques-01.png",
+    "icons": [
+      {
+        "id": "gamelle",
+        "file": "img/objets/aventure/reliques/gamelle.png",
+        "opaqueBox": [
+          27,
+          50,
+          357,
+          333
+        ]
+      },
+      {
+        "id": "pelote",
+        "file": "img/objets/aventure/reliques/pelote.png",
+        "opaqueBox": [
+          27,
+          28,
+          357,
+          355
+        ]
+      },
+      {
+        "id": "sifflet",
+        "file": "img/objets/aventure/reliques/sifflet.png",
+        "opaqueBox": [
+          27,
+          73,
+          357,
+          310
+        ]
+      },
+      {
+        "id": "enclume",
+        "file": "img/objets/aventure/reliques/enclume.png",
+        "opaqueBox": [
+          35,
+          27,
+          348,
+          357
+        ]
+      },
+      {
+        "id": "lanterne",
+        "file": "img/objets/aventure/reliques/lanterne.png",
+        "opaqueBox": [
+          99,
+          27,
+          285,
+          357
+        ]
+      },
+      {
+        "id": "marmite",
+        "file": "img/objets/aventure/reliques/marmite.png",
+        "opaqueBox": [
+          27,
+          27,
+          357,
+          357
+        ]
+      },
+      {
+        "id": "sablier",
+        "file": "img/objets/aventure/reliques/sablier.png",
+        "opaqueBox": [
+          87,
+          27,
+          297,
+          357
+        ]
+      },
+      {
+        "id": "oeuf",
+        "file": "img/objets/aventure/reliques/oeuf.png",
+        "opaqueBox": [
+          61,
+          27,
+          323,
+          357
+        ]
+      },
+      {
+        "id": "boussole",
+        "file": "img/objets/aventure/reliques/boussole.png",
+        "opaqueBox": [
+          48,
+          27,
+          336,
+          357
+        ]
+      },
+      {
+        "id": "graal",
+        "file": "img/objets/aventure/reliques/graal.png",
+        "opaqueBox": [
+          67,
+          27,
+          317,
+          357
+        ]
+      },
+      {
+        "id": "etendard",
+        "file": "img/objets/aventure/reliques/etendard.png",
+        "opaqueBox": [
+          79,
+          27,
+          304,
+          357
+        ]
+      },
+      {
+        "id": "creuset",
+        "file": "img/objets/aventure/reliques/creuset.png",
+        "opaqueBox": [
+          74,
+          27,
+          310,
+          357
+        ]
+      },
+      {
+        "id": "couronne",
+        "file": "img/objets/aventure/reliques/couronne.png",
+        "opaqueBox": [
+          27,
+          40,
+          357,
+          344
+        ]
+      },
+      {
+        "id": "coeur",
+        "file": "img/objets/aventure/reliques/coeur.png",
+        "opaqueBox": [
+          27,
+          32,
+          357,
+          352
+        ]
+      },
+      {
+        "id": "meridien",
+        "file": "img/objets/aventure/reliques/meridien.png",
+        "opaqueBox": [
+          27,
+          76,
+          357,
+          308
+        ]
+      },
+      {
+        "id": "astrolabe",
+        "file": "img/objets/aventure/reliques/astrolabe.png",
+        "opaqueBox": [
+          27,
+          28,
+          357,
+          355
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/aventure-tresors-01.png",
+    "icons": [
+      {
+        "id": "coffre",
+        "file": "img/objets/aventure/tresors/coffre.png",
+        "opaqueBox": [
+          27,
+          30,
+          357,
+          354
+        ]
+      },
+      {
+        "id": "coffre-royal",
+        "file": "img/objets/aventure/tresors/coffre-royal.png",
+        "opaqueBox": [
+          27,
+          27,
+          357,
+          356
+        ]
+      },
+      {
+        "id": "bourse",
+        "file": "img/objets/aventure/tresors/bourse.png",
+        "opaqueBox": [
+          31,
+          27,
+          353,
+          357
+        ]
+      },
+      {
+        "id": "ecus",
+        "file": "img/objets/aventure/tresors/ecus.png",
+        "opaqueBox": [
+          27,
+          51,
+          357,
+          332
+        ]
+      },
+      {
+        "id": "rubis",
+        "file": "img/objets/aventure/tresors/rubis.png",
+        "opaqueBox": [
+          53,
+          27,
+          331,
+          357
+        ]
+      },
+      {
+        "id": "saphir",
+        "file": "img/objets/aventure/tresors/saphir.png",
+        "opaqueBox": [
+          68,
+          27,
+          316,
+          357
+        ]
+      },
+      {
+        "id": "emeraude",
+        "file": "img/objets/aventure/tresors/emeraude.png",
+        "opaqueBox": [
+          53,
+          27,
+          330,
+          357
+        ]
+      },
+      {
+        "id": "perles",
+        "file": "img/objets/aventure/tresors/perles.png",
+        "opaqueBox": [
+          34,
+          27,
+          350,
+          357
+        ]
+      },
+      {
+        "id": "plan",
+        "file": "img/objets/aventure/tresors/plan.png",
+        "opaqueBox": [
+          49,
+          27,
+          335,
+          357
+        ]
+      },
+      {
+        "id": "parchemin-scelle",
+        "file": "img/objets/aventure/tresors/parchemin-scelle.png",
+        "opaqueBox": [
+          43,
+          27,
+          340,
+          357
+        ]
+      },
+      {
+        "id": "croc",
+        "file": "img/objets/aventure/tresors/croc.png",
+        "opaqueBox": [
+          82,
+          27,
+          301,
+          357
+        ]
+      },
+      {
+        "id": "ecaille-dragon",
+        "file": "img/objets/aventure/tresors/ecaille-dragon.png",
+        "opaqueBox": [
+          85,
+          27,
+          299,
+          357
+        ]
+      },
+      {
+        "id": "coeur-biome",
+        "file": "img/objets/aventure/tresors/coeur-biome.png",
+        "opaqueBox": [
+          41,
+          27,
+          342,
+          357
+        ]
+      },
+      {
+        "id": "oeil-abyme",
+        "file": "img/objets/aventure/tresors/oeil-abyme.png",
+        "opaqueBox": [
+          34,
+          27,
+          350,
+          357
+        ]
+      },
+      {
+        "id": "tablette",
+        "file": "img/objets/aventure/tresors/tablette.png",
+        "opaqueBox": [
+          34,
+          27,
+          350,
+          357
+        ]
+      },
+      {
+        "id": "reliquaire",
+        "file": "img/objets/aventure/tresors/reliquaire.png",
+        "opaqueBox": [
+          27,
+          27,
+          357,
+          357
+        ]
+      }
+    ]
+  }
+]

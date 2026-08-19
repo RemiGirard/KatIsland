@@ -378,7 +378,9 @@
               else window.Jeu.definirRecette(bid, i, rid, null);
               U.fermer('tache'); rafraichirVillage();
             } : null },
-            el('div', { class: 'vig' }, U.ico(window.METIERS[r.metier].ico, 32)),
+            el('div', { class: 'vig' }, r.image
+              ? el('img', { src:r.image, alt:'', class:'illustration-recette' })
+              : U.ico(window.METIERS[r.metier].ico, 32)),
             el('div', { class: 'cc' },
               el('h3', { text: r.nom }),
               el('div', { class: 'm', text: ok ? U.duree(r.duree / Math.max(0.001, v)) + ' par cycle  ·  ' +
@@ -1252,16 +1254,58 @@
        île, même place, pour toujours ; les couronnes paires tournent
        d'un demi-pas pour ne pas s'aligner en rayons. */
     if (t === 'local') {
+      /* UNE BANDE PAR TIER, ET LA BANDE OUVERTE PREND TOUTE LA MER.
+
+         Le placement d'origine posait chaque île entre l'anneau de son
+         tier et le précédent. Tant qu'une seule couronne est ouverte —
+         c'est-à-dire pendant toute la découverte du jeu — les dix îles
+         se partageaient donc une bande de quelques dizaines de pixels :
+         un collier autour du bourg, avec toute la carte vide autour.
+
+         La bande la plus extérieure OUVERTE s'étend maintenant jusqu'au
+         bord de la carte. Avec un seul tier, les dix îles occupent tout
+         le plan ; à mesure que les couronnes s'ouvrent, chacune reprend
+         sa part et l'ensemble se resserre naturellement.
+
+         LA DIFFICULTÉ SE LIT TOUJOURS À LA RÈGLE : la force décide de
+         l'éloignement, les faciles près du bourg. On y ajoute seulement
+         un ÉCART tiré de l'identifiant — jamais du hasard — pour que la
+         rangée cesse d'être un arc parfait. Même île, même place, d'une
+         partie à l'autre. */
+      /* LA BORNE EST CELLE DE LA VUE, PAS DE LA FEUILLE. La feuille fait
+         2200 de cote ; la fenetre, elle, ne montre que le tier decouvert —
+         494 au premier. Borner sur la feuille envoyait donc huit iles sur
+         dix hors du cadre, invisibles et incliquables. `cadreMer` donne le
+         demi-cote reellement visible : c'est lui qui fait loi.
+
+         On garde une marge d'une demi-ile plus le fanion, sinon la plus
+         lointaine est coupee par le bord. */
+      const vueDemi = cadreMer('local', rayonOuvert).demi;
+      const rMaxUtile = vueDemi - 46;
       for (const p of l) {
         const ti = p.ile.tier || 1;
         const f = Math.max(1, Math.min(10, p.ile.force || 1));
-        const dedans = rayonLieues(ti - 1) + 26, dehors = rayonLieues(ti) - 14;
-        p.r = dedans + (dehors - dedans) * ((f - 1) / 9);
-        /* le budget d'arc garantit que deux voisines ne se touchent
-           jamais, même au premier anneau où la place est comptée */
-        p.taille = Math.min(p.taille, 2 * Math.PI * p.r / 10 * 0.34);
+        /* LE TROU CENTRAL. `rayonLieues(0)` vaut 110 — un vide de la
+           moitie du rayon visible, pour un bourg qui en occupe trente.
+           La premiere couronne se retrouvait coincee entre 136 et 201 :
+           une bande de soixante pixels, d'ou le collier. On la fait
+           commencer juste au large du bourg ; les couronnes suivantes
+           gardent leur anneau, qui sert alors vraiment a les separer. */
+        const dedans = (ti <= 1) ? 84 : rayonLieues(ti - 1) + 26;
+        const dehors = (ti >= rayonOuvert) ? rMaxUtile : rayonLieues(ti) - 14;
+        const large = Math.max(1, dehors - dedans);
+        /* deux tirages indépendants : l'un décale le long du rayon,
+           l'autre le long de l'arc. Sans le second, les écarts radiaux
+           se liraient encore comme une file. */
+        const jr = hachage(p.ile.id + '#r'), ja = hachage(p.ile.id + '#a');
+        const part = (f - 1) / 9;
+        p.r = dedans + large * (0.10 + part * 0.80 + (jr - 0.5) * 0.16);
+        p.r = Math.max(dedans, Math.min(dehors, p.r));
+        p.taille = Math.min(p.taille, 2 * Math.PI * p.r / 10 * 0.42);
+        const pas = (Math.PI * 2 - NORD) / 10;
         p.a0 = -Math.PI / 2 + NORD / 2
-          + ((f - 1 + (ti % 2 ? 0 : 0.5)) / 10) * (Math.PI * 2 - NORD);
+          + (f - 1 + (ti % 2 ? 0 : 0.5)) * pas
+          + (ja - 0.5) * pas * 0.75;
       }
     }
     for (const p of l) {

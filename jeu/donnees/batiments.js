@@ -491,23 +491,72 @@
     nom:'Four banal', metier:'Fournier', cat:'atelier', rangees:[1,2],
     desc:"Le four du bourg, où chacun vient cuire sa pâte contre une redevance. L'odeur suffit à remplir la place à midi.",
     cout:{brique:20,pierre:15,bois:20,tuile:8}, temps:110, postes:P(1,1,2,2,2,3,3,3,3,4),
-    recettes:['cuire_pain','tourte_poisson','galette_miel','tourte_riche','confire'],
+    recettes:['cuire_pain','marmite_pecheur','brochette_poisson','soupe_legumes',
+              'confire','pain_fromage','chausson_champignons','galette_miel',
+              'ration_marche','bouillie_miel','tarte_verger','racines_roties',
+              'tourte_poisson','tourte_riche','chaudree_marin','planche_fumee',
+              'roti_miel','champignons_farcis','cidre_epice','galette_tournesol'],
   });
   x('cuire_pain', { bat:'cuisine', nom:'Cuire le pain', metier:'cuisine', duree:22,
-    in:{farine:2,eau:1}, out:{pain:3},
+    image:'img/objets/cuisine/pain-rustique.png', in:{farine:2,eau:1}, out:{pain:3},
     desc:"Le vrai carburant du bourg : un habitant qui a du pain travaille sans se plaindre." });
   x('confire', { bat:'cuisine', nom:'Confire les fruits', metier:'cuisine', duree:58, niv:2,
-    in:{fruit:5,miel:2}, out:{confiture:3}, loot:[{res:'poterie',p:0.15,n:[1,1]}],
+    image:'img/objets/cuisine/confiture-baies.png', in:{fruit:5,miel:2}, out:{confiture:3}, loot:[{res:'poterie',p:0.15,n:[1,1]}],
     desc:"On cuit jusqu'à ce que la cuillère tienne debout, on coule en pot, on ferme au parchemin. Un été qu'on garde pour l'hiver." });
   x('tourte_riche', { bat:'cuisine', nom:'Tourte à la farine claire', metier:'cuisine', duree:80, niv:4,
-    in:{farineclaire:3,fromage:1,viande:2}, out:{tourte:3},
+    image:'img/objets/cuisine/tourte-farine-claire.png', in:{farineclaire:3,fromage:1,viande:2}, out:{tourte:3},
     desc:"La farine de tournesol donne une pâte grasse qui ne sèche pas. Trois tourtes d'un coup, et meilleures." });
   x('tourte_poisson', { bat:'cuisine', nom:'Faire une tourte', metier:'cuisine', duree:70, niv:4,
-    in:{farine:3,poissonfume:2,fromage:1}, out:{tourte:2},
+    image:'img/objets/cuisine/tourte-poisson.png', in:{farine:3,poissonfume:2,fromage:1}, out:{tourte:2},
     desc:"Pain, poisson, fromage : les trois d'un coup. Un repas de fête et un rendement de fête." });
   x('galette_miel', { bat:'cuisine', nom:'Galettes au miel', metier:'cuisine', duree:40, niv:3,
-    in:{farine:2,miel:1}, out:{pain:6}, loot:[{res:'ecu',p:0.5,n:[4,14]}],
+    image:'img/objets/cuisine/galettes-miel.png', in:{farine:2,miel:1}, out:{pain:6}, loot:[{res:'ecu',p:0.5,n:[4,14]}],
     desc:"On en vend la moitié sur la place avant qu'elles aient refroidi." });
+  x('marmite_pecheur', { bat:'cuisine', nom:'Marmite du pêcheur', metier:'cuisine', duree:34,
+    image:'img/objets/cuisine/marmite-pecheur.png', in:{poisson:3,legume:2,eau:2}, out:{tourte:1},
+    desc:"Le premier vrai repas chaud : poisson, racines et une marmite qui ne quitte jamais le feu." });
+  x('brochette_poisson', { bat:'cuisine', nom:'Griller les brochettes', metier:'cuisine', duree:30, niv:2,
+    image:'img/objets/cuisine/brochette-poisson.png', in:{poisson:4,herbe:1,bois:1}, out:{poissonfume:3},
+    desc:"Le feu saisit la peau, les simples font oublier que c'est encore du poisson." });
+  x('soupe_legumes', { bat:'cuisine', nom:'Soupe de racines', metier:'cuisine', duree:32, niv:2,
+    image:'img/objets/cuisine/soupe-legumes.png', in:{legume:5,eau:3,herbe:1}, out:{pain:4},
+    desc:"Une soupe épaisse qui nourrit autant qu'un pain et coûte ce que le jardin donne." });
+  x('pain_fromage', { bat:'cuisine', nom:'Pain au fromage', metier:'cuisine', duree:46, niv:3,
+    image:'img/objets/cuisine/pain-fromage.png', in:{farine:3,fromage:1,eau:1}, out:{pain:7},
+    desc:"La croûte garde le fromage chaud ; les fournées disparaissent avant de refroidir." });
+  x('chausson_champignons', { bat:'cuisine', nom:'Chaussons aux champignons', metier:'cuisine', duree:52, niv:3,
+    image:'img/objets/cuisine/chausson-champignons.png', in:{farine:3,champignon:3,huile:1}, out:{tourte:2},
+    desc:"On replie la pâte sur la forêt. Le quatrième champignon reste au laboratoire." });
+  x('ration_marche', { bat:'cuisine', nom:'Ration de marche', metier:'cuisine', duree:56, niv:4,
+    image:'img/objets/cuisine/ration-marche.png', in:{poissonfume:2,pain:2,fromage:1}, out:{poissonfume:5},
+    desc:"Compacte, sèche et solide : la ration qu'on ouvre quand la tour ne montre plus le ciel." });
+  x('bouillie_miel', { bat:'cuisine', nom:'Bouillie au lait et au miel', metier:'cuisine', duree:38, niv:4,
+    image:'img/objets/cuisine/bouillie-lait-miel.png', in:{farine:2,lait:2,miel:1}, out:{pain:7},
+    desc:"Douce, chaude, et assez épaisse pour tenir une cuillère droite." });
+  x('tarte_verger', { bat:'cuisine', nom:'Tarte du verger', metier:'cuisine', duree:62, niv:5,
+    image:'img/objets/cuisine/tarte-verger.png', in:{fruit:5,farine:3,miel:1}, out:{tourte:3},
+    desc:"Les meilleurs fruits sur une pâte fine ; les moins beaux finissent en cidre." });
+  x('racines_roties', { bat:'cuisine', nom:'Rôtir les racines', metier:'cuisine', duree:40, niv:5,
+    image:'img/objets/cuisine/racines-roties.png', in:{legume:7,huile:1,herbe:2}, out:{pain:8},
+    desc:"Le four transforme les navets en quelque chose que même les enfants réclament." });
+  x('chaudree_marin', { bat:'cuisine', nom:'Chaudrée du marin', metier:'cuisine', duree:76, niv:6,
+    image:'img/objets/cuisine/chaudree-marin.png', in:{poisson:5,lait:2,legume:2,pain:1}, out:{tourte:4},
+    desc:"Servie dans une miche évidée : rien à laver, rien à perdre." });
+  x('planche_fumee', { bat:'cuisine', nom:'Planche du fumoir', metier:'cuisine', duree:64, niv:6,
+    image:'img/objets/cuisine/planche-fumee.png', in:{viande:3,poissonfume:2,fromage:2}, out:{poissonfume:7},
+    desc:"Une réserve dense pour les longues traversées et les étages sans cuisine." });
+  x('roti_miel', { bat:'cuisine', nom:'Rôti laqué au miel', metier:'cuisine', duree:92, niv:7,
+    image:'img/objets/cuisine/roti-miel.png', in:{viande:5,miel:3,huile:1}, out:{tourte:5},
+    desc:"La fête commence quand le miel caramélise et que tout le bourg suit l'odeur." });
+  x('champignons_farcis', { bat:'cuisine', nom:'Champignons farcis', metier:'cuisine', duree:72, niv:7,
+    image:'img/objets/cuisine/champignons-farcis.png', in:{champignon:7,fromage:2,herbe:2}, out:{tourte:4},
+    desc:"Petits, riches, et bien plus sérieux que leur taille ne le laisse croire." });
+  x('cidre_epice', { bat:'cuisine', nom:'Cidre aux épices', metier:'cuisine', duree:86, niv:8,
+    image:'img/objets/cuisine/cidre-epice.png', in:{cidre:3,miel:1,herbe:2}, out:{cidre:6},
+    desc:"Réchauffé doucement, jamais bouilli : le moral monte avant même la première tasse." });
+  x('galette_tournesol', { bat:'cuisine', nom:'Galette de tournesol', metier:'cuisine', duree:54, niv:8,
+    image:'img/objets/cuisine/galette-tournesol.png', in:{farineclaire:4,huile:1,miel:1}, out:{pain:10},
+    desc:"Une galette dorée, grasse et durable, taillée pour les réserves d'expédition." });
 
   b('fumoir', {
     nom:'Fumoir', metier:'Saleur', cat:'atelier', rangees:[1,2], nivMax:8,
@@ -671,19 +720,45 @@
     nom:"Laboratoire d'alchimie", metier:'Alchimiste', cat:'atelier', rangees:[1,2],
     desc:"Bocaux, vapeurs vertes, et une tour qui penche un peu plus chaque année. On y cherche l'or ; on y trouve surtout des remèdes, ce qui se vend mieux.",
     cout:{pierretaille:10,fiole:6,planche:14}, temps:190, postes:P(1,1,1,2,2,2,3,3,3,3),
-    recettes:['potion_soin','encre_noire','elixir','distiller_essence',
+    recettes:['potion_soin','potion_antidote','amertume','potion_givre','potion_celerite',
+              'potion_rage','potion_precision','elixir','potion_bouclier','potion_confusion',
+              'potion_phoenix','encre_noire','distiller_essence',
               'garde_feu','garde_venin','garde_gel','garde_foudre','garde_ombre',
-              'ouvrir_coeur','distiller_parfum','amertume'],
+              'ouvrir_coeur','distiller_parfum'],
   });
   x('potion_soin', { bat:'alchimie', nom:'Distiller un remède', metier:'savoir', duree:60,
-    in:{herbe:3,fiole:1,eau:1,champignon:1}, out:{potion:1},
+    image:'img/objets/alchimie/soin.png', in:{herbe:3,fiole:1,eau:1,champignon:1}, out:{potion:1},
     desc:"Ce qu'on emporte dans la descente et qu'on regrette de n'avoir pas pris en double." });
   x('encre_noire', { bat:'alchimie', nom:"Broyer l'encre", metier:'savoir', duree:44, niv:2,
     in:{charbonbois:1,herbe:2,huile:1}, out:{encre:2},
     desc:"Noir de fumée, gomme et fiel. Elle ne pardonne pas les repentirs." });
   x('elixir', { bat:'alchimie', nom:'Composer un élixir', metier:'savoir', duree:150, niv:5,
-    in:{potion:2,essence:2,gemme:1}, out:{potion:6},
+    image:'img/objets/alchimie/regeneration.png', in:{potion:2,essence:2,gemme:1}, out:{potion:6},
     desc:"L'essence des profondeurs, fixée dans le verre. Six fioles d'un coup, et bien meilleures." });
+  x('potion_antidote', { bat:'alchimie', nom:'Brasser un antidote', metier:'savoir', duree:64, niv:2,
+    image:'img/objets/alchimie/antidote.png', in:{herbe:3,racine:2,fiole:1,eau:2}, out:{potion:2},
+    desc:"Vert, amer, efficace contre tout ce qui mord, pique ou pousse dans les marais." });
+  x('potion_givre', { bat:'alchimie', nom:'Fixer le givre', metier:'savoir', duree:78, niv:3,
+    image:'img/objets/alchimie/givre.png', in:{eau:4,essence:1,fiole:1}, out:{potion:2},
+    desc:"La fiole reste froide même près du four. Sur le terrain, elle arrête une charge." });
+  x('potion_celerite', { bat:'alchimie', nom:'Élixir de célérité', metier:'savoir', duree:88, niv:4,
+    image:'img/objets/alchimie/celerite.png', in:{fleur:5,miel:2,fiole:1}, out:{potion:2},
+    desc:"Les jambes partent avant que la tête ait fini de décider où aller." });
+  x('potion_rage', { bat:'alchimie', nom:'Tonique de rage', metier:'savoir', duree:96, niv:4,
+    image:'img/objets/alchimie/rage.png', in:{viande:2,racine:3,potion:1}, out:{potion:3},
+    desc:"On ne recommande ni le goût, ni la conversation qui suit." });
+  x('potion_precision', { bat:'alchimie', nom:'Élixir de l'œil clair', metier:'savoir', duree:112, niv:5,
+    image:'img/objets/alchimie/precision.png', in:{ambre:1,herbe:4,fiole:1}, out:{potion:2},
+    desc:"Le monde ralentit juste assez pour que la flèche trouve sa place." });
+  x('potion_bouclier', { bat:'alchimie', nom:'Bouclier en fiole', metier:'savoir', duree:138, niv:6,
+    image:'img/objets/alchimie/bouclier-arcane.png', in:{gemme:1,essence:2,potion:1}, out:{potion:3},
+    desc:"Une peau bleue de lumière qui encaisse le premier mauvais choix." });
+  x('potion_confusion', { bat:'alchimie', nom:'Distillat de confusion', metier:'savoir', duree:148, niv:7,
+    image:'img/objets/alchimie/confusion.png', in:{champignon:6,essence:2,fiole:2}, out:{potion:3},
+    desc:"Les ennemis oublient brièvement qui ils poursuivaient. Parfois eux-mêmes." });
+  x('potion_phoenix', { bat:'alchimie', nom:'Élixir du phénix', metier:'savoir', duree:260, niv:9,
+    image:'img/objets/alchimie/phoenix.png', in:{coeurbiome:1,gardefeu:2,essence:5,fiole:2}, out:{potion:8},
+    desc:"Une chaleur impossible enfermée dans du verre. À réserver aux descentes dont on ne devrait pas revenir." });
   /* ---------------------------------------------------------------
      LES GARDES DE PROFONDEUR. Chacune consomme une TROUVAILLE qu'aucun
      métier ne produit : c'est ce qui relie le pêcheur du mardi à
@@ -691,22 +766,22 @@
      tient un étage.
      --------------------------------------------------------------- */
   x('garde_feu', { bat:'alchimie', nom:'Onguent contre le feu', metier:'savoir', duree:90, niv:2,
-    in:{ecaille:2,resine:3,huile:1}, out:{gardefeu:4},
+    image:'img/objets/alchimie/garde-feu.png', in:{ecaille:2,resine:3,huile:1}, out:{gardefeu:4},
     loot:[{res:'cendre',p:0.30,n:[1,3]}],
     desc:"Écaille pilée, résine chaude, huile de lin. Ça pue, ça tient, et sans ça les Fournaises mangent la compagnie." });
   x('garde_venin', { bat:'alchimie', nom:'Décoction contre le venin', metier:'savoir', duree:95, niv:3,
-    in:{racine:4,herbe:4,fiole:1}, out:{gardevenin:4},
+    image:'img/objets/alchimie/antidote.png', in:{racine:4,herbe:4,fiole:1}, out:{gardevenin:4},
     loot:[{res:'herbe',p:0.25,n:[1,2]}],
     desc:"On fait bouillir la racine amère trois fois, en jetant l'eau deux fois. La troisième se boit." });
   x('garde_gel', { bat:'alchimie', nom:'Doublure contre le gel', metier:'tissage', duree:100, niv:4,
-    in:{plume:5,drap:1,huile:1}, out:{gardegel:4},
+    image:'img/objets/alchimie/givre.png', in:{plume:5,drap:1,huile:1}, out:{gardegel:4},
     desc:"Plume de Nuée cousue entre deux draps. Le Grand Froid ne se combat pas : il se retarde." });
   x('garde_foudre', { bat:'alchimie', nom:'Bracelet contre la foudre', metier:'forge', duree:120, niv:5,
-    in:{ambre:2,lingotcuivre:1,cuir:1}, out:{gardefoudre:4},
+    image:'img/objets/alchimie/garde-foudre.png', in:{ambre:2,lingotcuivre:1,cuir:1}, out:{gardefoudre:4},
     loot:[{res:'limaille',p:0.30,n:[1,2]}],
     desc:"L'ambre prend la décharge, le cuivre l'emporte au sol. On le porte au poignet, jamais au cou." });
   x('garde_ombre', { bat:'alchimie', nom:"Chandelle contre l'ombre", metier:'savoir', duree:150, niv:6,
-    in:{perle:1,cire:4,essence:1}, out:{gardeombre:4},
+    image:'img/objets/alchimie/garde-ombre.png', in:{perle:1,cire:4,essence:1}, out:{gardeombre:4},
     desc:"Elle ne fait aucune lumière. Elle empêche seulement l'ombre d'entrer, ce qui est bien plus utile." });
   x('ouvrir_coeur', { bat:'alchimie', nom:'Ouvrir un cœur de biome', metier:'savoir', duree:180, niv:6,
     in:{coeurbiome:1,fiole:2}, out:{essence:14,gemme:2},
@@ -726,7 +801,7 @@
     in:{perle:2,fil:2}, out:{bijou:2}, loot:[{res:'ecu',p:0.4,n:[60,200]}],
     desc:"Percées à l'archet, enfilées sur un fil de soie. C'est ce que le colporteur emporte en premier." });
   x('amertume', { bat:'alchimie', nom:'Décoction amère', metier:'savoir', duree:56, niv:2,
-    in:{racine:2,eau:2,fiole:1}, out:{potion:2},
+    image:'img/objets/alchimie/purification.png', in:{racine:2,eau:2,fiole:1}, out:{potion:2},
     desc:"Imbuvable, souveraine. On la garde pour les jours où quelqu'un revient de la tour mal en point." });
 
   b('scriptorium', {

@@ -17,12 +17,12 @@
   // des stats de combat pures. Pas d'« adresse » ni d'« esprit » abstraits —
   // ce qu'on lit sur une pièce d'équipement, on le sent dans l'arène.
   GameData.GEN_STATS = {
-    hp:    { id: 'hp',    icon: '', name: 'Points de vie',      desc: 'ce qu’on peut encaisser avant de tomber' },
-    dmg:   { id: 'dmg',   icon: '', name: 'Dégâts',             desc: 'ce que coûte un coup à celui d’en face' },
-    aspd:  { id: 'aspd',  icon: '', name: 'Vitesse d’attaque',  desc: 'coups par seconde' },
-    mspd:  { id: 'mspd',  icon: '', name: 'Vitesse',            desc: 'déplacement — sortir d’une zone à temps' },
-    armor: { id: 'armor', icon: '', name: 'Armure',             desc: 'réduit les dégâts reçus (plafond 70 %)' },
-    range: { id: 'range', icon: '', name: 'Portée',             desc: '0 = corps à corps ; sinon, on frappe de loin' },
+    hp:    { id: 'hp',    icon: '', image:'img/objets/aventure/stats/hp.png',    name: 'Points de vie',      desc: 'ce qu’on peut encaisser avant de tomber' },
+    dmg:   { id: 'dmg',   icon: '', image:'img/objets/aventure/stats/dmg.png',   name: 'Dégâts',             desc: 'ce que coûte un coup à celui d’en face' },
+    aspd:  { id: 'aspd',  icon: '', image:'img/objets/aventure/stats/aspd.png',  name: 'Vitesse d’attaque',  desc: 'coups par seconde' },
+    mspd:  { id: 'mspd',  icon: '', image:'img/objets/aventure/stats/mspd.png',  name: 'Vitesse',            desc: 'déplacement — sortir d’une zone à temps' },
+    armor: { id: 'armor', icon: '', image:'img/objets/aventure/stats/armor.png', name: 'Armure',             desc: 'réduit les dégâts reçus (plafond 70 %)' },
+    range: { id: 'range', icon: '', image:'img/objets/aventure/stats/range.png', name: 'Portée',             desc: '0 = corps à corps ; sinon, on frappe de loin' },
   };
   /* LE BOUCLIER D'ENERGIE. Une reserve qui encaisse AVANT les points de
      vie et se recharge seule apres un repit. Il ne se soigne pas : il
@@ -30,16 +30,36 @@
      armure ni masse de vie — il evite, il encaisse le premier coup, il
      attend. Sans lui, la voie magique n'a aucune facon de survivre.
      `eshRegen` est ce qu'il regagne par seconde une fois le repit passe. */
-  GameData.GEN_STATS.esh = { id: 'esh', icon: '', name: 'Bouclier',
+  GameData.GEN_STATS.esh = { id: 'esh', icon: '', image:'img/objets/aventure/stats/esh.png', name: 'Bouclier',
     desc: 'encaisse avant les points de vie, et se recharge seul' };
-  GameData.GEN_STATS.eshRegen = { id: 'eshRegen', icon: '', name: 'Recharge',
+  GameData.GEN_STATS.eshRegen = { id: 'eshRegen', icon: '', image:'img/objets/aventure/stats/esh-regen.png', name: 'Recharge',
     desc: 'ce que le bouclier regagne par seconde' };
+  Object.assign(GameData.GEN_STATS, {
+    lifesteal:{id:'lifesteal',icon:'',image:'img/objets/aventure/stats/lifesteal.png',name:'Vol de vie',desc:'rend une part des dégâts infligés'},
+    armorPen:{id:'armorPen',icon:'',image:'img/objets/aventure/stats/armor-pen.png',name:'Perforation',desc:'ignore une part de l’armure'},
+    magicPen:{id:'magicPen',icon:'',image:'img/objets/aventure/stats/armor-pen.png',name:'Pénétration magique',desc:'ignore une part des résistances'},
+    lootPct:{id:'lootPct',icon:'',image:'img/objets/aventure/stats/loot.png',name:'Butin',desc:'augmente les quantités trouvées'},
+    itemPct:{id:'itemPct',icon:'',image:'img/objets/aventure/stats/item-find.png',name:'Trouvaille',desc:'augmente les chances de trouver un objet'},
+    rarePct:{id:'rarePct',icon:'',image:'img/objets/aventure/stats/rarity.png',name:'Chance',desc:'améliore la rareté des objets'},
+    resFire:{id:'resFire',icon:'',image:'img/objets/aventure/stats/res-fire.png',name:'Résistance au feu',desc:'réduit les dégâts de feu'},
+    resCold:{id:'resCold',icon:'',image:'img/objets/aventure/stats/res-cold.png',name:'Résistance au froid',desc:'réduit les dégâts de froid'},
+    resPoison:{id:'resPoison',icon:'',image:'img/objets/aventure/stats/res-poison.png',name:'Résistance au poison',desc:'réduit les dégâts de poison'},
+    resLightning:{id:'resLightning',icon:'',image:'img/objets/aventure/stats/esh.png',name:'Résistance à la foudre',desc:'réduit les dégâts de foudre'},
+    resShadow:{id:'resShadow',icon:'',image:'img/objets/aventure/stats/esh.png',name:'Résistance à l’ombre',desc:'réduit les dégâts d’ombre'},
+    resMagic:{id:'resMagic',icon:'',image:'img/objets/aventure/stats/esh.png',name:'Résistance magique',desc:'réduit les dégâts magiques'},
+    critChance:{id:'critChance',icon:'',image:'img/objets/aventure/stats/rarity.png',name:'Chance critique',desc:'augmente la chance de coup critique'},
+    critMult:{id:'critMult',icon:'',image:'img/objets/aventure/stats/dmg.png',name:'Dégâts critiques',desc:'augmente les dégâts des coups critiques'},
+    mspdPct:{id:'mspdPct',icon:'',image:'img/objets/aventure/stats/mspd.png',name:'Vitesse accrue',desc:'augmente la vitesse de déplacement'},
+  });
   GameData.GEN_STAT_ORDER = ['hp', 'esh', 'dmg', 'aspd', 'mspd', 'armor', 'range', 'eshRegen'];
   GameData.ESH_REPIT = 4.0;   // secondes sans coup recu avant que ca reparte
   // comment une stat s'affiche (l'aspd en décimales, le reste en entier)
   GameData.genStatFmt = function (k, v) {
     if (k === 'aspd') return (Math.round((v || 0) * 100) / 100).toFixed(2).replace('.', ',') + '/s';
     if (k === 'armor') return Math.round(v || 0) + '';
+    if (['lifesteal','armorPen','magicPen','lootPct','itemPct','rarePct','resFire','resCold',
+         'resPoison','resLightning','resShadow','resMagic','critChance','critMult','mspdPct'].indexOf(k) >= 0)
+      return Math.round((v || 0) * 100) + ' %';
     return Math.round(v || 0) + '';
   };
 
@@ -569,6 +589,27 @@
     out.push({ id: 'bijou_lunette',  slot: 'bijou', fam: null, icon: '', cats: 'Longue-vue',birds: 'Longue-vue',   stat: 'range', scale: 4.0 });
     return out;
   })();
+  (function assignItemIllustrations() {
+    const weapon = ['epee','hache','lance','masse','dagues','arc','arbalete','baton','sceptre','bombe'];
+    for (const id of weapon) {
+      const b = GameData.ITEM_BASES.find(x => x.id === 'arme_' + id);
+      if (b) b.image = 'img/objets/aventure/armes/' + id + '.png';
+    }
+    for (const slot of ['casque','armure','gants','bottes']) {
+      for (const fam of ['plaque','maille','cuir','robe']) {
+        const b = GameData.ITEM_BASES.find(x => x.id === slot + '_' + fam);
+        if (b) b.image = 'img/objets/aventure/armures/' + slot + '-' + fam + '.png';
+      }
+    }
+    const accessories = {
+      bouclier:'bouclier', bijou_amulette:'amulette', bijou_anneau:'anneau',
+      bijou_fetiche:'fetiche', bijou_lunette:'longue-vue'
+    };
+    for (const id in accessories) {
+      const b = GameData.ITEM_BASES.find(x => x.id === id);
+      if (b) b.image = 'img/objets/aventure/accessoires/' + accessories[id] + '.png';
+    }
+  })();
   GameData.baseById = id => GameData.ITEM_BASES.find(b => b.id === id) || null;
 
   /* ------------------------------------------------------------------
@@ -805,6 +846,8 @@
     GEN_RL('meridien', '', 'Méridien brisé',        'Méridien brisé',        5, { kind: 'work', pct: 0.25 }, '+25 % à l\'effet des ouvriers'),
     GEN_RL('astrolabe', '', 'Astrolabe fendu',      'Astrolabe fendu',       5, { kind: 'loot', pct: 0.30 }, '+30 % de butin d\'exploration'),
   ];
+  for (const relic of GameData.RELICS)
+    relic.image = 'img/objets/aventure/reliques/' + relic.id + '.png';
   GameData.relicById = id => GameData.RELICS.find(r => r.id === id) || null;
 
   // ---------- LES PLANS (ce que l'exploration débloque AILLEURS) ----------
@@ -826,6 +869,9 @@
     GEN_PL('p_arcane',  '', 'Formule : liant arcane',    'Formule : liant arcane',    4, { kind: 'alambic', what: 'arcane' },   'Débloque le fil arcane sans catalyseur'),
     GEN_PL('p_sceau',   '', 'Plan : sceau de guerre',    'Plan : sceau de guerre',    5, { kind: 'war', what: 'sceau' },        '+20 % à l\'ingénierie de bataille'),
   ];
+  GameData.PLANS.forEach((plan, i) => {
+    plan.image = 'img/objets/aventure/tresors/' + (i % 2 ? 'parchemin-scelle' : 'plan') + '.png';
+  });
   GameData.planById = id => GameData.PLANS.find(p => p.id === id) || null;
 
 
