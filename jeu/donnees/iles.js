@@ -32,58 +32,68 @@
   }
 
   /* ---------------------------------------------------------------
-     LA PREMIÈRE COURONNE — à vue du bourg.
-     Deux à quatre lieues : on part le matin, on se bat, on rentre. Ce
-     sont les îles qu'on prend avant d'avoir une vraie flotte.
-     --------------------------------------------------------------- */
-  f('berges', 'Les Basses Berges', 2, 1, 1, 5, 8,
-    {}, { medaille: 1, essence: 2 }, { metier: 'peche', pct: 0.14 },
-    "Une langue de gravier que la Nuée utilise pour remonter la rivière sans être vue. On y aborde à marée basse.");
-  f('taillis', 'Le Taillis Brûlé', 3, 2, 2, 6, 10,
-    {}, { medaille: 1, bois: 40 }, { metier: 'bois', pct: 0.14 },
-    "Ils y mettent le feu chaque printemps pour dégager leur vue. On peut leur retirer l'habitude.");
-  f('carriere', 'La Carrière Haute', 4, 3, 3, 7, 12,
-    {}, { medaille: 2, pierre: 60 }, { metier: 'mine', pct: 0.14 },
-    "Un front de taille abandonné, tenu par une garnison qui n'en tire rien.");
+     DIX COURONNES, DIX FORCES PAR COURONNE.
 
-  /* ---------------------------------------------------------------
-     LA DEUXIÈME COURONNE — une journée de mer.
-     Cinq à neuf lieues : il faut un navire qu'on accepte de perdre de
-     vue, donc une cale qui vaille le voyage.
-     --------------------------------------------------------------- */
-  f('paturage', 'Les Grands Pâturages', 6, 4, 4, 7, 15,
-    {}, { medaille: 2, laine: 30, peau: 12 }, { metier: 'elevage', pct: 0.16 },
-    "De l'herbe à perte de vue et personne pour y mener un troupeau. Une aberration.");
-  f('plateau', 'Le Plateau du Vent', 7, 5, 5, 8, 18,
-    {}, { medaille: 3, ble: 90 }, { metier: 'cuisine', pct: 0.18 },
-    "Le vent y est régulier toute l'année. Le meunier en rêve depuis qu'il a des dents.");
-  f('saline', 'La Saline', 8, 5, 6, 8, 20,
-    {}, { medaille: 3, poissonfume: 20 }, { global: 0.05 },
-    "Des tables d'évaporation en escalier. Qui tient le sel tient l'hiver.");
-  f('boisancien', 'Le Bois Ancien', 9, 6, 7, 9, 22,
-    {}, { medaille: 4, poutre: 6, planche: 40 }, { metier: 'bois', pct: 0.20 },
-    "Des fûts de six mètres de tour. Une seule de ces poutres porterait un rempart.");
+     La force reste volontairement comprise entre 1 et 10 : elle dit la
+     taille de la garnison DANS la couronne. Le tier dit à quel point le
+     monde est devenu dangereux. Ainsi une force 1 du tier 6 reste plus
+     dure qu'une force 10 du tier 1, sans rendre la jauge illisible.
 
-  /* ---------------------------------------------------------------
-     LE LARGE — plusieurs jours de mer.
-     Dix lieues et plus : on n'y va qu'avec une flotte, et le navire
-     manque au bourg pendant tout ce temps.
+     Quatre biomes tournent dans chaque couronne. Le nom du PNG reprend
+     exactement tier + biome + variante ; l'interface n'a aucun registre
+     d'images à maintenir à côté des données.
      --------------------------------------------------------------- */
-  f('veine', 'La Veine Rouge', 11, 7, 8, 9, 26,
-    { potion: 2 }, { medaille: 4, lingotfer: 20 }, { metier: 'feu', pct: 0.20 },
-    "Un affleurement de fer si pur qu'on le prend d'abord pour de la brique.");
-  f('falaise', 'La Falaise aux Nids', 13, 8, 10, 10, 34,
-    { potion: 3 }, { medaille: 6, essence: 12 }, { menaceTaux: -0.30 },
-    "C'est de là qu'elles partent. Y aborder, c'est couper la Nuée à la racine.");
-  f('gouffre', 'Le Gouffre Sonnant', 15, 8, 12, 11, 38,
-    { potion: 4 }, { medaille: 8, gemme: 3, essence: 20 }, { butin: 0.15 },
-    "Une autre entrée du Puits, prise depuis toujours. La compagnie y descendrait moins loin, mais plus riche.");
-  f('minesnoires', 'Les Mines Noires', 18, 9, 15, 12, 44,
-    { potion: 6 }, { medaille: 10, obsidienne: 4 }, { metier: 'forge', pct: 0.22 },
-    "On y taille une pierre qui ne réfléchit rien. La fonderie saura quoi en faire.");
-  f('aire', "L'Aire du Grand Bec", 24, 10, 20, 14, 60,
-    { potion: 10, chant: 2 }, { medaille: 20, relique: 1, obsidienne: 8 }, { global: 0.12 },
-    "Le nid du chef. Personne n'y est allé deux fois — et le premier n'en est pas revenu.");
+  const BIOMES = {
+    guerriere: {
+      nom: ['Bastion', 'Fort', 'Citadelle', 'Camp retranché'],
+      desc: "Une île militaire. Ses murailles abritent davantage de garnisons et ses renforts arrivent plus vite.",
+      effet: "Garnisons ennemies +30 % · renforts accélérés",
+    },
+    marecageuse: {
+      nom: ['Marais', 'Mangrove', 'Tourbière', 'Eaux mortes'],
+      desc: "Une brume vénéneuse rampe entre les racines. Hors de la protection d'un bâtiment, toutes les unités s'affaiblissent peu à peu.",
+      effet: "Poison progressif hors des bâtiments",
+    },
+    volcanique: {
+      nom: ['Caldeira', 'Fournaise', 'Île de basalte', 'Mont ardent'],
+      desc: "Le sol n'a pas fini de refroidir. Des roches tombent et les impacts laissent des plaques de lave temporaires.",
+      effet: "Chutes de roches · flaques de lave",
+    },
+    arcanique: {
+      nom: ['Sanctuaire', 'Observatoire', 'Ruines levantes', 'Couronne de cristal'],
+      desc: "Les ruines chargent l'air d'électricité. Des décharges frappent périodiquement les groupes trop serrés.",
+      effet: "Orages arcaniques sur les concentrations de troupes",
+    },
+  };
+  const ORDRE_BIOMES = ['guerriere', 'marecageuse', 'volcanique', 'arcanique'];
+  const ADJECTIFS = ['Basses', 'Voilées', 'Rousses', 'Anciennes', 'Fendues', 'Perdues', 'Hautes', 'Noires', 'Souveraines', 'Dernières'];
+
+  for (let tier = 1; tier <= 10; tier++) for (let force = 1; force <= 10; force++) {
+    const biome = ORDRE_BIOMES[(force + tier - 2) % ORDRE_BIOMES.length];
+    const bd = BIOMES[biome];
+    const variante = ((force * 3 + tier * 5) % 4) + 1;
+    const id = 'couronne-' + tier + '-ile-' + force;
+    const nom = bd.nom[(force + tier) % bd.nom.length] + ' des ' + ADJECTIFS[tier - 1];
+    const diff = (tier - 1) * 4 + force;
+    const lieues = Math.round((tier - 1) * 28 + 1 + force * 2.35);
+    const noeuds = Math.min(28, 5 + Math.floor(diff * 0.58));
+    const menace = Math.min(60, 5 + tier * 3 + force * 2);
+    const butin = { medaille: Math.round((2 + force) * Math.pow(1.72, tier - 1)) };
+    if (biome === 'guerriere') butin.acier = Math.round((4 + force * 2) * tier);
+    if (biome === 'marecageuse') butin.herbe = Math.round((8 + force * 3) * tier);
+    if (biome === 'volcanique') butin.obsidienne = Math.max(1, Math.round((force + tier) / 3));
+    if (biome === 'arcanique') butin.essence = Math.round((3 + force) * tier);
+    const bonus = force === 10 ? { global: 0.01 + tier * 0.004 } : {};
+    f(id, nom, lieues, force, diff, noeuds, menace, {}, butin, bonus,
+      bd.desc);
+    const ile = I[I.length - 1];
+    ile.tier = tier;
+    ile.biome = biome;
+    ile.effetBiome = bd.effet;
+    ile.variante = variante;
+    ile.image = 'img/iles/tier-' + String(tier).padStart(2, '0') + '-' + biome +
+                '-v' + String(variante).padStart(2, '0') + '.png';
+  }
 
   /* ---------------------------------------------------------------
      LA FLOTTE
@@ -204,19 +214,41 @@
   /* Une destination peut venir de la couronne locale OU du Grand Large.
      Tout le reste du jeu — le port, les bonus permanents, le bilan de
      bataille — passe par ici et n'a donc pas à savoir laquelle. */
+  const ANCIENNES = ['berges','taillis','carriere','paturage','plateau','saline',
+    'boisancien','veine','falaise','gouffre','minesnoires','aire'];
   function parId(id) {
     const local = I.find(x => x.id === id);
     if (local) return local;
+    const ancien = ANCIENNES.indexOf(id);
+    if (ancien >= 0) return I[Math.min(I.length - 1, ancien)];
     return (window.LARGE && window.LARGE.find(x => x.id === id)) || null;
+  }
+  function couronne(n) {
+    n = Math.max(1, Math.min(10, n | 0));
+    return I.filter(x => x.tier === n);
+  }
+  function visibles() {
+    const n = window.Port && window.Port.rayon ? window.Port.rayon() : 1;
+    return couronne(Math.min(10, n));
+  }
+  /* Une même sauvegarde garde toujours la même silhouette, mais deux îles
+     du même biome ne sont pas condamnées à partager le même dessin. La
+     graine du bourg choisit parmi les quatre variantes de la planche. */
+  function imagePour(ile) {
+    if (!ile || !ile.tier || !ile.biome) return ile && ile.image;
+    const graine = (window.Etat && window.Etat.E && window.Etat.E.graine) || 1;
+    let h = (graine ^ 2166136261) >>> 0;
+    const txt = ile.id + ':' + ile.biome;
+    for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
+    const v = (h >>> 0) % 4 + 1;
+    return 'img/iles/tier-' + String(ile.tier).padStart(2, '0') + '-' + ile.biome +
+      '-v' + String(v).padStart(2, '0') + '.png';
   }
   /* Toutes les destinations, les deux théâtres confondus. */
   function toutes() { return I.concat(window.LARGE || []); }
-  /* LE GRAND LARGE NE S'OUVRE QU'UNE FOIS LA COURONNE PRISE. Tant qu'il
-     reste une île à vue du bourg, on n'a rien à faire à trois cents
-     lieues — et la carte resterait illisible. */
+  /* Le onzième élargissement ouvre l'ancienne carte du Grand Large. */
   function largeOuvert() {
-    const p = (window.Etat && window.Etat.E && window.Etat.E.port && window.Etat.E.port.prises) || [];
-    return I.every(x => p.indexOf(x.id) >= 0);
+    return !!(window.Port && window.Port.rayon && window.Port.rayon() > 10);
   }
   function palierDe(places) {
     let k = 0;
@@ -227,6 +259,6 @@
   window.ILES = I;
   window.IleUtil = { CALES, coutNavire, traversee, parId, palierDe,
                      RATIONS, rationsRequises, rationsDisponibles, prelevementPour, vivresEnStock,
-                     toutes, largeOuvert };
+                     toutes, couronne, visibles, imagePour, BIOMES, largeOuvert };
 
 })();

@@ -1114,9 +1114,12 @@
      règle. `r0` n'est pas un biais mais la place que tient le bourg
      lui-même — rien ne se pose dessus. */
   const CARTES = {
-    local: { L: 880, H: 620, cx: 440, cy: 310,
-             r0: 58, pas: 9.08, lieuesMax: 25, anneau: 5,
-             unite: 'LIEUES', libelle: 'Les eaux du bourg' },
+    /* La carte locale est une feuille CARRÉE, bien plus grande que sa
+       fenêtre. Chaque tier ajoute une couronne sans déplacer celles déjà
+       connues — et la fenêtre ne glisse que jusqu'au tier découvert. */
+    local: { L: 2200, H: 2200, cx: 1100, cy: 1100,
+             r0: 110, pas: 85, lieuesMax: 10, anneau: 1,
+             unite: 'TIER', libelle: 'Les eaux explorées' },
     large: { L: 880, H: 620, cx: 440, cy: 310,
              r0: 46, pas: 0.775, lieuesMax: 310, anneau: 50,
              unite: 'LIEUES', libelle: 'Le Grand Large' },
@@ -1156,7 +1159,7 @@
      l'infobulle et dans la fiche, pour qui veut le chiffre. Au large les
      forces montent à trente : on écrase l'échelle pour que la Couronne
      ne fasse pas trois fois la taille de la carte. */
-  const tailleIle = f => f <= 10 ? 6.4 + f * 1.05 : 12 + Math.sqrt(f - 10) * 3.4;
+  const tailleIle = f => f <= 10 ? 30 + f * 3.15 : 45 + Math.sqrt(f - 10) * 4;
 
   /* TROIS TEINTES, PAS DIX. La taille dit déjà la force au pixel près ;
      la teinte répond à la seule question qu'on se pose devant la carte :
@@ -1205,7 +1208,8 @@
   const plans = {};
   function planIles(theatre) {
     const t = theatre || 'local';
-    if (plans[t]) return plans[t];
+    const clePlan = t === 'local' ? 'local:' + (window.Port && window.Port.rayon ? window.Port.rayon() : 1) : t;
+    if (plans[clePlan]) return plans[clePlan];
     const memoire = CARTE;
     CARTE = CARTES[t];
 
@@ -1221,15 +1225,44 @@
     pris.push({ pave: { x1: CARTE.cx - 34, y1: CARTE.cy - 34, x2: CARTE.cx + 34, y2: CARTE.cy + 36 },
                 boite: { x1: CARTE.cx - 34, y1: CARTE.cy + 20, x2: CARTE.cx + 34, y2: CARTE.cy + 36 } });
 
-    const source = t === 'large' ? (window.LARGE || []) : window.ILES;
+    const rayonOuvert = window.Port && window.Port.rayon ? Math.min(10, window.Port.rayon()) : 1;
+    const source = t === 'large' ? (window.LARGE || [])
+      : (window.ILES || []).filter(ile => (ile.tier || 1) <= rayonOuvert);
     const l = source.map(ile => ({
-      ile, r: rayonLieues(ile.lieues), taille: tailleIle(ile.force),
+      ile,
+      r: t === 'local' ? rayonLieues(ile.tier || 1) : rayonLieues(ile.lieues),
+      taille: tailleIle(ile.force),
       /* au large le relèvement est écrit dans les données ; dans la
-         couronne il vient du hachage de l'identifiant */
-      a0: ile.secteur != null ? ile.secteur
-        : -Math.PI / 2 + NORD / 2 + hachage(ile.id) * (Math.PI * 2 - NORD),
+         couronne il se pose plus bas, cercle par cercle */
+      a0: ile.secteur != null ? ile.secteur : 0,
       fixe: ile.secteur != null,
     }));
+    /* DES CERCLES CONCENTRIQUES, UN PAR TIER. Chaque couronne pose ses
+       dix îles EXACTEMENT sur son anneau, à intervalles égaux, dans
+       l'ordre de leur force en tournant depuis le nord — même île,
+       même place, pour toujours, et la difficulté se lit dans le sens
+       des aiguilles. Le couloir du nord reste libre pour l'échelle. */
+    if (t === 'local') {
+      const parTier = {};
+      for (const p of l) {
+        const ti = p.ile.tier || 1;
+        (parTier[ti] = parTier[ti] || []).push(p);
+      }
+      for (const ti in parTier) {
+        const groupe = parTier[ti].sort((a, b) =>
+          (a.ile.force - b.ile.force) || (a.ile.id < b.ile.id ? -1 : 1));
+        const n = groupe.length, r = rayonLieues(+ti);
+        /* le budget d'arc garantit que deux voisines ne se touchent
+           jamais, même au premier anneau où la place est comptée */
+        const budget = 2 * Math.PI * r / n * 0.40;
+        for (let i = 0; i < n; i++) {
+          groupe[i].r = r;
+          groupe[i].taille = Math.min(groupe[i].taille, budget);
+          groupe[i].a0 = -Math.PI / 2 + NORD / 2
+            + ((i + ((+ti) % 2 ? 0 : 0.5)) / n) * (Math.PI * 2 - NORD);
+        }
+      }
+    }
     for (const p of l) {
       /* DEUX TERRES PEUVENT TOMBER AU MÊME RELÈVEMENT. Le hachage ne
          garantit qu'une chose : la stabilité. On dégage donc ce qui se
@@ -1240,9 +1273,14 @@
          pas ; c'est le rayon qui la sépare de ses voisines. */
       let k = 0;
       poser(p, p.a0);
+      /* sans nom sur la carte locale, l'emprise de l'île EST son caillou :
+         la boîte de texte n'a plus à réserver cent pixels de mer */
+      if (t === 'local') p.boite = p.pave;
       if (!p.fixe)
-        while (k++ < 71 && pris.some(q => genent(p, q)))
+        while (k++ < 71 && pris.some(q => genent(p, q))) {
           poser(p, p.a0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * CRAN);
+          if (t === 'local') p.boite = p.pave;
+        }
       pris.push(p);
       /* Un contour à sept faces, tiré du même hachage : chaque terre
          garde sa silhouette d'une partie à l'autre, et aucune n'est un
@@ -1256,9 +1294,9 @@
       }
       p.contour = pts.join(' ');
     }
-    plans[t] = l;
+    plans[clePlan] = l;
     CARTE = memoire;
-    return plans[t];
+    return plans[clePlan];
   }
   function planDe(id, theatre) {
     return planIles(theatre).find(p => p.ile.id === id) || null;
@@ -1317,16 +1355,45 @@
     return l.join('\n');
   }
 
-  function dessinerMer(nav, choisi, theatre) {
+  /* LA FENÊTRE CARRÉE. Le parchemin ne montre d'abord que la première
+     couronne ; chaque tier découvert élargit d'un anneau ce que la souris
+     peut atteindre — jamais davantage. Au large, la feuille tient entière
+     dans la fenêtre : il n'y a rien à faire glisser. */
+  function cadreMer(t, rayon) {
+    const C = CARTES[t];
+    if (t !== 'local') {
+      const demi = Math.max(C.L, C.H) / 2;
+      return { demi, x0: C.cx - demi, x1: C.cx - demi, y0: C.cy - demi, y1: C.cy - demi };
+    }
+    const demi = C.r0 + C.pas + 80;                   // le tier 1, entier, immobile
+    const marge = Math.max(0, rayon - 1) * C.pas;     // un anneau de glisse par tier
+    return { demi, x0: C.cx - demi - marge, x1: C.cx - demi + marge,
+                   y0: C.cy - demi - marge, y1: C.cy - demi + marge };
+  }
+  function bride(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function dessinerMer(nav, choisi, theatre, vue) {
     const t = theatre || 'local';
     const memoire = CARTE; CARTE = CARTES[t];
     const C = CARTE, rMax = rayonLieues(C.lieuesMax);
+    const vb = vue || { x: 0, y: 0, demi: Math.max(C.L, C.H) / 2 };
     const P = window.Port;
     const portee = P && P.portee ? P.portee() : 9999;
-    const carte = sv('svg', { class: 'mer-carte', viewBox: '0 0 ' + C.L + ' ' + C.H,
+    const porteeCarte = t === 'local'
+      ? Math.max(1, Math.min(10, P && P.rayon ? P.rayon() : 1))
+      : portee;
+    const carte = sv('svg', { class: 'mer-carte',
+      viewBox: ar(vb.x) + ' ' + ar(vb.y) + ' ' + ar(vb.demi * 2) + ' ' + ar(vb.demi * 2),
       role: 'img', 'aria-label': 'Carte marine — ' + C.libelle });
+    const defs = sv('defs');
+    const motif = sv('pattern', { id: 'papier-mer-' + t, patternUnits: 'userSpaceOnUse',
+      width: 512, height: 512 });
+    motif.appendChild(sv('image', { href: 'img/iles/fond-carte-parchemin-tuile.png',
+      x: 0, y: 0, width: 512, height: 512, preserveAspectRatio: 'none' }));
+    defs.appendChild(motif); carte.appendChild(defs);
     carte.appendChild(sv('rect', { class: 'mer-fond', x: 0.5, y: 0.5,
-      width: C.L - 1, height: C.H - 1, rx: 5 }));
+      width: C.L - 1, height: C.H - 1, rx: 5,
+      fill: 'url(#papier-mer-' + t + ')' }));
 
     /* LES LIGNES DE RHUMB ne portent aucune information : elles disent
        que ceci est une carte marine, et elles tirent l'œil du bourg vers
@@ -1388,8 +1455,8 @@
        joueur et non du monde : au-delà, le capitaine refuse. La tracer
        vaut mieux que de le dire, parce qu'on voit du même coup ce que le
        prochain gréement irait chercher. */
-    if (portee < C.lieuesMax * 1.4 && portee > 0) {
-      const rp = rayonLieues(Math.min(portee, C.lieuesMax));
+    if (porteeCarte < C.lieuesMax * 1.4 && porteeCarte > 0) {
+      const rp = rayonLieues(Math.min(porteeCarte, C.lieuesMax));
       carte.appendChild(sv('circle', { class: 'mer-portee', cx: C.cx, cy: C.cy, r: ar(rp) }));
       carte.appendChild(sv('text', { class: 'mer-portee-nom',
         x: C.cx, y: ar(C.cy + rp - 6), text: 'PORTÉE DE LA FLOTTE' }));
@@ -1437,7 +1504,13 @@
          détache un caillou du fond de mer sans avoir à le cerner d'un
          trait dur. */
       g.appendChild(sv('circle', { class: 'mer-ressac', r: ar(p.taille + 3.5) }));
-      g.appendChild(sv('polygon', { class: 'mer-terre', points: p.contour }));
+      const imageIle = window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(I) : I.image;
+      if (imageIle) {
+        const cote = p.taille * 2.55;
+        g.appendChild(sv('image', { class: 'mer-illustration', href: imageIle,
+          x: ar(-cote / 2), y: ar(-cote / 2), width: ar(cote), height: ar(cote),
+          preserveAspectRatio: 'xMidYMid meet' }));
+      } else g.appendChild(sv('polygon', { class: 'mer-terre', points: p.contour }));
       /* UNE VILLE N'EST PAS UNE ÎLE : on lui pose des toits et un beffroi,
          pour que la côte se lise comme habitée. */
       if (I.type === 'ville') {
@@ -1457,7 +1530,10 @@
         g.appendChild(sv('polygon', { class: 'mer-fanion',
           points: '0,' + ar(h) + ' 7.5,' + ar(h + 2.7) + ' 0,' + ar(h + 5.4) }));
       }
-      g.appendChild(sv('text', { class: 'mer-nom', 'text-anchor': p.ancre,
+      /* LE NOM NE SE LIT PLUS SUR LA COURONNE : il encombrait la mer et
+         doublait l'infobulle. Il reste au large, où les villes sont des
+         repères de côte qu'on apprend par cœur. */
+      if (t !== 'local') g.appendChild(sv('text', { class: 'mer-nom', 'text-anchor': p.ancre,
         x: ar(p.nx - p.x), y: ar(p.ny - p.y), text: I.nom }));
       iles.appendChild(g);
     }
@@ -1466,7 +1542,10 @@
     /* LA ROSE, dans l'angle laissé vide par le dernier anneau. Huit
        aires, la fleur de lys au nord : c'est le seul ornement de la
        carte, et il sert — on y lit l'orientation d'un coup. */
-    const rose = sv('g', { class: 'mer-rose', transform: 'translate(70,' + (C.H - 74) + ')' });
+    /* LA ROSE SUIT LA FENÊTRE, pas la feuille : glisser le parchemin ne
+       doit pas emporter le nord. */
+    const rose = sv('g', { class: 'mer-rose',
+      transform: 'translate(' + ar(vb.x + 66) + ',' + ar(vb.y + vb.demi * 2 - 70) + ')' });
     for (let k = 0; k < 8; k++) {
       const a = k * Math.PI / 4, r = k % 2 ? 13 : 25;
       rose.appendChild(sv('polygon', { class: 'mer-rose-branche' + (k === 6 ? ' nord' : ''),
@@ -1481,7 +1560,7 @@
     /* L'ÉCHELLE. Une carte sans échelle oblige à compter les anneaux ;
        avec elle, on mesure une distance à l'œil. */
     const eL = CARTE.anneau * CARTE.pas;
-    const ex = C.L - 40 - eL, ey = C.H - 34;
+    const ex = vb.x + vb.demi * 2 - 40 - eL, ey = vb.y + vb.demi * 2 - 34;
     carte.appendChild(sv('g', { class: 'mer-echelle' },
       sv('line', { x1: ar(ex), y1: ey, x2: ar(ex + eL), y2: ey }),
       sv('line', { x1: ar(ex), y1: ey - 4, x2: ar(ex), y2: ey + 4 }),
@@ -1502,10 +1581,11 @@
       boite.appendChild(el('div', { class: 'cadre creux' },
         el('div', { class: 'eti-or', text: 'lire la carte' }),
         el('div', { class: 'note', style: 'margin-top:6px',
-          text: 'Le bourg est au centre, chaque anneau vaut cinq lieues de mer. '
+          text: 'Le bourg est au centre, chaque anneau révèle un nouveau tier. '
               + "Plus une île est grosse, plus sa garnison l'est : verte on y va, "
               + "or on se prépare, corail il faut une flotte. Le fanion d'or marque "
-              + 'les îles déjà prises.' }),
+              + 'les îles déjà prises. Faites glisser le parchemin pour naviguer — '
+              + 'il ne s\'ouvre que jusqu\'au dernier tier découvert.' }),
         el('div', { class: 'note', style: 'margin-top:8px',
           text: "Survolez une île pour l'essentiel, cliquez-la pour le détail." })));
       return boite;
@@ -1514,30 +1594,38 @@
     const prise = P.estPrise(choisi.id);
     const duree = window.IleUtil.traversee(choisi.lieues, nav ? nav.palier : 0);
     const v = nav ? P.peutAppareiller(nav.id, choisi.id) : { ok: false, pourquoi: '' };
-    const box = el('div', { class: 'cadre' + (prise ? ' actif' : '') },
-      el('div', { class: 'rangee entre' },
+    const box = el('div', { class: 'cadre' + (prise ? ' actif' : '') });
+    /* L'ILLUSTRATION D'ABORD : c'est elle qu'on a cliquée sur la carte,
+       c'est elle qu'on veut reconnaître ici. */
+    const illu = window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(choisi) : choisi.image;
+    if (illu) box.appendChild(el('img', { class: 'mer-fiche-illu', src: illu, alt: choisi.nom }));
+    box.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:8px' },
         el('span', { class: 'tt', style: 'font-size:14px', text: choisi.nom }),
-        prise ? el('span', { class: 'eti-or', text: 'déjà prise' }) : null),
-      el('div', { class: 'eti', style: 'margin-top:4px',
-        text: choisi.lieues + ' lieues · ' + U.duree(duree) + ' de mer' }),
-      el('div', { class: 'note', style: 'margin-top:6px', text: choisi.desc }),
-      /* LA FORCE en dix crans : on la lit sans compter. */
-      el('div', { class: 'rangee entre', style: 'margin-top:8px' },
-        el('span', { class: 'eti', text: 'force' }),
-        el('div', { class: 'force' },
-          ...Array.from({ length: 10 }, (_, i) =>
-            el('i', { class: i < choisi.force ? 'on' : '' })))),
-      /* AU LARGE, LA NUÉE N'EST PLUS LE SUJET : elle est retombée à zéro
-         depuis longtemps quand on arme pour trois cents lieues. Ce qu'on
-         y cherche, c'est le butin et l'avantage permanent — on annonce
-         donc cela, et non un « −0 point » qui ne veut rien dire. */
-      choisi.menace
-        ? el('div', { class: 'rangee entre', style: 'margin-top:6px' },
-            el('span', { class: 'eti', text: 'la prendre fait retomber la Nuée de' }),
-            el('span', { class: 'eti-or', text: choisi.menace + ' points' }))
-        : el('div', { class: 'rangee entre', style: 'margin-top:6px' },
-            el('span', { class: 'eti', text: choisi.type === 'ville' ? 'ville côtière' : 'terre du large' }),
-            el('span', { class: 'eti-or', text: 'butin et avantage' })));
+        prise ? el('span', { class: 'eti-or', text: 'déjà prise' }) : null));
+    box.appendChild(el('div', { class: 'eti', style: 'margin-top:4px',
+      text: (choisi.tier ? 'tier ' + choisi.tier + ' · ' : '') + choisi.lieues + ' lieues · ' + U.duree(duree) + ' de mer' }));
+    box.appendChild(el('div', { class: 'note', style: 'margin-top:6px', text: choisi.desc }));
+    if (choisi.biome) box.appendChild(el('div', { class: 'appel biome-' + choisi.biome, style: 'margin-top:8px' },
+      el('div', { style: 'flex:1' },
+        el('div', { class: 'eti-or', text: choisi.biome.toUpperCase() }),
+        el('div', { class: 'note', text: choisi.effetBiome || '' }))));
+    /* LA FORCE en dix crans : on la lit sans compter. */
+    box.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:8px' },
+      el('span', { class: 'eti', text: 'force' }),
+      el('div', { class: 'force' },
+        ...Array.from({ length: 10 }, (_, i) =>
+          el('i', { class: i < choisi.force ? 'on' : '' })))));
+    /* AU LARGE, LA NUÉE N'EST PLUS LE SUJET : elle est retombée à zéro
+       depuis longtemps quand on arme pour trois cents lieues. Ce qu'on
+       y cherche, c'est le butin et l'avantage permanent — on annonce
+       donc cela, et non un « −0 point » qui ne veut rien dire. */
+    box.appendChild(choisi.menace
+      ? el('div', { class: 'rangee entre', style: 'margin-top:6px' },
+          el('span', { class: 'eti', text: 'la prendre fait retomber la Nuée de' }),
+          el('span', { class: 'eti-or', text: choisi.menace + ' points' }))
+      : el('div', { class: 'rangee entre', style: 'margin-top:6px' },
+          el('span', { class: 'eti', text: choisi.type === 'ville' ? 'ville côtière' : 'terre du large' }),
+          el('span', { class: 'eti-or', text: 'butin et avantage' })));
     /* LE MATÉRIEL DE SIÈGE : le seul péage fixe, et seulement au large. */
     if (Object.keys(choisi.cout).length)
       box.appendChild(el('div', { style: 'margin-top:8px' }, ligneCout(choisi.cout, 'matériel de siège')));
@@ -1587,6 +1675,8 @@
      le rendu : on ne veut pas retomber sur la couronne à chaque
      rafraîchissement quand on est en train de lire le Grand Large. */
   const theatreVu = {};
+  const vueMer = {};
+  const glisseMer = {};
 
   function rendreCarteMer(c, o) {
     const P = window.Port;
@@ -1606,6 +1696,21 @@
       : "Tout ce qui n'est pas le bourg est de l'autre côté de l'eau. Prendre une île "
         + 'est la SEULE façon de faire retomber la Nuée.' }));
 
+    if (t === 'local' && P.rayon) {
+      const rayon = P.rayon(), prises = P.prisesCouronne(rayon), elargir = P.peutElargirRayon();
+      c.appendChild(el('div', { class: 'mer-progression' },
+        el('div', { class: 'rangee entre' },
+          el('div', {},
+            el('div', { class: 'eti-or', text: 'RAYON D’EXPLORATION · TIER ' + Math.min(10, rayon) }),
+            el('div', { class: 'note', text: prises + ' / 10 îles sécurisées dans cette couronne' })),
+          el('button', { class: 'b primaire', text: rayon >= 10 ? 'Ouvrir le Grand Large' : 'Élargir le rayon',
+            disabled: !elargir.ok, title: elargir.ok ? 'Découvrir la couronne suivante.' : elargir.pourquoi,
+            onclick: () => { const r = P.elargirRayon();
+              U.dire(r.ok ? (r.rayon > 10 ? 'Le Grand Large est cartographié.' : 'Nouveau rayon découvert.') : r.pourquoi,
+                r.ok ? 'butin' : 'alerte');
+              choixIle[o.cle] = null; if (o.rafraichir) o.rafraichir(); } }))));
+    }
+
     /* Le clic est pris ICI, pas sur chaque île : `el` est le seul à
        greffer des gestionnaires que la réconciliation sait rafraîchir,
        et il ne fabrique pas de SVG. Le relais lit `data-ile` sur ce qui
@@ -1617,17 +1722,58 @@
         onclick: () => { theatreVu[o.cle] = id; choixIle[o.cle] = null;
                          if (o.rafraichir) o.rafraichir(); } });
       c.appendChild(el('div', { class: 'rangee', style: 'margin-top:8px;gap:6px' },
-        onglet('local', 'Les eaux du bourg', 'Les douze îles de la couronne, à vue du bourg.'),
+        onglet('local', 'Les eaux du bourg', 'La couronne actuellement cartographiée.'),
         onglet('large', 'Le Grand Large', 'Ce qui commence là où la couronne finit.')));
     }
-    const toile = el('div', { class: 'mer-toile', tabindex: '-1', onclick: ev => {
+    /* LA FENÊTRE SUR LA FEUILLE. Le parchemin est immense, la fenêtre
+       carrée et SANS ASCENSEUR : c'est la `viewBox` qu'on déplace à la
+       souris, bridée au dernier tier découvert. Au tier 1, la fenêtre
+       tient exactement sur la première couronne — rien ne bouge. */
+    const rayonCarte = (t === 'local' && P.rayon) ? Math.max(1, Math.min(10, P.rayon())) : 1;
+    const cadre = cadreMer(t, rayonCarte);
+    let vue = vueMer[o.cle];
+    if (!vue || vue.t !== t) vue = vueMer[o.cle] = { t, x: 0, y: 0 };
+    vue.x = bride(vue.x, cadre.x0, cadre.x1);
+    vue.y = bride(vue.y, cadre.y0, cadre.y1);
+    let drag = null;
+    const toile = el('div', { class: 'mer-toile', tabindex: '-1',
+      onpointerdown: ev => {
+        if (ev.button !== 0) return;
+        drag = { x: ev.clientX, y: ev.clientY, vx: vue.x, vy: vue.y, bouge: false };
+      },
+      onpointermove: ev => {
+        if (!drag) return;
+        const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+        /* LA CAPTURE N'ARRIVE QU'AVEC LA GLISSE. Capturer dès
+           pointerdown retirait le CLIC à l'île visée : l'événement
+           remontait sur la toile et la sélection ne se faisait
+           jamais. */
+        if (!drag.bouge && Math.abs(dx) + Math.abs(dy) > 5) {
+          drag.bouge = true;
+          try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) { }
+        }
+        if (!drag.bouge) return;
+        const k = (2 * cadre.demi) / Math.max(1, ev.currentTarget.clientWidth);
+        vue.x = bride(drag.vx - dx * k, cadre.x0, cadre.x1);
+        vue.y = bride(drag.vy - dy * k, cadre.y0, cadre.y1);
+        const feuille = ev.currentTarget.querySelector('svg');
+        if (feuille) feuille.setAttribute('viewBox',
+          ar(vue.x) + ' ' + ar(vue.y) + ' ' + ar(cadre.demi * 2) + ' ' + ar(cadre.demi * 2));
+      },
+      onpointerup: ev => {
+        if (drag && drag.bouge) glisseMer[o.cle] = performance.now();
+        drag = null;
+        if (ev.currentTarget.hasPointerCapture(ev.pointerId)) ev.currentTarget.releasePointerCapture(ev.pointerId);
+      },
+      onclick: ev => {
+      if (glisseMer[o.cle] && performance.now() - glisseMer[o.cle] < 180) return;
       const cible = ev.target && ev.target.closest ? ev.target.closest('[data-ile]') : null;
       if (!cible) return;
       const id = cible.getAttribute('data-ile');
       choixIle[o.cle] = choixIle[o.cle] === id ? null : id;
       if (o.rafraichir) o.rafraichir();
     } });
-    toile.appendChild(dessinerMer(nav, choisi, t));
+    toile.appendChild(dessinerMer(nav, choisi, t, { x: vue.x, y: vue.y, demi: cadre.demi }));
     c.appendChild(el('div', { class: 'carte-mer' }, toile, ficheMer(choisi, nav, o)));
   }
 
@@ -1635,7 +1781,7 @@
   function ouvrirDestination(navId) {
     choixIle['dest:' + navId] = null;
     U.ouvrir('destination', {
-      titre: 'Où met-on le cap ?', sous: 'Carte des eaux du bourg', classe: 'carte',
+      titre: 'Où met-on le cap ?', sous: 'Carte des eaux du bourg', classe: 'carte-marine',
       onglets: [{ id: 'd', nom: 'La carte', rendu: (c, F) => rendreCarteMer(c, {
         cle: 'dest:' + navId, navId,
         rafraichir: () => F.rafraichir(),
@@ -1666,7 +1812,8 @@
            devant une ville du Grand Large n'a rien à faire de la liste
            des douze îles du bourg — elles sont à trois cents lieues
            derrière lui. On lui propose ses voisines, pas ses souvenirs. */
-        const voisines = (ici && ici.large) ? (window.LARGE || []) : window.ILES;
+        const voisines = (ici && ici.large) ? (window.LARGE || [])
+          : (window.IleUtil && window.IleUtil.visibles ? window.IleUtil.visibles() : window.ILES);
         for (const ile of voisines) {
           if (ile.id === n.ile) continue;
           const v = P.peutContinuer(n.id, ile.id);
@@ -1692,11 +1839,31 @@
     });
   }
 
-  /* L'onglet « Les îles » : la même carte, sans navire attaché. Elle est
-     alors consultative — on y prépare la prochaine sortie, on n'en lance
-     aucune. */
+  /* LA CARTE A SA FENÊTRE. Dans l'onglet du port elle tenait sur un
+     mouchoir ; ici elle prend toute la place qu'une carte mérite —
+     grande feuille à gauche, fiche à droite. Consultative : on y
+     prépare la prochaine sortie, on n'en lance aucune. */
+  function ouvrirCarteMarine() {
+    U.ouvrir('carteMarine', {
+      titre: 'La carte marine', sous: 'Les eaux du bourg et le Grand Large',
+      classe: 'carte-marine',
+      onglets: [{ id: 'c', nom: 'La carte', rendu: (c, F) =>
+        rendreCarteMer(c, { cle: 'carte', rafraichir: () => F.rafraichir() }) }],
+    });
+  }
+
+  /* L'onglet « Les îles » du port : plus la carte elle-même — son
+     bouton. Deux cartes côte à côte se marchaient dessus ; on passe
+     par la fenêtre dédiée, plus grande et plus lisible. */
   function rendreIles(c, F) {
-    rendreCarteMer(c, { cle: 'iles', rafraichir: () => F.rafraichir() });
+    c.appendChild(el('div', { class: 'cadre' },
+      el('div', { class: 'eti-or', text: 'LA CARTE MARINE' }),
+      el('div', { class: 'note', style: 'margin-top:6px',
+        text: "Le bourg est au centre, chaque anneau révèle un nouveau tier. "
+            + "On y lit d'un coup d'œil ce qui est à portée de matinée et ce qui "
+            + "demande une flotte — et l'on n'y lance rien sans avoir chargé une cale." }),
+      el('button', { class: 'b primaire pleine', style: 'margin-top:12px',
+        text: 'Dérouler la carte marine', onclick: () => ouvrirCarteMarine() })));
   }
 
   function rendreNotice(c, bid) {
@@ -2141,12 +2308,21 @@
     const grille = el('div', { class:'collection-grille' });
     for (const h of vus) {
       const R = window.HAB.RARETES[h.rarete] || window.HAB.RARETES.commun;
-      grille.appendChild(el('button', { class:'carte-habitant', onclick:() => ouvrirHabitants('fiche:' + h.id), title:'Ouvrir la fiche de ' + h.nom },
-        avatarHab(h, 74, 'collection-avatar'),
-        el('span', { class:'collection-nom', text:h.nom }),
-        el('span', { class:'collection-meta', text:(window.METIERS[h.talent] || {}).nom || '—' }),
-        el('span', { class:'collection-badge r-' + R.id, text:R.nom }),
-        el('span', { class:'collection-niveau', text:'Niv. ' + (h.niv || 1) })));
+      /* LA CARTE PORTRAIT. Le visage prend toute la carte ; le nom, le
+         métier, la rareté et le niveau vivent dans un volet blanc qui
+         monte du bas au survol — la carte se lit d'un coup d'œil, le
+         détail se mérite (voir .carte-infos dans la feuille de style).
+         PAS D'INFOBULLE : elle répéterait ce que le volet affiche déjà. */
+      const av = avatarHab(h, 150, 'carte-portrait');
+      delete av.dataset.bulle;
+      grille.appendChild(el('button', { class:'carte-habitant', onclick:() => ouvrirHabitants('fiche:' + h.id) },
+        av,
+        el('span', { class:'carte-infos' },
+          el('span', { class:'collection-nom', text:h.nom }),
+          el('span', { class:'collection-meta', text:(window.METIERS[h.talent] || {}).nom || '—' }),
+          el('span', { class:'carte-infos-ligne' },
+            el('span', { class:'collection-badge r-' + R.id, text:R.nom }),
+            el('span', { class:'collection-niveau', text:'Niv. ' + (h.niv || 1) })))));
     }
     c.appendChild(grille);
   }

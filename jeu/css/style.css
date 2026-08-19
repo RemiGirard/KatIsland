@@ -697,11 +697,20 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .tache-image{width:44px!important;height:44px!important;object-fit:contain}
 .collection-filtres{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .collection-compte{font-size:11px;color:#6f7a78;margin:4px 0 10px}
-.collection-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
-.carte-habitant{position:relative;min-height:156px;padding:10px 6px 8px;border:1px solid rgba(78,105,109,.22);border-radius:10px;background:rgba(255,255,255,.32);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:inherit}
-.carte-habitant:hover{border-color:#d19b4a;transform:translateY(-2px)}
-.collection-avatar{width:82px;height:82px;margin-bottom:2px}.collection-avatar .vig{width:82px!important;height:82px!important;object-fit:cover;border-radius:9px}
-.collection-nom{font-weight:700;font-size:12px;white-space:nowrap;max-width:108px;overflow:hidden;text-overflow:ellipsis}
+.collection-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.carte-habitant{position:relative;aspect-ratio:3/4;padding:0;border:1px solid rgba(78,105,109,.22);border-radius:12px;background:#2b3230;overflow:hidden;cursor:pointer;color:inherit;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.carte-habitant:hover{border-color:#d19b4a;transform:translateY(-3px);box-shadow:0 10px 24px rgba(28,36,34,.28)}
+/* le portrait remplit toute la carte */
+.carte-portrait{position:absolute;inset:0;margin:0;width:100%;height:100%;border:0;border-radius:0;display:block}
+.carte-portrait .vig{width:100%!important;height:100%!important;object-fit:cover;border-radius:0;transition:transform .35s cubic-bezier(.22,1,.36,1)}
+.carte-habitant:hover .carte-portrait .vig{transform:scale(1.05)}
+/* sans portrait, l'icône du métier tient le centre */
+.carte-portrait:not(.face){display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)}
+/* le volet blanc monte du bas au survol, avec un léger dépassement */
+.carte-infos{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px 12px;background:rgba(255,255,255,.96);box-shadow:0 -6px 18px rgba(28,36,34,.18);text-align:left;transform:translateY(103%);transition:transform .32s cubic-bezier(.2,1.1,.3,1.06)}
+.carte-habitant:hover .carte-infos,.carte-habitant:focus-visible .carte-infos{transform:translateY(0)}
+.carte-infos-ligne{display:flex;gap:6px;align-items:center;margin-top:3px}
+.collection-nom{font-weight:700;font-size:13px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .collection-meta{font-size:10px;color:#6f7a78}.collection-badge{font-size:9px;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.06em}.collection-niveau{font-size:10px;color:#67716e}
 .collection-badge.r-commun{color:#6c6676;background:rgba(108,102,118,.12)}.collection-badge.r-estime{color:#4e7536;background:rgba(78,117,54,.12)}.collection-badge.r-rare{color:#356392;background:rgba(53,99,146,.12)}.collection-badge.r-insigne{color:#8a6a12;background:rgba(138,106,18,.14)}.collection-badge.r-legende{color:#b0433c;background:rgba(176,67,60,.14)}
 .fiche-hab-tete{display:flex;gap:14px;align-items:center;padding:4px 0 12px}.fiche-avatar{width:96px;height:96px}.fiche-avatar .vig{width:96px!important;height:96px!important;object-fit:cover;border-radius:12px}.fiche-hab-identite h2{margin:0 0 5px;font-size:22px}.fiche-jauge,.fiche-attribut{margin:8px 0}.fiche-jauge .barre,.fiche-attribut .barre{margin-top:4px}
@@ -738,6 +747,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .plateau-portrait{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--panneau3);color:var(--or);font-weight:800;flex:none}
 .plateau-mini-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:8px}
 .plateau-mini-stats span{padding:5px 6px;border-radius:5px;background:rgba(255,255,255,.035);font-size:9px;color:var(--doux)}
+.plateau-equipement{display:flex;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)}
+.plateau-equipement-piece{position:relative;width:52px;height:42px;border-radius:5px;background:rgba(6,15,21,.5);border:1px solid rgba(214,177,73,.2);overflow:hidden}
+.plateau-equipement-piece img{display:block;width:100%;height:100%;object-fit:contain}
+.plateau-equipement-piece span{position:absolute;right:3px;bottom:3px;padding:2px 4px;border-radius:3px;background:rgba(5,13,18,.84);color:#efd47f;font-size:8px;font-weight:900}
 .plateau-pouvoir{padding:8px 0;border-bottom:1px solid var(--bord)}
 .plateau-pouvoir:last-child{border-bottom:0}
 .plateau-vie{height:4px;margin-top:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
@@ -1390,6 +1403,12 @@ button[title],.b[title],a[title]{cursor:pointer}
   box-shadow:0 18px 52px rgba(3,10,14,.34);backdrop-filter:none;color:var(--texte);
 }
 .fen.large{min-width:min(760px,94vw);max-width:min(900px,96vw)}
+/* LA FENÊTRE DE LA CARTE MARINE : plus large que les autres, parce
+   qu'une carte se lit de près. La feuille y gagne toute la hauteur
+   disponible ; la fiche garde sa colonne. */
+.fen.carte-marine{min-width:min(1020px,94vw);max-width:min(1320px,96vw)}
+.fen.carte-marine .carte-mer{grid-template-columns:minmax(0,1fr) 350px;
+  height:clamp(560px,78vh,920px)}
 .fen.active{border-color:rgba(19,31,36,.36)}
 .fen .fen-tete{padding:15px 17px 13px;background:#1c2b35;border-bottom:0}
 .fen .fen-tete h2{font-size:21px;color:#f4f2e9;letter-spacing:.04em}
@@ -1743,25 +1762,45 @@ button[title],.b[title],a[title]{cursor:pointer}
    suit les variables comme le reste de l'interface. Aucune teinte
    n'est écrite dans le dessin.
    --------------------------------------------------------------- */
-.carte-mer{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
-/* la carte prend trois parts pour une à la fiche ; sous ~660 px la
-   fiche passe dessous d'elle-même plutôt que de tout étrangler */
-.mer-toile{flex:3 1 380px;min-width:0;outline:none}
-.mer-fiche{flex:1 1 260px;min-width:0}
+.carte-mer{
+  display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;
+  height:clamp(540px,68vh,720px);min-height:0;align-items:stretch
+}
+/* la fenêtre sur le parchemin : carrée, fixe, sans ascenseur — c'est la
+   viewBox de la carte que la souris déplace, pas la toile qui défile */
+.mer-toile{min-width:0;min-height:0;height:100%;max-width:100%;aspect-ratio:1/1;
+  justify-self:center;overflow:hidden;outline:none;cursor:grab;
+  border:1px solid rgba(91,65,35,.42);border-radius:6px;background:#cdb982}
+.mer-toile:active{cursor:grabbing}
+.mer-fiche{min-width:0;min-height:0;overflow-y:auto;padding-right:3px}
 .mer-fiche .cadre{margin-top:0}
-.mer-carte{display:block;width:100%;height:auto}
+.mer-fiche-illu{display:block;width:100%;border-radius:6px;border:1px solid rgba(91,65,35,.35)}
+.mer-carte{display:block;width:100%;height:100%;touch-action:none;user-select:none}
 /* une fenêtre plus large que les autres : la carte a besoin d'air, et
    la fiche tient à côté sans écraser la mer */
-.fen.carte{min-width:min(900px,95vw);max-width:min(1000px,96vw)}
+.fen.carte{width:min(1440px,97vw);max-width:min(1440px,97vw);height:min(920px,94vh)}
+.fen.carte .corps{min-height:0;overflow:auto}
 
-.mer-fond{fill:var(--creux);stroke:var(--bord)}
+.mer-fond{stroke:rgba(76,52,28,.7);stroke-width:2}
+.mer-fond-image{opacity:.82;pointer-events:none}
+.mer-progression{margin:9px 0 10px;padding:9px 11px;border:1px solid rgba(205,178,105,.22);border-radius:5px;background:rgba(7,20,28,.42)}
+.mer-progression .b{flex:none;margin-left:12px}
 .mer-rhumbs line{stroke:var(--bord);stroke-width:1}
 .mer-anneau{fill:none;stroke:var(--bord2);stroke-width:1;stroke-dasharray:2 7}
 /* les textes de la carte portent un halo de mer : ils coupent le trait
    qui passe dessous au lieu de se battre avec lui */
 .mer-carte text{
-  paint-order:stroke;stroke:var(--creux);stroke-width:3;stroke-linejoin:round;
+  paint-order:stroke;stroke:rgba(235,220,174,.86);stroke-width:3;stroke-linejoin:round;
   font-family:inherit;font-weight:600;
+}
+.mer-rhumbs line,.mer-anneau,.mer-portee,.mer-route{mix-blend-mode:multiply}
+.mer-carte .mer-lieues,.mer-carte .mer-nom,.mer-carte .mer-bourg-nom,
+.mer-carte .mer-portee-nom,.mer-carte .mer-echelle-nom{fill:#4b3927}
+@media(max-width:850px){
+  .carte-mer{grid-template-columns:1fr;height:auto}
+  .mer-toile{height:58vh}
+  .mer-fiche{height:260px}
+  .fen.carte{height:96vh}
 }
 .mer-lieues{fill:var(--faible);font-size:8.5px;letter-spacing:.14em;text-anchor:middle}
 
@@ -1774,6 +1813,10 @@ button[title],.b[title],a[title]{cursor:pointer}
 
 .mer-ile{cursor:pointer}
 .mer-zone{fill:none;pointer-events:all}
+.mer-illustration{pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.55));transition:filter .16s,opacity .16s,transform .16s;transform-box:fill-box;transform-origin:center}
+.mer-ile:hover .mer-illustration{filter:drop-shadow(0 5px 6px rgba(0,0,0,.65)) brightness(1.12);transform:scale(1.04)}
+.mer-ile.prise .mer-illustration{filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)) saturate(.62) brightness(.78)}
+.mer-ile.choisie .mer-illustration{filter:drop-shadow(0 0 8px rgba(232,197,104,.8)) brightness(1.1)}
 .mer-terre{fill:var(--panneau2);stroke-width:1.4;transition:fill .14s}
 /* la teinte répond à « est-ce à ma portée ? » ; la taille, elle, est
    dessinée par le script et dit la force au pixel près */
@@ -1842,6 +1885,10 @@ button[title],.b[title],a[title]{cursor:pointer}
 .mer-ile.loin{opacity:.42}
 .mer-ile.loin .mer-terre{stroke-dasharray:3 3}
 .mer-ile.loin:hover{opacity:.68}
+.biome-guerriere{border-left:3px solid #c95b45}
+.biome-marecageuse{border-left:3px solid #78a44e}
+.biome-volcanique{border-left:3px solid #ef7138}
+.biome-arcanique{border-left:3px solid #8e7be8}
 /* ARSENAL — deux pièces lisibles par famille, avec l'illustration canvas
    comme information principale. */
 .arsenal-entete{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;margin-bottom:14px;background:rgba(210,186,132,.12);border:1px solid rgba(210,186,132,.22);border-radius:6px}

@@ -550,6 +550,42 @@
   }
 
   /* Perdu dans la tour : même peine, autre récit. */
+  /* =================================================================
+     LES NEUF VIES
+
+     Un chat qui tombe dans la tour ne meurt pas : il y laisse une vie.
+     Neuf fois, on peut descendre chercher le corps et payer le rite. La
+     dixième, il n'y a plus rien à ramener.
+
+     Le compteur vit sur l'habitant, pas sur la descente : c'est une
+     propriété du chat, qu'il emporte d'une expédition à l'autre. Une
+     sauvegarde d'avant n'en a pas — on la considère intacte, neuf vies
+     pleines, plutôt que de punir après coup des chats déjà tombés.
+     ================================================================= */
+  const VIES_MAX = 9;
+  function vies(h) {
+    if (!h) return 0;
+    if (h.vies == null) h.vies = VIES_MAX;
+    return h.vies;
+  }
+  /* Rend ce qu'il reste APRÈS le coup. Zéro veut dire : plus de rite
+     possible, l'appelant doit passer par `perdre`. */
+  function perdreVie(hid) {
+    const h = habitant(hid); if (!h) return 0;
+    h.vies = Math.max(0, vies(h) - 1);
+    prevenir('vieHabitant', h);
+    return h.vies;
+  }
+  /* Le rite ne rend PAS la vie dépensée — sinon il n'y aurait pas de
+     compte à tenir. Cette porte existe pour ce qui viendra plus tard :
+     un repos long, une relique, une fête. */
+  function rendreVie(hid, n) {
+    const h = habitant(hid); if (!h) return 0;
+    h.vies = Math.min(VIES_MAX, vies(h) + (n || 1));
+    prevenir('vieHabitant', h);
+    return h.vies;
+  }
+
   function perdre(hid, ou) {
     const h = habitant(hid); if (!h) return null;
     libererHabitant(hid);
@@ -756,6 +792,7 @@
     renvoyer, perdre, peineDeDepart, tickMalaise, facteurMalaise,
     rangMetier, progresMetier, gagnerXp,
     rangHabitant, gagnerXpHabitant, gagnerAttribut, assurerProgression,
+    VIES_MAX, vies, perdreVie, rendreVie,
     progresMetierHabitant, progresAttributHabitant, progressionInfinie, xpPourNiveau,
     TRAITS, TRAITS_IDS,
     journal,

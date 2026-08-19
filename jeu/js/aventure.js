@@ -300,6 +300,11 @@
 
     /* ---- LE PÉRIL DU MOMENT ---- */
     c.appendChild(U().section('Le péril'));
+    /* LE PALIER. Quand un étage vient d'être nettoyé, la descente
+       s'arrête et attend. C'est le seul moment où le joueur décide, il
+       doit donc passer AVANT tout le reste du panneau. */
+    if (window.GameState && window.GameState.surPalier && window.GameState.surPalier())
+      c.appendChild(pavePalier(d));
     c.appendChild(paveRoute(d ? d.floor : window.Tour.prochainDepart()));
     c.appendChild(pavePeril(d ? d.floor : window.Tour.prochainDepart()));
 
@@ -381,7 +386,8 @@
             onclick: () => { window.GameState.toggleParty(hid); } }))));
     }
     if (!g.roster.length)
-      avanceeCorps.appendChild(A('div', { class: 'note faible', text: 'Personne encore. Les compagnons se recrutent dans le donjon lui-même — le premier attend au deuxième étage.' }));
+      avanceeCorps.appendChild(A('div', { class: 'note faible', text: "Personne encore. On ne recrute pas sous terre : la compagnie se forme ici, "
+              + 'au bourg. Choisissez des habitants, équipez-les, et ce sont eux qui descendront.' }));
     c.appendChild(avancee);
   }
 
@@ -493,6 +499,33 @@
   /* La ROUTE ENTIÈRE, d'un coup d'œil : six paliers, six gardes, et ce
      qu'il y a en réserve pour chacune. C'est ce tableau qui dit à
      l'alchimie ce qu'elle doit préparer ce soir. */
+  /* DEUX BOUTONS, ET RIEN D'AUTRE. Descendre, ou remonter avec ce qu'on
+     a. Le butin de la descente est en main mais n'est PAS acquis : il ne
+     rentre au bourg qu'en remontant, et c'est ce qui rend le choix
+     difficile — c'est le sujet du mode. */
+  function pavePalier(d) {
+    const A = el();
+    const etage = d ? d.floor : 0;
+    const prochain = etage + 1;
+    const boss = (prochain % 5 === 0);
+    return A('div', { class: 'cadre actif' },
+      A('div', { class: 'rangee entre' },
+        A('span', { class: 'tt', style: 'font-size:14px', text: 'Palier — étage ' + etage }),
+        A('span', { class: 'eti-or', text: 'la compagnie souffle' })),
+      A('div', { class: 'note', style: 'margin-top:6px',
+        text: boss
+          ? 'En dessous, un gardien tient l’étage ' + prochain + '. On ne le croise pas par hasard.'
+          : 'Ce qui a été ramassé ne rentre au bourg qu’en remontant. Plus bas, ça vaut davantage — et ça se perd aussi.' }),
+      A('div', { class: 'rangee', style: 'margin-top:10px;gap:6px' },
+        A('button', { class: 'b primaire', text: 'Descendre encore',
+          onclick: () => { if (window.GameState.descendreEncore()) {
+            U().dire('On descend.', 'bien'); } } }),
+        A('button', { class: 'b', text: 'Remonter au bourg',
+          onclick: () => { if (window.GameState.abortDescent) {
+            window.GameState.abortDescent();
+            U().dire('La compagnie remonte avec ce qu’elle a.', 'bien'); } } })));
+  }
+
   function paveRoute(etage) {
     const A = el();
     const box = A('div', { class: 'route' });

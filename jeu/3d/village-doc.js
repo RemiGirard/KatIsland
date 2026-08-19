@@ -40,7 +40,11 @@
 /* ============================================================
    1. Constantes
    ============================================================ */
-const RAYON_HEX = 5;      // rayon de la grille triangulaire de départ
+const RAYON_HEX = 6;      /* rayon de la grille triangulaire de départ.
+                             Cinq était juste : le bourg touchait ses rives
+                             avant d'avoir fini de grandir, et l'on bâtissait
+                             au coude à coude. Six laisse respirer, sans
+                             changer l'échelle de ce qu'on y pose. */
 const H         = 0.62;   // hauteur d'un bloc
 const H_TOIT    = 0.42;   // hauteur de faîtage
 const D_TOIT    = 0.30;   // retrait du faîtage (crée l'arête)
@@ -95,7 +99,13 @@ const TYPES = [
   { nom:'Forge', mur:'#8d8378', toit:'#4b4a52', parts:[
       { faces:['ouvert','mur','deco','mur'], pignon:true, pente:1.55 },
       { df:0, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
-      { dl:1, sommet:true, pignon:true, pente:1.55, mur:'#77716d', toit:'#3f4148',
+      /* LA HOTTE. Une forge ne se reconnaît pas à sa halle — toutes les
+         halles se ressemblent — mais à la masse ronde qui monte au-dessus
+         de l'âtre et fume. C'était un pignon de plus ; c'est maintenant un
+         fût de maçonnerie coiffé, qui tranche sur toutes les arêtes du
+         bourg et dit le métier de loin. */
+      { dl:1, sommet:true, rond:true, cone:true, haut:0.66,
+        mur:'#77716d', toit:'#3f4148',
         faces:['mur','mur','mur','mur'] },
       { df:1, sommet:true, pignon:true, pente:0.82, appentis:3,
         mur:'#786b5d', toit:'#55535a', faces:['mur','mur','mur','mur'] } ] },
@@ -130,8 +140,11 @@ const TYPES = [
   { nom:'Pêcherie', mur:'#93aab2', toit:'#5b6f78', bordEau:true, parts:[
       { faces:['ouvert','mur','deco','mur'], ponton:true, pignon:true, pente:1.30 },
       { df:2, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
-      { dl:1, sommet:true, pignon:true, pente:1.34,
-        mur:'#829ba5', faces:['mur','mur','mur','mur'] },
+      /* LE FUMOIR. Rond et coiffé bas, comme les fumoirs de bord de mer :
+         le hareng y pend en couronne autour du foyer central. C'est la
+         silhouette qui distingue une pêcherie d'une remise sur pilotis. */
+      { dl:1, sommet:true, rond:true, cone:true, haut:0.48,
+        mur:'#829ba5', toit:'#4f6068', faces:['mur','mur','mur','mur'] },
       { df:1, sommet:true, pignon:true, pente:0.86,
         mur:'#789198', toit:'#4d626b', faces:['mur','mur','mur','mur'] } ] },
 
@@ -139,14 +152,19 @@ const TYPES = [
       { faces:['ouvert','mur','deco','mur'], pignon:true, pente:0.72, appentis:1 },
       { df:0, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
       { df:1, faces:['ouvert','mur','mur','mur'], mur:'#776f66' },
-      { df:1, dl:1, sommet:true, pignon:true, pente:1.12,
+      /* LA MACHINERIE. Le chevalement porte la molette ; il lui faut en
+         face la masse ronde du treuil, plus haute que le reste, pour que
+         la mine se lise comme une machine et non comme une grange. */
+      { df:1, dl:1, sommet:true, rond:true, cone:true, haut:0.74,
         mur:'#706a64', toit:'#474442', faces:['mur','mur','mur','mur'] } ] },
 
   { nom:'Scierie', mur:'#b08a5e', toit:'#7a5a3f', parts:[
       { faces:['ouvert','mur','deco','mur'], roue:true, pignon:true, pente:0.85, appentis:1 },
       { df:0, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
       { df:1, faces:['ouvert','mur','mur','mur'], mur:'#96724f' },
-      { df:1, dl:1, sommet:true, pignon:true, pente:1.02,
+      /* LE SILO À SCIURE, en douves cerclées. Une scierie, c'est une roue
+         et un cylindre : le reste est du hangar. Le cylindre manquait. */
+      { df:1, dl:1, sommet:true, rond:true, cone:true, haut:0.58,
         mur:'#8d6949', toit:'#65472f', faces:['mur','mur','mur','mur'] } ] },
 
   { nom:'Laiterie', mur:'#e8e0d0', toit:'#c4a86a', parts:[
@@ -171,8 +189,21 @@ const TYPES = [
   // trois corps : boutique, tourelle ronde à l'étage, cour aux cristaux
   { nom:'Alchimie', mur:'#6a6390', toit:'#3f3b5c', parts:[
       { faces:['ouvert','mur','deco','mur'] },
-      { dl:1, rond:true, tourelle:true, sommet:true, cone:true, haut:0.70,
+      /* LA TOUR DE L'ALCHIMISTE, sur DEUX niveaux.
+
+         Le bourg est plat : hors le moulin, rien ne dépasse d'un étage, et
+         la silhouette d'ensemble n'a aucun accident. L'alchimiste est celui
+         qui a une raison de monter — on observe, on distille en hauteur, on
+         se tient à l'écart. Le fût prend donc un second niveau et une flèche
+         plus haute : de loin, deux verticales répondent au moulin.
+
+         `sommet` quitte cette part : c'est ce drapeau qui interdisait de
+         bâtir au-dessus. Il passe au couronnement, comme sur le moulin. */
+      { dl:1, rond:true, tourelle:true, cone:true, haut:0.70,
         faces:['deco','mur','deco','mur'] },
+      { dl:2, rond:true, sommet:true, cone:true, haut:0.82,
+        mur:'#5d5782', toit:'#37335a',
+        faces:['mur','mur','deco','mur'] },
       { df:0, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
       { df:1, sommet:true, pignon:true, pente:1.18,
         mur:'#536f73', toit:'#354f58', faces:['ouvert','mur','deco','mur'] } ] },
@@ -237,15 +268,21 @@ const TYPES = [
          large : elle porte le ponton, et au-dessus une galerie de bois d'où
          l'on descend les charges. Mur plein côté mer, la grande porte est de
          flanc, sur le quai. */
+      /* LE MAGASIN DOIT DOMINER LE QUAI. Il avait la pente la plus plate du
+         bourg — 0,58, quand le moindre atelier monte à 1,2 — et le port se
+         lisait donc comme un hangar posé au bord de l'eau. Un magasin de
+         port est haut : on y empile sous charpente, sur deux étages de
+         plancher, et sa masse se voit du large avant tout le reste. */
       { faces:['deco','ouvert','mur','mur'], ponton:true, galerie:true,
-        sommet:true, pignon:true, pente:0.58 },
+        sommet:true, pignon:true, pente:1.34 },
       // le quai dallé, au flanc du magasin : c'est là que les habitants chargent
       { df:1, cour:true, sommet:true, faces:['deco','deco','mur','deco'] },
       // la halle en retour, son appentis à marchandises ouvert côté terre
-      { df:2, sommet:true, pignon:true, pente:0.66, appentis:0,
+      { df:2, sommet:true, pignon:true, pente:1.02, appentis:0,
         mur:'#968f7e', toit:'#475256', faces:['mur','mur','mur','mur'] },
-      // la vigie du capitaine : tour basse coiffée d'un cône, en bout de môle
-      { df:3, sommet:true, rond:true, cone:true, haut:0.52,
+      /* La vigie : c'est l'amer du bourg, ce qu'on cherche des yeux en
+         rentrant. Une tour basse ne sert à rien — on la monte. */
+      { df:3, sommet:true, rond:true, cone:true, haut:0.86,
         mur:'#9c9689', toit:'#455054', faces:['mur','mur','mur','mur'] } ] }
 ];
 
@@ -710,6 +747,8 @@ scene.add(grpPoissons);
 
 const grpAiles = new THREE.Group();
 scene.add(grpAiles);
+const grpBalanciers = new THREE.Group();
+scene.add(grpBalanciers);
 
 // Ressac : bandes translucides qui glissent le long du profil de plage.
 const matVague = new THREE.MeshBasicMaterial({
@@ -3914,6 +3953,12 @@ function tas(cx, cz, r, y0, h, coul){
 }
 
 let rotatifs = [];
+/* LES PIÈCES QUI SE BALANCENT. Cousines des rotatives : mêmes objets
+   séparés de la géométrie fusionnée, même orientation par lookAt, mais
+   elles OSCILLENT autour de leur point d'accroche au lieu de tourner.
+   Une enseigne d'auberge qui pend sans bouger est ce qui fait qu'un
+   bourg a l'air d'un décor et non d'un lieu. */
+let balanciers = [];
 
 /* ---- corps plein --------------------------------------------------------- */
 /* La Tour sombre. Elle occupe quatre cellules, mais elle ne les REMPLIT pas :
@@ -4220,11 +4265,25 @@ function courSpeciale(c, L, sp, part){
   if(part.champ !== undefined){ champCulture(c, L, part.champ); return; }
   const T = TYPES[sp.t];
   const S = c.q.map(v => P[v]);
-  const y0 = L*H, yd = y0 + 0.13;
+  /* AU SOL, UNE COUR EST UNE RUE ; SUR UN TOIT, C'EST UNE TERRASSE.
+
+     Toutes les cours étaient traitées pareil : une estrade de treize
+     centimètres, ceinte d'un parapet sur ses quatre faces libres. Le
+     forgeron battait donc son fer au fond d'un enclos, l'étal du
+     boulanger était derrière un muret, et le bourg se lisait comme une
+     succession de cases fermées au lieu d'un village où l'on circule.
+
+     Au rez-de-chaussée la cour devient un simple DALLAGE affleurant, sans
+     bord et sans mur : l'enclume, l'étal, le baquet posent à même le sol
+     du village et l'on passe devant. En hauteur, la terrasse garde son
+     socle et son garde-corps — là, le bord est une nécessité, pas une
+     cloison. */
+  const auSol = (L === 0);
+  const y0 = L*H, yd = y0 + (auSol ? 0.035 : 0.13);
   ctx = {c, L, k:'toit', e:-1};
   const dalle = teinte('#9d9384', 1);
 
-  for(let i=0;i<4;i++){
+  if(!auSol) for(let i=0;i<4;i++){
     if(occ(c.nb[i], L)) continue;
     const A=S[i], B=S[(i+1)%4];
     pousserQuad([A[0],y0,A[1]], [B[0],y0,B[1]], [B[0],yd,B[1]], [A[0],yd,A[1]],
@@ -4256,12 +4315,26 @@ function courSpeciale(c, L, sp, part){
         poutre([A[0],yd+h,A[1]], [B[0],yd+h,B[1]], 0.018, bois);
       }
     }
-  }else{
+  }else if(!auSol){
+    /* Le garde-corps de la terrasse : seulement en hauteur. Au sol il
+       enfermait l'atelier au lieu de l'ouvrir sur la rue. */
     for(let i=0;i<4;i++){
       if(occ(c.nb[i], L)) continue;
       const A=In[i], B=In[(i+1)%4];
       pousserQuad([A[0],yd,A[1]], [B[0],yd,B[1]], [B[0],yd+0.16,B[1]], [A[0],yd+0.16,A[1]],
                   teinte(T.mur, 0.72), [(A[0]+B[0])/2-c.cx, 0.2, (A[1]+B[1])/2-c.cz], true);
+    }
+  }else{
+    /* AU SOL, PAS DE MUR — mais la cour ne doit pas pour autant se
+       confondre avec l'herbe : on marque son emprise par une bordure de
+       pavés posée à plat, comme le seuil d'un atelier qui déborde sur la
+       rue. Elle se lit d'en haut et n'arrête personne. */
+    const bord = teinte('#8d8474', 1);
+    for(let i=0;i<4;i++){
+      if(occ(c.nb[i], L)) continue;
+      const A=S[i], B=S[(i+1)%4], A2=In[i], B2=In[(i+1)%4];
+      pousserQuad([A[0],yd,A[1]], [B[0],yd,B[1]], [B2[0],yd,B2[1]], [A2[0],yd,A2[1]],
+                  bord, [0,1,0], true);
     }
   }
   detail = true;
@@ -4509,6 +4582,10 @@ function decorFace(c, L, sp, part, f, A, B, dir, y0, y1){
             y0+0.86, y0+0.96, teinte('#4a4038',1));
     boiteOr(mx+dir[0]*0.05, mz+dir[1]*0.05, dir[0], dir[1], 0.03, 0.13,
             y0+0.96, y0+1.02, teinte('#6f6a5e',1));
+    /* LA MOLETTE. Un chevalement sans sa poulie est une charpente : c'est
+       elle qui dit qu'on descend et qu'on remonte quelque chose. */
+    rotatifs.push({sorte:'poulie', x:mx + dir[0]*0.05, y:y0 + 0.92,
+                   z:mz + dir[1]*0.05, dx:dir[0], dz:dir[1], vit:1.25});
   }else if(t === 6){                             // scierie : roue à aubes
     cheminees.push({x:mx - dir[0]*0.18, y:y0+0.30, z:mz - dir[1]*0.18, force:0.35});
     rotatifs.push({sorte:'roue', x:mx + dir[0]*0.16, y:y0 + 0.30,
@@ -4539,10 +4616,12 @@ function decorFace(c, L, sp, part, f, A, B, dir, y0, y1){
            [mx+dir[0]*0.22, y0+0.49, mz+dir[1]*0.22], 0.008, fer);
     poutre([mx+dir[0]*0.24, y0+0.49, mz+dir[1]*0.24],
            [mx+dir[0]*0.24, y0+0.42, mz+dir[1]*0.24], 0.007, fer);
-    boiteOr(mx+dir[0]*0.24, mz+dir[1]*0.24, dir[0], dir[1], 0.012, 0.085,
-            y0+0.22, y0+0.42, teinte('#7a5a3a',1));
-    boiteOr(mx+dir[0]*0.245, mz+dir[1]*0.245, dir[0], dir[1], 0.006, 0.06,
-            y0+0.26, y0+0.38, teinte('#d9b45f',1));
+    /* LE PANNEAU NE FAIT PLUS PARTIE DE LA VILLE FIGÉE. Il pendait, bien
+       dessiné et parfaitement immobile — l'image même du décor. Il passe
+       aux balanciers, accroché sous la potence, et respire au vent. */
+    balanciers.push({sorte:'enseigne', x:mx+dir[0]*0.24, y:y0+0.49,
+                     z:mz+dir[1]*0.24, dx:dir[0], dz:dir[1],
+                     amp:0.19, vit:1.15});
   }else if(t === 14){                            // pépinière : serre appuyée
     for(let k=0;k<4;k++){
       const w=-0.21+k*0.14;
@@ -5000,6 +5079,93 @@ function amenagement(c, t, dRet, y){
     }
     boiteOr(X(-0.05,0.26), Z(-0.05,0.26), av[0], av[1], 0.10, 0.06, y, y+0.14,
             teinte('#7a6248',1));
+  }else if(t === 17){                            /* port : le quai de charge.
+       Un port ne se reconnaît pas à son bâtiment mais à ce qui traîne sur
+       son quai — c'est là que la marchandise attend. Le môle et sa grue
+       sont bâtis par `port3d.js` ; ici, c'est le désordre utile du bord
+       à quai : cabestan, bittes, caisses, futailles, cordages, ancre. */
+    const bois = teinte('#7a6248',1), fer = teinte('#3d3b40',1);
+    const chene = teinte('#6b5744',1), corde = teinte('#b8a179',1);
+    // LE CABESTAN : fût tronconique et barres de virage passées dedans
+    boiteOr(X(0.16,-0.20), Z(0.16,-0.20), av[0], av[1], 0.055, 0.055, y, y+0.055, fer);
+    boiteOr(X(0.16,-0.20), Z(0.16,-0.20), av[0], av[1], 0.045, 0.045, y+0.055, y+0.20, chene);
+    boiteOr(X(0.16,-0.20), Z(0.16,-0.20), av[0], av[1], 0.058, 0.058, y+0.20, y+0.235, chene);
+    for(const a of [0, Math.PI/3, -Math.PI/3]){
+      const ux = av[0]*Math.cos(a) - av[1]*Math.sin(a);
+      const uz = av[0]*Math.sin(a) + av[1]*Math.cos(a);
+      poutre([X(0.16,-0.20)-ux*0.17, y+0.175, Z(0.16,-0.20)-uz*0.17],
+             [X(0.16,-0.20)+ux*0.17, y+0.175, Z(0.16,-0.20)+uz*0.17], 0.012, bois);
+    }
+    // DEUX BITTES D'AMARRAGE, et l'aussière lovée à côté de l'une d'elles
+    for(const b of [0.24, -0.02]){
+      boiteOr(X(-0.28,b), Z(-0.28,b), av[0], av[1], 0.038, 0.038, y, y+0.13, chene);
+      boiteOr(X(-0.28,b), Z(-0.28,b), av[0], av[1], 0.052, 0.052, y+0.13, y+0.165, fer);
+    }
+    for(let k=0;k<3;k++){
+      const r = 0.085 - k*0.018;
+      boiteOr(X(-0.16,0.24), Z(-0.16,0.24), av[0], av[1], r, r,
+              y+k*0.022, y+(k+1)*0.022, corde);
+    }
+    // CAISSES EMPILÉES, l'une de travers : une pile parfaite ne se lit pas
+    boiteOr(X(0.02,0.20), Z(0.02,0.20), av[0], av[1], 0.085, 0.075, y, y+0.15, bois);
+    boiteOr(X(0.02,0.20), Z(0.02,0.20), av[0], av[1], 0.075, 0.068, y+0.15, y+0.27,
+            teinte('#8a6a4e',1));
+    boiteOr(X(0.14,0.16), Z(0.14,0.16), av[1], -av[0], 0.070, 0.062, y, y+0.13, bois);
+    // FUTAILLES : deux debout, une couchée sur ses cales
+    for(const [a,b] of [[-0.06,-0.24], [0.04,-0.30]]){
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.055, 0.055, y, y+0.17, chene);
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.060, 0.060, y+0.045, y+0.070, fer);
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.060, 0.060, y+0.110, y+0.135, fer);
+    }
+    poutre([X(-0.20,-0.26), y+0.055, Z(-0.20,-0.26)],
+           [X(-0.06,-0.26), y+0.055, Z(-0.06,-0.26)], 0.055, chene);
+    // PILE DE PLANCHES, tirées sur le quai
+    for(let k=0;k<4;k++){
+      boiteOr(X(0.28,0.06), Z(0.28,0.06), av[1], -av[0], 0.16, 0.055,
+              y+k*0.026, y+(k+1)*0.026 - 0.004, grain('#a58963', 0.9 + k*0.04, 0));
+    }
+    // L'ANCRE, appuyée contre les caisses : jas, verge, deux bras
+    poutre([X(-0.04,0.34), y+0.02, Z(-0.04,0.34)],
+           [X(0.06,0.30), y+0.34, Z(0.06,0.30)], 0.016, fer);
+    poutre([X(-0.10,0.34), y+0.28, Z(-0.10,0.34)],
+           [X(0.02,0.30), y+0.31, Z(0.02,0.30)], 0.011, fer);
+    poutre([X(-0.04,0.34), y+0.02, Z(-0.04,0.34)],
+           [X(-0.10,0.30), y+0.10, Z(-0.10,0.30)], 0.012, fer);
+    poutre([X(-0.04,0.34), y+0.02, Z(-0.04,0.34)],
+           [X(0.03,0.38), y+0.10, Z(0.03,0.38)], 0.012, fer);
+  }else if(t === 4){                             /* pêcherie : la cour de marée.
+       Le séchoir à filets est déjà sur le corps du bâtiment ; ce qui
+       manquait, c'est le travail du poisson — vider, saler, empiler. */
+    const bois = teinte('#6b5744',1), osier = teinte('#b99a63',1);
+    const sel = teinte('#e6e2d6',1), fer = teinte('#3d3b40',1);
+    // LA TABLE À VIDER : plateau sur deux tréteaux, tout au bord
+    for(const b of [-0.16, 0.16]){
+      poutre([X(-0.14,b), y, Z(-0.14,b)], [X(-0.14,b), y+0.20, Z(-0.14,b)], 0.018, bois);
+      poutre([X(-0.02,b), y, Z(-0.02,b)], [X(-0.02,b), y+0.20, Z(-0.02,b)], 0.018, bois);
+    }
+    boiteOr(X(-0.08,0), Z(-0.08,0), av[0], av[1], 0.085, 0.21, y+0.20, y+0.235,
+            grain('#9e8a6e', 0.95, 0));
+    boiteOr(X(-0.08,-0.05), Z(-0.08,-0.05), av[0], av[1], 0.035, 0.012,
+            y+0.235, y+0.245, fer);            // le couteau posé dessus
+    // CASIERS À CRABES, empilés en pyramide
+    for(const [a,b,h] of [[0.22,-0.22,0], [0.22,-0.08,0], [0.22,-0.15,0.12]]){
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.058, 0.052, y+h, y+h+0.11, osier);
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.062, 0.056, y+h+0.045, y+h+0.062,
+              teinte('#8a7346',1));
+    }
+    // PANIERS DE POISSON, dont un renversé
+    for(const [a,b] of [[0.06,0.26], [0.18,0.30]]){
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.055, 0.055, y, y+0.09, osier);
+      boiteOr(X(a,b), Z(a,b), av[0], av[1], 0.048, 0.048, y+0.09, y+0.115,
+              teinte('#8fa3ad',1));           // les prises qui dépassent
+    }
+    // LE BARIL DE SEL, cerclé, couvercle de guingois
+    boiteOr(X(-0.24,0.26), Z(-0.24,0.26), av[0], av[1], 0.062, 0.062, y, y+0.19, bois);
+    boiteOr(X(-0.24,0.26), Z(-0.24,0.26), av[0], av[1], 0.067, 0.067, y+0.05, y+0.075, fer);
+    boiteOr(X(-0.235,0.265), Z(-0.235,0.265), av[0], av[1], 0.058, 0.058,
+            y+0.19, y+0.205, sel);
+    // FLOTTEURS DE LIÈGE enfilés, roulés en tas
+    tas(X(-0.26,-0.24), Z(-0.26,-0.24), 0.075, y, 0.10, teinte('#c08a4e',1));
   }else if(t === 3){                             // bergerie : paille et brebis
     tas(X(0.20,-0.18), Z(0.20,-0.18), 0.12, y, 0.20, teinte('#d8bd6f',1));
     for(const [a,b,s] of [[-0.10,0.10,1],[0.02,-0.06,-1]]){
@@ -5631,7 +5797,7 @@ function construire(){
   vide(pos); vide(col); vide(nor); vide(lam);
   vide(posD); vide(colD); vide(norD); detail = false;
   for(let g=0;g<NB_LUEURS;g++){ vide(lpos[g]); vide(lcol[g]); }
-  meta = []; rotatifs = []; cheminees = []; perchoirs = [];
+  meta = []; rotatifs = []; balanciers = []; cheminees = []; perchoirs = [];
   const sigSol = empreinteSol();
   if(sigSol !== empreinteTerrain){
     construireTerrain();
@@ -6129,6 +6295,7 @@ function construire(){
 
   ombreARefaire = true;
   majAiles();
+  majBalanciers();
   if(!mouettesPretes){ majMouettes(); mouettesPretes = true; }
   construireFumee();
   if(graineVague !== graine){ construireVague(); graineVague = graine; }
@@ -6293,6 +6460,61 @@ function majAiles(){
   }
 }
 
+/* LES BALANCIERS. Même montage que les rotatives — un objet par pièce,
+   orienté par lookAt sur la normale du mur — mais on garde en plus leur
+   orientation de repos : une oscillation est un écart ABSOLU par rapport
+   à une verticale, pas un cumul comme une rotation. Sans cette copie de
+   référence, l'enseigne dériverait d'image en image jusqu'à se coucher. */
+let geoBalancier = {};
+function majBalanciers(){
+  while(grpBalanciers.children.length){
+    grpBalanciers.remove(grpBalanciers.children[grpBalanciers.children.length-1]);
+  }
+  for(const m of balanciers){
+    if(!geoBalancier[m.sorte]) geoBalancier[m.sorte] = construireBalancier(m.sorte);
+    const o = new THREE.Mesh(geoBalancier[m.sorte], matVille);
+    o.castShadow = false;
+    o.position.set(m.x, m.y, m.z);
+    o.lookAt(m.x + m.dx, m.y, m.z + m.dz);
+    o.userData.repos = o.quaternion.clone();
+    o.userData.amp = m.amp || 0.16;
+    o.userData.vit = m.vit || 1.4;
+    /* Une phase par pièce : deux enseignes voisines qui battraient
+       ensemble se liraient comme un défaut, pas comme du vent. */
+    o.userData.phase = hash3(Math.round(m.x*97), Math.round(m.z*97), 733) * Math.PI * 2;
+    grpBalanciers.add(o);
+  }
+}
+
+/* Géométries locales : la pièce PEND sous l'origine, dans le plan XY, et
+   l'axe de balancement est Z — celui que lookAt pointe vers le large. */
+function construireBalancier(sorte){
+  const sp=pos, sc=col, sn=nor, sm=meta, sl=lam, sp2=lpos, sc2=lcol, sd=detail;
+  detail = false;
+  pos=tampon(); col=tampon(); nor=tampon(); meta=[]; lam=tampon();
+  lpos=[]; lcol=[]; for(let g=0; g<NB_LUEURS; g++){ lpos.push(tampon(64)); lcol.push(tampon(64)); }
+  const fer = teinte('#3b3a3f',1);
+  if(sorte === 'enseigne'){
+    const planche = teinte('#7a5a3a',1), or = teinte('#d9b45f',1);
+    /* l'anneau d'accroche, puis le panneau qui pend dessous */
+    poutre([0,0,-0.010],[0,0,0.010], 0.010, fer);
+    poutre([0,-0.005,0],[0,-0.075,0], 0.007, fer);
+    boiteOr(0, 0, 1, 0, 0.012, 0.085, -0.275, -0.075, planche);
+    boiteOr(0, 0.006, 1, 0, 0.006, 0.060, -0.235, -0.115, or);
+  }else{                                   // fanion : une flamme d'étoffe
+    const toile = teinte('#c9553f',1);
+    poutre([0,0,-0.008],[0,0,0.008], 0.008, fer);
+    pousserQuad([0,-0.02,0], [0.055,-0.05,0], [0.055,-0.20,0], [0,-0.17,0],
+                toile, [0,0,1], false);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(fige(pos),3));
+  g.setAttribute('color',    new THREE.BufferAttribute(fige(col),3));
+  g.computeVertexNormals();
+  pos=sp; col=sc; nor=sn; meta=sm; lam=sl; lpos=sp2; lcol=sc2; detail=sd;
+  return g;
+}
+
 /* Géométries locales : bras dans le plan XY, rotation autour de Z. */
 function construireRotatif(sorte){
   const sp=pos, sc=col, sn=nor, sm=meta, sl=lam, sp2=lpos, sc2=lcol, sd=detail;
@@ -6343,6 +6565,29 @@ function construireRotatif(sorte){
     pousserQuad([0.17,0,0.26], [0.09,0.055,0.26], [0.09,-0.055,0.26], [0.09,-0.055,0.26],
                 or, [0,0,1], false);
     boiteOr(0, 0, 1, 0, 0.022, 0.022, 0.30, 0.345, or);
+  }else if(sorte === 'poulie'){           // molette de chevalement de mine
+    /* Une poulie de puits de mine : jante à gorge, rayons, moyeu. Elle
+       tourne vite et par à-coups — c'est ce qui distingue une machine
+       d'une aile de moulin. */
+    const R = 0.13, N = 12;
+    const fer = teinte('#4a4038',1), clair = teinte('#6f6a5e',1);
+    for(let k=0;k<N;k++){
+      const a=k/N*Math.PI*2, a2=(k+1)/N*Math.PI*2;
+      const cx=Math.cos(a), cy=Math.sin(a), dx=Math.cos(a2), dy=Math.sin(a2);
+      for(const z of [-0.026, 0.026]){
+        pousserQuad([cx*R, cy*R, z], [dx*R, dy*R, z], [dx*R*0.82, dy*R*0.82, z],
+                    [cx*R*0.82, cy*R*0.82, z], clair, [0,0,Math.sign(z)], false);
+      }
+      /* la gorge : le fond du V où court le câble */
+      pousserQuad([cx*R, cy*R, -0.026], [dx*R, dy*R, -0.026],
+                  [dx*R*0.90, dy*R*0.90, 0], [cx*R*0.90, cy*R*0.90, 0],
+                  fer, [cx, cy, -0.5], false);
+      pousserQuad([cx*R*0.90, cy*R*0.90, 0], [dx*R*0.90, dy*R*0.90, 0],
+                  [dx*R, dy*R, 0.026], [cx*R, cy*R, 0.026],
+                  fer, [cx, cy, 0.5], false);
+      if(k % 3 === 0) poutre([cx*0.02, cy*0.02, 0], [cx*R*0.84, cy*R*0.84, 0], 0.010, fer);
+    }
+    poutre([0,0,-0.040],[0,0,0.040], 0.020, fer);
   }else{                                   // roue à aubes
     const R = 0.34, N = 10, e = 0.085;
     const sombre = teinte('#5a4736',1), aube = teinte('#7d6448',1);
@@ -7247,9 +7492,24 @@ function boucle(){
      Les masquer évite leur surdessin sans modifier la silhouette du bourg. */
   const detailsProches = orbite.rayon < 43;
   meshDetails.visible = detailsProches;
-  meshFumee.visible = detailsProches && cheminees.length > 0;
+  /* LA FUMÉE RESTE VISIBLE DE LOIN. Elle était coupée au même seuil que
+     les menuiseries — donc éteinte exactement quand le joueur prend du
+     recul pour juger son bourg, au moment où il a le plus besoin de le
+     voir respirer. Cinq bouffées par cheminée ne coûtent rien ; une
+     poignée de vertex ne valait pas un village mort. */
+  meshFumee.visible = cheminees.length > 0;
   meshMouettes.visible = orbite.rayon < 52;
   for(const o of grpAiles.children) o.rotateZ(dt*(o.userData.vit || 0.55));
+  /* LES BALANCIERS. On repart de l'orientation de repos à chaque image :
+     un écart absolu, jamais un cumul. Deux sinus de périodes premières
+     entre elles évitent le battement mécanique d'une horloge. */
+  for(const o of grpBalanciers.children){
+    const u = o.userData;
+    const a = (Math.sin(temps*u.vit + u.phase) * 0.72
+             + Math.sin(temps*u.vit*0.41 + u.phase*1.7) * 0.28) * u.amp;
+    o.quaternion.copy(u.repos);
+    o.rotateZ(a);
+  }
   animerVague(temps);
   animerPoissons(temps);
   animerFumee(temps);

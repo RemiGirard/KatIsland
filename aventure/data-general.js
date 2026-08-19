@@ -24,7 +24,18 @@
     armor: { id: 'armor', icon: '', name: 'Armure',             desc: 'réduit les dégâts reçus (plafond 70 %)' },
     range: { id: 'range', icon: '', name: 'Portée',             desc: '0 = corps à corps ; sinon, on frappe de loin' },
   };
-  GameData.GEN_STAT_ORDER = ['hp', 'dmg', 'aspd', 'mspd', 'armor', 'range'];
+  /* LE BOUCLIER D'ENERGIE. Une reserve qui encaisse AVANT les points de
+     vie et se recharge seule apres un repit. Il ne se soigne pas : il
+     revient. C'est ce qui rend jouable un personnage en tissu, qui n'a ni
+     armure ni masse de vie — il evite, il encaisse le premier coup, il
+     attend. Sans lui, la voie magique n'a aucune facon de survivre.
+     `eshRegen` est ce qu'il regagne par seconde une fois le repit passe. */
+  GameData.GEN_STATS.esh = { id: 'esh', icon: '', name: 'Bouclier',
+    desc: 'encaisse avant les points de vie, et se recharge seul' };
+  GameData.GEN_STATS.eshRegen = { id: 'eshRegen', icon: '', name: 'Recharge',
+    desc: 'ce que le bouclier regagne par seconde' };
+  GameData.GEN_STAT_ORDER = ['hp', 'esh', 'dmg', 'aspd', 'mspd', 'armor', 'range', 'eshRegen'];
+  GameData.ESH_REPIT = 4.0;   // secondes sans coup recu avant que ca reparte
   // comment une stat s'affiche (l'aspd en décimales, le reste en entier)
   GameData.genStatFmt = function (k, v) {
     if (k === 'aspd') return (Math.round((v || 0) * 100) / 100).toFixed(2).replace('.', ',') + '/s';
@@ -219,9 +230,23 @@
              tier: biome.tier, biome: biome.id };
   };
   // nombre d'ennemis par étage
+  /* COMBIEN D'ENNEMIS TIENT UN ÉTAGE.
+
+     Un étage se pliait en une minute : deux à huit ennemis, trois
+     vagues au plus. On descendait par à-coups, sans jamais avoir le
+     temps de placer quoi que ce soit — ni un pouvoir, ni une posture,
+     ni un repli. Un étage doit durer, sinon rien de ce que le joueur a
+     préparé n'a l'occasion de servir.
+
+     On vise CINQ MINUTES de combat. Le compte monte donc franchement,
+     et surtout il continue de monter avec la profondeur au lieu de
+     plafonner à huit dès l'étage quarante-huit.
+
+     Le boss, lui, garde une escorte maigre : c'est LUI qu'on affronte,
+     et une nuée autour de lui ne fait que cacher ses tells. */
   GameData.floorEnemyCount = function (floor, isBoss) {
-    if (isBoss) return Math.min(3, 1 + Math.floor(floor / 20));
-    return Math.min(8, 2 + Math.floor(floor / 8));
+    if (isBoss) return Math.min(4, 1 + Math.floor(floor / 15));
+    return Math.min(26, 8 + Math.floor(floor / 3));
   };
 
   // ---------- LES TYPES D'ÉTAGE ----------
@@ -313,8 +338,148 @@
     { id: 'rare',       name: 'Rare',       icon: '', col: '#3d7ab8', lines: 3, mult: 3.0,  w: 15 },
     { id: 'epique',     name: 'Épique',     icon: '', col: '#8a56c0', lines: 4, mult: 5.2,  w: 5 },
     { id: 'legendaire', name: 'Légendaire', icon: '', col: '#d08a20', lines: 5, mult: 9.0,  w: 1.2 },
+    /* L'UNIQUE. Six lignes de stats, mais ce n'est pas ce qui compte : une
+       pièce unique DONNE UN POUVOIR à qui la porte. C'est la seule source
+       d'un pouvoir qui ne vienne ni de la classe ni de l'arbre, donc la
+       seule façon de sortir un personnage de son couloir. Son poids est
+       volontairement dérisoire — on en trouve, pas on en collectionne. */
+    { id: 'unique',     name: 'Unique',     icon: '', col: '#c2452f', lines: 6, mult: 14.0, w: 0.14 },
   ];
   GameData.rarityById = id => GameData.RARITIES.find(r => r.id === id) || GameData.RARITIES[0];
+
+  /* ------------------------------------------------------------------
+     LES PIÈCES UNIQUES
+
+     Chacune est une pièce NOMMÉE qui accorde un pouvoir du catalogue —
+     jamais un pouvoir inventé sur place : le moteur ne sait jouer que ce
+     que `GameData.POWERS` déclare, et un identifiant inconnu ferait une
+     pièce muette. `dev/smoke-pouvoirs.js` croise déjà les données contre
+     ces tables ; on reste dans le même contrat.
+
+     Une unique se tire dans les pièces dont l'emplacement correspond. Si
+     aucune ne correspond au tirage, la rareté RETOMBE à légendaire plutôt
+     que de rendre une pièce unique sans don — une unique sans pouvoir
+     serait un mensonge sur l'étiquette.
+     ------------------------------------------------------------------ */
+  const UNQ = (id, nom, slot, don, txt) => ({ id, nom, slot, don, txt });
+  GameData.UNIQUES = [
+    UNQ('brisemur',  'Brise-Mur',        'arme',     'gu_fracas',
+        'Le porteur frappe tout ce qui le touche.'),
+    UNQ('faucheuse', 'La Faucheuse',     'arme',     'gu_tourbillon',
+        'Elle tourne toute seule ; on suit.'),
+    UNQ('oeildelynx','Œil-de-Lynx',      'arme',     'ti_sniper',
+        'On voit où l’on tire, et de bien plus loin.'),
+    UNQ('trait9',    'Le Trait Fourchu', 'arme',     'ma_fourchu',
+        'Le trait se divise en chemin.'),
+    UNQ('barilnoir', 'Le Baril Noir',    'arme',     'ar_baril',
+        'On le pose, on s’écarte, on compte.'),
+    UNQ('pavois',    'Le Pavois',        'bouclier', 'ga_pavois',
+        'Derrière lui, la ligne tient.'),
+    UNQ('serment',   'Serment de Pierre','armure',   'ga_serment',
+        'Ce qu’il promet, il le tient jusqu’au bout.'),
+    UNQ('cape9',     'Cape des Neuf',    'armure',   'ec_esquive',
+        'Neuf fois on croit l’avoir touchée.'),
+    UNQ('heaumecri',  'Heaume du Cri',   'casque',   'ge_cri',
+        'On l’entend d’un bout à l’autre de l’étage.'),
+    UNQ('bottesfumee','Bottes de Fumée', 'bottes',   'ec_fumee',
+        'On part avant que le coup n’arrive.'),
+    UNQ('gantsronces','Gants de Ronces', 'gants',    'so_ronces',
+        'Qui les saisit le regrette.'),
+    UNQ('larme',      'La Larme',        'bijou',    'so_baume',
+        'Elle pleure sur les blessures des autres.'),
+    UNQ('refrain',    'Le Refrain',      'bijou',    'ba_refrain',
+        'On ne sait plus qui l’a commencé.'),
+
+    /* ------------------------------------------------------------------
+       LES UNIQUES D’ARCHÉTYPE
+
+       Treize pièces ne suffisaient pas : l’arbre ouvre quatorze bosquets,
+       et une voie sans pièce qui la signe reste une voie théorique. Chaque
+       unique ci-dessous APPUIE un build que l’arbre rend possible —
+       poison, feu, froid, foudre, ombre, nécromancie, deux mains, tank,
+       paladin — au lieu d’être un palier de statistiques de plus.
+
+       Le don reste un IDENTIFIANT du catalogue : `uniquesPour` écarte
+       d’office toute pièce dont le pouvoir n’existe plus, et la rareté
+       retombe alors à légendaire plutôt que de mentir sur l’étiquette.
+       ------------------------------------------------------------------ */
+
+    /* POISON — on ne frappe pas plus fort, on frappe plus longtemps */
+    UNQ('dentcreuse', 'La Dent Creuse',   'arme',     'ti_venin',
+        'Elle ne tue pas sur le coup. Elle ne rate jamais non plus.'),
+    UNQ('fioleverte', 'La Fiole Verte',   'bijou',    'ar_acide',
+        'Le bouchon est soudé. On ne l’ouvre pas, on la jette.'),
+
+    /* FEU — ce qui brûle continue de brûler */
+    UNQ('braisier',   'Le Braisier',      'arme',     'ar_gregeois',
+        'On la tient par la garde, et encore, pas longtemps.'),
+    UNQ('cendrier',   'Manteau de Cendre','armure',   'ma_meteore',
+        'Ce qui tombe dessus n’en repart pas.'),
+
+    /* FROID — on ne tue pas le froid, on immobilise */
+    UNQ('lamegivre',  'Lame de Givre',    'arme',     'ma_givre',
+        'Elle ne coupe pas : elle arrête.'),
+    UNQ('coeurgel',   'Le Cœur Gelé',     'bijou',    'ma_blizzard',
+        'Il bat une fois par hiver.'),
+
+    /* FOUDRE — elle choisit son chemin toute seule */
+    UNQ('fourche',    'La Fourche',       'arme',     'ma_fourchu',
+        'Un coup part, trois arrivent.'),
+    UNQ('paratonnerre','Le Paratonnerre', 'casque',   'ma_nova',
+        'Le porter par temps clair est déjà imprudent.'),
+
+    /* OMBRE — on frappe ce qui ne regarde pas */
+    UNQ('voilenoir',  'Le Voile Noir',    'armure',   'ec_fumee',
+        'On le voit surtout quand il n’est plus là.'),
+    UNQ('crocombre',  'Croc d’Ombre',     'arme',     'ec_execution',
+        'Il finit ce que la lumière a commencé.'),
+
+    /* NÉCROMANCIE — ce qui est tombé n’a pas fini de servir */
+    UNQ('osselet',    'L’Osselet',        'bijou',    'so_releve',
+        'On le lance. Ce qui se relève ne demande pas pourquoi.'),
+    UNQ('suaire',     'Le Suaire',        'armure',   'so_transfusion',
+        'Il prend aux uns pour rendre aux autres, et garde sa part.'),
+
+    /* DEUX MAINS — un seul coup, mais on ne le rejoue pas */
+    UNQ('fendoir',    'Le Fendoir',       'arme',     'gu_decapitation',
+        'Deux mains, et de la place autour.'),
+    UNQ('massacre',   'Le Massacre',      'arme',     'gu_tourbillon',
+        'On la lâche et elle continue.'),
+    UNQ('harnaisdos', 'Harnais de Dos',   'armure',   'gu_dechainement',
+        'Il tient les reins de ceux qui frappent trop fort.'),
+
+    /* TANK — tenir la ligne, et la faire tenir */
+    UNQ('ancre',      'L’Ancre',         'bottes',   'ga_ancrage',
+        'On ne le déplace pas. On contourne.'),
+    UNQ('cridefer',   'Cri de Fer',       'casque',   'ga_provoc',
+        'Tout le monde se retourne. C’est le but.'),
+    UNQ('halte',      'La Halte',         'bouclier', 'ga_halte',
+        'Ce qui arrive là s’arrête là.'),
+
+    /* PALADIN — ce qu’on protège vaut ce qu’on frappe */
+    UNQ('jugement',   'Le Jugement',      'arme',     'ga_jugement',
+        'Elle ne tranche pas la question : elle la clôt.'),
+    UNQ('sanctuaire', 'Le Sanctuaire',    'bouclier', 'so_sanctuaire',
+        'Derrière, on souffle. Devant, non.'),
+    UNQ('mainsjointes','Mains Jointes',   'gants',    'so_baume',
+        'Elles recousent plus vite qu’elles ne frappent.'),
+
+    /* MOBILITÉ ET SOUTIEN — le reste de l’anneau */
+    UNQ('talonvif',   'Talon Vif',        'bottes',   'ec_crochet',
+        'Il part avant que le coup arrive, et revient après.'),
+    UNQ('cormarche',  'Cor de Marche',    'bijou',    'ba_marche',
+        'On marche plus vite en l’entendant. On ne sait pas pourquoi.'),
+    UNQ('etendard',   'Le Vieil Étendard','armure',   'ge_etendard',
+        'Il a été porté par quelqu’un qui n’est pas rentré.'),
+    UNQ('oeilrepere', 'L’Œil qui Repère', 'casque',  'ec_reperage',
+        'Il voit ce qui brille avant ce qui mord.'),
+];
+  /* On ne garde que les dons que le moteur sait jouer : une table de
+     pouvoirs remaniée ne doit pas laisser d'unique muette derrière elle. */
+  GameData.uniquesPour = function (slot) {
+    const P = GameData.POWERS || {};
+    return GameData.UNIQUES.filter(u => u.slot === slot && P[u.don]);
+  };
 
   // ---------- LES FAMILLES D'ARMES ----------
   // `stat` = ce que la ligne PRINCIPALE de l'arme pousse ; `scale` convertit la
@@ -406,6 +571,54 @@
   })();
   GameData.baseById = id => GameData.ITEM_BASES.find(b => b.id === id) || null;
 
+  /* ------------------------------------------------------------------
+     CE QU'ON PEUT PORTER AVEC CE QU'ON TIENT
+
+     Trois façons de se battre, trois façons de s'habiller. Ce n'est pas
+     une contrainte gratuite : c'est ce qui fait qu'un personnage EST
+     quelque chose. Un chat en plaque avec un arc n'est ni un tireur ni un
+     homme d'armes — c'est un tas d'objets. On tranche donc :
+
+       le corps à corps se protège    -> plaque, ou maille pour qui court
+       le tir s'allège                -> cuir
+       la magie n'a que l'étoffe      -> robe
+
+     La VOIE se lit sur l'arme tenue, pas sur une classe : c'est ce qu'on
+     met dans les mains qui décide, et l'on peut en changer.
+     ------------------------------------------------------------------ */
+  GameData.VOIE_ARME = {
+    epee: 'corps', hache: 'corps', lance: 'corps', masse: 'corps', dagues: 'corps',
+    arc: 'distance', arbalete: 'distance', bombe: 'distance',
+    baton: 'magie', sceptre: 'magie',
+  };
+  GameData.VOIE_ARMURE = {
+    corps:    ['plaque', 'maille'],
+    distance: ['cuir'],
+    magie:    ['robe'],
+  };
+  GameData.VOIE_NOM = { corps: 'corps à corps', distance: 'tir', magie: 'magie' };
+  /* La voie de l'arme tenue. Sans arme, aucune contrainte : on s'habille
+     comme on veut tant qu'on n'a rien choisi. */
+  GameData.voieDe = function (item) {
+    if (!item) return null;
+    const b = GameData.baseById(item.base);
+    const fam = (b && b.fam) || item.fam;
+    return (fam && GameData.VOIE_ARME[fam]) || null;
+  };
+  /* La famille d'armure d'une pièce de protection, s'il y en a une. */
+  GameData.famArmure = function (item) {
+    if (!item) return null;
+    const b = GameData.baseById(item.base);
+    const fam = (b && b.fam) || item.fam;
+    return (GameData.VOIE_ARMURE.corps.concat(
+            GameData.VOIE_ARMURE.distance, GameData.VOIE_ARMURE.magie)
+           ).indexOf(fam) >= 0 ? fam : null;
+  };
+  GameData.armureVaPour = function (voie, fam) {
+    if (!voie || !fam) return true;
+    return (GameData.VOIE_ARMURE[voie] || []).indexOf(fam) >= 0;
+  };
+
   // une classe peut-elle porter cette pièce ? → null si oui, un motif sinon
   GameData.equipRefus = function (cls, item) {
     if (!item) return 'rien à porter';
@@ -453,7 +666,12 @@
     GEN_LN('l_range', 'range',  '', 'portée',             3.0,   0.5),
     // lignes spéciales : elles plafonnent, sinon elles cassent le jeu
     GEN_LN('l_vamp',  'lifesteal', '', 'vol de vie',      0.0016, 1, 1),
-    GEN_LN('l_perce', 'armorPen',  '', 'perforation',    0.06,   1),
+    /* LA PERFORATION N'ETAIT PAS UNE FRACTION. Elle est declaree sans le
+       drapeau `pct`, donc `lineValue` ne lui appliquait aucun plafond : au
+       tier 20 en unique elle sortait a 13 888, c'est-a-dire qu'une seule
+       piece annulait toute armure du jeu. C'est bien une part de l'armure
+       ignoree, donc une fraction — et l'echelle descend en consequence. */
+    GEN_LN('l_perce', 'armorPen',  '', 'perforation',   0.006,  1, 1),
     GEN_LN('l_butin', 'lootPct',   '', 'butin',           0.0022, 1, 1),
     GEN_LN('l_trouv', 'itemPct',   '', 'trouvaille',      0.0018, 1, 1),
     GEN_LN('l_chance','rarePct',   '', 'chance',          0.0014, 1, 1),
@@ -461,11 +679,49 @@
     GEN_LN('l_froid', 'resCold',     '', 'résistance au froid',  0.003, 1, 1),
     GEN_LN('l_poison','resPoison',   '', 'résistance au poison', 0.003, 1, 1),
     GEN_LN('l_foudre','resLightning','', 'résistance à la foudre', 0.003, 1, 1),
+    GEN_LN('l_ombre', 'resShadow',   '', "résistance à l'ombre",  0.003, 1, 1),
+    GEN_LN('l_resmag','resMagic',    '', 'résistance magique',     0.003, 1, 1),
+    /* LE BOUCLIER : une reserve plate, et sa recharge. */
+    GEN_LN('l_esh',   'esh',      '', "bouclier d'énergie",       4.2,   0.55),
+    GEN_LN('l_eshreg','eshRegen', '', 'recharge du bouclier',      0.35,  0.5),
+    /* LES PENETRATIONS : elles ignorent une part de la defense d'en face.
+       Deux, parce qu'il y a deux defenses — l'armure et la resistance. */
+    GEN_LN('l_permag','magicPen', '', 'pénétration magique',       0.055, 1, 1),
+    /* LE CRITIQUE. La chance de le declencher, et ce qu'il ajoute. */
+    GEN_LN('l_crit',  'critChance','', 'chance de critique',       0.0022, 1, 1),
+    GEN_LN('l_critd', 'critMult',  '', 'dégâts critiques',         0.010,  1, 1),
+    /* LA VITESSE EN POURCENTAGE. Elle existait en plat (`mspd`), ce qui
+       ne suffit pas : un plat de plus ne se sent plus quand la base a
+       monte. Mais elle se PLAFONNE durement — voir LINE_CAP. */
+    GEN_LN('l_haste', 'mspdPct',  '', 'vitesse de déplacement',    0.0016, 1, 1),
   ];
   GameData.lineById = id => GameData.ITEM_LINES.find(l => l.id === id) || null;
   // les stats en pourcentage sont BORNÉES : un vol de vie de 300 %, non.
-  GameData.LINE_CAP = { lifesteal: 0.35, lootPct: 1.5, itemPct: 1.2, rarePct: 0.8,
-                        resFire: 0.75, resCold: 0.75, resPoison: 0.75, resLightning: 0.75 };
+  /* LES PLAFONDS.
+
+     LA VITESSE DE DEPLACEMENT est le cas qui compte. +50 %, c'est deja
+     enorme : le personnage traverse l'arene avant que la vague soit
+     posee, sort de toutes les zones, et le combat cesse d'exister. On la
+     bride donc a la moitie, et c'est le plafond le plus bas de la table.
+
+     LES RESISTANCES tiennent a 75 % : au-dela on devient insensible a un
+     element entier, et l'ennemi qui le porte n'a plus rien a dire.
+
+     LES PENETRATIONS aussi, pour la raison inverse : passer 100 % de
+     l'armure d'en face rendrait toute defense decorative. `armorPen`
+     n'etait PAS plafonnee — c'etait un trou, deux lignes epiques
+     suffisaient a l'annuler.
+
+     LE CRITIQUE : la chance monte a 75 % (un critique garanti n'est plus
+     un critique, c'est un degat de base), le multiplicateur a +300 %. */
+  GameData.LINE_CAP = {
+    lifesteal: 0.35, lootPct: 1.5, itemPct: 1.2, rarePct: 0.8,
+    resFire: 0.75, resCold: 0.75, resPoison: 0.75, resLightning: 0.75,
+    resShadow: 0.75, resMagic: 0.75,
+    armorPen: 0.75, magicPen: 0.75,
+    critChance: 0.75, critMult: 3.0,
+    mspdPct: 0.50,
+  };
   GameData.lineValue = function (line, tier, rarityId) {
     const R = GameData.rarityById(rarityId);
     const v = GameData.itemPower(tier) * R.mult * line.scale * line.part;
@@ -1419,6 +1675,74 @@
       txt: 'Plus personne ne regarde ailleurs pendant six secondes',
     }),
 
+    /* ================================================================
+       LES POUVOIRS DE L’ANNEAU
+
+       Les soixante-douze premiers sont des capacites DE CLASSE : chacun
+       appartient a un metier, et l’arbre partage n’en distribue que ce
+       que ses bosquets veulent bien citer. Ceux-ci sont differents — ils
+       n’appartiennent a personne et ne s’obtiennent QUE par l’arbre, au
+       bout d’un theme. Ce sont eux que les runes retouchent.
+
+       Chacun n’utilise que des `kind` que l’arene sait jouer : un pouvoir
+       dont le `kind` est inconnu est un pouvoir muet, et le contrat de ce
+       fichier l’interdit.
+       ================================================================ */
+
+    an_boulefeu: GEN_PW({
+      id: 'an_boulefeu', cls: null, icon: '', name: 'Boule de feu', cd: 7,
+      kind: 'aoe_point', cible: 'sol',
+      range: 190, radius: 52, mult: 1.7, elem: 'feu',
+      tags: ['degats', 'zone'],
+      ia: { veut: 'groupe', prio: 62, quand: { densite: 2 },
+            motif: 'attend deux ennemis groupes' },
+      txt: 'Une boule qui part et qui eclate',
+    }),
+    an_brasier: GEN_PW({
+      id: 'an_brasier', cls: null, icon: '', name: 'Brasier', cd: 11,
+      kind: 'field', cible: 'sol',
+      range: 160, radius: 78, dur: 5, tick: 0.5, mult: 0.45, elem: 'feu',
+      tags: ['degats', 'zone'],
+      ia: { veut: 'groupe', prio: 55, quand: { densite: 2 },
+            motif: 'pose le feu sous un groupe' },
+      txt: 'Le sol brule, et continue de bruler',
+    }),
+    an_nuee: GEN_PW({
+      id: 'an_nuee', cls: null, icon: '', name: 'Nuee acide', cd: 10,
+      kind: 'field', cible: 'sol',
+      range: 170, radius: 72, dur: 6, tick: 0.6, mult: 0.38, elem: 'poison',
+      tags: ['degats', 'zone', 'debuff'],
+      ia: { veut: 'groupe', prio: 52, quand: { densite: 2 },
+            motif: 'noie un groupe sous l acide' },
+      txt: 'Un nuage qui ronge tant qu’on y reste',
+    }),
+    an_eclatgel: GEN_PW({
+      id: 'an_eclatgel', cls: null, icon: '', name: 'Eclat de gel', cd: 8,
+      kind: 'aoe_self', cible: 'soi',
+      radius: 70, mult: 1.1, slow: 0.45, elem: 'froid',
+      tags: ['degats', 'zone', 'controle'],
+      ia: { veut: 'proche', prio: 58, quand: { foesMin: 2, dist: 0.9 },
+            motif: 'attend d avoir du monde au contact' },
+      txt: 'Tout ce qui touche se fige',
+    }),
+    an_arcfoudre: GEN_PW({
+      id: 'an_arcfoudre', cls: null, icon: '', name: 'Arc de foudre', cd: 6,
+      kind: 'bolt', cible: 'ennemi',
+      range: 210, mult: 1.5, chain: 2, elem: 'foudre',
+      tags: ['degats'],
+      ia: { veut: 'menace', prio: 60, quand: { foesMin: 1 },
+            motif: 'vise ce qui fait le plus mal' },
+      txt: 'Elle saute d une cible a l autre',
+    }),
+    an_fauxombre: GEN_PW({
+      id: 'an_fauxombre', cls: null, icon: '', name: 'Faux d ombre', cd: 9,
+      kind: 'line', cible: 'ennemi',
+      len: 240, w: 34, mult: 1.9, elem: 'ombre',
+      tags: ['degats', 'zone'],
+      ia: { veut: 'groupe', prio: 57, quand: { densite: 2 },
+            motif: 'cherche un alignement' },
+      txt: 'Une coupe qui traverse la ligne',
+    }),
   };
   GameData.powerById = id => GameData.POWERS[id] || null;
 
@@ -1486,26 +1810,26 @@
     // 600 duels par colonne) : SEUL 0 %, à DEUX 30 %, à TROIS 70 %. Le premier
     // gardien demande donc une compagnie — et le premier compagnon est
     // désormais garanti (GameData.GEN_PREMIER_COMPAGNON).
-    tour:        { types: ['lancier', 'eclaireur'], animals: ['rat', 'corbeau', 'fouine'],
+    tour:        { types: ['lancier', 'eclaireur'], animals: ['rat', 'corbeau', 'fouine', 'belette', 'pie', 'chauvesouris'],
                    boss: { type: 'costaud',  hpMult: 4,  patterns: ['ecrasement'],
                            enrageAt: 0.3, tempo: { base: 1.4, enrage: 1, desperate: 0.63 } } },
     // LE GARDIEN DE LA GROTTE EST LENT ET LOURD : ses patrons tombent moins
     // souvent, mais la croix couvre la moitié de la salle.
-    grotte:      { types: ['lancier', 'fronde', 'targier'], animals: ['rat', 'blaireau', 'crapaud'],
+    grotte:      { types: ['lancier', 'fronde', 'targier'], animals: ['rat', 'blaireau', 'crapaud', 'araignee', 'taupe', 'salamandre'],
                    boss: { type: 'targier',  hpMult: 9,  patterns: ['balayage', 'croix'],
                            tempo: { base: 1.3, enrage: 0.95, desperate: 0.6 } } },
     // L'AURA DES CRISTAUX S'EMPORTE TÔT — mais n'invoque jamais : son combat
     // est un duel, pas un siège.
-    cristaux:    { types: ['fronde', 'traqueur', 'mage'], animals: ['corbeau', 'fouine', 'renard'],
+    cristaux:    { types: ['fronde', 'traqueur', 'mage'], animals: ['corbeau', 'renard', 'lucane', 'hermine', 'prisme'],
                    boss: { type: 'aura',     hpMult: 12, patterns: ['salve', 'balayage', 'traque'],
                            enrageAt: 0.65, summonAt: 0 } },
-    champignons: { types: ['mage', 'traqueur', 'targier', 'essaim'], animals: ['crapaud', 'rat', 'sanglier'],
+    champignons: { types: ['mage', 'traqueur', 'targier', 'essaim'], animals: ['crapaud', 'sanglier', 'limace', 'guepe', 'bolet'],
                    boss: { type: 'rempart',  hpMult: 14, patterns: ['ecrasement', 'salve', 'etoile'] } },
-    lave:        { types: ['sapeur', 'artilleur', 'costaud'], animals: ['chien', 'sanglier', 'renard'],
+    lave:        { types: ['sapeur', 'artilleur', 'costaud'], animals: ['chien', 'renard', 'basilic', 'scorpion', 'fournaise'],
                    boss: { type: 'artilleur', hpMult: 17, patterns: ['ruee', 'etoile', 'salve'] } },
     // LE CHRONARQUE DÉSESPÈRE PLUS TÔT ET PLUS FORT : dès 35 % de PV, un
     // tempo frénétique — la fin du dernier biome doit être son sommet.
-    morts:       { types: ['mage', 'assassin', 'invocateur'], animals: ['rat', 'corbeau', 'fouine'],
+    morts:       { types: ['mage', 'assassin', 'invocateur'], animals: ['fouine', 'chauvesouris', 'goule', 'spectre', 'liche'],
                    boss: { type: 'chronarque', hpMult: 22, patterns: ['ruee', 'etoile', 'traque', 'ecrasement', 'croix'],
                            desperateAt: 0.35, tempo: { desperate: 0.32 } } },
   };
@@ -1544,6 +1868,11 @@
     froid:    { id: 'froid',    icon: '', name: 'froid',    col: '#7ac8ff', status: 'chill',  res: 'resCold' },
     poison:   { id: 'poison',   icon: '', name: 'poison',   col: '#8adf5a', status: 'poison', res: 'resPoison' },
     foudre:   { id: 'foudre',   icon: '', name: 'foudre',   col: '#ffe04a', status: 'shock',  res: 'resLightning' },
+    /* L'OMBRE. Cinquieme element, ajoute avec `resShadow` : sans lui la
+       resistance existait et ne protegeait de rien. Son statut `wither`
+       est declare dans `applyStatus` — un element dont le statut manque
+       est un element muet. */
+    ombre:    { id: 'ombre',    icon: '', name: 'ombre',    col: '#a06ad0', status: 'wither', res: 'resShadow' },
   };
   // assignation d'un élément par type d'ennemi (null = physique)
   GameData.ENEMY_ELEM = {
@@ -1572,6 +1901,19 @@
     charge:    { icon: '', name: 'Charge',     txt: 'ruée en ligne droite qui projette' },
     nuee:      { icon: '', name: 'Nuée',       txt: 'appelle un congénère en renfort' },
     crachat:   { icon: '', name: 'Crachat',    txt: 'crache une flaque qui ronge' },
+    /* LES POUVOIRS DE LA FAUNE ÉLARGIE. Chacun doit dire quelque chose que
+       le joueur puisse LIRE en combat : on ne met pas un pouvoir pour
+       remplir une colonne. */
+    embrase:   { icon: '', name: 'Embrasement', txt: 'sa morsure met le feu' },
+    givre:     { icon: '', name: 'Givre',       txt: 'fige ce qui approche de trop près' },
+    arc:       { icon: '', name: 'Arc',         txt: 'la foudre saute d’une cible à l’autre' },
+    drain:     { icon: '', name: 'Drain',       txt: 'ce qu’il retire, il se le rend' },
+    toile:     { icon: '', name: 'Toile',       txt: 'entrave qui ralentit longtemps' },
+    spores:    { icon: '', name: 'Spores',      txt: 'un nuage qui ronge et se propage' },
+    fracture:  { icon: '', name: 'Fracture',    txt: 'brise l’armure de ce qu’il touche' },
+    voile:     { icon: '', name: 'Voile',       txt: 'disparaît, et frappe de dos' },
+    reveil:    { icon: '', name: 'Réveil',      txt: 'relève ce qui est tombé près de lui' },
+    eclat:     { icon: '', name: 'Éclat',       txt: 'explose en échardes en mourant' },
   };
   GameData.ADV_ANIMALS = {
     rat:      GEN_AN('rat',      'Rat d’égout',       'Rat d’égout',       'eclaireur', 'swarmer',      'poison', 0.82,
@@ -1590,6 +1932,66 @@
                      { id: 'nuee', cd: 13, max: 2 }),
     crapaud:  GEN_AN('crapaud',  'Crapaud venimeux',  'Crapaud venimeux',  'sapeur',    'zone_caster',  'poison', 0.92,
                      { id: 'crachat', cd: 6, rayon: 1.5, duree: 6 }),
+
+    /* ------------------------------------------------------------------
+       LA FAUNE ÉLARGIE
+
+       Huit bêtes pour six biomes, dont deux seulement portaient un
+       élément : les résistances n’avaient presque rien à résister, et une
+       descente entière se jouait contre le même bestiaire.
+
+       Chaque bête neuve porte UN élément et UN pouvoir lisible. Les cinq
+       éléments sont couverts, et chaque biome a désormais sa couleur
+       dominante — c’est ce qui rend une résistance CHOISIE plutôt que
+       subie : on sait ce qui attend en bas.
+       ------------------------------------------------------------------ */
+    /* LA TOUR — physique et ombre, le bestiaire d’apprentissage */
+    belette:  GEN_AN('belette',  'Belette hargneuse', 'Belette hargneuse', 'eclaireur', 'flanker',      null,     0.80,
+                     { id: 'voile', cd: 10, duree: 1.8 }),
+    pie:      GEN_AN('pie',      'Pie chapardeuse',   'Pie chapardeuse',   'fronde',    'ranged_kiter', null,     0.84,
+                     { id: 'larcin', cd: 12, part: 0.08 }),
+    chauvesouris: GEN_AN('chauvesouris', 'Chauve-souris', 'Chauve-souris', 'essaim',    'swarmer',      'ombre',  0.72,
+                     { id: 'drain', cd: 7, part: 0.35 }),
+
+    /* LES GROTTES — poison et feu souterrain */
+    araignee: GEN_AN('araignee', 'Araignée des puits','Araignée des puits','traqueur',  'zone_caster',  'poison', 0.90,
+                     { id: 'toile', cd: 9, rayon: 2.2, duree: 4, ralenti: 0.45 }),
+    taupe:    GEN_AN('taupe',    'Taupe géante',      'Taupe géante',      'costaud',   'rusher',       null,     1.05,
+                     { id: 'fracture', cd: 8, perte: 0.35, duree: 6 }),
+    salamandre: GEN_AN('salamandre','Salamandre noire','Salamandre noire', 'sapeur',    'bruiser',      'feu',    0.95,
+                     { id: 'embrase', cd: 6, duree: 3 }),
+
+    /* LES CRISTAUX — foudre et froid, tout y résonne */
+    lucane:   GEN_AN('lucane',   'Lucane de quartz',  'Lucane de quartz',  'artilleur', 'ranged_kiter', 'foudre', 0.93,
+                     { id: 'arc', cd: 8, sauts: 3, perte: 0.3 }),
+    hermine:  GEN_AN('hermine',  'Hermine des glaces','Hermine des glaces','assassin',  'fuyard',       'froid',  0.86,
+                     { id: 'givre', cd: 7, rayon: 1.8, duree: 2.5 }),
+    prisme:   GEN_AN('prisme',   'Prisme animé',      'Prisme animé',      'aura',      'garde',        'foudre', 1.00,
+                     { id: 'eclat', cd: 0, degats: 1.4, rayon: 2 }),
+
+    /* LES CHAMPIGNONS — le poison, partout */
+    limace:   GEN_AN('limace',   'Limace baveuse',    'Limace baveuse',    'targier',   'bruiser',      'poison', 1.00,
+                     { id: 'crachat', cd: 7, rayon: 1.8, duree: 7 }),
+    guepe:    GEN_AN('guepe',    'Guêpe fongique',    'Guêpe fongique',    'essaim',    'swarmer',      'poison', 0.74,
+                     { id: 'spores', cd: 9, rayon: 2.4, duree: 5 }),
+    bolet:    GEN_AN('bolet',    'Bolet marcheur',    'Bolet marcheur',    'rempart',   'garde',        'poison', 1.15,
+                     { id: 'eclat', cd: 0, degats: 1.2, rayon: 2.6 }),
+
+    /* LA LAVE — le feu, et ce qui le supporte */
+    basilic:  GEN_AN('basilic',  'Basilic de scorie', 'Basilic de scorie', 'lancier',   'rusher',       'feu',    1.08,
+                     { id: 'embrase', cd: 5, duree: 4 }),
+    scorpion: GEN_AN('scorpion', 'Scorpion de braise','Scorpion de braise','traqueur',  'flanker',      'feu',    0.98,
+                     { id: 'fracture', cd: 9, perte: 0.4, duree: 5 }),
+    fournaise: GEN_AN('fournaise','Gueule de fournaise','Gueule de fournaise','mage',   'zone_caster',  'feu',    1.12,
+                     { id: 'crachat', cd: 6, rayon: 2.6, duree: 5 }),
+
+    /* LES MORTS — l’ombre, et ce qui ne reste pas mort */
+    goule:    GEN_AN('goule',    'Goule affamée',     'Goule affamée',     'costaud',   'meute',        'ombre',  1.02,
+                     { id: 'drain', cd: 8, part: 0.4 }),
+    spectre:  GEN_AN('spectre',  'Spectre de mineur', 'Spectre de mineur', 'assassin',  'flanker',      'ombre',  0.94,
+                     { id: 'voile', cd: 9, duree: 2.2 }),
+    liche:    GEN_AN('liche',    'Petite liche',      'Petite liche',      'mage',      'ranged_kiter', 'ombre',  1.10,
+                     { id: 'reveil', cd: 14, max: 2 }),
   };
   GameData.animalById = id => GameData.ADV_ANIMALS[id] || null;
 

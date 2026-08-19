@@ -40,6 +40,16 @@
       window.Village.retirer(b.id);
     }
 
+    /* KIT DE TEST, À USAGE UNIQUE.
+
+       Cette petite migration ne s'active que dans le navigateur qui possède
+       déjà une sauvegarde. Elle permet de transformer LA partie de travail en
+       île-laboratoire sans modifier l'équilibrage des nouvelles parties : une
+       marque séparée de la sauvegarde la rend définitivement inerte après son
+       premier passage. La copie brute permet de revenir à l'état précédent
+       depuis la console ou un futur bouton de restauration. */
+    if (reprise) appliquerKitTestUneFois();
+
     /* La Tour sombre est un morceau de l'île. Elle existe sur une partie
        neuve comme sur une ancienne sauvegarde : cliquer sa silhouette
        suffit pour préparer l'équipée et lancer le mode aventure. */
@@ -142,6 +152,83 @@
     const enregistrer = () => { E().plan = window.Village.plan(); window.Etat.sauver(true); };
     addEventListener('beforeunload', enregistrer);
     addEventListener('visibilitychange', () => { if (document.hidden) enregistrer(); });
+  }
+
+  function appliquerKitTestUneFois() {
+    const MARQUE = 'bourg.kit-test-batiments.2026-08-19';
+    const BACKUP = 'bourg.sauvegarde.avant-kit-test.2026-08-19';
+    let deja = false;
+    try { deja = localStorage.getItem(MARQUE) === '1'; }
+    catch (e) { return; }
+    if (deja) return;
+
+    const e = E();
+    try {
+      const brut = localStorage.getItem('bourg.sauvegarde.v1');
+      if (brut && !localStorage.getItem(BACKUP)) localStorage.setItem(BACKUP, brut);
+    } catch (err) { /* le jeu saura signaler lui-même un stockage interdit */ }
+
+    /* Aucun chantier ni amélioration en attente : le laboratoire commence
+       dans un état stable. Les habitants qui y travaillaient redeviennent
+       disponibles, les postes de production déjà choisis restent en place. */
+    for (const h of (e.habitants || []))
+      if (h.aff && h.aff.k === 'chantier') h.aff = null;
+    for (const job of ((e.chantier && e.chantier.file) || []))
+      if (job && job.k === 'construire' && job.bat) window.Village.retirer(job.bat);
+    e.chantier = { file: [], prog: 0, ouvriers: [] };
+
+    /* On ramène tout l'existant au niveau de base et l'on retire annexes,
+       outils et améliorations. Ce sont bien les bâtiments, pas leurs
+       évolutions, que cette sauvegarde doit permettre d'essayer. */
+    for (const id in e.bat) {
+      const b = e.bat[id];
+      b.niv = 1; b.xp = 0; b.outil = null; b.am = {}; b.raff = {};
+      window.Etat.majPostes(b);
+      window.Village.rehausser(id, 1);
+    }
+
+    /* Les lieux exigeants passent d'abord : quais et parcelles agricoles
+       prennent le sol dont ils ont besoin. Les ateliers urbains peuvent
+       ensuite monter sur plusieurs terrasses si l'île est déjà dense. */
+    const types = window.BAT_ORDRE.slice().sort((a, b) => {
+      const da = window.BAT[a], db = window.BAT[b];
+      const pa = window.Village.bordEau(a) ? 0 : ((da.cat === 'recolte' || da.cat === 'elevage' || a === 'descente') ? 1 : 2);
+      const pb = window.Village.bordEau(b) ? 0 : ((db.cat === 'recolte' || db.cat === 'elevage' || b === 'descente') ? 1 : 2);
+      return pa - pb;
+    });
+    const manquants = [];
+    for (const type of types) {
+      e.vus['carnet:' + type] = true;
+      e.vus['bat:' + type] = true;
+      if (window.Etat.aBatiment(type)) continue;
+      const d = window.BAT[type];
+      const empilable = !window.Village.bordEau(type) && d.cat !== 'recolte' && d.cat !== 'elevage' && type !== 'descente';
+      let pose = window.Village.poser(type, null, null, null, 1, null, 0);
+      if (!pose && empilable)
+        for (let niveau = 1; niveau <= 12 && !pose; niveau++)
+          pose = window.Village.poser(type, null, null, null, 1, null, niveau);
+      if (!pose) { manquants.push(type); continue; }
+      window.Etat.creerBatiment(type, pose.id);
+    }
+
+    /* Le stock de test ignore volontairement les plafonds : il doit servir à
+       éprouver toutes les recettes, même avant la construction d'entrepôts. */
+    for (const id in window.RES) {
+      e.res[id] = 100000;
+      e.vus['res:' + id] = true;
+    }
+    window.Etat.invaliderCap();
+    e.plan = window.Village.plan();
+    window.Etat.journal('Île de test préparée : tous les bâtiments de base et 100 000 de chaque ressource.', 'butin');
+    if (manquants.length)
+      window.Etat.journal('Parcelles introuvables pour : ' + manquants.map(id => window.BAT[id].nom).join(', ') + '.', 'alerte');
+
+    window.Etat.sauver(true);
+    try { localStorage.setItem(MARQUE, '1'); } catch (err) { }
+    U().dire(manquants.length
+      ? 'Kit de test chargé, mais ' + manquants.length + ' bâtiment(s) manquent de place.'
+      : 'Kit de test chargé : île complète et 100 000 de chaque ressource.',
+      manquants.length ? 'alerte' : 'butin', 7000);
   }
 
   /* =================================================================

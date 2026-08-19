@@ -522,6 +522,7 @@
       rare:       { froid: '#a8bcd8', chaud: '#6a7f9e', or: '#7a86a0', gemme: '#4a86c8' },
       epique:     { froid: '#bfaad8', chaud: '#7d6a9c', or: '#8a7aa8', gemme: '#8a56c0' },
       legendaire: { froid: '#e2cf9a', chaud: '#a8862e', or: '#d8ab2c', gemme: '#ffb830' },
+      unique:     { froid: '#e8b4a4', chaud: '#a83c2a', or: '#c2452f', gemme: '#ff5a3c' },
     };
     const ART_BOIS = '#6b4c2a', ART_BOIS_C = '#8a6a40', ART_CUIR = '#7a5636';
     function artInk(g, s2) { g.strokeStyle = 'rgba(24,20,16,0.55)'; g.lineWidth = Math.max(0.8, s2 * 0.028); }
@@ -1736,6 +1737,10 @@
         cls, type: def ? def.base : 'heros', tint: def ? def.tint : '#c9a24a',
         icon: def ? def.icon : '', stance,
         st, hp: st.hp, hpMax: st.hp,
+        /* LE BOUCLIER D\u2019ENERGIE. Plein au depart : on entre dans la salle
+           reposé. `eshT` compte le temps ECOULE DEPUIS LE DERNIER COUP —
+           c\u2019est lui qui decide du repit, pas un minuteur global. */
+        esh: st.esh || 0, eshMax: st.esh || 0, eshT: 0,
         x: cx() + (i - (span - 1) / 2) * CELL * 1.1,
         y: H - MARGIN() - CELL * 0.4,
         angle: -Math.PI / 2, phase: Math.random() * 6.28, atkT: 0,
@@ -2065,10 +2070,17 @@
           foes.push(mkFoe(cfg.types[k % cfg.types.length], k + 1, foeCount, diff, null));
       } else if ((kind.foes || 0) > 0) {
         const n = Math.max(1, Math.round(foeCount * kind.foes));
-        // VAGUES : 2-3 selon la profondeur (on tient ~1 minute) — et CHAQUE
-        // VAGUE A SON THÈME (meute, escouade, tirailleurs, essaim), tiré sans
-        // doublon : la salle se raconte, elle ne se répète pas.
-        const nWaves = Math.min(3, 1 + Math.floor((opts.floor || 1) / 4) + (n >= 5 ? 1 : 0));
+        /* LES VAGUES. Trois au plus, « on tient ~1 minute » : c'était le
+           coeur du probleme. Un etage doit durer CINQ MINUTES pour que ce
+           que le joueur a prepare — pouvoirs, postures, replis — ait le
+           temps de servir. On monte donc a neuf vagues, et la montee
+           suit la profondeur au lieu de plafonner tout de suite.
+
+           CHAQUE VAGUE GARDE SON THEME (meute, escouade, tirailleurs,
+           essaim), tire sans doublon : la salle se raconte, elle ne se
+           repete pas. `pickWaveThemes` recycle quand on lui en demande
+           plus qu'il n'en existe. */
+        const nWaves = Math.min(9, 3 + Math.floor((opts.floor || 1) / 3) + (n >= 5 ? 1 : 0));
         waveThemes = pickWaveThemes(nWaves);
         const perWave = Math.ceil(n / nWaves);
         for (let w = 0; w < nWaves; w++) {
@@ -2451,6 +2463,29 @@
       // L'ABSORPTION passe AVANT les points de vie, et se consomme.
       const abs = bf(p, 'abs');
       if (abs > 0) { const pris = Math.min(abs, n); p.buffs.abs.v -= pris; n -= pris; }
+      /* LE BOUCLIER D\u2019ENERGIE, ensuite.
+
+         Il vient APRES l\u2019absorption temporaire — celle-ci est un buff qui
+         expire, on la depense donc en premier pendant qu\u2019elle vaut encore
+         quelque chose — et AVANT les points de vie, ce qui est toute sa
+         raison d\u2019etre : il encaisse a leur place, et il revient seul.
+
+         TOUT COUP REMET LE REPIT A ZERO, meme entierement absorbe. Sinon
+         un personnage sous le feu continu rechargerait en se faisant
+         tirer dessus, et le bouclier deviendrait une seconde barre de vie
+         infinie au lieu d\u2019une recompense pour s\u2019etre degage. */
+      if (p.eshMax > 0) {
+        p.eshT = 0;
+        if (p.esh > 0) {
+          const pris = Math.min(p.esh, n);
+          p.esh -= pris; n -= pris;
+          if (pris > 0) {
+            burst(p.x, p.y - CELL * 0.3, '#7ac8ff', 3);
+            if (p.esh <= 0)
+              arena.floats.push({ x: p.x, y: p.y - 26, txt: 'bouclier brisé', t: 0, col: '#7ac8ff' });
+          }
+        }
+      }
       // TOUT ABSORBÉ : on le DIT, sinon le coup est silencieux et le joueur
       // croit que l'ennemi a raté.
       if (n <= 0) {
@@ -2500,7 +2535,14 @@
     // effets de statut élémentaires (DoT / ralentissement)
     function applyStatus(p, status, elemId) {
       if (!p.statuses) p.statuses = {};
-      const cfg = { burn: { dur: 3, dps: 0.06 }, poison: { dur: 4, dps: 0.05 }, chill: { dur: 2.5, slow: 0.5 }, shock: { dur: 0.8, slow: 0.7 } }[status];
+      /* LA TABLE EST FERMEE, et c'est voulu : un statut inconnu sort par
+         le `return` ci-dessous et ne fait RIEN. Ajouter un element sans
+         ajouter son statut ici, c'est ajouter un element muet.
+         `wither` est celui de l'ombre : il ronge plus fort que le poison
+         mais moins longtemps, et alourdit legerement sa cible. */
+      const cfg = { burn: { dur: 3, dps: 0.06 }, poison: { dur: 4, dps: 0.05 },
+                    chill: { dur: 2.5, slow: 0.5 }, shock: { dur: 0.8, slow: 0.7 },
+                    wither: { dur: 3.5, dps: 0.075, slow: 0.15 } }[status];
       if (!cfg) return;
       p.statuses[status] = { t: cfg.dur, dps: cfg.dps || 0, slow: cfg.slow || 0, elem: elemId };
     }
@@ -3853,6 +3895,19 @@
         const b = e.buffs[k];
         if (b.t > 0) { b.t -= dt; if (b.t <= 0) { b.v = 0; b.t = 0; } }
       }
+      /* LA RECHARGE DU BOUCLIER. Elle ne demarre qu\u2019apres `ESH_REPIT`
+         secondes sans avoir rien pris — c\u2019est ce delai, et lui seul, qui
+         fait la difference entre une reserve qu\u2019on menage et une barre de
+         vie de plus. Le test porte sur `eshMax` : seuls les porteurs en ont
+         un, la boucle ne coute donc rien aux autres ni aux ennemis. */
+      if (e.eshMax > 0 && !e.dead) {
+        e.eshT = (e.eshT || 0) + dt;
+        const repit = (AD().ESH_REPIT != null) ? AD().ESH_REPIT : 4;
+        if (e.eshT >= repit && e.esh < e.eshMax) {
+          const parSec = (e.st && e.st.eshRegen) || (e.eshMax * 0.12);
+          e.esh = Math.min(e.eshMax, e.esh + parSec * dt);
+        }
+      }
       // LE CONTRÔLE se purge en ~10 s ; tant qu'il dure, l'unité est absente.
       if (e.ctrlT > 0) e.ctrlT = Math.max(0, e.ctrlT - dt * 0.3);
       if (e.stunT > 0) {
@@ -4800,6 +4855,15 @@
         g.beginPath(); (g.roundRect ? g.roundRect(bx, by, w, 5, 2) : g.rect(bx, by, w, 5)); g.fill();
         g.fillStyle = e.side === 'party' ? '#6fd08a' : (e.boss ? '#e05252' : '#d88a5a');
         g.beginPath(); (g.roundRect ? g.roundRect(bx, by, w * pct, 5, 2) : g.rect(bx, by, w * pct, 5)); g.fill();
+        /* LE BOUCLIER, en surimpression de la barre de vie et non a cote :
+           il se lit comme une avance sur les points de vie, ce qu'il est.
+           Un liseré bleu par-dessus le vert, qui fond avant lui. */
+        if (e.eshMax > 0 && e.esh > 0) {
+          const pe = clamp(e.esh / e.eshMax, 0, 1);
+          g.fillStyle = '#7ac8ff';
+          g.beginPath(); (g.roundRect ? g.roundRect(bx, by - 3.5, w * pe, 3, 1.5)
+                                      : g.rect(bx, by - 3.5, w * pe, 3)); g.fill();
+        }
         if (e.boss) { g.fillStyle = '#7a2a2a'; g.font = '900 9px Nunito, sans-serif'; g.textAlign = 'center'; g.fillText(' ' + e.name, 0, -CELL * 1.0 * sc); }
         // élite : anneau doré + nom de rang
         if (e.elite && !e.boss) {

@@ -123,6 +123,40 @@
     if (p.garde) c[p.garde] = p.abyme ? 4 : 2;
     return c;
   }
+  /* CE AVEC QUOI LE BOURG SE BAT, famille par famille. Sert a repartir
+     la pratique : on ne progresse que dans ce dont on se sert. La force
+     tombait a chaque etage, la dexterite un etage sur trois, l'intelligence
+     un sur cinq — un calendrier, pas une pratique. Une compagnie tout
+     entiere a l'arc devenait costaude et maladroite. */
+  function melangePratique() {
+    const par = { force: 0, dexterite: 0, intelligence: 0 };
+    if (window.Armee && window.Armee.tierEquipement) {
+      par.force        = window.Armee.tierEquipement('melee', 'arme') || 0;
+      par.dexterite    = window.Armee.tierEquipement('distance', 'arme') || 0;
+      par.intelligence = window.Armee.tierEquipement('magie', 'arme') || 0;
+    }
+    /* Un bourg qui n'a rien forge se bat quand meme : a mains nues, c'est
+       du corps a corps. Sans ce repli, les premieres descentes ne
+       rapporteraient aucun attribut du tout. */
+    if (!par.force && !par.dexterite && !par.intelligence) par.force = 1;
+    return par;
+  }
+  function repartirPratique(h) {
+    const par = melangePratique();
+    const tot = par.force + par.dexterite + par.intelligence;
+    if (tot <= 0) return;
+    /* Trois points par etage, au prorata. Le reste va a la famille
+       dominante plutot que de se perdre dans les arrondis. */
+    const POINTS = 3;
+    let donnes = 0, meilleure = 'force', mieux = -1;
+    for (const a of ['force', 'dexterite', 'intelligence']) {
+      const n = Math.floor(POINTS * par[a] / tot);
+      if (n > 0) { window.Etat.gagnerAttribut(h, a, n); donnes += n; }
+      if (par[a] > mieux) { mieux = par[a]; meilleure = a; }
+    }
+    if (donnes < POINTS) window.Etat.gagnerAttribut(h, meilleure, POINTS - donnes);
+  }
+
   /* Les chances de l'emporter : ce que la compagnie vaut contre l'étage. */
   function forceEquipee() {
     const g = window.GameState && window.GameState.gen ? window.GameState.gen() : null;
@@ -186,7 +220,7 @@
           /* La pratique laisse une trace individuelle : un combattant
              aguerri gagne force et dextérité, pas seulement un compteur
              global de compagnie. */
-          window.Etat.gagnerAttribut(h, 'force', 1);
+          repartirPratique(h);
           window.Etat.gagnerAttribut(h, 'dexterite', etage % 3 === 0 ? 1 : 0);
           window.Etat.gagnerAttribut(h, 'intelligence', etage % 5 === 0 ? 1 : 0);
         }
@@ -304,13 +338,28 @@
     const h = window.Etat.habitant(hid); if (!h) return null;
     laisser(hid);
     window.Etat.libererHabitant(hid);
+    /* LA VIE DÉPENSÉE. Elle part AVANT qu'on décide du sort du corps :
+       c'est elle qui départage un chat qu'on peut aller chercher d'un
+       chat qui ne remontera pas. */
+    const reste = window.Etat.perdreVie(hid);
+    if (reste <= 0) {
+      /* La neuvième. Il n'y a plus de rite : le corps ne tient plus
+         personne. On passe par la perte définitive, avec sa peine pour
+         le bourg — la même que pour un renvoi, parce que c'en est un,
+         de la pire espèce. */
+      window.Etat.journal(h.nom + ' avait neuf vies. La neuvième reste dans ' +
+                          (ou || 'la tour') + '.', 'alerte');
+      window.Etat.perdre(hid, ou || 'la tour');
+      return { nom: h.nom, id: hid, definitif: true };
+    }
     T().tombes.unshift({ id: hid, nom: h.nom, rarete: h.rarete, niv: h.niv,
                          ou: ou || 'la tour', t: E().tJeu, etage: profondeur() });
     if (T().tombes.length > 12) T().tombes.length = 12;
     window.Etat.journal(h.nom + ' est tombé dans ' + (ou || 'la tour') +
+                        ' — il lui reste ' + reste + ' vie' + (reste > 1 ? 's' : '') +
                         '. On peut encore aller le chercher.', 'alerte');
     window.Etat.prevenir('tombe', { hid, ou });
-    return { nom: h.nom, id: hid };
+    return { nom: h.nom, id: hid, vies: reste };
   }
   /* LE RITE. Ramener quelqu'un coûte cher et ne se marchande pas — mais
      c'est toujours moins cher que de perdre un Insigne de niveau douze. */

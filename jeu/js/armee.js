@@ -151,7 +151,7 @@
 
   function imageEquipement(type, slot, tier) {
     const f = famille(type), n = Math.max(1, Math.min(40, tier || tierEquipement(f, slot) || 1));
-    return 'img/equipement/' + f + '/' + slot + '/tier-' + String(n).padStart(2, '0') + '.png';
+    return 'img/equipement-v2/' + f + '/' + slot + '/tier-' + String(n).padStart(2, '0') + '.png';
   }
 
   /* Les quatre premiers objets restent accessibles avec les ressources du
@@ -206,11 +206,19 @@
     const rang = a.rangs[t] || 0;
     const evo = GD().evoStatMult ? GD().evoStatMult(rang) : Math.pow(1.055, rang);
     const f = famille(t), arme = tierEquipement(f, 'arme'), armure = tierEquipement(f, 'armure');
+    const pieceArme = objetEquipement(f, 'arme', arme);
+    const pieceArmure = objetEquipement(f, 'armure', armure);
     const s = Object.assign({}, d.base);
-    s.hp *= evo * (1 + armure * 0.055);
-    s.dmg *= evo * (1 + arme * 0.085);
+    /* Les multiplicateurs viennent des 40 paliers historiques. C'est la
+       même courbe que dans `old`, pas une approximation linéaire ajoutée
+       par-dessus : l'objet réellement équipé décide des statistiques. */
+    s.hp *= evo * ((pieceArmure && pieceArmure.hpMult) || 1);
+    s.dmg *= evo * ((pieceArme && pieceArme.dmgMult) || 1);
     s.armure = armure * 2.2;
     s.cat = d.cat || 'melee';
+    if (s.range > 0 && (d.cat === 'tir' || d.cat === 'explosif') &&
+        GD().unitTier && GD().unitTier(t) >= 4 && GD().rangedRangeBonus)
+      s.range *= GD().rangedRangeBonus(t, Math.max(0, arme - 1));
     s.ability = d.ability || null;
     s.regen = 0;
     /* Dans le moteur hérité, weapon/armor sont des indices visuels, pas
@@ -219,6 +227,8 @@
     s.armor = f === 'melee' ? Math.max(0, armure - 1) : 0;
     s.ranged = f === 'distance' ? Math.max(0, arme - 1) : 0;
     s.vest = f === 'distance' ? Math.max(0, armure - 1) : 0;
+    s.ordnance = f === 'distance' ? Math.max(0, arme - 1) : 0;
+    s.suit = f === 'distance' ? Math.max(0, armure - 1) : 0;
     s.staff = f === 'magie' ? Math.max(0, arme - 1) : 0;
     s.robe = f === 'magie' ? Math.max(0, armure - 1) : 0;
     s.evo = rang;

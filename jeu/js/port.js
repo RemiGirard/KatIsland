@@ -40,10 +40,12 @@
         prises: [],          // îles déjà tenues
         expeditions: 0,
         greement: 0,         // le chantier naval : vitesse ET portée
+        rayon: 1,            // couronne maritime actuellement cartographiée
       };
     }
     /* Une sauvegarde d'avant le Grand Large n'a pas de gréement. */
     if (s.port.greement == null) s.port.greement = 0;
+    if (s.port.rayon == null) s.port.rayon = 1;
     /* Le PREMIER navire est offert avec le port : sans lui le bâtiment
        ne servirait à rien, et l'on ferait payer deux fois la même
        chose. Une barque de vingt places — assez pour aller voir, pas
@@ -104,6 +106,32 @@
   function greement() { const s = assure(); return s.greement | 0; }
   function portee() {
     return window.Greement ? window.Greement.porteeDe(greement()) : 30;
+  }
+  function rayon() { return Math.max(1, Math.min(11, assure().rayon | 0)); }
+  function prisesCouronne(n) {
+    const ids = assure().prises;
+    const iles = window.IleUtil && window.IleUtil.couronne ? window.IleUtil.couronne(n || rayon()) : [];
+    return iles.filter(x => ids.indexOf(x.id) >= 0).length;
+  }
+  function peutElargirRayon() {
+    const r = rayon();
+    if (r > 10) return { ok: false, pourquoi: 'Toutes les couronnes sont cartographiées.' };
+    const iles = window.IleUtil.couronne(r);
+    const prises = prisesCouronne(r);
+    if (prises < iles.length)
+      return { ok: false, pourquoi: 'Il reste ' + (iles.length - prises) + ' île(s) hostile(s) dans cette couronne.', prises, total: iles.length };
+    return { ok: true, prises, total: iles.length, suivant: r + 1 };
+  }
+  function elargirRayon() {
+    const v = peutElargirRayon();
+    if (!v.ok) return v;
+    const s = assure();
+    s.rayon = Math.min(11, rayon() + 1);
+    window.Etat.journal(s.rayon > 10
+      ? 'Toutes les couronnes sont sûres : les cartes du Grand Large sont ouvertes.'
+      : 'Les vigies élargissent la carte : couronne ' + s.rayon + ' découverte.', 'guerre');
+    window.Etat.prevenir('port', null);
+    return { ok: true, rayon: s.rayon };
   }
   function peutGreer() {
     if (!aLePort()) return { ok: false, pourquoi: 'Il faut un port.' };
@@ -258,6 +286,8 @@
     if (!nav) return { ok: false, pourquoi: 'Navire inconnu.' };
     if (nav.etat !== 'quai') return { ok: false, pourquoi: 'Ce navire est déjà en mer.' };
     if (!ile) return { ok: false, pourquoi: 'Île inconnue.' };
+    if (ile.tier && ile.tier !== rayon())
+      return { ok: false, pourquoi: 'Cette île est hors du rayon actuellement cartographié.' };
     /* LA PORTÉE. Un capitaine ne part pas pour trois cents lieues avec
        une voile carrée : c'est le gréement, et lui seul, qui ouvre le
        Grand Large. On le dit clairement, sinon le joueur croit à un bug
@@ -440,6 +470,8 @@
     if (!nav.cargo.length) return { ok: false, pourquoi: 'Plus personne à bord.' };
     const dest = window.IleUtil.parId(versId);
     if (!dest) return { ok: false, pourquoi: 'Île inconnue.' };
+    if (dest.tier && dest.tier !== rayon())
+      return { ok: false, pourquoi: 'Cette île n\'appartient pas à la couronne actuellement cartographiée.' };
     if (dest.id === nav.ile) return { ok: false, pourquoi: 'Le navire y est déjà.' };
     if (!window.Etat.assez(dest.cout))
       return { ok: false, pourquoi: 'Ravitaillement insuffisant.', manque: window.Etat.manque(dest.cout) };
@@ -489,6 +521,7 @@
     placesPrises, disponible, typesEmbarquables, charger, decharger, viderCale,
     rationsPour, ravitaillement,
     greement, portee, peutGreer, greer,
+    rayon, prisesCouronne, peutElargirRayon, elargirRayon,
     peutAppareiller, appareiller, peutCombattre, combattre, resultat,
     peutContinuer, continuer, rentrerAuBourg, ecart,
     tick, etatNavire, ileDe, estPrise,

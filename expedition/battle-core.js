@@ -439,6 +439,9 @@
     // ---- agents / projectiles / particules ----------------------
     const agents = [];
     const zones = []; // traînées de dégâts, volontairement légères et bornées
+    const environment = cfg.environment || null;
+    let envT = 0;
+    const envRocks = [];
     let agentSeq = 1;
     let regSeq = 0;   // §régiment : compteur de vagues (concept RUNTIME, jamais sérialisé)
     const projectiles = [];
@@ -2910,6 +2913,71 @@
       }
     }
 
+    /* -------------------------------------------------------------
+       BIOMES DES ÎLES DU PORT.
+
+       Ces dangers frappent les deux camps : un volcan ne lit pas les
+       fanions. Ils restent légers, bornés et entièrement runtime ; une
+       sauvegarde de bataille les recrée depuis le biome de l'île.
+       ------------------------------------------------------------- */
+    function abriteParBatiment(a) {
+      for (const n of ns) {
+        const r = (n.rad || n.r || 22) + 28;
+        if (bdist(a.x, a.y, n.x, n.y) <= r) return true;
+      }
+      return false;
+    }
+    function updateEnvironment(dt) {
+      if (!environment || ended) return;
+      const tier = Math.max(1, environment.tier | 0);
+      const force = Math.max(1, environment.force | 0);
+
+      if (environment.type === 'marecageuse') {
+        const dps = 0.32 + tier * 0.11 + force * 0.025;
+        for (const a of agents)
+          if (!a.dead && !abriteParBatiment(a)) hurtAgent(a, dps * dt, 'neutral', a.x, a.y);
+      }
+
+      for (let i = envRocks.length - 1; i >= 0; i--) {
+        const r = envRocks[i]; r.life -= dt;
+        if (r.life > 0) continue;
+        const ix = obstacles.indexOf(r.obs);
+        if (ix >= 0) { obstacles.splice(ix, 1); obsVer++; }
+        envRocks.splice(i, 1);
+      }
+
+      envT -= dt;
+      if (envT > 0) return;
+      const vivants = agents.filter(a => !a.dead);
+      if (!vivants.length) { envT = 2; return; }
+      const cible = vivants[(Math.random() * vivants.length) | 0];
+
+      if (environment.type === 'volcanique') {
+        envT = Math.max(2.8, 7.2 - tier * 0.28 - force * 0.10);
+        const x = bclamp(cible.x + (Math.random() - .5) * 70, 28, map.w - 28);
+        const y = bclamp(cible.y + (Math.random() - .5) * 70, 28, map.h - 28);
+        const rayon = 24 + tier;
+        eachNear(x, y, rayon, a => { if (!a.dead) hurtAgent(a, 7 + tier * 1.4, 'neutral', x, y); });
+        if (zones.length < 90) zones.push({ x, y, f: 'neutral', life: 5 + tier * .25,
+          r: 22 + tier, dmg: 1.8 + tier * .42, col: '#ff6a2a', lava: true });
+        if (envRocks.length < 7) {
+          const obs = { x, y, r: 11 + Math.min(8, tier), type: 'rock', temp: true };
+          obstacles.push(obs); obsVer++;
+          envRocks.push({ obs, life: 7 + tier * .5 });
+        }
+        puff(x, y, '#ff8a36', 12, 65, 3);
+      } else if (environment.type === 'arcanique') {
+        envT = Math.max(3.2, 8.2 - tier * .30 - force * .10);
+        const rayon = 30 + tier * 2;
+        eachNear(cible.x, cible.y, rayon, a => {
+          if (!a.dead) hurtAgent(a, 5 + tier * 1.15, 'neutral', cible.x, cible.y);
+        });
+        bossBeams.push({ x0: cible.x, y0: 0, x1: cible.x, y1: cible.y,
+          life: .28, tot: .28, col: '#aa8cff', bolt: true });
+        puff(cible.x, cible.y, '#9b83ff', 10, 58, 2.5);
+      } else envT = 9999;
+    }
+
     // ---- update principal ---------------------------------------------
     function update(dt) {
       if (destroyed || !dt || dt <= 0) return;
@@ -2924,6 +2992,7 @@
       }
 
       rebuildGrid();
+      updateEnvironment(dt);
 
       // traînées : elles ne touchent que l’ennemi qui y entre.
       for (let i = zones.length - 1; i >= 0; i--) {
@@ -5120,6 +5189,7 @@
         agents.length = 0; projectiles.length = 0; particles.length = 0; dmgTexts.length = 0;
         souls.length = 0; soulHead = 0;
         mapBosses.length = 0; bossBeams.length = 0;
+        envRocks.length = 0;
         // §D4 : sorts — on rend aussi les obstacles TEMPORAIRES (épines) à la carte
         spellFx.length = 0; spParts.length = 0;
         for (let i = obstacles.length - 1; i >= 0; i--) if (obstacles[i].temp) obstacles.splice(i, 1);

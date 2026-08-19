@@ -8,8 +8,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
-from PIL import Image, ImageFilter
-from scipy import ndimage
+from PIL import Image, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,21 +18,15 @@ OUTPUT = ROOT / "img" / "planches" / "equipement-illustre-transparent"
 
 def detourer(source: Path, output: Path) -> None:
     image = Image.open(source).convert("RGB")
-    rgb = np.asarray(image, dtype=np.int16)
-    mini = rgb.min(axis=2)
-    maxi = rgb.max(axis=2)
-    chroma = maxi - mini
-
-    # Blanc uniforme des générations finales et deux tons du damier de la
-    # toute première planche. La propagation depuis les bords empêche cette
-    # règle de traverser les contours noirs d'une arme ou d'une armure.
-    candidat = (mini >= 218) & (chroma <= 34)
-    graines = np.zeros(candidat.shape, dtype=bool)
-    graines[0, :] = candidat[0, :]
-    graines[-1, :] = candidat[-1, :]
-    graines[:, 0] = candidat[:, 0]
-    graines[:, -1] = candidat[:, -1]
-    fond = ndimage.binary_propagation(graines, mask=candidat)
+    # Le remplissage tolérant part des quatre coins. Il traverse le blanc,
+    # ses légères ombres et les deux gris du damier, mais s'arrête aux contours
+    # colorés ou sombres. La couleur sentinelle n'existe pas dans les images.
+    travail = image.copy()
+    sentinelle = (1, 2, 3)
+    w, h = travail.size
+    for point in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
+        ImageDraw.floodfill(travail, point, sentinelle, thresh=48)
+    fond = np.all(np.asarray(travail) == sentinelle, axis=2)
 
     alpha = Image.fromarray((~fond).astype(np.uint8) * 255, "L")
     alpha = alpha.filter(ImageFilter.GaussianBlur(0.65))

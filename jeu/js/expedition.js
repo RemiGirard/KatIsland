@@ -247,6 +247,8 @@
       cout: { unites: 1 },          // la cale a déjà été payée à l'embarquement
       bonus: ile.bonus || {}, butin: ile.butin || {},
       gainMenace: ile.menace,
+      tier: ile.tier || 1, force: ile.force || 1, biome: ile.biome || null,
+      effetBiome: ile.effetBiome || '',
     };
   }
 
@@ -304,7 +306,7 @@
       w: cvB.width, h: cvB.height,
     });
     const compo = equilibrer(map, z, ligne);
-    const diffMult = 1 + z.diff * 0.06;
+    const diffMult = (1 + z.diff * 0.06) * (z.biome === 'guerriere' ? 1.30 : 1);
     /* L'ÉQUIPEMENT DE LA NUÉE. L'ancien jeu tirait ces indices d'un
        « look » complet — une ligne par catégorie d'unité. On le
        reconstitue : sans lui, les archers ennemis se battaient avec
@@ -328,6 +330,8 @@
         ? (window.Armee ? window.Armee.statsCombat(faction, type) : null)
         : statsNuee(type, look, diffMult),
       enemyLook: look,
+      environment: z.biome ? { type: z.biome, tier: z.tier || 1,
+        force: z.force || 1 } : null,
 
       /* L'IA MONTE EN GAMME. Zéro : elle se contente d'attaquer ce
          qu'elle voit. Trois : elle tient ses positions, concentre ses
@@ -345,7 +349,7 @@
          première minute. Par vagues, la bataille respire — on prend une
          position, on la tient, la suivante arrive. */
       enemyReinforce: z.diff >= 4 ? {
-        interval: Math.max(30, 60 - z.diff),
+        interval: Math.max(22, (60 - z.diff) * (z.biome === 'guerriere' ? 0.72 : 1)),
         waves: Math.min(6, 1 + Math.floor(z.diff / 5)),
         size: Math.round((4 + z.diff * 0.8) * (diffMult > 2 ? 1.2 : 1)),
       } : null,
@@ -833,6 +837,9 @@
     for (const x of colonneEnCours) {
       const s = window.Armee ? window.Armee.stats(x.type) : null;
       const p = window.Armee ? window.Armee.pouvoirActif(x.type) : null;
+      const famille = window.Armee ? window.Armee.famille(x.type) : 'melee';
+      const tierArme = window.Armee ? window.Armee.tierEquipement(famille, 'arme') : 0;
+      const tierArmure = window.Armee ? window.Armee.tierEquipement(famille, 'armure') : 0;
       const illustration = window.Img && window.Img.unite ? window.Img.unite(x.type) : null;
       gauche.appendChild(A('div', { class:'plateau-membre' },
         A('div', { class:'rangee' },
@@ -848,13 +855,24 @@
           A('span', { text:Math.round(s.hp) + ' PV' }),
           A('span', { text:Math.round(s.dmg * 10) / 10 + ' dégâts' }),
           A('span', { text:Math.round(s.armure || 0) + ' armure' }),
-          A('span', { text:s.range > 0 ? Math.round(s.range) + ' portée' : 'mêlée' })) : null));
+          A('span', { text:s.range > 0 ? Math.round(s.range) + ' portée' : 'mêlée' })) : null,
+        tierArme || tierArmure ? A('div', { class:'plateau-equipement' },
+          tierArme ? A('div', { class:'plateau-equipement-piece', title:'Arme équipée · palier ' + tierArme },
+            A('img', { src:window.Armee.imageEquipement(famille, 'arme', tierArme), alt:'Arme équipée' }),
+            A('span', { text:'T' + tierArme })) : null,
+          tierArmure ? A('div', { class:'plateau-equipement-piece', title:'Armure équipée · palier ' + tierArmure },
+            A('img', { src:window.Armee.imageEquipement(famille, 'armure', tierArmure), alt:'Armure équipée' }),
+            A('span', { text:'T' + tierArmure })) : null) :
+          A('div', { class:'eti faible', text:'aucun équipement forgé' })));
     }
     U().vide(droite);
     droite.appendChild(A('div', { class:'cote-titre', text:zoneEnCours.sortie ? 'Repousser la Menace' : 'Objectif territorial' }));
     droite.appendChild(A('div', { class:'plateau-membre choisi' },
       A('div', { class:'tt', text:zoneEnCours.nom }),
       A('div', { class:'note', text:zoneEnCours.desc }),
+      zoneEnCours.biome ? A('div', { class:'appel biome-' + zoneEnCours.biome, style:'margin-top:10px' },
+        A('div', { class:'eti-or', text:zoneEnCours.biome.toUpperCase() }),
+        A('div', { class:'note', text:zoneEnCours.effetBiome || '' })) : null,
       A('div', { class:'plateau-mini-stats' },
         A('span', { text:'difficulté ' + zoneEnCours.diff }),
         A('span', { text:zoneEnCours.noeuds + ' positions' }),

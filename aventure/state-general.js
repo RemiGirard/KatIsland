@@ -222,7 +222,24 @@
   // les avaler en silence — `(undefined || 0) * 1,3` fait 0, et c'est
   // exactement ce que faisait mkHero : `heal_recv` n'a jamais rien valu.
   const GEN_STAT_FRACTIONS = ['lifesteal', 'armorPen', 'heal_recv',
-                              'resFire', 'resCold', 'resPoison', 'resLightning'];
+                              'resFire', 'resCold', 'resPoison', 'resLightning',
+                              /* les cinq elements au complet : l'ombre
+                                 manquait, et la resistance magique avec. */
+                              'resShadow', 'resMagic',
+                              /* la penetration magique repond a resMagic
+                                 comme armorPen repond a l'armure. */
+                              'magicPen',
+                              /* le critique, et la vitesse en pourcentage :
+                                 des fractions, donc additives et plafonnees
+                                 par GD.LINE_CAP a l'application. */
+                              'critChance', 'critMult', 'mspdPct'];
+  /* Le plafond s'applique a la SOMME, pas ligne par ligne : trois pieces
+     a +20 % de vitesse ne doivent pas donner +60 %. Sans ce passage, les
+     bornes de LINE_CAP ne bornaient qu'un objet isole. */
+  function genBorner(stat, v) {
+    const cap = GD && GD.LINE_CAP ? GD.LINE_CAP[stat] : null;
+    return (cap == null) ? v : Math.min(cap, v);
+  }
   // LA LISTE BLANCHE. Tout ce qui n'est pas là-dedans n'est PAS une stat de
   // combat : `loot`, `xp` et `rare` passent par `talentMeta()`, et les lignes
   // d'objet `lootPct`/`itemPct`/`rarePct` sont lues par `partyStat()`. Sans
@@ -284,6 +301,15 @@
       if (GEN_IS_FRACTION[k]) st[k] += T.pcts[k];        // une fraction s'additionne
       else st[k] = Math.round(st[k] * (1 + T.pcts[k]) * 10) / 10;
     }
+    /* LE PLAFOND S'APPLIQUE A LA SOMME, une fois tout accumule — objets,
+       talents, auras. Le borner ligne par ligne ne bornait rien : trois
+       pieces a +20 % de vitesse faisaient +60 %, et le personnage sortait
+       de toutes les zones avant qu'elles se posent. */
+    for (const k in GEN_IS_FRACTION) if (st[k] != null) st[k] = genBorner(k, st[k]);
+    /* La vitesse en pourcentage se verse dans la vitesse reelle : c'est
+       une fraction pour pouvoir etre plafonnee, mais le moteur ne lit que
+       `mspd`. Sans ce report, la ligne existait et ne faisait rien. */
+    if (st.mspdPct) st.mspd = Math.round(st.mspd * (1 + st.mspdPct) * 10) / 10;
     return st;
   };
 
@@ -457,10 +483,20 @@
   // sans doublon dans GameData.ITEM_LINES.
   function rollItem(rng, floor, chance) {
     const tier = GD.rollTier(floor, rng);
-    const rarity = GD.rollRarity(floor, chance || 0, rng);
-    const R = GD.rarityById(rarity);
+    let rarity = GD.rollRarity(floor, chance || 0, rng);
     const bases = GD.ITEM_BASES;
     const base = bases[Math.floor(rng() * bases.length)];
+    /* UNE UNIQUE EST UNE PIÈCE NOMMÉE, PAS UN PALIER DE PLUS. Elle doit
+       donc trouver un modèle pour son emplacement ; sinon la rareté
+       retombe d'un cran, plutôt que de rendre une « unique » sans don
+       — l'étiquette promettrait un pouvoir que la pièce n'a pas. */
+    let unique = null;
+    if (rarity === 'unique') {
+      const cand = GD.uniquesPour ? GD.uniquesPour(base.slot) : [];
+      if (cand.length) unique = cand[Math.floor(rng() * cand.length)];
+      else rarity = 'legendaire';
+    }
+    const R = GD.rarityById(rarity);
     // les lignes SECONDAIRES (la principale vient de la famille)
     const lines = [];
     const pool = GD.ITEM_LINES.filter(l => l.stat !== base.stat);
@@ -468,12 +504,18 @@
       const L = pool.splice(Math.floor(rng() * pool.length), 1)[0];
       lines.push({ id: L.id, val: GD.lineValue(L, tier, rarity) });
     }
-    return {
+    const it = {
       base: base.id, slot: base.slot, fam: base.fam || null,
       tier, rarity, stat: base.stat,
       power: GD.itemValue(base.id, tier, rarity),
       lines,
     };
+    /* `don` est un IDENTIFIANT de pouvoir, jamais un objet : comme pour
+       les nœuds d'arbre, une définition inlinée ne pourrait être ni
+       partagée, ni corrigée en un endroit, ni re-résolue au chargement
+       d'une vieille sauvegarde. */
+    if (unique) { it.unique = unique.id; it.nom = unique.nom; it.don = unique.don; }
+    return it;
   }
   // ---------------- LE RECRUTEMENT D'UN COMPAGNON ----------------
   // UN SEUL ENDROIT, pour que « trouvé » veuille dire « il se bat avec vous ».
@@ -502,33 +544,24 @@
     const table = GD.lootTable(biomeId);
     const tier = GD.dungeonBiome(d.floor).tier;
     const roll = rng();
-    // LE PREMIER COMPAGNON EST GARANTI (GameData.GEN_PREMIER_COMPAGNON).
-    // Tant que personne n'a jamais été recruté, le donjon rend quelqu'un à
-    // l'étage dit — sans jet de dé. Une chance sur dix par étage laissait des
-    // parties entières à un seul personnage devant un gardien qui en demande
-    // deux. La garde `d.loot.heroes.length` fait que ça n'arrive qu'UNE fois
-    // par descente, et `recruterHeros` refuse un héros déjà au roster.
-    const premier = GD.GEN_PREMIER_COMPAGNON || { etage: 2 };
-    if (!g.roster.length && !d.loot.heroes.length && d.floor >= (premier.etage || 2)) {
-      const pool = GD.HEROES.filter(h => h.at === biomeId && !GameState.heroState(h.id));
-      if (pool.length) {
-        const h = pool[Math.floor(rng() * pool.length)];
-        d.loot.heroes.push(h.id);
-        recruterHeros(g, h.id, d);
-        return { icon: '', txt: (h.name[GameState.state.faction] || h.name.cats)
-                 + ' rejoint la compagnie — il se bat dès la salle suivante' };
-      }
-    }
-    if (roll < table.hero && GD.HEROES.some(h => h.at === biomeId && !GameState.heroState(h.id))) {
-      const pool = GD.HEROES.filter(h => h.at === biomeId && !GameState.heroState(h.id)
-        && d.loot.heroes.indexOf(h.id) === -1);
-      if (pool.length) {
-        const h = pool[Math.floor(rng() * pool.length)];
-        d.loot.heroes.push(h.id);
-        recruterHeros(g, h.id, d);
-        return { icon: '', txt: (h.name[GameState.state.faction] || h.name.cats) + ' rejoint la compagnie' };
-      }
-    }
+    /* ON NE RECRUTE PLUS DANS LE DONJON.
+
+       Le donjon rendait des héros à CLASSE FIXE, tirés d'un catalogue :
+       on descendait pour trouver son groupe. Ce n'est plus le sujet — le
+       joueur part avec des habitants de son bourg, qu'il a accueillis aux
+       portes, nourris et formés, et ce qu'ils deviennent tient à ce qu'on
+       leur met dans les mains, pas à une étiquette trouvée sous terre.
+
+       Les deux tirages qui vivaient ici — le premier compagnon garanti au
+       deuxième étage, puis un jet par étage — sont retirés. Le dé continue
+       sa course vers les autres récompenses : une salle ne rend donc pas
+       moins qu'avant, elle rend autre chose.
+
+       `recruterHeros` reste, et reste utilisé par `claimReport` : de
+       vieilles sauvegardes portent encore des héros dans leur butin, et
+       les faire disparaître au chargement perdrait des personnages que le
+       joueur a déjà vus arriver. */
+
     if (roll < table.relic) {
       const pool = GD.RELICS.filter(r => r.tier <= tier && !g.relics[r.id]
         && d.loot.relics.indexOf(r.id) === -1);
@@ -613,6 +646,25 @@
     // niveau : le joueur associe « je suis descendu plus profond » à « j'ai un
     // nouveau pouvoir », qui est le rythme du jeu — et non celui d'une
     // exponentielle d'XP (mesuré : le 4e pouvoir demandait ~500 descentes).
+    /* LE GARDIEN VAINCU DEVIENT UNE PROIE.
+
+       On l'a battu une fois : on saura le refaire. Il entre au tableau
+       des gardiens connus, avec la PROFONDEUR À LAQUELLE on l'a pris —
+       c'est elle qui fixera ce qu'il rapporte en farm, et non le simple
+       fait de l'avoir croisé. Repasser plus bas sur le même gardien
+       améliore donc la prise. */
+    if (kind.boss) {
+      if (!g.gardiens || typeof g.gardiens !== 'object') g.gardiens = {};
+      const cle = biome.id;
+      const avant = g.gardiens[cle] || 0;
+      if (d.floor > avant) {
+        g.gardiens[cle] = d.floor;
+        d.log.push({ icon: '', name: 'Gardien connu',
+          txt: avant ? 'On le reprendra plus bas : étage ' + d.floor + '.'
+                     : 'Sa tanière est notée — on pourra y retourner sans descendre.',
+          ok: true });
+      }
+    }
     if (kind.boss && d.floor % 10 === 0) {
       for (const id of d.party) { const h = GameState.heroState(id); if (h) h.talentBonusPts = (h.talentBonusPts | 0) + 1; }
       g.talentBonusPts = (g.talentBonusPts | 0) + 1;
@@ -624,12 +676,94 @@
       if (d.floor > g.tally.bestFloor) g.tally.bestFloor = d.floor;
       d.log.push({ icon: '', name: 'Checkpoint', txt: 'Progression sauvegardée — étage ' + d.floor, ok: true });
     }
-    // étage suivant
+    /* ON NE DESCEND PLUS TOUT SEUL.
+
+       L'étage suivant s'enchaînait sans rien demander : la descente
+       filait jusqu'à ce que la compagnie tombe, et le joueur ne
+       décidait de rien — il regardait. Or c'est LA décision du mode
+       aventure : ce qu'on a gagné vaut-il ce qu'on risque en allant
+       plus bas ?
+
+       On s'arrête donc sur un PALIER. La descente reste ouverte, le
+       butin est en main, et rien ne bouge tant que le joueur n'a pas
+       tranché : `descendreEncore` ou `abortDescent`. */
+    d.phase = 'palier';
+    GameState.notify();
+    return true;
+  };
+
+  /* LE PAS SUIVANT, à la demande. C'est ici, et nulle part ailleurs,
+     que la profondeur augmente. */
+  GameState.descendreEncore = function () {
+    const g = GameState.gen();
+    const d = g.descent;
+    if (!d || d.phase !== 'palier') return false;
     d.floor++;
     d.roomType = GD.floorType(d.floor);
     d.phase = 'fight';
     GameState.notify();
     return true;
+  };
+  /* Le joueur est-il devant ce choix ? L'interface s'en sert pour poser
+     ses deux boutons, et le rattrapage hors-ligne pour s'arrêter là. */
+  /* ------------------------------------------------------------------
+     LE FARM DES GARDIENS
+
+     Un gardien battu se refait en idle : on envoie la compagnie sur sa
+     tanière et elle en rapporte, sans qu'on ait à redescendre les
+     étages qui y mènent. C'est ce qui rend une descente profonde
+     durablement utile au lieu d'être un record qu'on regarde.
+
+     Le rendement suit la PROFONDEUR à laquelle on l'a pris : rebattre
+     le même gardien plus bas améliore la rente.
+     ------------------------------------------------------------------ */
+  GameState.gardiensConnus = function () {
+    const g = GameState.gen();
+    if (!g.gardiens || typeof g.gardiens !== 'object') g.gardiens = {};
+    return Object.keys(g.gardiens).map(id => ({ id, etage: g.gardiens[id] }));
+  };
+  /* Celui qu'on farme, s'il y en a un. On ne peut en tenir qu'un : la
+     compagnie est une, et la partager n'aurait pas de sens. */
+  GameState.gardienFarme = function () {
+    const g = GameState.gen();
+    return g.farm && g.gardiens && g.gardiens[g.farm] ? g.farm : null;
+  };
+  GameState.farmerGardien = function (id) {
+    const g = GameState.gen();
+    if (id && (!g.gardiens || !g.gardiens[id])) return false;
+    g.farm = id || null;
+    g.farmT = 0;
+    GameState.notify();
+    return true;
+  };
+  /* LE BATTEMENT DU FARM. Une prise toutes les `FARM_CYCLE` secondes,
+     appelé depuis le tick de l'aventure. On ne farme QUE si la
+     compagnie n'est pas déjà en descente : elle ne peut pas être à deux
+     endroits. */
+  const FARM_CYCLE = 45;
+  GameState.tickFarm = function (dt) {
+    const g = GameState.gen();
+    if (g.descent) return null;
+    const id = GameState.gardienFarme();
+    if (!id) return null;
+    g.farmT = (g.farmT || 0) + (dt || 0);
+    if (g.farmT < FARM_CYCLE) return null;
+    g.farmT -= FARM_CYCLE;
+    const etage = g.gardiens[id] || 5;
+    const rng = genRng((Date.now() ^ (etage * 2654435761)) >>> 0);
+    /* La prise d'un gardien farmé : le butin de son étage, et une
+       chance d'objet — c'est pour l'objet qu'on y retourne. */
+    const faux = { floor: etage, loot: { res: {}, items: [], relics: [], heroes: [] },
+                   lootMult: 1, xp: 0, log: [], party: [] };
+    addLoot(faux, id, rng, 1.1);
+    if (rng() < 0.34) faux.loot.items.push(rollItem(rng, etage, 0));
+    GameState.notify();
+    return { gardien: id, etage, loot: faux.loot };
+  };
+
+  GameState.surPalier = function () {
+    const d = GameState.gen().descent;
+    return !!(d && d.phase === 'palier');
   };
 
   // ---------------- FIN DE DESCENTE ----------------
@@ -933,6 +1067,16 @@
       if (typeof pid !== 'string' || !pid) continue;
       arbre.push({ pid, tier: n.tier | 0 });
     }
+    /* LES DONS DES PIÈCES UNIQUES. Ils passent AVANT les pouvoirs
+       d'arbre : on ne trouve pas une unique tous les jours, et il serait
+       absurde qu'elle soit celle qu'on écrête quand les cinq places sont
+       prises. Après la capacité de classe, donc, et avant le reste. */
+    const gear = (o.holder && o.holder.gear) || {};
+    for (const slot in gear) {
+      const it = gear[slot];
+      if (it && typeof it.don === 'string' && it.don && out.indexOf(it.don) < 0)
+        out.push(it.don);
+    }
     arbre.sort((a, b) => a.tier - b.tier);
     for (const x of arbre) if (out.indexOf(x.pid) < 0) out.push(x.pid);
     return out.slice(0, GD.POWER_SLOTS || 5);
@@ -1044,6 +1188,23 @@
     const gear = (holder && holder.gear) || {};
     const b = GD.baseById(item.base);
     if (b && b.slot === 'bouclier' && GD.armeDeuxMains(gear.arme)) return 'son arme se tient à deux mains';
+    /* LE COUPLAGE ARME / ARMURE. On refuse dans les DEUX sens : poser une
+       plaque sur un mage, comme donner un arc à quelqu'un déjà en plaque.
+       Sans la réciproque, l'ordre d'équipement décidait de la règle — on
+       s'habillait d'abord, on prenait l'arme ensuite, et tout passait. */
+    const voieTenue = GD.voieDe(gear.arme);
+    const famPosee = GD.famArmure(item);
+    if (famPosee && voieTenue && !GD.armureVaPour(voieTenue, famPosee))
+      return 'le ' + (GD.VOIE_NOM[voieTenue] || voieTenue) + ' ne se porte pas en ' + famPosee;
+    if (b && b.slot === 'arme') {
+      const voiePosee = GD.voieDe(item);
+      for (const slot of ['casque', 'armure', 'gants', 'bottes']) {
+        const fam = GD.famArmure(gear[slot]);
+        if (fam && voiePosee && !GD.armureVaPour(voiePosee, fam))
+          return 'il porte de la ' + fam + ', qui ne va pas au ' +
+                 (GD.VOIE_NOM[voiePosee] || voiePosee);
+      }
+    }
     return null;
   };
 
