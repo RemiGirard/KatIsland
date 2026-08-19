@@ -86,7 +86,7 @@
     B('ombre', 'Ombre', 'On frappe ce qui ne regarde pas.', true,
       [P('dmg', 0.09), S('mspd', 7)], P('dmg', 0.18), 'an_fauxombre'),
     B('necro', 'Nécromancie', 'Ce qui est tombé n\'a pas fini de servir.', false,
-      [A('dmg', { pct: 0.05 }), S('hp', 22)], A('dmg', { pct: 0.11 }), 'so_releve'),
+      [A('dmg', { pct: 0.05 }), S('hp', 22)], A('dmg', { pct: 0.11 }), 'an_ossuaire'),
     B('allure', 'Allure', 'Arriver le premier, partir avant le coup.', true,
       [S('mspd', 8), P('aspd', 0.07)], P('mspd', 0.10), 'ec_esquive'),
     B('fortune', 'Fortune', 'Revenir plus riche qu\'on n\'est parti.', false,
@@ -140,6 +140,11 @@
       nom: 'Ricochet',     txt: 'le trait rebondit de cible en cible' },
     { mod: 'spread', pct: 3,    kinds: ['line'],
       nom: 'Salve',        txt: 'il en part trois au lieu d un' },
+    /* Les runes d'invocation. `dur` allonge le sursis ; `part` la fait
+       mordre plus fort en empruntant davantage a son invocateur. Toutes
+       deux sont des champs REELS d'un pouvoir `summon`, donc jamais
+       muettes sur autre chose : le filtre par champ s'en charge. */
+    { mod: 'part',   pct: 0.50,  nom: 'Fidele',      txt: 'elle emprunte bien plus de sa force' },
     { mod: 'tick',   pct: -0.35, nom: 'Devorant',    txt: 'la zone ronge bien plus souvent' },
     { mod: 'dur',    pct: 0.70,  nom: 'Persistant',  txt: 'ce qu il laisse au sol dure' },
     { mod: 'w',      pct: 0.60,  nom: 'Large',       txt: 'la coupe s elargit' },

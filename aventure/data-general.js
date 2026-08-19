@@ -848,7 +848,12 @@
   // ============================================================
 
   // COMMENT un pouvoir se joue. Un `kind` hors de cette liste = pouvoir muet.
+  /* `summon` : une unité alliée TEMPORAIRE, qui se bat seule et s'efface.
+     Elle vit dans `arena.party` — d'où son déplacement, son ciblage
+     et son rendu gratuits — mais porte `_invoque`, qui l'exclut de la
+     condition de défaite, de la sélection et du contexte de l'IA. */
   GameData.POWER_KINDS = { aoe_self: 1, aoe_point: 1, bolt: 1, line: 1, heal: 1,
+                           summon: 1,
                            buff_party: 1, buff_self: 1, taunt: 1, rally: 1,
                            field: 1, dash: 1 };
   // CE QU'IL FAIT, pour l'IA : c'est là-dessus que la posture pondère (`pol.prio`).
@@ -894,6 +899,14 @@
     cd: 'scalaire', radius: 'scalaire', mult: 'scalaire', dur: 'scalaire',
     len: 'scalaire', heal: 'scalaire', dmg: 'scalaire', pct: 'scalaire',
     spd: 'scalaire', range: 'scalaire', w: 'scalaire', tick: 'scalaire',
+    /* LES CHAMPS D'INVOCATION. Sans eux, une rune ecrite pour une hydre
+       tombait dans le vide : `appliquerMods` ignore en silence tout mod
+       absent de cette table, et la rune promettait un effet que rien
+       n'appliquait. `part` est la fraction de degats empruntee a
+       l'invocateur, `pv` la robustesse, `nb` le nombre appele.
+       `max` reste HORS de la table : le plafond de proliferation est un
+       garde-fou de lisibilite, pas une statistique a ameliorer. */
+    part: 'scalaire', pv: 'scalaire', nb: 'scalaire',
     chain: 'drapeau', spread: 'drapeau', splash: 'drapeau', cleanse: 'drapeau',
   };
   // COMBIEN DE POUVOIRS UN PERSONNAGE PORTE EN MÊME TEMPS : 1 de classe + 4
@@ -1689,6 +1702,42 @@
        fichier l’interdit.
        ================================================================ */
 
+    /* LES INVOCATIONS. Trois noms pour la même mécanique : une unité
+       alliée temporaire qui se bat seule. `unite` dit de quel gabarit elle
+       hérite ses stats, `part` quelle fraction des dégâts de l'invocateur
+       elle emprunte — sans quoi une hydre lâchée au dixième étage frappe
+       comme au premier et le pouvoir cesse de valoir un point d'arbre.
+       `max` borne la prolifération : au-delà, la plus ancienne s'en va. */
+    an_hydre: GEN_PW({
+      id: 'an_hydre', cls: null, icon: '', name: 'Hydre de feu', cd: 14,
+      kind: 'summon', cible: 'soi',
+      unite: 'artilleur', nomUnite: 'hydre', elem: 'feu',
+      dur: 10, pv: 1.4, part: 0.55, nb: 1, max: 2, range: 150, mobile: false,
+      tags: ['degats', 'zone'],
+      ia: { veut: 'groupe', prio: 56, quand: { foesMin: 2 },
+            motif: 'plante une tête de feu quand il y a de quoi mordre' },
+      txt: 'Une tête de feu qui crache tant qu\'elle tient',
+    }),
+    an_ossuaire: GEN_PW({
+      id: 'an_ossuaire', cls: null, icon: '', name: 'Ossuaire', cd: 16,
+      kind: 'summon', cible: 'soi',
+      unite: 'lancier', nomUnite: 'squelette', elem: 'ombre',
+      dur: 12, pv: 0.9, part: 0.45, nb: 2, max: 4,
+      tags: ['degats'],
+      ia: { veut: 'proche', prio: 54, quand: { foesMin: 1 },
+            motif: 'relève ce qu\'il faut pour tenir la ligne' },
+      txt: 'Deux squelettes se relèvent et marchent devant',
+    }),
+    an_tourelle: GEN_PW({
+      id: 'an_tourelle', cls: null, icon: '', name: 'Tourelle', cd: 15,
+      kind: 'summon', cible: 'soi',
+      unite: 'fronde', nomUnite: 'tourelle', elem: 'foudre',
+      dur: 14, pv: 1.8, part: 0.5, nb: 1, max: 1, range: 190, mobile: false,
+      tags: ['degats'],
+      ia: { veut: 'arriere', prio: 52, quand: { foesMin: 2 },
+            motif: 'plante une pièce et la laisse travailler' },
+      txt: 'On la pose, elle tire toute seule',
+    }),
     an_boulefeu: GEN_PW({
       id: 'an_boulefeu', cls: null, icon: '', name: 'Boule de feu', cd: 7,
       kind: 'aoe_point', cible: 'sol',

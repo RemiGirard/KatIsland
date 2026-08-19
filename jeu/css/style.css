@@ -1029,7 +1029,13 @@ button.b.large{width:100%;justify-content:center}
      · SOBRE. Les accents s'assombrissent pour tenir sur le clair ;
        aucun aplat coloré ne vient meubler.
    =============================================================== */
-.fen{
+/* LES DEUX COLONNES DE LA CARTE SONT DES FEUILLES, comme les fenetres.
+   Elles affichaient des panneaux dessines pour le fond CLAIR d'une
+   fenetre, poses sur le fond sombre de la carte : encre pale sur nuit,
+   cadres invisibles, et un ecran qui ne ressemblait a rien d'autre dans
+   le jeu. On les rattache au meme bloc de jetons plutot que de recopier
+   la palette — recopiee, elle aurait diverge des la premiere retouche. */
+.fen,.carte-flanc,.mer-fiche{
   --panneau:#f4efe4;
   --panneau2:#eae3d4;
   --panneau3:#ded5c2;
@@ -1403,12 +1409,74 @@ button[title],.b[title],a[title]{cursor:pointer}
   box-shadow:0 18px 52px rgba(3,10,14,.34);backdrop-filter:none;color:var(--texte);
 }
 .fen.large{min-width:min(760px,94vw);max-width:min(900px,96vw)}
-/* LA FENÊTRE DE LA CARTE MARINE : plus large que les autres, parce
-   qu'une carte se lit de près. La feuille y gagne toute la hauteur
-   disponible ; la fiche garde sa colonne. */
-.fen.carte-marine{min-width:min(1020px,94vw);max-width:min(1320px,96vw)}
-.fen.carte-marine .carte-mer{grid-template-columns:minmax(0,1fr) 350px;
-  height:clamp(560px,78vh,920px)}
+/* LA CARTE MARINE, PLEIN ÉCRAN. Ce n'est pas une fenêtre flottante :
+   c'est une table qu'on déplie par-dessus le village — feuille à
+   gauche, fiche à droite, et rien d'autre à l'écran. */
+.carte-pleine{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;
+  background:#f7f5ef;color:#283238}
+.carte-pleine.vu{display:flex}
+.carte-pleine-tete{display:flex;align-items:center;gap:10px;padding:13px 16px;
+  background:#1c2b35}
+.carte-pleine-tete .ti{flex:1;min-width:0}
+.carte-pleine-tete h2{margin:0;font-size:21px;color:#f4f2e9;letter-spacing:.04em}
+.carte-pleine-tete .sous{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:#98a5a4;margin-top:4px;font-weight:600}
+.carte-pleine-tete .fen-x{width:30px;height:30px;color:#aab4b2;border-color:rgba(255,255,255,.16)}
+.carte-pleine-tete .fen-x:hover{color:#e8837a;border-color:rgba(232,131,122,.5);
+  background:rgba(232,131,122,.12)}
+.carte-pleine-corps{flex:1;min-height:0;display:flex;flex-direction:column;
+  overflow:hidden;padding:14px 16px}
+.carte-pleine .carte-mer{flex:1;min-height:0;height:auto;
+  grid-template-columns:minmax(0,1fr) 380px}
+/* ---------------------------------------------------------------
+   LE FLANC DU PORT, a gauche de la carte.
+
+   Le port n'a plus de fenetre : ses commandes vivent la. Trois
+   colonnes qui REMPLISSENT la page — le premier jet laissait des trous
+   partout parce que la mer avait une largeur figee de 854 px au milieu
+   d'un ecran de 1600.
+
+   Les deux marges sont donc bornees en pourcentage et la mer prend TOUT
+   le reste. Ses onglets reprennent `fen-onglets`, le bandeau de toutes
+   les fenetres du jeu : un second langage d'onglets serait un jeu qui ne
+   parle plus d'une seule voix.
+   --------------------------------------------------------------- */
+.carte-pleine .carte-mer.a-flanc{
+  grid-template-columns:clamp(300px,26vw,470px) minmax(0,1fr) clamp(300px,24vw,420px);
+  gap:14px;align-items:stretch}
+.carte-flanc,.carte-pleine .mer-fiche{
+  border:1px solid rgba(46,42,36,.28);border-radius:2px;
+  box-shadow:0 18px 48px rgba(0,0,0,.45);padding:12px 13px;overflow:hidden}
+.carte-flanc{display:flex;flex-direction:column;min-width:0;min-height:0}
+.carte-pleine .mer-fiche{overflow:auto}
+/* Le bandeau d'onglets tient la largeur du flanc et defile plutot que
+   de s'enrouler sur trois lignes : huit onglets replies mangeaient un
+   quart de la colonne. */
+.carte-flanc .fen-onglets{flex:0 0 auto;flex-wrap:nowrap;overflow-x:auto;
+  background:transparent;border-bottom:1px solid var(--bord);margin-bottom:10px;
+  padding:0 2px}
+/* Ils vivent sur la FEUILLE, pas sur la tete sombre : l'encre y est
+   noire. Sans cette reprise, l'onglet ouvert s'ecrivait en creme sur du
+   papier — invisible. */
+.carte-flanc .fen-onglets button{color:var(--faible);white-space:nowrap}
+.carte-flanc .fen-onglets button:hover{color:var(--doux)}
+.carte-flanc .fen-onglets button.on{color:var(--texte)}
+.carte-flanc .fen-onglets button.on::after{background:var(--corail)}
+/* Le panneau defile seul : c'est lui qui deborde, pas la page. */
+.flanc-corps{flex:1;min-height:0;overflow:auto;padding-right:6px}
+/* LA MER REMPLIT SA COLONNE. `aspect-ratio:1/1` la bridait a un carre,
+   d'ou la bande vide sous la carte : on la laisse prendre la hauteur
+   disponible et l'image se debrouille avec.
+   --------------------------------------------------------------- */
+.carte-pleine .carte-mer.a-flanc .mer-toile{aspect-ratio:auto;width:100%;height:100%}
+.carte-pleine .carte-mer.a-flanc .mer-carte{width:100%;height:100%}
+/* Sous 1250 px la mer passe sous les commandes : trois colonnes
+   deviennent trois bandes trop etroites pour l'une ou l'autre. */
+@media (max-width:1250px){
+  .carte-pleine .carte-mer.a-flanc{grid-template-columns:minmax(0,1fr)}
+  .carte-flanc{max-height:36vh}
+}
+}
 .fen.active{border-color:rgba(19,31,36,.36)}
 .fen .fen-tete{padding:15px 17px 13px;background:#1c2b35;border-bottom:0}
 .fen .fen-tete h2{font-size:21px;color:#f4f2e9;letter-spacing:.04em}

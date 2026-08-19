@@ -463,6 +463,13 @@
   }
 
   function ouvrirBatiment(bid) {
+    /* LE PORT N'A PLUS DE FENÊTRE. Il EST la carte marine — on l'ouvre
+       donc directement, et tout ce qu'on y faisait vit maintenant dans
+       le flanc gauche de cette carte. On intercepte ici plutôt qu'à
+       chaque appelant : le clic dans le village, la vignette du dock et
+       le raccourci du bilan passent tous par cette porte. */
+    const bp = window.Etat.E.bat[bid];
+    if (bp && bp.type === 'port' && !bp.chantier) { ouvrirCarteMarine(null, null); return; }
     const b = E().bat[bid];
     if (!b) return;
     const def = window.BAT[b.type];
@@ -1237,30 +1244,24 @@
       a0: ile.secteur != null ? ile.secteur : 0,
       fixe: ile.secteur != null,
     }));
-    /* DES CERCLES CONCENTRIQUES, UN PAR TIER. Chaque couronne pose ses
-       dix îles EXACTEMENT sur son anneau, à intervalles égaux, dans
-       l'ordre de leur force en tournant depuis le nord — même île,
-       même place, pour toujours, et la difficulté se lit dans le sens
-       des aiguilles. Le couloir du nord reste libre pour l'échelle. */
+    /* UNE BANDE PAR TIER, PAS UN CERCLE. Le tier 1 s'étale entre le
+       bourg et sa limite, le tier 2 entre la limite du 1 et la sienne,
+       et ainsi de suite. Dans sa bande, chaque île a SA distance : les
+       faciles côté bourg, les dures côté large — la difficulté se lit
+       à la règle, sans légende. L'angle vient du rang de force : même
+       île, même place, pour toujours ; les couronnes paires tournent
+       d'un demi-pas pour ne pas s'aligner en rayons. */
     if (t === 'local') {
-      const parTier = {};
       for (const p of l) {
         const ti = p.ile.tier || 1;
-        (parTier[ti] = parTier[ti] || []).push(p);
-      }
-      for (const ti in parTier) {
-        const groupe = parTier[ti].sort((a, b) =>
-          (a.ile.force - b.ile.force) || (a.ile.id < b.ile.id ? -1 : 1));
-        const n = groupe.length, r = rayonLieues(+ti);
+        const f = Math.max(1, Math.min(10, p.ile.force || 1));
+        const dedans = rayonLieues(ti - 1) + 26, dehors = rayonLieues(ti) - 14;
+        p.r = dedans + (dehors - dedans) * ((f - 1) / 9);
         /* le budget d'arc garantit que deux voisines ne se touchent
            jamais, même au premier anneau où la place est comptée */
-        const budget = 2 * Math.PI * r / n * 0.40;
-        for (let i = 0; i < n; i++) {
-          groupe[i].r = r;
-          groupe[i].taille = Math.min(groupe[i].taille, budget);
-          groupe[i].a0 = -Math.PI / 2 + NORD / 2
-            + ((i + ((+ti) % 2 ? 0 : 0.5)) / n) * (Math.PI * 2 - NORD);
-        }
+        p.taille = Math.min(p.taille, 2 * Math.PI * p.r / 10 * 0.34);
+        p.a0 = -Math.PI / 2 + NORD / 2
+          + ((f - 1 + (ti % 2 ? 0 : 0.5)) / 10) * (Math.PI * 2 - NORD);
       }
     }
     for (const p of l) {
@@ -1365,7 +1366,7 @@
       const demi = Math.max(C.L, C.H) / 2;
       return { demi, x0: C.cx - demi, x1: C.cx - demi, y0: C.cy - demi, y1: C.cy - demi };
     }
-    const demi = C.r0 + C.pas + 80;                   // le tier 1, entier, immobile
+    const demi = C.r0 + C.pas + 52;                   // le tier 1, entier, immobile
     const marge = Math.max(0, rayon - 1) * C.pas;     // un anneau de glisse par tier
     return { demi, x0: C.cx - demi - marge, x1: C.cx - demi + marge,
                    y0: C.cy - demi - marge, y1: C.cy - demi + marge };
@@ -1594,7 +1595,11 @@
     const prise = P.estPrise(choisi.id);
     const duree = window.IleUtil.traversee(choisi.lieues, nav ? nav.palier : 0);
     const v = nav ? P.peutAppareiller(nav.id, choisi.id) : { ok: false, pourquoi: '' };
-    const box = el('div', { class: 'cadre' + (prise ? ' actif' : '') });
+    const box = el('div', { class: 'cadre' + (prise ? ' actif' : ''),
+      /* SANS CLE, LA RÉCONCILIATION GARDE LA PREMIÈRE FICHE : le morphage
+         ne remplace pas un cadre dont le jumeau a la même tête. La cle
+         porte l'île — changer d'île, c'est changer de noeud. */
+      'data-cle': 'fiche-' + choisi.id });
     /* L'ILLUSTRATION D'ABORD : c'est elle qu'on a cliquée sur la carte,
        c'est elle qu'on veut reconnaître ici. */
     const illu = window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(choisi) : choisi.image;
@@ -1677,6 +1682,58 @@
   const theatreVu = {};
   const vueMer = {};
   const glisseMer = {};
+
+  /* ==================================================================
+     LE FLANC DU PORT
+
+     Le port n'a plus de fenêtre à lui. Le cliquer ouvre LA CARTE, et
+     tout ce qu'on faisait dans sa fenêtre — armer, charger, agrandir,
+     placer des postes, monter le chantier naval — se fait maintenant
+     dans cette colonne, à gauche de la mer.
+
+     C'est le bon endroit : on arme un navire POUR une destination, et
+     l'on choisit une destination EN FONCTION de ce qu'on peut armer.
+     Les séparer en deux fenêtres obligeait à faire l'aller-retour de
+     mémoire.
+     ================================================================== */
+  const ongletFlanc = {};          // l'onglet ouvert, par carte
+  function panneauxDuPort(bid) {
+    const b = window.Etat.E.bat[bid];
+    const out = [
+      { id: 'flotte',   nom: 'La flotte',     rendu: c => rendreFlotte(c) },
+      { id: 'chantier', nom: 'Chantier naval', rendu: c => rendreChantier(c) },
+    ];
+    if (!b) return out;
+    if (b.postes && b.postes.length)
+      out.push({ id: 'postes', nom: 'Postes', rendu: c => rendrePostes(c, bid) });
+    out.push({ id: 'niveau', nom: 'Niveau', rendu: c => rendreNiveau(c, bid) });
+    if (b.postes && b.postes.length && aVuUneAmelioration(b))
+      out.push({ id: 'amelio', nom: 'Améliorations', rendu: c => rendreAmelio(c, bid) });
+    if (b.postes && b.postes.length && aVuUnOutil(b))
+      out.push({ id: 'outil', nom: 'Outillage', rendu: c => rendreOutil(c, bid) });
+    out.push({ id: 'notice', nom: 'Notice', rendu: c => rendreNotice(c, bid) });
+    return out;
+  }
+  function flancDuPort(cle, rafraichir) {
+    const E2 = window.Etat.E;
+    const bid = Object.keys(E2.bat).find(k => E2.bat[k].type === 'port');
+    if (!bid) return null;
+    const pans = panneauxDuPort(bid);
+    const actif = pans.find(x => x.id === ongletFlanc[cle]) || pans[0];
+    /* LE MÊME BANDEAU QUE PARTOUT AILLEURS. J'avais invente des pastilles
+       a moi : un deuxieme langage d'onglets dans un jeu qui en a deja un,
+       c'est-a-dire un jeu qui ne parle plus d'une seule voix. On reprend
+       `fen-onglets`, la classe que `ui-noyau` pose sur toutes les
+       fenetres — meme graisse, meme casse, meme trait corail sous
+       l'onglet ouvert. */
+    const barre = el('div', { class: 'fen-onglets' },
+      ...pans.map(x => el('button', {
+        class: (x.id === actif.id ? 'on' : ''), text: x.nom,
+        onclick: () => { ongletFlanc[cle] = x.id; if (rafraichir) rafraichir(); } })));
+    const corps = el('div', { class: 'flanc-corps' });
+    try { actif.rendu(corps); } catch (e) { /* un panneau qui casse ne doit pas emporter la carte */ }
+    return el('div', { class: 'carte-flanc' }, barre, corps);
+  }
 
   function rendreCarteMer(c, o) {
     const P = window.Port;
@@ -1774,20 +1831,70 @@
       if (o.rafraichir) o.rafraichir();
     } });
     toile.appendChild(dessinerMer(nav, choisi, t, { x: vue.x, y: vue.y, demi: cadre.demi }));
-    c.appendChild(el('div', { class: 'carte-mer' }, toile, ficheMer(choisi, nav, o)));
+    /* TROIS COLONNES en pleine page : les commandes du port à gauche, la
+       mer au milieu, la terre choisie à droite. Dans une fenêtre ordinaire
+       — l'onglet « Les îles » d'un autre écran — on garde les deux
+       colonnes d'origine : il n'y a pas la place, et le flanc ferait
+       doublon avec les onglets de la fenêtre elle-même. */
+    const flanc = o.avecFlanc ? flancDuPort(o.cle, o.rafraichir) : null;
+    c.appendChild(el('div', { class: 'carte-mer' + (flanc ? ' a-flanc' : '') },
+      flanc, toile, ficheMer(choisi, nav, o)));
   }
 
-  /* LE CHOIX DE L'ÎLE, quand un navire attend un cap. */
+  /* LA CARTE PREND TOUT L'ÉCRAN. Une fenêtre flottante, même grande,
+     reste une fenêtre posée sur le village ; une carte, elle, veut une
+     table entière. On l'ouvre par-dessus tout — feuille à gauche, fiche
+     à droite — et on la ferme d'une croix ou d'Échap. */
+  let pleineNoeud = null, pleineCorps = null, pleineTitre = null, pleineSous = null;
+  let pleineOuvert = false, pleineOpts = null;
+  function rafraichirPleine() {
+    if (!pleineCorps || !pleineOpts) return;
+    U.vide(pleineCorps);
+    rendreCarteMer(pleineCorps, {
+      cle: pleineOpts.cle, navId: pleineOpts.navId, avecFlanc: true,
+      rafraichir: rafraichirPleine, apresDepart: pleineOpts.apresDepart,
+    });
+  }
+  function fermerCarteMarine() {
+    pleineOuvert = false;
+    if (pleineNoeud) pleineNoeud.classList.remove('vu');
+  }
+  function ouvrirCarteMarine(navId, apresDepart) {
+    if (!pleineNoeud) {
+      pleineTitre = el('h2', { text: '' });
+      pleineSous = el('div', { class: 'sous', text: '' });
+      pleineCorps = el('div', { class: 'carte-pleine-corps' });
+      pleineNoeud = el('div', { class: 'carte-pleine' },
+        el('div', { class: 'carte-pleine-tete' },
+          el('div', { class: 'ti' }, pleineTitre, pleineSous),
+          el('button', { class: 'fen-x', title: 'Fermer (Échap)', text: '×',
+            onclick: () => fermerCarteMarine() })),
+        pleineCorps);
+      document.body.appendChild(pleineNoeud);
+      /* Échap ferme la carte AVANT que le noyau n'entende la touche et
+         ne referme aussi une fenêtre qui n'y était pour rien. */
+      addEventListener('keydown', ev => {
+        if (ev.key === 'Escape' && pleineOuvert) {
+          ev.stopImmediatePropagation();
+          fermerCarteMarine();
+        }
+      }, true);
+    }
+    pleineOpts = { cle: navId ? 'dest:' + navId : 'carte', navId: navId || null,
+                   apresDepart: apresDepart || null };
+    pleineTitre.textContent = navId ? 'Où met-on le cap ?' : 'La carte marine';
+    pleineSous.textContent = navId ? 'Carte des eaux du bourg'
+                                   : 'Les eaux du bourg et le Grand Large';
+    pleineOuvert = true;
+    pleineNoeud.classList.add('vu');
+    rafraichirPleine();
+  }
+
+  /* LE CHOIX DE L'ÎLE, quand un navire attend un cap : le même plein
+     écran, avec le bouton « Appareiller » dans la fiche. */
   function ouvrirDestination(navId) {
     choixIle['dest:' + navId] = null;
-    U.ouvrir('destination', {
-      titre: 'Où met-on le cap ?', sous: 'Carte des eaux du bourg', classe: 'carte-marine',
-      onglets: [{ id: 'd', nom: 'La carte', rendu: (c, F) => rendreCarteMer(c, {
-        cle: 'dest:' + navId, navId,
-        rafraichir: () => F.rafraichir(),
-        apresDepart: () => U.fermer('destination'),
-      }) }],
-    });
+    ouvrirCarteMarine(navId, () => fermerCarteMarine());
   }
 
   /* POUSSER PLUS LOIN. Les distances se comptent depuis l'île où l'on
@@ -1839,22 +1946,9 @@
     });
   }
 
-  /* LA CARTE A SA FENÊTRE. Dans l'onglet du port elle tenait sur un
-     mouchoir ; ici elle prend toute la place qu'une carte mérite —
-     grande feuille à gauche, fiche à droite. Consultative : on y
-     prépare la prochaine sortie, on n'en lance aucune. */
-  function ouvrirCarteMarine() {
-    U.ouvrir('carteMarine', {
-      titre: 'La carte marine', sous: 'Les eaux du bourg et le Grand Large',
-      classe: 'carte-marine',
-      onglets: [{ id: 'c', nom: 'La carte', rendu: (c, F) =>
-        rendreCarteMer(c, { cle: 'carte', rafraichir: () => F.rafraichir() }) }],
-    });
-  }
-
-  /* L'onglet « Les îles » du port : plus la carte elle-même — son
-     bouton. Deux cartes côte à côte se marchaient dessus ; on passe
-     par la fenêtre dédiée, plus grande et plus lisible. */
+  /* LA CARTE A SA TABLE. L'onglet du port ne porte plus la carte elle-
+     même — il en garde l'invitation, et c'est le plein écran qui la
+     déroule, plus grand et plus lisible. */
   function rendreIles(c, F) {
     c.appendChild(el('div', { class: 'cadre' },
       el('div', { class: 'eti-or', text: 'LA CARTE MARINE' }),

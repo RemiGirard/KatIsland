@@ -1737,9 +1737,9 @@
         cls, type: def ? def.base : 'heros', tint: def ? def.tint : '#c9a24a',
         icon: def ? def.icon : '', stance,
         st, hp: st.hp, hpMax: st.hp,
-        /* LE BOUCLIER D\u2019ENERGIE. Plein au depart : on entre dans la salle
+        /* LE BOUCLIER D’ENERGIE. Plein au depart : on entre dans la salle
            reposé. `eshT` compte le temps ECOULE DEPUIS LE DERNIER COUP —
-           c\u2019est lui qui decide du repit, pas un minuteur global. */
+           c’est lui qui decide du repit, pas un minuteur global. */
         esh: st.esh || 0, eshMax: st.esh || 0, eshT: 0,
         x: cx() + (i - (span - 1) / 2) * CELL * 1.1,
         y: H - MARGIN() - CELL * 0.4,
@@ -1797,6 +1797,54 @@
         scale,
       };
     }
+    /* ==================================================================
+       LES INVOCATIONS
+
+       Une hydre de feu, un squelette releve, une tourelle : trois noms
+       pour la meme chose — une unite ALLIEE, temporaire, qui se bat toute
+       seule et disparait.
+
+       Elle vit dans `arena.party`, et ce n est pas un raccourci : c est
+       ce qui lui donne gratuitement le deplacement, le ciblage, l attaque,
+       les statuts et le rendu. Rien de tout cela n a ete reecrit.
+
+       MAIS ELLE N EST PAS UN HEROS, et trois endroits doivent le savoir :
+       la condition de defaite (une compagnie morte autour d une hydre
+       vivante est une defaite), la selection (on ne lui donne pas d ordre)
+       et le contexte de l IA (un soigneur ne gaspille pas ses soins sur
+       ce qui va s evanouir). Le drapeau `_invoque` les distingue, comme
+       `protege` distingue deja la caisse d escorte.
+       ================================================================== */
+    let seqInvoque = 0;
+    function mkInvoque(maitre, ab) {
+      const u = AD().UNIT_TYPES[ab.unite] || AD().UNIT_TYPES.lancier;
+      const b = u.base || { hp: 40, dmg: 4, range: 0, mspd: 40, aspd: 0.8 };
+      /* Elle emprunte une part des degats de son invocateur : sans cela
+         une hydre lancee au dixieme etage tape comme au premier, et le
+         pouvoir cesse de valoir un point d arbre passe un moment. */
+      const part = ab.part || 0.6;
+      const dmg = (b.dmg || 4) + (maitre.st.dmg || 0) * part;
+      const hp = Math.round((b.hp || 40) * (ab.pv || 1.2));
+      const elem = ab.elem || null;
+      return {
+        side: 'party', id: 'inv' + (++seqInvoque),
+        _invoque: true, vieT: ab.dur || 8,
+        name: ab.nomUnite || 'invocation',
+        type: ab.unite || 'lancier', elem,
+        tint: elem && AD().ELEMENTS[elem] ? AD().ELEMENTS[elem].col : '#8ab4a0',
+        hp, hpMax: hp,
+        st: { dmg, aspd: b.aspd || 0.9, mspd: (b.mspd || 40) * (ab.mobile === false ? 0 : 1),
+              range: ab.range || b.range || 0, armor: 2, hp },
+        angle: -Math.PI / 2, phase: Math.random() * 6.28, atkT: 0,
+        lunge: 0, hitT: 0, deadT: 0, moving: false,
+        buffs: {}, statuses: {}, stunT: 0, ctrlT: 0,
+        x: clamp(maitre.x + rnd(-CELL, CELL), MARGIN(), W - MARGIN()),
+        y: clamp(maitre.y + rnd(-CELL, CELL), MARGIN(), H - MARGIN()),
+        dest: null, target: null, dead: false,
+        pouvoirs: [], procs: null, talents: null, gcd: 0,
+      };
+    }
+
     // LE VIVIER DES RENFORTS : animaux ET soldats, pondéré par la profondeur.
     // Avant, les portails et les renforts de survie ne pondaient QUE la faune
     // dès qu'un biome en avait — les soldats du lieu n'entraient jamais en
@@ -2250,7 +2298,7 @@
     A.selectAll = function () {
       if (!arena) return;
       arena.sel = {};
-      for (const p of arena.party) if (!p.dead) arena.sel[p.id] = true;
+      for (const p of arena.party) if (!p.dead && !p._invoque) arena.sel[p.id] = true;
     };
     A.selected = () => (arena ? arena.party.filter(p => arena.sel[p.id] && !p.dead) : []);
 
@@ -2463,17 +2511,17 @@
       // L'ABSORPTION passe AVANT les points de vie, et se consomme.
       const abs = bf(p, 'abs');
       if (abs > 0) { const pris = Math.min(abs, n); p.buffs.abs.v -= pris; n -= pris; }
-      /* LE BOUCLIER D\u2019ENERGIE, ensuite.
+      /* LE BOUCLIER D’ENERGIE, ensuite.
 
-         Il vient APRES l\u2019absorption temporaire — celle-ci est un buff qui
-         expire, on la depense donc en premier pendant qu\u2019elle vaut encore
+         Il vient APRES l’absorption temporaire — celle-ci est un buff qui
+         expire, on la depense donc en premier pendant qu’elle vaut encore
          quelque chose — et AVANT les points de vie, ce qui est toute sa
-         raison d\u2019etre : il encaisse a leur place, et il revient seul.
+         raison d’etre : il encaisse a leur place, et il revient seul.
 
          TOUT COUP REMET LE REPIT A ZERO, meme entierement absorbe. Sinon
          un personnage sous le feu continu rechargerait en se faisant
          tirer dessus, et le bouclier deviendrait une seconde barre de vie
-         infinie au lieu d\u2019une recompense pour s\u2019etre degage. */
+         infinie au lieu d’une recompense pour s’etre degage. */
       if (p.eshMax > 0) {
         p.eshT = 0;
         if (p.esh > 0) {
@@ -3032,6 +3080,23 @@
         }
         // LE BOND. Même patron que la charge d'un monstre : on note le départ,
         // on arrive, et tout ce qui était sur le segment le sent passer.
+        case 'summon': {
+          /* On ne laisse pas proliferer : au-dela de `max` invocations
+             vivantes du meme maitre, la plus ancienne s en va. Sans ce
+             plafond, un pouvoir a 6 s de recharge et 12 s de duree
+             remplissait l arene et rendait tout le reste illisible. */
+          const max = Math.max(1, ab.max || 1);
+          const miennes = arena.party.filter(u => u._invoque && u._maitre === p.id && !u.dead);
+          while (miennes.length >= max) { const v = miennes.shift(); v.dead = true; v.deadT = 0; }
+          const n = Math.max(1, Math.round(ab.nb || 1));
+          for (let k = 0; k < n; k++) {
+            const inv = mkInvoque(p, ab);
+            inv._maitre = p.id;
+            arena.party.push(inv);
+            burst(inv.x, inv.y, inv.tint, 8);
+          }
+          break;
+        }
         case 'dash': {
           const sujets = ab.groupe ? arena.party.filter(h => !h.dead && !h.protege) : [p];
           const L = ab.len || CELL * 4;
@@ -3298,7 +3363,10 @@
     function contexteIA() {
       const foes = [], party = [];
       for (const f of arena.foes) if (!f.dead && !f.portal) foes.push(f);
-      for (const h of arena.party) if (!h.dead && !h.protege) party.push(h);
+      /* Une invocation n entre pas dans le contexte de l IA : un soigneur
+         qui verse ses soins sur ce qui va s evanouir dans huit secondes
+         les gaspille, et le blesse a cote attend. */
+      for (const h of arena.party) if (!h.dead && !h.protege && !h._invoque) party.push(h);
       let blesse = null, pire = 2;
       for (const h of party) {
         const r = h.hp / Math.max(1, h.hpMax);
@@ -3895,9 +3963,9 @@
         const b = e.buffs[k];
         if (b.t > 0) { b.t -= dt; if (b.t <= 0) { b.v = 0; b.t = 0; } }
       }
-      /* LA RECHARGE DU BOUCLIER. Elle ne demarre qu\u2019apres `ESH_REPIT`
-         secondes sans avoir rien pris — c\u2019est ce delai, et lui seul, qui
-         fait la difference entre une reserve qu\u2019on menage et une barre de
+      /* LA RECHARGE DU BOUCLIER. Elle ne demarre qu’apres `ESH_REPIT`
+         secondes sans avoir rien pris — c’est ce delai, et lui seul, qui
+         fait la difference entre une reserve qu’on menage et une barre de
          vie de plus. Le test porte sur `eshMax` : seuls les porteurs en ont
          un, la boucle ne coute donc rien aux autres ni aux ennemis. */
       if (e.eshMax > 0 && !e.dead) {
@@ -4120,6 +4188,13 @@
       arena._ctx = arena.auto ? contexteIA() : null;
       for (const p of arena.party) {
         if (p.dead) continue;
+        /* LE TEMPS D UNE INVOCATION. Il court meme hors combat : ce qui
+           est appele pour une salle ne doit pas suivre jusqu a la
+           suivante. Elle s efface sans laisser de cadavre a ramasser. */
+        if (p._invoque) {
+          p.vieT -= dt;
+          if (p.vieT <= 0) { p.dead = true; p.deadT = 0; burst(p.x, p.y, p.tint, 6); continue; }
+        }
         if (arena.auto) autoPlay(p);
         else if (arena.phase === 'fight' && !p.target && !p.dest) {
           // auto-attack when enemy in range (manual mode)
@@ -4269,7 +4344,10 @@
         const foesLeft = arena.foes.some(f => !f.dead);
         // LA CAISSE NE COMPTE PAS comme survivante : des héros morts autour
         // d'un convoi intact, c'est une défaite, pas une attente.
-        const partyLeft = arena.party.some(p => !p.dead && !p.protege);
+        /* NI LA CAISSE NI UNE INVOCATION ne comptent comme survivantes :
+           des heros morts autour d une hydre encore debout, c est une
+           defaite, pas une attente. */
+        const partyLeft = arena.party.some(p => !p.dead && !p.protege && !p._invoque);
         if (!partyLeft) {
           arena.phase = 'lost';
           sfx('error');
