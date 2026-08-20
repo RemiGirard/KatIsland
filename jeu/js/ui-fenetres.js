@@ -1175,43 +1175,26 @@
      est-ce à ma portée ? */
   const teinteForce = f => f <= 3 ? 'douce' : (f <= 6 ? 'rude' : 'ardente');
 
-  /* QUATRE CERCLES PAR TIER, GROUPÉS PAR FORCE. Le premier cercle porte
-     les forces 1-2, le deuxième 3-4-5, le troisième 6-7-8, le quatrième
-     9-10 ; puis le tier suivant reprend quatre cercles plus loin, et
-     ainsi de suite. Les rayons sont CALCULÉS, pas décorés : chaque
-     cercle est assez large pour que les images de ses îles ne se
-     touchent pas (corde), et assez loin du précédent pour que deux
-     cercles voisins ne se mordent jamais (somme des demi-emprises).
-     Même force, même cercle, même place — pour toujours. */
-  const CERCLES_FORCES = [[1, 2], [3, 4, 5], [6, 7, 8], [9, 10]];
-  /* les îles de la couronne se lisent de loin : elles sont dessinées
-     plus grandes que celles du Grand Large, et les cercles s'écartent
-     d'autant — calculés depuis cette même emprise, rien ne se touche */
-  const TAILLE_LOCAL = 3.4;
+  /* UNE COURONNE PAR TIER. L'ancien plan étalait les dix îles sur quatre
+     anneaux concentriques : seules quelques terres tenaient dans la vue
+     et la lecture ressemblait à un radar. Une couronne légèrement
+     irrégulière donne dix destinations lisibles d'un seul regard. */
+  const TAILLE_LOCAL = 1.78;
   let cerclesMemo = null;
   function cerclesLocal() {
     if (cerclesMemo) return cerclesMemo;
     const out = [];
-    let rPrev = 44, sPrev = 0;                 // le bourg et son fanion
+    const s = tailleIle(10) * TAILLE_LOCAL * 1.275 + 10;
     for (let tier = 1; tier <= 10; tier++)
-      for (let g = 0; g < 4; g++) {
-        const grp = CERCLES_FORCES[g];
-        /* l'image fait 2,55 × la taille : la demi-emprise réelle */
-        const s = tailleIle(grp[grp.length - 1]) * TAILLE_LOCAL * 1.275 + 6;
-        const n = grp.length;
-        const corde = (2 * s + 44) / (2 * Math.sin(Math.PI / n));
-        const r = Math.max(corde, rPrev + sPrev + s + 48);
-        out.push({ r, s, n, tier, g, forces: grp });
-        rPrev = r; sPrev = s;
-      }
+      out.push({ r: 455 + (tier - 1) * 365, s, n: 10, tier });
     cerclesMemo = out;
     return out;
   }
   /* le bord extérieur d'un tier : le dernier cercle, plus sa plus grande
      île, plus une respiration — c'est lui qui borne la fenêtre */
   function bordTier(ti) {
-    const c = cerclesLocal()[Math.max(1, Math.min(10, ti)) * 4 - 1];
-    return c.r + c.s + 26;
+    const c = cerclesLocal()[Math.max(1, Math.min(10, ti)) - 1];
+    return c.r + c.s + 34;
   }
 
   /* CE QUI OCCUPE VRAIMENT LA PLACE, C'EST LE NOM. Un îlot fait six
@@ -1266,9 +1249,9 @@
        l'échelle au lieu de venir s'asseoir dessus. */
     const pris = [];
     if (t === 'local') {
-      /* un libellé par tier, posé sur son quatrième cercle */
+      /* un libellé par tier, posé sur sa couronne */
       for (let ti = 1; ti <= 10; ti++) {
-        const r = cerclesLocal()[ti * 4 - 1].r;
+        const r = cerclesLocal()[ti - 1].r;
         const y = CARTE.cy - r + 3, w = (ti + ' ' + CARTE.unite).length * 5.6 + 6;
         const b = { x1: CARTE.cx - w / 2, y1: y - 9.5, x2: CARTE.cx + w / 2, y2: y + 4 };
         pris.push({ pave: b, boite: b });
@@ -1280,8 +1263,8 @@
         pris.push({ pave: b, boite: b });
       }
     }
-    pris.push({ pave: { x1: CARTE.cx - 34, y1: CARTE.cy - 34, x2: CARTE.cx + 34, y2: CARTE.cy + 36 },
-                boite: { x1: CARTE.cx - 34, y1: CARTE.cy + 20, x2: CARTE.cx + 34, y2: CARTE.cy + 36 } });
+    pris.push({ pave: { x1: CARTE.cx - 96, y1: CARTE.cy - 96, x2: CARTE.cx + 96, y2: CARTE.cy + 110 },
+                boite: { x1: CARTE.cx - 52, y1: CARTE.cy + 92, x2: CARTE.cx + 52, y2: CARTE.cy + 110 } });
 
     const rayonOuvert = window.Port && window.Port.rayon ? Math.min(10, window.Port.rayon()) : 1;
     const source = t === 'large' ? (window.LARGE || [])
@@ -1295,28 +1278,20 @@
       a0: ile.secteur != null ? ile.secteur : 0,
       fixe: ile.secteur != null,
     }));
-    /* QUATRE CERCLES PAR TIER. Chaque île rejoint le cercle de son groupe
-       de force — 1-2, 3-4-5, 6-7-8, 9-10 — et s'y pose à intervalle
-       régulier, dans l'ordre de la force depuis le nord. Les couronnes
-       paires tournent d'un demi-pas pour ne pas s'aligner en rayons. */
+    /* Dix caps réguliers par tier, avec une respiration radiale alternée.
+       La rotation dorée empêche les tiers successifs de former des
+       rayons parfaits tout en gardant la carte strictement stable. */
     if (t === 'local') {
       for (const p of l) {
         const ti = p.ile.tier || 1;
         const f = Math.max(1, Math.min(10, p.ile.force || 1));
-        const ci = (ti - 1) * 4
-          + CERCLES_FORCES.findIndex(gr => f <= gr[gr.length - 1]);
-        const c = cerclesLocal()[ci];
-        const i = Math.max(0, c.forces.indexOf(f));
-        /* CHAQUE CERCLE TOURNE D'UN PAS DIFFÉRENT. Sans cette rotation,
-           tous les cercles partaient du même relèvement : les îles de
-           même rang se suivaient vers le large — des lignes, pas une
-           répartition. Le pas est fixe (3/8 de tour de slot) : même
-           île, même place, pour toujours. */
-        const off = (ci * 0.375) % 1;
-        p.r = c.r;
+        const c = cerclesLocal()[ti - 1];
+        const i = f - 1;
+        const off = ((ti - 1) * 0.61803398875) % 1;
+        p.r = c.r + (i % 2 ? 34 : -34);
         p.taille = tailleIle(f) * TAILLE_LOCAL;
         p.a0 = -Math.PI / 2 + NORD / 2
-          + ((i + off) / c.n) * (Math.PI * 2 - NORD);
+          + ((i + off) / 10) * (Math.PI * 2 - NORD);
       }
     }
     for (const p of l) {
@@ -1427,8 +1402,8 @@
        zoome du premier cercle jusqu'au tier découvert entier, la
        glisse complète ce qui déborde ; rien n'est hors d'atteinte. */
     return {
-      minDemi: r[0].r + r[0].s + 40,
-      defDemi: r[1].r + r[1].s + 30,
+      minDemi: 300,
+      defDemi: bordTier(1),
       maxDemi: bordTier(rayon),
     };
   }
@@ -1515,11 +1490,11 @@
        lui, comme sur une carte gravée. */
     const anneaux = sv('g', { class: 'mer-anneaux' });
     if (t === 'local') {
-      /* QUARANTE CERCLES, dix tiers × quatre : le trait se lit comme une
-         règle, et le libellé du tier se pose sur le quatrième cercle. */
+      /* Une couronne par tier : la carte se lit comme un territoire,
+         pas comme un instrument de mesure. */
       for (const c of cerclesLocal()) {
         anneaux.appendChild(sv('circle', { class: 'mer-anneau', cx: C.cx, cy: C.cy, r: ar(c.r) }));
-        if (c.g === 3) anneaux.appendChild(sv('text', { class: 'mer-lieues',
+        anneaux.appendChild(sv('text', { class: 'mer-lieues',
           x: C.cx, y: ar(C.cy - c.r + 3), text: c.tier + ' ' + C.unite }));
       }
     } else {
@@ -1554,16 +1529,13 @@
       x2: ar(cap.x), y2: ar(cap.y) }));
     carte.appendChild(routes);
 
-    /* LE BOURG, au centre : un îlot, un donjon, son fanion. On le
-       reconnaît à sa forme, pas à son étiquette. */
+    /* LE BOURG, au centre : la même Tour sombre que sur l'île 3D. */
     carte.appendChild(sv('g', { class: 'mer-bourg',
       transform: 'translate(' + C.cx + ',' + C.cy + ')',
       title: 'Le bourg\nToutes les distances se comptent d\'ici.' },
-      sv('polygon', { class: 'mer-bourg-terre',
-        points: '-24,7 -15,-9 0,-14 16,-9 24,5 13,14 -13,14' }),
-      sv('rect', { class: 'mer-bourg-tour', x: -5, y: -27, width: 10, height: 18 }),
-      sv('polygon', { class: 'mer-bourg-fanion', points: '5,-27 17,-23 5,-19' }),
-      sv('text', { class: 'mer-bourg-nom', x: 0, y: 30, text: 'LE BOURG' })));
+      sv('image', { class: 'mer-bourg-illustration', href: 'img/iles/ile-bourg-tour-sombre.png',
+        x: -91, y: -91, width: 182, height: 182, preserveAspectRatio: 'xMidYMid meet' }),
+      sv('text', { class: 'mer-bourg-nom', x: 0, y: 104, text: 'VOTRE ÎLE' })));
 
     const iles = sv('g', { class: 'mer-iles' });
     for (const p of planIles(t)) {
@@ -1664,23 +1636,24 @@
   function ficheMer(choisi, nav, o) {
     const boite = el('div', { class: 'mer-fiche' });
     if (!choisi) {
-      boite.appendChild(el('div', { class: 'cadre creux' },
-        el('div', { class: 'eti-or', text: 'lire la carte' }),
-        el('div', { class: 'note', style: 'margin-top:6px',
-          text: 'Le bourg est au centre, chaque anneau révèle un nouveau tier. '
-              + "Plus une île est grosse, plus sa garnison l'est : verte on y va, "
-              + "or on se prépare, corail il faut une flotte. Le fanion d'or marque "
-              + 'les îles déjà prises. Faites glisser le parchemin pour naviguer, '
-              + 'molette pour zoomer — il ne s\'ouvre que jusqu\'au dernier tier découvert.' }),
-        el('div', { class: 'note', style: 'margin-top:8px',
-          text: "Survolez une île pour l'essentiel, cliquez-la pour le détail." })));
+      boite.appendChild(el('div', { class: 'mer-fiche-carte mer-fiche-accueil' },
+        el('div', { class: 'mer-fiche-accueil-visuel' },
+          el('img', { src: 'img/iles/ile-bourg-tour-sombre.png', alt: 'Votre île et la Tour sombre' })),
+        el('div', { class: 'mer-fiche-accueil-corps' },
+          el('div', { class: 'mer-fiche-sur', text: 'VOTRE PORT D’ATTACHE' }),
+          el('div', { class: 'mer-fiche-grand-titre', text: 'Choisissez une destination' }),
+          el('div', { class: 'mer-fiche-aide' },
+            el('span', { text: '1' }), el('p', { text: 'Cliquez une île pour étudier sa garnison et son butin.' })),
+          el('div', { class: 'mer-fiche-aide' },
+            el('span', { text: '2' }), el('p', { text: 'Chargez la cale, puis appareillez depuis sa fiche.' })),
+          el('div', { class: 'mer-fiche-gestes', text: 'Glisser pour naviguer · molette pour zoomer' }))));
       return boite;
     }
     const P = window.Port;
     const prise = P.estPrise(choisi.id);
     const duree = window.IleUtil.traversee(choisi.lieues, nav ? nav.palier : 0);
     const v = nav ? P.peutAppareiller(nav.id, choisi.id) : { ok: false, pourquoi: '' };
-    const box = el('div', { class: 'cadre' + (prise ? ' actif' : ''),
+    const box = el('div', { class: 'cadre mer-fiche-carte' + (prise ? ' actif' : ''),
       /* SANS CLE, LA RÉCONCILIATION GARDE LA PREMIÈRE FICHE : le morphage
          ne remplace pas un cadre dont le jumeau a la même tête. La cle
          porte l'île — changer d'île, c'est changer de noeud. */
@@ -1688,14 +1661,16 @@
     /* L'ILLUSTRATION D'ABORD : c'est elle qu'on a cliquée sur la carte,
        c'est elle qu'on veut reconnaître ici. */
     const illu = window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(choisi) : choisi.image;
-    if (illu) box.appendChild(el('img', { class: 'mer-fiche-illu', src: illu, alt: choisi.nom }));
+    if (illu) box.appendChild(el('div', { class: 'mer-fiche-hero' },
+      el('img', { class: 'mer-fiche-illu', src: illu, alt: choisi.nom }),
+      prise ? el('span', { class: 'mer-fiche-pris', text: 'SÉCURISÉE' }) : null));
     box.appendChild(el('div', { class: 'rangee entre', style: 'margin-top:8px' },
         el('span', { class: 'tt', style: 'font-size:14px', text: choisi.nom }),
         prise ? el('span', { class: 'eti-or', text: 'déjà prise' }) : null));
     box.appendChild(el('div', { class: 'eti', style: 'margin-top:4px',
       text: (choisi.tier ? 'tier ' + choisi.tier + ' · ' : '') + choisi.lieues + ' lieues · ' + U.duree(duree) + ' de mer' }));
     box.appendChild(el('div', { class: 'note', style: 'margin-top:6px', text: choisi.desc }));
-    if (choisi.biome) box.appendChild(el('div', { class: 'appel biome-' + choisi.biome, style: 'margin-top:8px' },
+    if (choisi.biome) box.appendChild(el('div', { class: 'appel mer-biome biome-' + choisi.biome, style: 'margin-top:8px' },
       el('div', { style: 'flex:1' },
         el('div', { class: 'eti-or', text: choisi.biome.toUpperCase() }),
         el('div', { class: 'note', text: choisi.effetBiome || '' }))));
@@ -1717,7 +1692,7 @@
           el('span', { class: 'eti', text: choisi.type === 'ville' ? 'ville côtière' : 'terre du large' }),
           el('span', { class: 'eti-or', text: 'butin et avantage' })));
     /* LE MATÉRIEL DE SIÈGE : le seul péage fixe, et seulement au large. */
-    if (Object.keys(choisi.cout).length)
+    if (Object.keys(choisi.cout || {}).length)
       box.appendChild(el('div', { style: 'margin-top:8px' }, ligneCout(choisi.cout, 'matériel de siège')));
     /* LES VIVRES. On montre la quantité de rations que la traversée
        demande ET ce qui sortira des réserves pour les fournir : le
@@ -1743,7 +1718,7 @@
     if (nav) {
       box.appendChild(el('div', { class: 'eti', style: 'margin-top:12px',
         text: v.ok ? 'prêt à appareiller' : v.pourquoi }));
-      box.appendChild(el('button', { class: 'b primaire pleine', style: 'margin-top:6px',
+      box.appendChild(el('button', { class: 'b primaire pleine mer-appareiller', style: 'margin-top:6px',
         text: 'Appareiller', disabled: !v.ok,
         onclick: () => { const r = P.appareiller(nav.id, choisi.id);
           if (r.ok) { if (o.apresDepart) o.apresDepart(); U.dire('Le navire appareille.', 'bien'); }
@@ -1783,21 +1758,13 @@
      ================================================================== */
   const ongletFlanc = {};          // l'onglet ouvert, par carte
   function panneauxDuPort(bid) {
-    const b = window.Etat.E.bat[bid];
-    const out = [
-      { id: 'flotte',   nom: 'La flotte',     rendu: c => rendreFlotte(c) },
-      { id: 'chantier', nom: 'Chantier naval', rendu: c => rendreChantier(c) },
+    /* La carte n'est pas la fiche technique du bâtiment. Postes, niveau,
+       améliorations, outillage et notice restent accessibles en cliquant
+       le port sur l'île ; ici on ne garde que ce qui sert à partir. */
+    return [
+      { id: 'flotte',   nom: 'Flotte',   rendu: c => rendreFlotte(c) },
+      { id: 'chantier', nom: 'Chantier', rendu: c => rendreChantier(c) },
     ];
-    if (!b) return out;
-    if (b.postes && b.postes.length)
-      out.push({ id: 'postes', nom: 'Postes', rendu: c => rendrePostes(c, bid) });
-    out.push({ id: 'niveau', nom: 'Niveau', rendu: c => rendreNiveau(c, bid) });
-    if (b.postes && b.postes.length && aVuUneAmelioration(b))
-      out.push({ id: 'amelio', nom: 'Améliorations', rendu: c => rendreAmelio(c, bid) });
-    if (b.postes && b.postes.length && aVuUnOutil(b))
-      out.push({ id: 'outil', nom: 'Outillage', rendu: c => rendreOutil(c, bid) });
-    out.push({ id: 'notice', nom: 'Notice', rendu: c => rendreNotice(c, bid) });
-    return out;
   }
   function flancDuPort(cle, rafraichir) {
     const E2 = window.Etat.E;
@@ -1811,13 +1778,41 @@
        `fen-onglets`, la classe que `ui-noyau` pose sur toutes les
        fenetres — meme graisse, meme casse, meme trait corail sous
        l'onglet ouvert. */
-    const barre = el('div', { class: 'fen-onglets' },
+    const P = window.Port;
+    const rayon = P.rayon ? Math.min(10, P.rayon()) : 1;
+    const prises = P.prisesCouronne ? P.prisesCouronne(rayon) : 0;
+    const elargir = P.peutElargirRayon ? P.peutElargirRayon() : { ok: false, pourquoi: '' };
+    const entete = el('div', { class: 'port-flanc-entete' },
+      el('div', { class: 'port-flanc-marque' },
+        el('span', { class: 'port-flanc-ancre', text: '⚓' }),
+        el('div', {},
+          el('div', { class: 'port-flanc-sur', text: 'PORT DU BOURG' }),
+          el('div', { class: 'port-flanc-titre', text: 'Préparer la traversée' }))),
+      el('div', { class: 'port-flanc-chiffres' },
+        el('div', {}, el('b', { text: P.navires().length + ' / ' + P.quaisMax() }), el('span', { text: 'navires' })),
+        el('div', {}, el('b', { text: P.portee() }), el('span', { text: 'lieues' })),
+        el('div', {}, el('b', { text: 'T' + rayon }), el('span', { text: 'rayon' }))),
+      el('div', { class: 'port-rayon' },
+        el('div', { class: 'port-rayon-ligne' },
+          el('span', { text: 'Couronne actuelle' }), el('b', { text: prises + ' / 10' })),
+        el('div', { class: 'port-rayon-barre' },
+          el('i', { style: 'width:' + Math.min(100, prises * 10) + '%' }))),
+      el('button', { class: 'b port-rayon-action',
+        text: rayon >= 10 ? 'Ouvrir le Grand Large' : 'Élargir le rayon',
+        disabled: !elargir.ok, title: elargir.ok ? 'Découvrir la couronne suivante.' : elargir.pourquoi,
+        onclick: () => {
+          const r = P.elargirRayon();
+          U.dire(r.ok ? (r.rayon > 10 ? 'Le Grand Large est cartographié.' : 'Nouveau rayon découvert.') : r.pourquoi,
+            r.ok ? 'butin' : 'alerte');
+          choixIle[cle] = null; if (rafraichir) rafraichir();
+        } }));
+    const barre = el('div', { class: 'fen-onglets port-flanc-onglets' },
       ...pans.map(x => el('button', {
         class: (x.id === actif.id ? 'on' : ''), text: x.nom,
         onclick: () => { ongletFlanc[cle] = x.id; if (rafraichir) rafraichir(); } })));
     const corps = el('div', { class: 'flanc-corps' });
     try { actif.rendu(corps); } catch (e) { /* un panneau qui casse ne doit pas emporter la carte */ }
-    return el('div', { class: 'carte-flanc' }, barre, corps);
+    return el('div', { class: 'carte-flanc' }, entete, barre, corps);
   }
 
   function rendreCarteMer(c, o) {
@@ -1836,40 +1831,20 @@
     const ouvert = window.IleUtil.largeOuvert && window.IleUtil.largeOuvert();
     const t = (ouvert && theatreVu[o.cle] === 'large') ? 'large' : 'local';
 
-    c.appendChild(el('div', { class: 'note', text: nav
-      ? nav.nom + ' porte ' + P.placesPrises(nav.cargo) + ' unités. Plus l\'île est loin, '
-        + 'plus la traversée est longue — et le navire manque au bourg tout ce temps.'
-      : "Tout ce qui n'est pas le bourg est de l'autre côté de l'eau. Prendre une île "
-        + 'est la SEULE façon de faire retomber la Nuée.' }));
-
-    if (t === 'local' && P.rayon) {
-      const rayon = P.rayon(), prises = P.prisesCouronne(rayon), elargir = P.peutElargirRayon();
-      c.appendChild(el('div', { class: 'mer-progression' },
-        el('div', { class: 'rangee entre' },
-          el('div', {},
-            el('div', { class: 'eti-or', text: 'RAYON D’EXPLORATION · TIER ' + Math.min(10, rayon) }),
-            el('div', { class: 'note', text: prises + ' / 10 îles sécurisées dans cette couronne' })),
-          el('button', { class: 'b primaire', text: rayon >= 10 ? 'Ouvrir le Grand Large' : 'Élargir le rayon',
-            disabled: !elargir.ok, title: elargir.ok ? 'Découvrir la couronne suivante.' : elargir.pourquoi,
-            onclick: () => { const r = P.elargirRayon();
-              U.dire(r.ok ? (r.rayon > 10 ? 'Le Grand Large est cartographié.' : 'Nouveau rayon découvert.') : r.pourquoi,
-                r.ok ? 'butin' : 'alerte');
-              choixIle[o.cle] = null; if (o.rafraichir) o.rafraichir(); } }))));
-    }
-
     /* Le clic est pris ICI, pas sur chaque île : `el` est le seul à
        greffer des gestionnaires que la réconciliation sait rafraîchir,
        et il ne fabrique pas de SVG. Le relais lit `data-ile` sur ce qui
        a été touché. `tabindex` déclaré à la main écarte le rôle de
        bouton que `el` poserait sinon sur toute la carte. */
+    let modesMer = null;
     if (ouvert) {
       const onglet = (id, nom, sous) => el('button', {
-        class: 'b' + (t === id ? ' primaire' : ''), text: nom, title: sous,
+        class: 'mer-mode' + (t === id ? ' on' : ''), text: nom, title: sous,
         onclick: () => { theatreVu[o.cle] = id; choixIle[o.cle] = null;
                          if (o.rafraichir) o.rafraichir(); } });
-      c.appendChild(el('div', { class: 'rangee', style: 'margin-top:8px;gap:6px' },
+      modesMer = el('div', { class: 'mer-modes', onpointerdown: ev => ev.stopPropagation() },
         onglet('local', 'Les eaux du bourg', 'La couronne actuellement cartographiée.'),
-        onglet('large', 'Le Grand Large', 'Ce qui commence là où la couronne finit.')));
+        onglet('large', 'Le Grand Large', 'Ce qui commence là où la couronne finit.'));
     }
     /* LA FENÊTRE SUR LA FEUILLE. Le parchemin est immense, la fenêtre
        carrée et SANS ASCENSEUR : c'est la `viewBox` qu'on déplace à la
@@ -1944,6 +1919,7 @@
       if (o.rafraichir) o.rafraichir();
     } });
     toile.appendChild(dessinerMer(nav, choisi, t, { x: vue.x, y: vue.y, demi: vue.demi }));
+    if (modesMer) toile.appendChild(modesMer);
     /* TROIS COLONNES en pleine page : les commandes du port à gauche, la
        mer au milieu, la terre choisie à droite. Dans une fenêtre ordinaire
        — l'onglet « Les îles » d'un autre écran — on garde les deux

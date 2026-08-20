@@ -621,6 +621,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
 .plateau-stat-illustree b{color:var(--texte);font-size:12px}
 .plateau-stat-illustree i{font-style:normal;color:var(--faible)}
 .prod-recette-art{width:34px;height:34px;object-fit:contain;flex:none;image-rendering:auto}
+.butin-aventure-art{width:24px;height:24px;object-fit:contain;flex:none;image-rendering:auto}
 
 /* ---------------------------------------------------------------
    FILE DU CHANTIER
@@ -1972,6 +1973,94 @@ button[title],.b[title],a[title]{cursor:pointer}
 .biome-marecageuse{border-left:3px solid #78a44e}
 .biome-volcanique{border-left:3px solid #ef7138}
 .biome-arcanique{border-left:3px solid #8e7be8}
+
+/* ===============================================================
+   PORT — table maritime claire et stable
+   =============================================================== */
+.carte-pleine-tete{
+  min-height:58px;padding:10px 18px;background:rgba(24,42,53,.94);
+  backdrop-filter:blur(12px);box-shadow:0 3px 14px rgba(12,25,31,.18)
+}
+.carte-pleine-corps{padding:10px;background:#e9ece7}
+.carte-pleine .carte-mer.a-flanc{
+  grid-template-columns:clamp(286px,21vw,344px) minmax(500px,1fr) clamp(304px,22vw,364px);
+  gap:10px;height:100%;min-height:0
+}
+.carte-flanc,.carte-pleine .mer-fiche{
+  background:#f5f3ed;color:#29363b;border:1px solid rgba(30,48,55,.18);
+  border-radius:8px;box-shadow:0 8px 24px rgba(25,38,43,.13);padding:0
+}
+.carte-flanc{overflow:hidden}
+.port-flanc-entete{padding:15px 15px 13px;background:linear-gradient(155deg,#e4e8e1,#f4f1e8);border-bottom:1px solid rgba(38,52,57,.13)}
+.port-flanc-marque{display:flex;align-items:center;gap:10px}
+.port-flanc-ancre{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#536d57;color:#fff;font-size:18px;box-shadow:0 3px 8px rgba(36,60,44,.18)}
+.port-flanc-sur,.mer-fiche-sur{font-size:8.5px;font-weight:800;letter-spacing:.16em;color:#718078}
+.port-flanc-titre{margin-top:2px;font:700 18px 'Condense',sans-serif;letter-spacing:.035em;color:#26353a}
+.port-flanc-chiffres{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:13px;border:1px solid rgba(38,52,57,.13);border-radius:5px;background:rgba(255,255,255,.48)}
+.port-flanc-chiffres>div{padding:8px 5px;text-align:center;border-right:1px solid rgba(38,52,57,.10)}
+.port-flanc-chiffres>div:last-child{border-right:0}
+.port-flanc-chiffres b{display:block;font:700 17px 'Condense',sans-serif;color:#354a3b}
+.port-flanc-chiffres span{display:block;margin-top:1px;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#7a8481}
+.port-rayon{margin-top:12px}.port-rayon-ligne{display:flex;justify-content:space-between;gap:8px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:#687573}
+.port-rayon-ligne b{color:#435842}.port-rayon-barre{height:5px;margin-top:6px;background:#d5d9d2;border-radius:5px;overflow:hidden}
+.port-rayon-barre i{display:block;height:100%;background:#6f8b5a;border-radius:inherit}
+.port-rayon-action{width:100%;margin-top:9px!important;background:#dde5d7!important;border-color:#bbc9b3!important;color:#3f5a39!important}
+.port-flanc-onglets{padding:0 10px!important;margin:0!important;background:#ecebe5!important;border-bottom:1px solid rgba(38,52,57,.12)!important;overflow:visible!important}
+.port-flanc-onglets button{flex:1;padding:11px 8px 9px!important;text-align:center;color:#727c79!important}
+.port-flanc-onglets button.on{color:#314139!important}.port-flanc-onglets button.on::after{left:14px!important;right:14px!important;background:#5f7951!important}
+.flanc-corps{padding:12px 12px 18px;scrollbar-width:thin}
+.carte-flanc .stats{gap:0;border:1px solid rgba(36,50,55,.12);border-radius:5px;background:#eeeee8;overflow:hidden}
+.carte-flanc .stats>div{padding:9px 5px;background:transparent;border-right:1px solid rgba(36,50,55,.09)}
+.carte-flanc .stats>div:last-child{border-right:0}
+.carte-flanc .cadre{margin-top:9px;padding:11px;background:rgba(255,255,255,.58);border:1px solid rgba(36,50,55,.13);border-radius:5px;box-shadow:none}
+.carte-flanc .cadre.actif{border-color:#9bab78;background:#f8f8f2}
+.carte-flanc .note{color:#6f7977}.carte-flanc .tt{color:#2c393e}.carte-flanc .eti{color:#77817e}.carte-flanc .eti-or{color:#536d42}
+.carte-flanc button.b{border-color:rgba(38,52,57,.20);color:#4e5e61;background:#f7f6f1}
+.carte-flanc button.b:hover:not(:disabled){background:#e7ebe3}.carte-flanc button.b.primaire{background:#5c754b;border-color:#5c754b;color:#fff}
+
+.carte-pleine .carte-mer.a-flanc .mer-toile{
+  position:relative;min-width:0;width:100%;height:100%;border:1px solid rgba(99,73,42,.38);
+  border-radius:8px;box-shadow:0 8px 24px rgba(65,50,32,.15);background:#cbb982
+}
+.mer-modes{position:absolute;left:50%;top:10px;z-index:3;transform:translateX(-50%);display:flex;padding:3px;gap:2px;border:1px solid rgba(72,54,33,.25);border-radius:5px;background:rgba(244,234,202,.91);box-shadow:0 3px 12px rgba(69,50,29,.18);backdrop-filter:blur(5px)}
+.mer-mode{padding:7px 11px;border:0;border-radius:3px;background:transparent;color:#715b3e;font:700 8.5px inherit;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.mer-mode:hover{background:rgba(91,70,42,.08)}.mer-mode.on{background:#576f50;color:#fff}
+.mer-bourg-illustration{pointer-events:none;filter:drop-shadow(0 5px 5px rgba(57,39,22,.38))}
+.mer-bourg-nom{font-size:10px;letter-spacing:.16em;font-weight:800}
+.mer-illustration{filter:drop-shadow(0 3px 3px rgba(65,42,22,.32))}
+.mer-ile:hover .mer-illustration{filter:drop-shadow(0 5px 6px rgba(61,39,21,.42)) brightness(1.08)}
+.mer-ressac{opacity:.23}
+
+.carte-pleine .mer-fiche{height:100%;overflow-y:auto;scrollbar-width:thin;background:#f4f1e9}
+.mer-fiche-carte{min-height:100%;box-sizing:border-box;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;margin:0!important;padding:14px!important}
+.mer-fiche-hero{position:relative;height:206px;margin:-14px -14px 14px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 48%,#e8e4d5 0,#d9ddd4 58%,#cbd1c9 100%);border-bottom:1px solid rgba(37,52,57,.13)}
+.mer-fiche-hero .mer-fiche-illu{width:86%;height:92%;object-fit:contain;border:0;border-radius:0;filter:drop-shadow(0 8px 8px rgba(31,43,47,.22))}
+.mer-fiche-pris{position:absolute;top:10px;right:10px;padding:5px 7px;border-radius:3px;background:#526e49;color:#fff;font-size:8px;font-weight:800;letter-spacing:.12em}
+.mer-fiche-carte>.rangee.entre .tt{font:700 22px 'Condense',sans-serif;letter-spacing:.035em;color:#28373c}
+.mer-fiche-carte>.eti{color:#727d7a}.mer-fiche-carte>.note{font-size:11px;line-height:1.45;color:#687370}
+.mer-biome{padding:10px 11px!important;background:rgba(255,255,255,.48)!important;border-top:1px solid rgba(38,52,57,.10)!important;border-right:1px solid rgba(38,52,57,.10)!important;border-bottom:1px solid rgba(38,52,57,.10)!important;border-radius:4px}
+.mer-biome .note{margin-top:3px;color:#65706d}
+.mer-fiche .force{gap:3px}.mer-fiche .force i{height:9px;flex:1;max-width:22px;background:#d5d7d1}.mer-fiche .force i.on{background:#c96557}
+.mer-fiche .liste-res{padding:5px 0}.mer-appareiller{min-height:38px;background:#567347!important;border-color:#567347!important;color:#fff!important}
+.mer-fiche-accueil{display:flex;flex-direction:column;padding:0!important}
+.mer-fiche-accueil-visuel{height:46%;min-height:250px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle,#e6e7dc 0,#d2d8cf 65%,#c5cdc5 100%);border-bottom:1px solid rgba(37,52,57,.13)}
+.mer-fiche-accueil-visuel img{display:block;width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(29,43,47,.23))}
+.mer-fiche-accueil-corps{padding:18px 17px}
+.mer-fiche-grand-titre{margin-top:4px;font:700 23px 'Condense',sans-serif;line-height:1.05;color:#28373c}
+.mer-fiche-aide{display:grid;grid-template-columns:24px 1fr;gap:9px;align-items:start;margin-top:15px}
+.mer-fiche-aide span{width:23px;height:23px;display:grid;place-items:center;border-radius:50%;background:#627957;color:#fff;font-size:10px;font-weight:800}
+.mer-fiche-aide p{margin:2px 0 0;color:#65716f;font-size:11px;line-height:1.35}
+.mer-fiche-gestes{margin-top:18px;padding-top:12px;border-top:1px solid rgba(38,52,57,.11);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:#7e8986}
+
+@media(max-width:1350px){
+  .carte-pleine .carte-mer.a-flanc{grid-template-columns:286px minmax(430px,1fr) 304px}
+}
+@media(max-width:1050px){
+  .carte-pleine-corps{overflow:auto}
+  .carte-pleine .carte-mer.a-flanc{grid-template-columns:minmax(280px,34vw) minmax(500px,1fr);height:760px}
+  .carte-pleine .mer-fiche{grid-column:1/-1;min-height:330px}
+  .mer-fiche-carte{min-height:330px}.mer-fiche-accueil{display:grid;grid-template-columns:42% 1fr}.mer-fiche-accueil-visuel{height:100%;min-height:330px;border-bottom:0;border-right:1px solid rgba(37,52,57,.13)}
+}
 /* ARSENAL — deux pièces lisibles par famille, avec l'illustration canvas
    comme information principale. */
 .arsenal-entete{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;margin-bottom:14px;background:rgba(210,186,132,.12);border:1px solid rgba(210,186,132,.22);border-radius:6px}

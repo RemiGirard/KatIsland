@@ -125,11 +125,15 @@
     pied.appendChild(el()('span', { class: 'eti', text: 'butin en sacoche' }));
     const lot = {};
     for (const k in d.loot.res) lot[window.GameState.versBourg(k)] = (lot[window.GameState.versBourg(k)] || 0) + d.loot.res[k];
-    pied.appendChild(U().listeRes(lot, { gain: true, rien: 'rien encore' }));
+    pied.appendChild(listeButinIllustre(lot));
     if (d.loot.items && d.loot.items.length)
-      pied.appendChild(el()('span', { class: 'puce gain', text: d.loot.items.length + ' objets' }));
+      pied.appendChild(el()('span', { class: 'puce gain' },
+        el()('img', { src:'img/objets/aventure/tresors/coffre.png', alt:'', class:'butin-aventure-art' }),
+        el()('b', { text:d.loot.items.length + ' objets' })));
     if (d.loot.plans && d.loot.plans.length)
-      pied.appendChild(el()('span', { class: 'puce gain', text: d.loot.plans.length + ' plans' }));
+      pied.appendChild(el()('span', { class: 'puce gain' },
+        el()('img', { src:'img/objets/aventure/tresors/plan.png', alt:'', class:'butin-aventure-art' }),
+        el()('b', { text:d.loot.plans.length + ' plans' })));
     pied.appendChild(el()('span', { class: 'eti', style: 'margin-left:auto',
       text: 'xp ' + U().fmt(d.xp) }));
   }
@@ -389,6 +393,26 @@
       avanceeCorps.appendChild(A('div', { class: 'note faible', text: "Personne encore. On ne recrute pas sous terre : la compagnie se forme ici, "
               + 'au bourg. Choisissez des habitants, équipez-les, et ce sont eux qui descendront.' }));
     c.appendChild(avancee);
+  }
+
+  const ART_BUTIN = {
+    ecu:'ecus', medaille:'bourse', gemme:'rubis', perle:'perles', plan:'plan',
+    coeurbiome:'coeur-biome', oeilabyme:'oeil-abyme', relique:'reliquaire', ecaille:'ecaille-dragon'
+  };
+  function listeButinIllustre(lot) {
+    const A = el(), box = A('div', { class:'liste-res' });
+    let n = 0;
+    for (const id in lot) {
+      n++;
+      const art = ART_BUTIN[id];
+      if (!art) { box.appendChild(U().puce(id, lot[id], { gain:true })); continue; }
+      const r = window.RES[id] || { nom:id };
+      box.appendChild(A('span', { class:'puce gain', title:r.nom },
+        A('img', { src:'img/objets/aventure/tresors/' + art + '.png', alt:'', class:'butin-aventure-art' }),
+        A('b', { text:U().fmt(lot[id]) })));
+    }
+    if (!n) box.appendChild(A('span', { class:'faible', text:'rien encore' }));
+    return box;
   }
 
   function nomDe(x) {
