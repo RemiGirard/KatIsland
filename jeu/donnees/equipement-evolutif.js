@@ -79,6 +79,21 @@
      ajoutée par planche sans modifier à nouveau la logique. */
   for (const u of (GD.UNIQUES || [])) u.image = 'img/objets/aventure/uniques/' + u.id + '.png';
 
+  GD.TRESORS_AVENTURE = [
+    {id:'tresor-coffret-nuee', nom:'Coffret de la Nuée', tier:1, bonus:{loot:0.025}, desc:'Il bourdonne quand une cache se trouve derrière un mur.'},
+    {id:'tresor-idole-neuf-vies', nom:'Idole des neuf vies', tier:1, bonus:{xp:0.025}, desc:'Elle a déjà été cassée huit fois. Cela rassure moyennement.'},
+    {id:'tresor-couronne-fond', nom:'Couronne du Fond', tier:2, bonus:{rare:0.012}, desc:'Elle ne va à personne, ce qui ne l’empêche pas d’exiger un coussin.'},
+    {id:'tresor-carte-effacee', nom:'Carte effacée', tier:2, bonus:{speed:0.03}, desc:'Les chemins disparaissent derrière le doigt, mais jamais devant.'},
+    {id:'tresor-cle-abyme', nom:'Clé de l’Abîme', tier:3, bonus:{rare:0.018}, desc:'Elle ouvre quelque chose. Le problème consiste à trouver quoi.'},
+    {id:'tresor-oeuf-cristal', nom:'Œuf de cristal', tier:3, bonus:{xp:0.04}, desc:'Il est tiède, lumineux et unanimement déclaré « pas inquiétant ».'},
+    {id:'tresor-reliquaire', nom:'Reliquaire oublié', tier:4, bonus:{loot:0.04}, desc:'La serrure a disparu ; le contenu tient pourtant à rester discret.'},
+    {id:'tresor-boussole-noire', nom:'Boussole noire', tier:4, bonus:{speed:0.05}, desc:'Son aiguille pointe toujours vers le bas. Dans la Tour, c’est utile.'},
+    {id:'tresor-lanterne-ame', nom:'Lanterne d’âme', tier:5, bonus:{xp:0.055}, desc:'La petite lumière connaît le chemin et juge les détours.'},
+    {id:'tresor-des-maudit', nom:'Dés maudits', tier:5, bonus:{rare:0.028,loot:0.025}, desc:'Ils font toujours douze. Même quand on n’en lance qu’un.'},
+  ];
+  for (const t of GD.TRESORS_AVENTURE) t.image = 'img/objets/aventure/uniques/' + t.id + '.png';
+  GD.tresorById = id => GD.TRESORS_AVENTURE.find(x => x.id === id) || null;
+
   /* Les gardiens sont les sources garanties des matériaux impossibles à
      fabriquer. Les activités ordinaires en donnent parfois, les boss en
      donnent toujours : la progression n'est jamais entièrement soumise au dé. */

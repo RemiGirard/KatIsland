@@ -64,6 +64,12 @@ SHEETS = {
          "tresor-cle-abyme", "tresor-oeuf-cristal", "tresor-reliquaire", "tresor-boussole-noire",
          "tresor-lanterne-ame", "tresor-des-maudit"],
     ),
+    "img/planches/batiments/batiments-services-01.png": (
+        "@bat",
+        ["conciergerie", "bains", "maisonjeux", "dispensaire", "ecolebourg", "casernepompiers",
+         "bureauguet", "parc", "theatre", "bibliotheque", "marchecouvert", "boulangerie",
+         "cabaret", "dechetterie", "placefontaine", "toiletteur"],
+    ),
 }
 
 
@@ -168,7 +174,7 @@ def process(path_rel: str, target_rel: str, names: list[str]) -> dict:
     if any(c != 0 for c in corners):
         raise ValueError(f"{path_rel}: coins non transparents {corners}")
     clean.save(path, optimize=True)
-    target = None if target_rel == "@res" else ROOT / target_rel
+    target = None if target_rel in ("@res", "@bat") else ROOT / target_rel
     if target is not None:
         target.mkdir(parents=True, exist_ok=True)
     w, h = clean.size
@@ -190,6 +196,9 @@ def process(path_rel: str, target_rel: str, names: list[str]) -> dict:
         icon, bbox = normalize(clean.crop((x0, y0, x1, y1)))
         if target_rel == "@res":
             out = ROOT / "img" / "res" / name / f"{name}.png"
+            out.parent.mkdir(parents=True, exist_ok=True)
+        elif target_rel == "@bat":
+            out = ROOT / "img" / "bat" / name / f"{name}.png"
             out.parent.mkdir(parents=True, exist_ok=True)
         else:
             out = target / f"{name}.png"

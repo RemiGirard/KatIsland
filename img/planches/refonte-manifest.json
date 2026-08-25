@@ -1464,6 +1464,420 @@
   },
   {
     "sheet": "img/planches/objets/uniques-aventure-03.png",
-    "status": "missing"
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          306,
+          625,
+          933,
+          1254
+        ],
+        [
+          0,
+          333,
+          610,
+          944,
+          1254
+        ],
+        [
+          0,
+          306,
+          628,
+          920,
+          1254
+        ],
+        [
+          0,
+          306,
+          618,
+          893,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        312,
+        623,
+        902,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "sanctuaire",
+        "file": "img/objets/aventure/uniques/sanctuaire.png",
+        "sourceBox": [
+          67,
+          42,
+          260,
+          295
+        ]
+      },
+      {
+        "id": "mainsjointes",
+        "file": "img/objets/aventure/uniques/mainsjointes.png",
+        "sourceBox": [
+          46,
+          77,
+          295,
+          268
+        ]
+      },
+      {
+        "id": "talonvif",
+        "file": "img/objets/aventure/uniques/talonvif.png",
+        "sourceBox": [
+          25,
+          46,
+          283,
+          289
+        ]
+      },
+      {
+        "id": "cormarche",
+        "file": "img/objets/aventure/uniques/cormarche.png",
+        "sourceBox": [
+          26,
+          65,
+          282,
+          276
+        ]
+      },
+      {
+        "id": "etendard",
+        "file": "img/objets/aventure/uniques/etendard.png",
+        "sourceBox": [
+          46,
+          17,
+          291,
+          288
+        ]
+      },
+      {
+        "id": "oeilrepere",
+        "file": "img/objets/aventure/uniques/oeilrepere.png",
+        "sourceBox": [
+          43,
+          33,
+          232,
+          275
+        ]
+      },
+      {
+        "id": "tresor-coffret-nuee",
+        "file": "img/objets/aventure/uniques/tresor-coffret-nuee.png",
+        "sourceBox": [
+          46,
+          54,
+          284,
+          271
+        ]
+      },
+      {
+        "id": "tresor-idole-neuf-vies",
+        "file": "img/objets/aventure/uniques/tresor-idole-neuf-vies.png",
+        "sourceBox": [
+          52,
+          27,
+          204,
+          281
+        ]
+      },
+      {
+        "id": "tresor-couronne-fond",
+        "file": "img/objets/aventure/uniques/tresor-couronne-fond.png",
+        "sourceBox": [
+          46,
+          37,
+          277,
+          256
+        ]
+      },
+      {
+        "id": "tresor-carte-effacee",
+        "file": "img/objets/aventure/uniques/tresor-carte-effacee.png",
+        "sourceBox": [
+          31,
+          44,
+          296,
+          251
+        ]
+      },
+      {
+        "id": "tresor-cle-abyme",
+        "file": "img/objets/aventure/uniques/tresor-cle-abyme.png",
+        "sourceBox": [
+          27,
+          25,
+          255,
+          263
+        ]
+      },
+      {
+        "id": "tresor-oeuf-cristal",
+        "file": "img/objets/aventure/uniques/tresor-oeuf-cristal.png",
+        "sourceBox": [
+          39,
+          27,
+          240,
+          262
+        ]
+      },
+      {
+        "id": "tresor-reliquaire",
+        "file": "img/objets/aventure/uniques/tresor-reliquaire.png",
+        "sourceBox": [
+          76,
+          17,
+          249,
+          299
+        ]
+      },
+      {
+        "id": "tresor-boussole-noire",
+        "file": "img/objets/aventure/uniques/tresor-boussole-noire.png",
+        "sourceBox": [
+          57,
+          39,
+          264,
+          289
+        ]
+      },
+      {
+        "id": "tresor-lanterne-ame",
+        "file": "img/objets/aventure/uniques/tresor-lanterne-ame.png",
+        "sourceBox": [
+          48,
+          21,
+          233,
+          298
+        ]
+      },
+      {
+        "id": "tresor-des-maudit",
+        "file": "img/objets/aventure/uniques/tresor-des-maudit.png",
+        "sourceBox": [
+          43,
+          91,
+          316,
+          257
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/batiments/batiments-services-01.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          311,
+          619,
+          931,
+          1254
+        ],
+        [
+          0,
+          298,
+          609,
+          914,
+          1254
+        ],
+        [
+          0,
+          307,
+          600,
+          930,
+          1254
+        ],
+        [
+          0,
+          300,
+          617,
+          911,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        312,
+        600,
+        895,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "conciergerie",
+        "file": "img/bat/conciergerie/conciergerie.png",
+        "sourceBox": [
+          39,
+          49,
+          295,
+          295
+        ]
+      },
+      {
+        "id": "bains",
+        "file": "img/bat/bains/bains.png",
+        "sourceBox": [
+          17,
+          17,
+          287,
+          302
+        ]
+      },
+      {
+        "id": "maisonjeux",
+        "file": "img/bat/maisonjeux/maisonjeux.png",
+        "sourceBox": [
+          22,
+          51,
+          290,
+          302
+        ]
+      },
+      {
+        "id": "dispensaire",
+        "file": "img/bat/dispensaire/dispensaire.png",
+        "sourceBox": [
+          23,
+          68,
+          279,
+          306
+        ]
+      },
+      {
+        "id": "ecolebourg",
+        "file": "img/bat/ecolebourg/ecolebourg.png",
+        "sourceBox": [
+          40,
+          8,
+          271,
+          284
+        ]
+      },
+      {
+        "id": "casernepompiers",
+        "file": "img/bat/casernepompiers/casernepompiers.png",
+        "sourceBox": [
+          29,
+          55,
+          289,
+          281
+        ]
+      },
+      {
+        "id": "bureauguet",
+        "file": "img/bat/bureauguet/bureauguet.png",
+        "sourceBox": [
+          23,
+          49,
+          282,
+          285
+        ]
+      },
+      {
+        "id": "parc",
+        "file": "img/bat/parc/parc.png",
+        "sourceBox": [
+          24,
+          46,
+          296,
+          279
+        ]
+      },
+      {
+        "id": "theatre",
+        "file": "img/bat/theatre/theatre.png",
+        "sourceBox": [
+          39,
+          46,
+          284,
+          274
+        ]
+      },
+      {
+        "id": "bibliotheque",
+        "file": "img/bat/bibliotheque/bibliotheque.png",
+        "sourceBox": [
+          24,
+          37,
+          282,
+          276
+        ]
+      },
+      {
+        "id": "marchecouvert",
+        "file": "img/bat/marchecouvert/marchecouvert.png",
+        "sourceBox": [
+          12,
+          38,
+          311,
+          275
+        ]
+      },
+      {
+        "id": "boulangerie",
+        "file": "img/bat/boulangerie/boulangerie.png",
+        "sourceBox": [
+          20,
+          4,
+          279,
+          275
+        ]
+      },
+      {
+        "id": "cabaret",
+        "file": "img/bat/cabaret/cabaret.png",
+        "sourceBox": [
+          34,
+          31,
+          279,
+          266
+        ]
+      },
+      {
+        "id": "dechetterie",
+        "file": "img/bat/dechetterie/dechetterie.png",
+        "sourceBox": [
+          22,
+          27,
+          303,
+          277
+        ]
+      },
+      {
+        "id": "placefontaine",
+        "file": "img/bat/placefontaine/placefontaine.png",
+        "sourceBox": [
+          15,
+          19,
+          261,
+          278
+        ]
+      },
+      {
+        "id": "toiletteur",
+        "file": "img/bat/toiletteur/toiletteur.png",
+        "sourceBox": [
+          35,
+          39,
+          289,
+          272
+        ]
+      }
+    ]
   }
 ]

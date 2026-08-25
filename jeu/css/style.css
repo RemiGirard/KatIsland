@@ -2120,3 +2120,9 @@ button[title],.b[title],a[title]{cursor:pointer}
 #noms-batiments{position:fixed;inset:0;z-index:18;pointer-events:none;opacity:0;transition:opacity .12s}#noms-batiments.visible{opacity:1}
 .nom-batiment{position:absolute;left:0;top:0;padding:5px 8px;border:1px solid rgba(232,220,186,.32);border-radius:4px;background:rgba(18,31,38,.82);backdrop-filter:blur(5px);box-shadow:0 3px 10px rgba(7,15,19,.25);color:#f2ead5;font:700 9px 'Condense',sans-serif;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 .nom-batiment::after{content:'';position:absolute;left:50%;bottom:-5px;width:7px;height:7px;transform:translateX(-50%) rotate(45deg);background:rgba(18,31,38,.82);border-right:1px solid rgba(232,220,186,.25);border-bottom:1px solid rgba(232,220,186,.25)}.nom-batiment.endommage{border-color:#d66559;color:#ffb4a9}
+
+.tresors-aventure{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:8px;margin:8px 0 16px}
+.tresor-aventure{min-height:146px;padding:9px;border:1px solid var(--bord);background:rgba(255,255,255,.48);display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.tresor-aventure img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 4px 5px rgba(31,25,18,.2))}
+.tresor-aventure b{font-size:11px}.tresor-aventure small{font-size:9px;color:var(--faible)}
+.tresor-aventure.cache{opacity:.38;filter:grayscale(1)}

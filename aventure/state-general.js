@@ -74,6 +74,7 @@
     if (!Array.isArray(g.bag)) g.bag = [];
     if (!g.plans) g.plans = {};
     if (!g.relics) g.relics = {};
+    if (!g.tresors) g.tresors = {};
     if (!Array.isArray(g.placed)) g.placed = [];
     // LE GÉNÉRAL A UN ARBRE ET UNE POSTURE, comme n'importe quel héros. Il ne
     // vit pas dans `g.roster` : il EST l'objet qui le contient. Sans ces deux
@@ -167,6 +168,7 @@
     g.talents = []; delete g.talentPts;
     g.stance = null;
     g.relics = {}; g.placed = [];     // reliques trouvées et serties
+    g.tresors = {};                   // curiosités permanentes de la Tour
     g.plans = {};                     // plans rapportés du donjon
     g.descent = null; g.report = null; g.fatigue = 0;
     g.tally = { descents: 0, floors: 0, hurt: 0, bestFloor: 0, lastCheckpoint: 1 };
@@ -343,6 +345,12 @@
     out.loot += T.loot;
     out.rare += T.rare;
     out.xp = (out.xp || 0) + T.xp;
+    if (GameState.tresorBonus) {
+      out.loot += GameState.tresorBonus('loot');
+      out.rare += GameState.tresorBonus('rare');
+      out.xp += GameState.tresorBonus('xp');
+      out.speed += GameState.tresorBonus('speed');
+    }
     return out;
   };
   GameState.partyPower = function () {
@@ -354,6 +362,12 @@
 
   // ---------------- les reliques ----------------
   GameState.relicSlots = function () { return GD.RELIC_SLOTS(GameState.gen().lvl); };
+  GameState.tresorBonus = function (kind) {
+    const g = GameState.gen(); let n = 0;
+    for (const t of (GD.TRESORS_AVENTURE || []))
+      if (g.tresors[t.id]) n += (t.bonus && t.bonus[kind]) || 0;
+    return n;
+  };
   GameState.placeRelic = function (id) {
     const g = GameState.gen();
     if (!g.relics[id]) return false;
@@ -434,7 +448,7 @@
       seed,
       phase: 'fight',
       roomType: GD.floorType(cp),
-      loot: { res: {}, items: [], plans: [], relics: [], heroes: [] },
+      loot: { res: {}, items: [], plans: [], relics: [], tresors: [], heroes: [] },
       lootMult: 1, xp: 0, log: [],
       party: g.party.slice(),
       hp: null,
@@ -545,6 +559,14 @@
     const table = GD.lootTable(biomeId);
     const tier = GD.dungeonBiome(d.floor).tier;
     const roll = rng();
+    d.loot.tresors = d.loot.tresors || [];
+    const tresors = (GD.TRESORS_AVENTURE || []).filter(t => t.tier <= tier && !g.tresors[t.id]
+      && d.loot.tresors.indexOf(t.id) === -1);
+    if (tresors.length && rng() < Math.min(0.16, 0.018 * tier)) {
+      const t = tresors[Math.floor(rng() * tresors.length)];
+      d.loot.tresors.push(t.id);
+      return { icon:'', txt:t.nom };
+    }
     /* ON NE RECRUTE PLUS DANS LE DONJON.
 
        Le donjon rendait des héros à CLASSE FIXE, tirés d'un catalogue :
@@ -754,7 +776,7 @@
     const rng = genRng((Date.now() ^ (etage * 2654435761)) >>> 0);
     /* La prise d'un gardien farmé : le butin de son étage, et une
        chance d'objet — c'est pour l'objet qu'on y retourne. */
-    const faux = { floor: etage, loot: { res: {}, items: [], relics: [], heroes: [] },
+    const faux = { floor: etage, loot: { res: {}, items: [], relics: [], tresors: [], heroes: [] },
                    lootMult: 1, xp: 0, log: [], party: [] };
     addLoot(faux, id, rng, 1.1);
     if (rng() < 0.34) faux.loot.items.push(rollItem(rng, etage, 0));
@@ -800,6 +822,7 @@
     for (const it of r.loot.items) g.bag.push(it);
     for (const id of r.loot.plans) g.plans[id] = 1;
     for (const id of r.loot.relics) g.relics[id] = 1;
+    for (const id of (r.loot.tresors || [])) g.tresors[id] = 1;
     // LES COMPAGNONS SONT DÉJÀ ENTRÉS (recruterHeros, pendant la descente) —
     // cette boucle ne sert plus qu'aux RAPPORTS EN ATTENTE des sauvegardes
     // faites avant ce correctif. `recruterHeros` refuse un doublon, donc la

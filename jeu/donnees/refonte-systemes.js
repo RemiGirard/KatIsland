@@ -212,7 +212,7 @@
     in:{eau:10,cendre:3,huile:1}, out:{}, proprete:24, moral:5, desc:"Le linge claque au vent et le bourg redevient présentable de loin." });
 
   batiment('maisonjeux', {
-    nom:'Maison des jeux', metier:'Maître de jeux', cat:'vie', gen:'auberge', rangees:[1,2],
+    nom:'Maison des jeux', metier:'Maître de jeux', cat:'vie', gen:'taverne', rangees:[1,2],
     desc:"Quilles, cartes, scène minuscule et règlement immense. On y perd des écus et rarement son après-midi.",
     cout:{planche:26,drap:3,poterie:5,ecu:120}, temps:230, postes:[1,1,1,2,2,2,3,3],
     recettes:['ouvrir_quilles','monter_spectacle','festival_pelote'], effet:{loisir:16,moral:7,attrait:0.25},

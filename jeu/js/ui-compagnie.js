@@ -164,6 +164,18 @@
     const g = G().gen();
     c.appendChild(el('div', { class: 'note',
       text: 'Ce que la compagnie a rapporté du fond. Une pièce refusée l\'est pour une raison : chaque classe a ses armes.' }));
+    const tresors = GD().TRESORS_AVENTURE || [];
+    if (tresors.length) {
+      c.appendChild(U.section('Trésors de la Tour', Object.keys(g.tresors || {}).length + ' / ' + tresors.length));
+      const galerie = el('div',{class:'tresors-aventure'});
+      for (const t of tresors) {
+        const trouve = !!(g.tresors || {})[t.id];
+        galerie.appendChild(el('div',{class:'tresor-aventure' + (trouve?' trouve':' cache'),title:trouve?t.desc:'Trésor encore inconnu'},
+          el('img',{src:t.image,alt:''}),el('b',{text:trouve?t.nom:'Inconnu'}),
+          trouve ? el('small',{text:Object.entries(t.bonus||{}).map(([k,v])=>'+'+Math.round(v*100)+' % '+({loot:'butin',rare:'rareté',xp:'expérience',speed:'exploration'}[k]||k)).join(' · ')}) : null));
+      }
+      c.appendChild(galerie);
+    }
     if (!g.bag.length) {
       c.appendChild(el('div', { class: 'vide', html: 'Le sac est vide.<br>Il se remplit dans le Puits.' }));
       return;
