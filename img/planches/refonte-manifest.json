@@ -1043,5 +1043,427 @@
         ]
       }
     ]
+  },
+  {
+    "sheet": "img/planches/objets/uniques-aventure-01.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          332,
+          632,
+          928,
+          1254
+        ],
+        [
+          0,
+          324,
+          606,
+          912,
+          1254
+        ],
+        [
+          0,
+          310,
+          612,
+          942,
+          1254
+        ],
+        [
+          0,
+          294,
+          584,
+          890,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        338,
+        640,
+        916,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "brisemur",
+        "file": "img/objets/aventure/uniques/brisemur.png",
+        "sourceBox": [
+          48,
+          40,
+          289,
+          318
+        ]
+      },
+      {
+        "id": "faucheuse",
+        "file": "img/objets/aventure/uniques/faucheuse.png",
+        "sourceBox": [
+          43,
+          41,
+          255,
+          312
+        ]
+      },
+      {
+        "id": "oeildelynx",
+        "file": "img/objets/aventure/uniques/oeildelynx.png",
+        "sourceBox": [
+          45,
+          44,
+          265,
+          314
+        ]
+      },
+      {
+        "id": "trait9",
+        "file": "img/objets/aventure/uniques/trait9.png",
+        "sourceBox": [
+          33,
+          51,
+          266,
+          320
+        ]
+      },
+      {
+        "id": "barilnoir",
+        "file": "img/objets/aventure/uniques/barilnoir.png",
+        "sourceBox": [
+          57,
+          39,
+          263,
+          275
+        ]
+      },
+      {
+        "id": "pavois",
+        "file": "img/objets/aventure/uniques/pavois.png",
+        "sourceBox": [
+          63,
+          18,
+          225,
+          293
+        ]
+      },
+      {
+        "id": "serment",
+        "file": "img/objets/aventure/uniques/serment.png",
+        "sourceBox": [
+          59,
+          24,
+          261,
+          290
+        ]
+      },
+      {
+        "id": "cape9",
+        "file": "img/objets/aventure/uniques/cape9.png",
+        "sourceBox": [
+          45,
+          30,
+          302,
+          284
+        ]
+      },
+      {
+        "id": "heaumecri",
+        "file": "img/objets/aventure/uniques/heaumecri.png",
+        "sourceBox": [
+          44,
+          24,
+          271,
+          255
+        ]
+      },
+      {
+        "id": "bottesfumee",
+        "file": "img/objets/aventure/uniques/bottesfumee.png",
+        "sourceBox": [
+          38,
+          10,
+          258,
+          257
+        ]
+      },
+      {
+        "id": "gantsronces",
+        "file": "img/objets/aventure/uniques/gantsronces.png",
+        "sourceBox": [
+          46,
+          13,
+          275,
+          262
+        ]
+      },
+      {
+        "id": "larme",
+        "file": "img/objets/aventure/uniques/larme.png",
+        "sourceBox": [
+          55,
+          32,
+          182,
+          261
+        ]
+      },
+      {
+        "id": "refrain",
+        "file": "img/objets/aventure/uniques/refrain.png",
+        "sourceBox": [
+          64,
+          30,
+          255,
+          273
+        ]
+      },
+      {
+        "id": "dentcreuse",
+        "file": "img/objets/aventure/uniques/dentcreuse.png",
+        "sourceBox": [
+          39,
+          37,
+          223,
+          276
+        ]
+      },
+      {
+        "id": "fioleverte",
+        "file": "img/objets/aventure/uniques/fioleverte.png",
+        "sourceBox": [
+          68,
+          25,
+          254,
+          276
+        ]
+      },
+      {
+        "id": "braisier",
+        "file": "img/objets/aventure/uniques/braisier.png",
+        "sourceBox": [
+          54,
+          15,
+          279,
+          283
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/uniques-aventure-02.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          320,
+          630,
+          919,
+          1254
+        ],
+        [
+          0,
+          283,
+          608,
+          931,
+          1254
+        ],
+        [
+          0,
+          294,
+          598,
+          922,
+          1254
+        ],
+        [
+          0,
+          304,
+          573,
+          908,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        324,
+        620,
+        900,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "cendrier",
+        "file": "img/objets/aventure/uniques/cendrier.png",
+        "sourceBox": [
+          35,
+          52,
+          292,
+          308
+        ]
+      },
+      {
+        "id": "lamegivre",
+        "file": "img/objets/aventure/uniques/lamegivre.png",
+        "sourceBox": [
+          29,
+          42,
+          265,
+          309
+        ]
+      },
+      {
+        "id": "coeurgel",
+        "file": "img/objets/aventure/uniques/coeurgel.png",
+        "sourceBox": [
+          47,
+          43,
+          256,
+          305
+        ]
+      },
+      {
+        "id": "fourche",
+        "file": "img/objets/aventure/uniques/fourche.png",
+        "sourceBox": [
+          34,
+          41,
+          294,
+          309
+        ]
+      },
+      {
+        "id": "paratonnerre",
+        "file": "img/objets/aventure/uniques/paratonnerre.png",
+        "sourceBox": [
+          75,
+          16,
+          245,
+          282
+        ]
+      },
+      {
+        "id": "voilenoir",
+        "file": "img/objets/aventure/uniques/voilenoir.png",
+        "sourceBox": [
+          39,
+          29,
+          286,
+          279
+        ]
+      },
+      {
+        "id": "crocombre",
+        "file": "img/objets/aventure/uniques/crocombre.png",
+        "sourceBox": [
+          40,
+          27,
+          279,
+          275
+        ]
+      },
+      {
+        "id": "osselet",
+        "file": "img/objets/aventure/uniques/osselet.png",
+        "sourceBox": [
+          45,
+          45,
+          243,
+          261
+        ]
+      },
+      {
+        "id": "suaire",
+        "file": "img/objets/aventure/uniques/suaire.png",
+        "sourceBox": [
+          34,
+          16,
+          267,
+          269
+        ]
+      },
+      {
+        "id": "fendoir",
+        "file": "img/objets/aventure/uniques/fendoir.png",
+        "sourceBox": [
+          27,
+          18,
+          258,
+          268
+        ]
+      },
+      {
+        "id": "massacre",
+        "file": "img/objets/aventure/uniques/massacre.png",
+        "sourceBox": [
+          46,
+          14,
+          275,
+          262
+        ]
+      },
+      {
+        "id": "harnaisdos",
+        "file": "img/objets/aventure/uniques/harnaisdos.png",
+        "sourceBox": [
+          50,
+          17,
+          256,
+          258
+        ]
+      },
+      {
+        "id": "ancre",
+        "file": "img/objets/aventure/uniques/ancre.png",
+        "sourceBox": [
+          38,
+          44,
+          259,
+          280
+        ]
+      },
+      {
+        "id": "cridefer",
+        "file": "img/objets/aventure/uniques/cridefer.png",
+        "sourceBox": [
+          48,
+          22,
+          222,
+          268
+        ]
+      },
+      {
+        "id": "halte",
+        "file": "img/objets/aventure/uniques/halte.png",
+        "sourceBox": [
+          48,
+          28,
+          279,
+          282
+        ]
+      },
+      {
+        "id": "jugement",
+        "file": "img/objets/aventure/uniques/jugement.png",
+        "sourceBox": [
+          58,
+          13,
+          290,
+          286
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/uniques-aventure-03.png",
+    "status": "missing"
   }
 ]
