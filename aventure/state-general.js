@@ -287,10 +287,11 @@
       const it = gear[slot];
       if (!it) continue;
       const b = GD.baseById(it.base);
-      if (b && st[b.stat] !== undefined) st[b.stat] += it.power || 0;
+      const renfort = GD.itemUpgradeMult ? GD.itemUpgradeMult(it) : 1;
+      if (b && st[b.stat] !== undefined) st[b.stat] += (it.power || 0) * renfort;
       for (const L of (it.lines || [])) {
         const def = GD.lineById(L.id);
-        if (def && st[def.stat] !== undefined) st[def.stat] += L.val;
+        if (def && st[def.stat] !== undefined) st[def.stat] += L.val * renfort;
       }
     }
     // 3. LES TALENTS : les plats d'abord, les pourcentages ensuite.
@@ -508,7 +509,7 @@
       base: base.id, slot: base.slot, fam: base.fam || null,
       tier, rarity, stat: base.stat,
       power: GD.itemValue(base.id, tier, rarity),
-      lines,
+      lines, amelioration:0, trempes:[],
     };
     /* `don` est un IDENTIFIANT de pouvoir, jamais un objet : comme pour
        les nœuds d'arbre, une définition inlinée ne pourrait être ni
@@ -1122,6 +1123,20 @@
       // ou `'*'` pour toute la panoplie.
       else if (e.kind === 'ability') out.mods.push(Object.assign({ cible: 'classe' }, e));
     }
+    /* Les trempes équipées utilisent les mêmes canaux que l'arbre. Elles
+       deviennent ainsi de vrais effets de combat (proc, stat, pourcentage
+       ou fortune), et jamais une ligne de texte sans lecteur. */
+    for (const slot in (o.holder.gear || {})) {
+      const it = o.holder.gear[slot];
+      for (const t of ((it && it.trempes) || [])) {
+        const e = GD.temperEffect ? GD.temperEffect(t) : null;
+        if (!e) continue;
+        if (e.kind === 'stat') out.stats[e.stat] = (out.stats[e.stat] || 0) + (e.add || 0);
+        else if (e.kind === 'pct') out.pcts[e.stat] = (out.pcts[e.stat] || 0) + (e.pct || 0);
+        else if (e.kind === 'proc') out.procs.push(e);
+        else if (e.kind === 'meta' && out.metas[e.stat] != null) out.metas[e.stat] += e.pct || 0;
+      }
+    }
     return out;
   };
 
@@ -1166,10 +1181,11 @@
         const it = (h.gear || {})[slot];
         if (!it) continue;
         const b = GD.baseById(it.base);
-        if (b && b.stat === stat) n += it.power || 0;
+        const renfort = GD.itemUpgradeMult ? GD.itemUpgradeMult(it) : 1;
+        if (b && b.stat === stat) n += (it.power || 0) * renfort;
         for (const L of (it.lines || [])) {
           const def = GD.lineById(L.id);
-          if (def && def.stat === stat) n += L.val;
+          if (def && def.stat === stat) n += L.val * renfort;
         }
       }
     }
@@ -1237,6 +1253,50 @@
     GameState.notify();
     return true;
   };
+  function itemPossede(item) {
+    if (!item) return false;
+    const g = GameState.gen();
+    if ((g.bag || []).indexOf(item) >= 0) return true;
+    const porteurs = [g].concat((g.roster || []).map(x => GameState.heroState(x.id)).filter(Boolean));
+    return porteurs.some(h => Object.values(h.gear || {}).indexOf(item) >= 0);
+  }
+  function assurerObjet(item) {
+    if (!item) return item;
+    if (typeof item.amelioration !== 'number') item.amelioration = 0;
+    if (!Array.isArray(item.trempes)) item.trempes = [];
+    return item;
+  }
+  GameState.upgradeItem = function (item) {
+    if (!itemPossede(item)) return {ok:false,raison:'Cette pièce n’appartient pas à la compagnie.'};
+    if (!window.Etat || !window.Etat.aBatiment('forge')) return {ok:false,raison:'Construisez la forge pour renforcer l’équipement.'};
+    assurerObjet(item);
+    if (item.amelioration >= (GD.ITEM_UPGRADE_MAX || 20)) return {ok:false,raison:'Cette pièce est déjà au renforcement maximal.'};
+    const cout = GD.itemUpgradeCost && GD.itemUpgradeCost(item);
+    if (!cout || !window.Etat.assez(cout)) return {ok:false,raison:'Il manque des matériaux de renforcement.'};
+    window.Etat.depenser(cout);
+    item.amelioration++;
+    GameState.notify(); window.Etat.sauver(true);
+    return {ok:true,niveau:item.amelioration};
+  };
+  GameState.temperItem = function (item, affixeId, slot) {
+    if (!itemPossede(item)) return {ok:false,raison:'Cette pièce n’appartient pas à la compagnie.'};
+    if (!window.Etat || !window.Etat.aBatiment('forge')) return {ok:false,raison:'Construisez la forge pour pratiquer la trempe.'};
+    const d = GD.temperById && GD.temperById(affixeId);
+    if (!d) return {ok:false,raison:'Trempe inconnue.'};
+    assurerObjet(item);
+    const max = item.amelioration >= 8 ? 2 : 1;
+    slot = Math.max(0, slot == null ? item.trempes.length : (slot | 0));
+    if (slot >= max) return {ok:false,raison:item.amelioration < 8 ? 'Le second emplacement s’ouvre au renforcement +8.' : 'Les deux trempes sont déjà occupées.'};
+    if (item.trempes.some((t,i) => i !== slot && t.id === affixeId)) return {ok:false,raison:'Cette trempe est déjà présente sur la pièce.'};
+    const cout = GD.temperCost(item, slot);
+    if (!window.Etat.assez(cout)) return {ok:false,raison:'Il manque des ressources rapportées d’aventure.'};
+    window.Etat.depenser(cout);
+    item.trempes[slot] = {id:affixeId,puissance:1 + Math.floor(item.amelioration / 5)};
+    GameState.notify(); window.Etat.sauver(true);
+    return {ok:true,nom:d.nom};
+  };
+  GameState.itemPossede = itemPossede;
+  GameState.assurerObjet = assurerObjet;
   GameState.sellItem = function (item) {
     const g = GameState.gen();
     const ix = g.bag.indexOf(item);
@@ -1244,7 +1304,8 @@
     g.bag.splice(ix, 1);
     const s = GameState.state;
     const R = GD.rarityById(item.rarity);
-    s.res.food = (s.res.food || 0) + (item.power || 1) * 120 * item.tier * (R ? R.mult : 1);
+    s.res.food = (s.res.food || 0) + (item.power || 1) * (GD.itemUpgradeMult ? GD.itemUpgradeMult(item) : 1)
+      * 120 * item.tier * (R ? R.mult : 1);
     GameState.notify();
     return true;
   };

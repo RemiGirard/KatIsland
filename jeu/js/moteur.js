@@ -28,6 +28,7 @@
      avaient été oubliés à mesure qu'on les ajoutait. */
   const PORTIONS = {
     poisson: 1, ble: 0.6, legume: 0.6, lait: 1, champignon: 1, miel: 2,
+    champignon_lune: 5, champignon_azur: 10,
     farine: 1.5, viande: 2.5, pain: 3, fromage: 3.5, poissonfume: 3, tourte: 8,
     tournesol: 0.8, fruit: 1.2, farineclaire: 2, confiture: 4, cidre: 2.5,
   };
@@ -118,7 +119,9 @@
      ================================================================= */
   function moralEffectif() {
     const E = S();
-    let m = 50;
+    /* Le moral est désormais vécu PAR les habitants. La moyenne fournit
+       le socle ; les bâtiments et événements gardent leur rôle global. */
+    let m = window.VieVillage ? window.VieVillage.moralGlobal() : 50;
     for (const bid in E.bat) {
       const def = window.BAT[E.bat[bid].type];
       if (def && def.effet && def.effet.moral) m += def.effet.moral * (1 + 0.4 * (E.bat[bid].niv - 1));
@@ -127,7 +130,10 @@
     m += acquis().moral;
     /* les caractères pèsent sur l'ambiance : un Avenant réchauffe, un
        Grognon refroidit — et cela se lit dans le bandeau. */
-    for (const h of E.habitants) m += window.HAB.somme(h, 'moral');
+    /* Les traits individuels sont déjà versés dans leur cible personnelle
+       par VieVillage. Sur une ancienne sauvegarde sans ce module, on garde
+       le comportement historique. */
+    if (!window.VieVillage) for (const h of E.habitants) m += window.HAB.somme(h, 'moral');
     if (E.famine) m -= 25;
     if (E.raidRecent > 0) m -= 12;
     return Math.max(0, Math.min(100, Math.round(m)));
@@ -205,9 +211,13 @@
     let f = 1 + 0.025 * ((h.niv || 1) - 1);
     const pratique = window.Etat.progresMetierHabitant(h, rec.metier);
     f *= 1 + 0.025 * (pratique.niveau - 1);
-    /* Le métier de prédilection : ce qu'il sait faire depuis toujours.
-       Une Légende le sait mieux encore. */
-    if (h.talent === rec.metier) f *= (h.rarete === 'legende' ? 1.35 : 1.20);
+    /* Le métier de prédilection est le SEUL à recevoir le bonus inné.
+       Sa valeur suit toute l'échelle de rareté : un habitant commun a
+       déjà un vrai métier, une Légende en a fait une signature. */
+    if (h.talent === rec.metier) {
+      const bonusTalent = { commun:1.08, estime:1.14, rare:1.22, insigne:1.31, legende:1.43 };
+      f *= bonusTalent[h.rarete] || bonusTalent.commun;
+    }
     const ctx = {
       metier: rec.metier, duree: rec.duree,
       jour: S().heure > 0.24 && S().heure < 0.78,
@@ -242,7 +252,10 @@
     v *= 1 + amelioDe(b, 'cadence');              // l'atelier, affûté
     v *= 1 + A.global;                            // les recherches du bourg
     v *= 1 + (A.metier[rec.metier] || 0);         // la branche du métier
-    if (b.outil && b.outil.restant > 0) v *= (b.outil.type === 'outilacier') ? 1.9 : 1.4;
+    if (b.outil && b.outil.restant > 0) {
+      const q = window.OutilUtil && window.OutilUtil.de(b.outil);
+      v *= q ? q.mult : ((b.outil.type === 'outilacier') ? 1.9 : 1.4);
+    }
     if (b.endommage > 0) v *= 0.4;
     /* LE TERRITOIRE. C'est le seul multiplicateur qui ne s'achète pas :
        il se prend par le portail d'expédition. */
@@ -464,6 +477,7 @@
       hab.cycles = (hab.cycles || 0) + 1;
       window.Etat.gagnerXpHabitant(hab, Math.max(1, Math.round(rec.xp * 0.35)), rec.metier);
     }
+    if (window.VieVillage) window.VieVillage.finirRecette(rec, hab);
 
     /* Effets particuliers : certaines recettes ne produisent pas une
        ressource mais un ÉTAT du bourg. */
@@ -725,6 +739,7 @@
     if (jour > E.jours) { E.jours = jour; window.Etat.prevenir('jour', jour); }
     nourrir(dt);
     window.Etat.tickMalaise(dt);
+    if (window.VieVillage) window.VieVillage.tick(dt);
     if (window.Auto) window.Auto.tick(dt);
     if (window.Marche) window.Marche.tickFlux(dt);
     if (window.Prestige) window.Prestige.tick(dt);
@@ -1074,11 +1089,21 @@
   }
   function outiller(bid, typeOutil) {
     const b = S().bat[bid]; if (!b) return { ok: false };
-    const cout = {}; cout[typeOutil] = 1;
+    const q = window.OutilUtil && window.OutilUtil.de({ type:typeOutil, qualite:typeOutil });
+    let ressource = typeOutil;
+    /* Le fer ancien (`outil`) et le fer détaillé (`outilfer`) cohabitent :
+       une sauvegarde ne perd donc jamais son stock historique. */
+    if (q) {
+      if (window.Etat.qte(q.res) > 0) ressource = q.res;
+      else if (q.legacy && window.Etat.qte(q.legacy) > 0) ressource = q.legacy;
+      else ressource = q.res;
+    }
+    const cout = {}; cout[ressource] = 1;
     if (!window.Etat.assez(cout)) return { ok: false, raison: 'Aucun outillage disponible.' };
     window.Etat.depenser(cout);
-    const base = typeOutil === 'outilacier' ? 520 : 190;
-    b.outil = { type: typeOutil, restant: Math.round(base * (1 + acquis().outilDuree)) };
+    const base = q ? q.cycles : (typeOutil === 'outilacier' ? 520 : 190);
+    b.outil = { type:ressource, qualite:q ? q.id : typeOutil,
+      restant:Math.round(base * (1 + acquis().outilDuree)), maximum:Math.round(base * (1 + acquis().outilDuree)) };
     window.Etat.prevenir('poste', { bat: bid });
     return { ok: true };
   }

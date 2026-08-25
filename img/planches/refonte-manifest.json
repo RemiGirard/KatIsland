@@ -1,0 +1,1047 @@
+[
+  {
+    "sheet": "img/planches/outils/outils-metiers-01.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          326,
+          630,
+          908,
+          1254
+        ],
+        [
+          0,
+          326,
+          612,
+          900,
+          1254
+        ],
+        [
+          0,
+          325,
+          608,
+          896,
+          1254
+        ],
+        [
+          0,
+          316,
+          614,
+          896,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        368,
+        640,
+        904,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "peche",
+        "file": "img/outils/peche.png",
+        "sourceBox": [
+          86,
+          108,
+          276,
+          320
+        ]
+      },
+      {
+        "id": "bois",
+        "file": "img/outils/bois.png",
+        "sourceBox": [
+          52,
+          111,
+          255,
+          325
+        ]
+      },
+      {
+        "id": "champs",
+        "file": "img/outils/champs.png",
+        "sourceBox": [
+          49,
+          116,
+          243,
+          320
+        ]
+      },
+      {
+        "id": "elevage",
+        "file": "img/outils/elevage.png",
+        "sourceBox": [
+          37,
+          127,
+          226,
+          317
+        ]
+      },
+      {
+        "id": "mine",
+        "file": "img/outils/mine.png",
+        "sourceBox": [
+          86,
+          44,
+          275,
+          235
+        ]
+      },
+      {
+        "id": "feu",
+        "file": "img/outils/feu.png",
+        "sourceBox": [
+          52,
+          57,
+          242,
+          231
+        ]
+      },
+      {
+        "id": "forge",
+        "file": "img/outils/forge.png",
+        "sourceBox": [
+          46,
+          44,
+          242,
+          234
+        ]
+      },
+      {
+        "id": "tissage",
+        "file": "img/outils/tissage.png",
+        "sourceBox": [
+          48,
+          45,
+          262,
+          235
+        ]
+      },
+      {
+        "id": "cuisine",
+        "file": "img/outils/cuisine.png",
+        "sourceBox": [
+          87,
+          44,
+          279,
+          220
+        ]
+      },
+      {
+        "id": "savoir",
+        "file": "img/outils/savoir.png",
+        "sourceBox": [
+          47,
+          48,
+          236,
+          219
+        ]
+      },
+      {
+        "id": "batisse",
+        "file": "img/outils/batisse.png",
+        "sourceBox": [
+          49,
+          50,
+          248,
+          227
+        ]
+      },
+      {
+        "id": "guerre",
+        "file": "img/outils/guerre.png",
+        "sourceBox": [
+          40,
+          38,
+          244,
+          225
+        ]
+      },
+      {
+        "id": "poterie",
+        "file": "img/outils/poterie.png",
+        "sourceBox": [
+          90,
+          48,
+          263,
+          227
+        ]
+      },
+      {
+        "id": "negoce",
+        "file": "img/outils/negoce.png",
+        "sourceBox": [
+          54,
+          40,
+          251,
+          230
+        ]
+      },
+      {
+        "id": "entretien",
+        "file": "img/outils/entretien.png",
+        "sourceBox": [
+          47,
+          39,
+          242,
+          237
+        ]
+      },
+      {
+        "id": "loisirs",
+        "file": "img/outils/loisirs.png",
+        "sourceBox": [
+          41,
+          40,
+          242,
+          225
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/alchimie-potions-03.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          334,
+          606,
+          922,
+          1254
+        ],
+        [
+          0,
+          312,
+          613,
+          920,
+          1254
+        ],
+        [
+          0,
+          314,
+          610,
+          914,
+          1254
+        ],
+        [
+          0,
+          295,
+          607,
+          906,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        322,
+        630,
+        914,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "voile-spores",
+        "file": "img/objets/alchimie/voile-spores.png",
+        "sourceBox": [
+          72,
+          43,
+          273,
+          307
+        ]
+      },
+      {
+        "id": "serum-lunaire",
+        "file": "img/objets/alchimie/serum-lunaire.png",
+        "sourceBox": [
+          61,
+          49,
+          207,
+          306
+        ]
+      },
+      {
+        "id": "essence-azur",
+        "file": "img/objets/alchimie/essence-azur.png",
+        "sourceBox": [
+          65,
+          49,
+          256,
+          307
+        ]
+      },
+      {
+        "id": "venin-couronne",
+        "file": "img/objets/alchimie/venin-couronne.png",
+        "sourceBox": [
+          60,
+          51,
+          259,
+          308
+        ]
+      },
+      {
+        "id": "elixir-astres",
+        "file": "img/objets/alchimie/elixir-astres.png",
+        "sourceBox": [
+          110,
+          14,
+          258,
+          289
+        ]
+      },
+      {
+        "id": "huile-braise",
+        "file": "img/objets/alchimie/huile-braise.png",
+        "sourceBox": [
+          54,
+          27,
+          244,
+          291
+        ]
+      },
+      {
+        "id": "prisme-givre",
+        "file": "img/objets/alchimie/prisme-givre.png",
+        "sourceBox": [
+          58,
+          28,
+          248,
+          288
+        ]
+      },
+      {
+        "id": "distillat-nuee",
+        "file": "img/objets/alchimie/distillat-nuee.png",
+        "sourceBox": [
+          59,
+          36,
+          259,
+          291
+        ]
+      },
+      {
+        "id": "tonique-epines",
+        "file": "img/objets/alchimie/tonique-epines.png",
+        "sourceBox": [
+          63,
+          24,
+          268,
+          270
+        ]
+      },
+      {
+        "id": "fiole-foudre",
+        "file": "img/objets/alchimie/fiole-foudre.png",
+        "sourceBox": [
+          46,
+          17,
+          242,
+          269
+        ]
+      },
+      {
+        "id": "baume-geant",
+        "file": "img/objets/alchimie/baume-geant.png",
+        "sourceBox": [
+          56,
+          22,
+          245,
+          265
+        ]
+      },
+      {
+        "id": "potion-miroir",
+        "file": "img/objets/alchimie/potion-miroir.png",
+        "sourceBox": [
+          61,
+          17,
+          249,
+          271
+        ]
+      },
+      {
+        "id": "essence-chance",
+        "file": "img/objets/alchimie/essence-chance.png",
+        "sourceBox": [
+          53,
+          16,
+          258,
+          276
+        ]
+      },
+      {
+        "id": "brouillard-sommeil",
+        "file": "img/objets/alchimie/brouillard-sommeil.png",
+        "sourceBox": [
+          38,
+          23,
+          259,
+          275
+        ]
+      },
+      {
+        "id": "coeur-liquide",
+        "file": "img/objets/alchimie/coeur-liquide.png",
+        "sourceBox": [
+          55,
+          13,
+          249,
+          278
+        ]
+      },
+      {
+        "id": "elixir-neuf-vies",
+        "file": "img/objets/alchimie/elixir-neuf-vies.png",
+        "sourceBox": [
+          52,
+          17,
+          274,
+          279
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/objets/cuisine-recettes-03.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          337,
+          632,
+          926,
+          1254
+        ],
+        [
+          0,
+          315,
+          616,
+          906,
+          1254
+        ],
+        [
+          0,
+          327,
+          615,
+          916,
+          1254
+        ],
+        [
+          0,
+          321,
+          614,
+          894,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        349,
+        630,
+        900,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "ragout-sous-bois",
+        "file": "img/objets/cuisine/ragout-sous-bois.png",
+        "sourceBox": [
+          52,
+          99,
+          320,
+          316
+        ]
+      },
+      {
+        "id": "veloute-lunaire",
+        "file": "img/objets/cuisine/veloute-lunaire.png",
+        "sourceBox": [
+          18,
+          107,
+          278,
+          316
+        ]
+      },
+      {
+        "id": "tourte-morille-azur",
+        "file": "img/objets/cuisine/tourte-morille-azur.png",
+        "sourceBox": [
+          19,
+          98,
+          277,
+          319
+        ]
+      },
+      {
+        "id": "brochette-amanite-reine",
+        "file": "img/objets/cuisine/brochette-amanite-reine.png",
+        "sourceBox": [
+          17,
+          104,
+          271,
+          314
+        ]
+      },
+      {
+        "id": "consomme-astres",
+        "file": "img/objets/cuisine/consomme-astres.png",
+        "sourceBox": [
+          59,
+          31,
+          298,
+          254
+        ]
+      },
+      {
+        "id": "brioche-verger",
+        "file": "img/objets/cuisine/brioche-verger.png",
+        "sourceBox": [
+          18,
+          30,
+          290,
+          261
+        ]
+      },
+      {
+        "id": "cassolette-port",
+        "file": "img/objets/cuisine/cassolette-port.png",
+        "sourceBox": [
+          13,
+          50,
+          277,
+          257
+        ]
+      },
+      {
+        "id": "festin-garnison",
+        "file": "img/objets/cuisine/festin-garnison.png",
+        "sourceBox": [
+          14,
+          31,
+          297,
+          258
+        ]
+      },
+      {
+        "id": "pain-noix-miel",
+        "file": "img/objets/cuisine/pain-noix-miel.png",
+        "sourceBox": [
+          54,
+          22,
+          308,
+          244
+        ]
+      },
+      {
+        "id": "gratin-racines",
+        "file": "img/objets/cuisine/gratin-racines.png",
+        "sourceBox": [
+          20,
+          29,
+          267,
+          244
+        ]
+      },
+      {
+        "id": "terrine-fumoir",
+        "file": "img/objets/cuisine/terrine-fumoir.png",
+        "sourceBox": [
+          22,
+          32,
+          281,
+          245
+        ]
+      },
+      {
+        "id": "tarte-champignons-lune",
+        "file": "img/objets/cuisine/tarte-champignons-lune.png",
+        "sourceBox": [
+          20,
+          35,
+          269,
+          244
+        ]
+      },
+      {
+        "id": "soupe-cendre",
+        "file": "img/objets/cuisine/soupe-cendre.png",
+        "sourceBox": [
+          58,
+          25,
+          303,
+          254
+        ]
+      },
+      {
+        "id": "fromage-herbes",
+        "file": "img/objets/cuisine/fromage-herbes.png",
+        "sourceBox": [
+          19,
+          36,
+          274,
+          257
+        ]
+      },
+      {
+        "id": "ration-capitaine",
+        "file": "img/objets/cuisine/ration-capitaine.png",
+        "sourceBox": [
+          20,
+          31,
+          265,
+          258
+        ]
+      },
+      {
+        "id": "banquet-neuf-vies",
+        "file": "img/objets/cuisine/banquet-neuf-vies.png",
+        "sourceBox": [
+          15,
+          26,
+          308,
+          263
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/ressources/ressources-trouvailles-01.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          332,
+          630,
+          926,
+          1254
+        ],
+        [
+          0,
+          320,
+          622,
+          918,
+          1254
+        ],
+        [
+          0,
+          320,
+          604,
+          914,
+          1254
+        ],
+        [
+          0,
+          308,
+          623,
+          916,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        339,
+        616,
+        916,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "champignon",
+        "file": "img/res/champignon/champignon.png",
+        "sourceBox": [
+          58,
+          85,
+          289,
+          294
+        ]
+      },
+      {
+        "id": "champignon_lune",
+        "file": "img/res/champignon_lune/champignon_lune.png",
+        "sourceBox": [
+          44,
+          85,
+          256,
+          303
+        ]
+      },
+      {
+        "id": "champignon_azur",
+        "file": "img/res/champignon_azur/champignon_azur.png",
+        "sourceBox": [
+          43,
+          75,
+          249,
+          304
+        ]
+      },
+      {
+        "id": "champignon_reine",
+        "file": "img/res/champignon_reine/champignon_reine.png",
+        "sourceBox": [
+          47,
+          62,
+          257,
+          309
+        ]
+      },
+      {
+        "id": "champignon_astre",
+        "file": "img/res/champignon_astre/champignon_astre.png",
+        "sourceBox": [
+          62,
+          53,
+          278,
+          252
+        ]
+      },
+      {
+        "id": "poussiere_trempe",
+        "file": "img/res/poussiere_trempe/poussiere_trempe.png",
+        "sourceBox": [
+          44,
+          42,
+          262,
+          252
+        ]
+      },
+      {
+        "id": "sceauancien",
+        "file": "img/res/sceauancien/sceauancien.png",
+        "sourceBox": [
+          41,
+          33,
+          254,
+          260
+        ]
+      },
+      {
+        "id": "eclatnuee",
+        "file": "img/res/eclatnuee/eclatnuee.png",
+        "sourceBox": [
+          43,
+          31,
+          269,
+          253
+        ]
+      },
+      {
+        "id": "braisevivante",
+        "file": "img/res/braisevivante/braisevivante.png",
+        "sourceBox": [
+          81,
+          38,
+          260,
+          266
+        ]
+      },
+      {
+        "id": "veninreine",
+        "file": "img/res/veninreine/veninreine.png",
+        "sourceBox": [
+          61,
+          19,
+          214,
+          275
+        ]
+      },
+      {
+        "id": "givreancien",
+        "file": "img/res/givreancien/givreancien.png",
+        "sourceBox": [
+          72,
+          39,
+          258,
+          263
+        ]
+      },
+      {
+        "id": "resine",
+        "file": "img/res/resine/resine.png",
+        "sourceBox": [
+          54,
+          36,
+          268,
+          262
+        ]
+      },
+      {
+        "id": "ambre",
+        "file": "img/res/ambre/ambre.png",
+        "sourceBox": [
+          62,
+          50,
+          262,
+          251
+        ]
+      },
+      {
+        "id": "perle",
+        "file": "img/res/perle/perle.png",
+        "sourceBox": [
+          47,
+          32,
+          265,
+          260
+        ]
+      },
+      {
+        "id": "ecaille",
+        "file": "img/res/ecaille/ecaille.png",
+        "sourceBox": [
+          51,
+          35,
+          240,
+          259
+        ]
+      },
+      {
+        "id": "relique",
+        "file": "img/res/relique/relique.png",
+        "sourceBox": [
+          53,
+          25,
+          221,
+          264
+        ]
+      }
+    ]
+  },
+  {
+    "sheet": "img/planches/iles/iles-carte-papier-01.png",
+    "status": "ok",
+    "size": [
+      1254,
+      1254
+    ],
+    "boundaries": {
+      "xByRow": [
+        [
+          0,
+          306,
+          610,
+          933,
+          1254
+        ],
+        [
+          0,
+          302,
+          614,
+          932,
+          1254
+        ],
+        [
+          0,
+          299,
+          618,
+          922,
+          1254
+        ],
+        [
+          0,
+          300,
+          610,
+          926,
+          1254
+        ]
+      ],
+      "y": [
+        0,
+        326,
+        610,
+        906,
+        1254
+      ]
+    },
+    "icons": [
+      {
+        "id": "guerriere-v01",
+        "file": "img/iles/carte/guerriere-v01.png",
+        "sourceBox": [
+          23,
+          49,
+          289,
+          295
+        ]
+      },
+      {
+        "id": "guerriere-v02",
+        "file": "img/iles/carte/guerriere-v02.png",
+        "sourceBox": [
+          17,
+          34,
+          287,
+          296
+        ]
+      },
+      {
+        "id": "guerriere-v03",
+        "file": "img/iles/carte/guerriere-v03.png",
+        "sourceBox": [
+          17,
+          24,
+          309,
+          303
+        ]
+      },
+      {
+        "id": "guerriere-v04",
+        "file": "img/iles/carte/guerriere-v04.png",
+        "sourceBox": [
+          15,
+          21,
+          304,
+          307
+        ]
+      },
+      {
+        "id": "marecageuse-v01",
+        "file": "img/iles/carte/marecageuse-v01.png",
+        "sourceBox": [
+          27,
+          25,
+          287,
+          265
+        ]
+      },
+      {
+        "id": "marecageuse-v02",
+        "file": "img/iles/carte/marecageuse-v02.png",
+        "sourceBox": [
+          16,
+          18,
+          300,
+          269
+        ]
+      },
+      {
+        "id": "marecageuse-v03",
+        "file": "img/iles/carte/marecageuse-v03.png",
+        "sourceBox": [
+          14,
+          21,
+          301,
+          268
+        ]
+      },
+      {
+        "id": "marecageuse-v04",
+        "file": "img/iles/carte/marecageuse-v04.png",
+        "sourceBox": [
+          19,
+          19,
+          289,
+          270
+        ]
+      },
+      {
+        "id": "volcanique-v01",
+        "file": "img/iles/carte/volcanique-v01.png",
+        "sourceBox": [
+          21,
+          53,
+          280,
+          266
+        ]
+      },
+      {
+        "id": "volcanique-v02",
+        "file": "img/iles/carte/volcanique-v02.png",
+        "sourceBox": [
+          20,
+          15,
+          300,
+          272
+        ]
+      },
+      {
+        "id": "volcanique-v03",
+        "file": "img/iles/carte/volcanique-v03.png",
+        "sourceBox": [
+          20,
+          15,
+          286,
+          276
+        ]
+      },
+      {
+        "id": "volcanique-v04",
+        "file": "img/iles/carte/volcanique-v04.png",
+        "sourceBox": [
+          20,
+          17,
+          306,
+          269
+        ]
+      },
+      {
+        "id": "arcanique-v01",
+        "file": "img/iles/carte/arcanique-v01.png",
+        "sourceBox": [
+          16,
+          31,
+          284,
+          291
+        ]
+      },
+      {
+        "id": "arcanique-v02",
+        "file": "img/iles/carte/arcanique-v02.png",
+        "sourceBox": [
+          18,
+          24,
+          291,
+          287
+        ]
+      },
+      {
+        "id": "arcanique-v03",
+        "file": "img/iles/carte/arcanique-v03.png",
+        "sourceBox": [
+          19,
+          30,
+          297,
+          292
+        ]
+      },
+      {
+        "id": "arcanique-v04",
+        "file": "img/iles/carte/arcanique-v04.png",
+        "sourceBox": [
+          20,
+          19,
+          293,
+          297
+        ]
+      }
+    ]
+  }
+]

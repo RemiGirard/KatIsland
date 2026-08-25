@@ -32,7 +32,9 @@ const ctx = { window: {}, console };
 vm.createContext(ctx);
 for (const f of ['donnees/ressources.js', 'donnees/batiments.js',
                  'donnees/butins.js', 'donnees/raffinages.js',
-                 'donnees/ameliorations.js', 'donnees/objectifs.js']) {
+                 'donnees/ameliorations.js', 'donnees/objectifs.js',
+                 'donnees/iles.js', 'donnees/habitants.js',
+                 'donnees/refonte-systemes.js']) {
   const q = path.join(__dirname, f);
   if (!fs.existsSync(q)) continue;
   try { vm.runInContext(fs.readFileSync(q, 'utf8'), ctx, { filename: f }); }
@@ -157,6 +159,8 @@ for (const [k, q] of [['ecu', 'contremaître'], ['plan', 'contremaître']]) note
 for (const k of ['arme', 'armure', 'bouclier', 'gardefeu', 'gardevenin',
                  'gardegel', 'gardefoudre', 'gardeombre', 'potion', 'outilacier', 'outil'])
   if (RES[k]) noter(k, 'équipement / usure');
+for (const q of (ctx.window.OUTILS_QUALITES || []))
+  if (RES[q.res]) noter(q.res, 'outillage de métier / usure');
 /* LES VIVRES SE MANGENT : c'est un emploi, et il ne figure dans aucune
    recette. On LIT la vraie table de `moteur.js` plutôt que d'en tenir
    une copie ici — une liste recopiée se démode au premier vivre ajouté,

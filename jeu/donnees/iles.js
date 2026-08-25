@@ -244,6 +244,16 @@
     return 'img/iles/tier-' + String(ile.tier).padStart(2, '0') + '-' + ile.biome +
       '-v' + String(v).padStart(2, '0') + '.png';
   }
+  /* Sur la CARTE, une île est un symbole d'encre posé sur le papier.
+     La vue isométrique entourée d'eau reste réservée à la fiche de droite. */
+  function imageCartePour(ile) {
+    if (!ile || !ile.biome) return null;
+    const graine = (window.Etat && window.Etat.E && window.Etat.E.graine) || 1;
+    let h = (graine ^ 374761393) >>> 0, txt = ile.id + ':carte';
+    for (let i=0;i<txt.length;i++) { h ^= txt.charCodeAt(i); h = Math.imul(h,668265263); }
+    const v = (h >>> 0) % 4 + 1;
+    return 'img/iles/carte/' + ile.biome + '-v' + String(v).padStart(2,'0') + '.png';
+  }
   /* Toutes les destinations, les deux théâtres confondus. */
   function toutes() { return I.concat(window.LARGE || []); }
   /* Le onzième élargissement ouvre l'ancienne carte du Grand Large. */
@@ -259,6 +269,6 @@
   window.ILES = I;
   window.IleUtil = { CALES, coutNavire, traversee, parId, palierDe,
                      RATIONS, rationsRequises, rationsDisponibles, prelevementPour, vivresEnStock,
-                     toutes, couronne, visibles, imagePour, BIOMES, largeOuvert };
+                     toutes, couronne, visibles, imagePour, imageCartePour, BIOMES, largeOuvert };
 
 })();

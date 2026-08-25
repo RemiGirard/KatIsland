@@ -26,6 +26,7 @@
        Les deux existent pour être comparés — l'un a le charme dessiné,
        l'autre tourne vraiment sur lui-même. */
     habitants: 'sprite',      // 'sprite' | 'bloc' | 'aucun'
+    nomsBatiments: 'alt',      // alt | toujours | aucun
     vitesseJour: 'normal',    // lent | normal | rapide | fige
     messages: 'tous',         // tous | importants | aucun
     confirmer: true,          // demander avant les gestes irréversibles
@@ -66,6 +67,7 @@
     const c = document.getElementById('couche');
     if (c) c.style.zoom = (o.echelle / 100).toFixed(2);
     document.body.classList.toggle('dock-droite', o.dockCote === 'droite');
+    if (window.NomsBatiments) window.NomsBatiments.config(o.nomsBatiments || 'alt');
     if (window.Village) {
       window.Village.vitesseJour(VITESSES[o.vitesseJour] != null ? VITESSES[o.vitesseJour] : DEFAUTS.vitesseJour);
       window.Village.figerTemps(o.vitesseJour === 'fige');

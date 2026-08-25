@@ -14,7 +14,7 @@
   const U = window.UI, el = U.el;
   const E = () => window.Etat.E;
   let postulantChoisi = null;
-  let collectionFiltre = 'tous', habFicheId = null;
+  let collectionFiltre = 'tous', habFicheId = null, entrainementHabId = null;
 
   /* =================================================================
      OUTILS D'AFFICHAGE PARTAGÉS
@@ -79,7 +79,8 @@
   /* L'OUTILLAGE : il n'existe pas avant la forge. */
   function aVuUnOutil(b) {
     if (jamaisRevient('outil')) return true;
-    if (b.outil || window.Etat.qte('outil') > 0 || window.Etat.qte('outilacier') > 0
+    const stock = (window.OUTILS_QUALITES || []).some(q => window.Etat.qte(q.res) > 0 || (q.legacy && window.Etat.qte(q.legacy) > 0));
+    if (b.outil || stock || window.Etat.qte('outil') > 0 || window.Etat.qte('outilacier') > 0
         || window.Etat.aBatiment('forge')) { retenir('outil'); return true; }
     return false;
   }
@@ -496,6 +497,8 @@
           ong.push({ id: 'colonne', nom: 'Colonne', rendu: c => window.UIArmee.rendreColonne(c, bid) });
           ong.push({ id: 'techniques', nom: 'Techniques', rendu: c => window.UIArmee.rendreTechniques(c, bid) });
         }
+        if (bb && bb.type === 'entrainement' && window.Entrainement)
+          ong.unshift({ id:'entrainer', nom:'Entraîner', rendu:c => rendreEntrainementIndividuel(c, bid) });
         if (bb && bb.type === 'forge' && window.Armee)
           ong.unshift({ id: 'arsenal', nom: 'Arsenal', rendu: c => rendreArsenal(c, bid) });
         ong.push({ id: 'niveau', nom: 'Niveau', rendu: c => rendreNiveau(c, bid) });
@@ -807,30 +810,81 @@
   function rendreOutil(c, bid) {
     const b = E().bat[bid];
     if (!b) return;
+    const defB = window.BAT[b.type];
+    const active = (b.postes || []).find(p => p.rec && window.REC[p.rec]);
+    const metier = active ? window.REC[active.rec].metier
+      : ((defB.recettes || []).map(id => window.REC[id]).find(Boolean) || {}).metier || 'batisse';
+    const art = window.OutilUtil ? window.OutilUtil.imageMetier(metier) : null;
     c.appendChild(el('div', { class: 'note',
-      text: "Un atelier outillé travaille bien plus vite. L'outillage s'use à chaque cycle : la forge doit tourner pour que le reste du bourg avance." }));
+      text: "Chaque métier a son propre nécessaire. Le matériau fixe la cadence et la durée ; une qualité remplace la précédente sans perdre les vieux stocks." }));
     if (b.outil) {
-      const pct = b.outil.restant / (b.outil.type === 'outilacier' ? 520 : 190);
-      c.appendChild(el('div', { class: 'cadre actif' },
+      const q = window.OutilUtil && window.OutilUtil.de(b.outil);
+      const maxi = b.outil.maximum || (q ? q.cycles : (b.outil.type === 'outilacier' ? 520 : 190));
+      const pct = b.outil.restant / Math.max(1, maxi);
+      c.appendChild(el('div', { class: 'cadre actif outil-equipe', style:q ? '--outil-col:' + q.col : '' },
         el('div', { class: 'rangee entre' },
-          el('span', { class: 'tt', text: window.RES[b.outil.type].nom }),
-          el('span', { class: 'eti-or', text: b.outil.type === 'outilacier' ? '× 1,9' : '× 1,4' })),
+          el('div', { class:'rangee' }, art ? el('img',{src:art,alt:'',class:'outil-art'}) : U.icoRes(b.outil.type,32),
+            el('div',{}, el('span', { class: 'tt', text:(window.METIERS[metier] || {}).nom || 'Outillage' }),
+              el('div',{class:'eti',text:q ? q.nom : ((window.RES[b.outil.type] || {}).nom || 'Outillage')}))),
+          el('span', { class: 'eti-or', text:'× ' + (q ? q.mult : (b.outil.type === 'outilacier' ? 1.9 : 1.4)).toFixed(2).replace('.', ',') })),
         el('div', { style: 'margin-top:8px' }, U.barre(pct, 'vert')),
         el('div', { class: 'eti', style: 'margin-top:4px', text: b.outil.restant + ' cycles avant usure' })));
     } else {
       c.appendChild(el('div', { class: 'cadre' }, el('div', { class: 'note faible', text: "Cet atelier travaille à mains nues." })));
     }
-    for (const t of ['outil', 'outilacier']) {
-      const q = window.Etat.qte(t);
-      c.appendChild(el('div', { class: 'cadre' },
+    const qualites = window.OUTILS_QUALITES || [
+      {id:'fer',res:'outil',nom:'Fer',mult:1.4,cycles:190,col:'#899299'},
+      {id:'acier',res:'outilacier',nom:'Acier',mult:1.9,cycles:520,col:'#bdc8d1'}
+    ];
+    const forge = window.Etat.nivDeType('forge'), scierie = window.Etat.nivDeType('scierie');
+    c.appendChild(el('div',{class:'outil-grille'}, qualites.filter(q => {
+      const stock = window.Etat.qte(q.res) + (q.legacy ? window.Etat.qte(q.legacy) : 0);
+      return stock > 0 || (q.id === 'bois' ? scierie >= 2 : forge >= q.niv);
+    }).map(q => {
+      const stock = window.Etat.qte(q.res) + (q.legacy ? window.Etat.qte(q.legacy) : 0);
+      return el('div', { class: 'cadre outil-choix', style:'--outil-col:' + q.col },
         el('div', { class: 'rangee entre' },
-          el('div', { class: 'rangee' }, U.icoRes(t, 26),
-            el('div', {}, el('div', { class: 'tt', text: window.RES[t].nom }),
-              el('div', { class: 'eti', text: (t === 'outilacier' ? '× 1,9 · 520' : '× 1,4 · 190') + ' cycles' }))),
-          el('button', { class: 'b', text: 'Équiper (' + U.fmt(q) + ')', disabled: q < 1,
-            onclick: () => { const r = window.Jeu.outiller(bid, t);
-              U.dire(r.ok ? 'Atelier outillé.' : r.raison, r.ok ? 'bien' : 'alerte'); } }))));
+          el('div', { class: 'rangee' }, art ? el('img',{src:art,alt:'',class:'outil-art petit'}) : U.icoRes(q.res,26),
+            el('div', {}, el('div', { class: 'tt', text:q.nom }),
+              el('div', { class: 'eti', text:'× ' + q.mult.toFixed(2).replace('.', ',') + ' · ' + q.cycles + ' cycles' }))),
+          el('button', { class: 'b mini', text: 'Équiper (' + U.fmt(stock) + ')', disabled: stock < 1,
+            onclick: () => { const r = window.Jeu.outiller(bid, q.id);
+              U.dire(r.ok ? 'Outils de ' + q.nom.toLowerCase() + ' équipés.' : r.raison, r.ok ? 'bien' : 'alerte'); } })));
+    })));
+  }
+
+  function rendreEntrainementIndividuel(c, bid) {
+    const habitants = E().habitants.slice().sort((a,b) => (b.niv || 1) - (a.niv || 1));
+    if (!habitants.length) { c.appendChild(el('div',{class:'vide',text:'Personne à entraîner.'})); return; }
+    if (!entrainementHabId || !window.Etat.habitant(entrainementHabId)) entrainementHabId = habitants[0].id;
+    c.appendChild(el('div',{class:'note',text:"Une séance vise un habitant et une caractéristique. Le prix monte avec sa maîtrise : les premiers exercices ne réclament que poisson et bois, les champions consomment des matériaux de la Tour."}));
+    const portraits = el('div',{class:'entrainement-portraits'});
+    for (const h of habitants) portraits.appendChild(el('button',{
+      class:'entrainement-portrait' + (h.id === entrainementHabId ? ' actif' : ''),
+      title:h.nom, onclick:() => { entrainementHabId = h.id; U.ouvrir('bat:' + bid,{}); }
+    }, avatarHab(h,44), el('span',{text:h.nom.split(' ')[0]})));
+    c.appendChild(portraits);
+    const h = window.Etat.habitant(entrainementHabId);
+    c.appendChild(el('div',{class:'entrainement-tete'}, avatarHab(h,72,'or'),
+      el('div',{},el('div',{class:'tt',text:h.nom}),el('div',{class:'eti',text:'Choisissez ce qu’il doit pratiquer maintenant.'}))));
+    const grille = el('div',{class:'entrainement-grille'});
+    for (const id of ['force','dexterite','endurance','intelligence']) {
+      const d = window.Entrainement.ATTR[id], p = window.Etat.progresAttributHabitant(h,id);
+      const cout = window.Entrainement.cout(h,id), ok = window.Etat.assez(cout);
+      grille.appendChild(el('div',{class:'cadre entrainement-carte'},
+        el('div',{class:'rangee entre'},
+          el('div',{class:'rangee'},el('img',{src:d.image,alt:'',class:'entrainement-stat-art'}),
+            el('div',{},el('div',{class:'tt',text:d.nom}),el('div',{class:'eti-or',text:'niveau ' + p.niveau}))),
+          el('span',{class:'eti',text:Math.round(p.pct * 100) + ' %'})),
+        el('div',{class:'mini-progression'},el('i',{style:'width:' + Math.round(p.pct * 100) + '%'})),
+        U.listeRes(cout,{verifier:true}),
+        el('button',{class:'b primaire',text:'Faire une séance',disabled:!ok,onclick:() => {
+          const r = window.Entrainement.pratiquer(h.id,id);
+          U.dire(r.ok ? d.nom + ' : +' + r.gain + ' XP.' : r.raison,r.ok ? 'bien' : 'alerte');
+          U.ouvrir('bat:' + bid,{});
+        }})));
     }
+    c.appendChild(grille);
   }
 
   /* ==================================================================
@@ -1263,8 +1317,8 @@
         pris.push({ pave: b, boite: b });
       }
     }
-    pris.push({ pave: { x1: CARTE.cx - 96, y1: CARTE.cy - 96, x2: CARTE.cx + 96, y2: CARTE.cy + 110 },
-                boite: { x1: CARTE.cx - 52, y1: CARTE.cy + 92, x2: CARTE.cx + 52, y2: CARTE.cy + 110 } });
+    pris.push({ pave: { x1: CARTE.cx - 126, y1: CARTE.cy - 126, x2: CARTE.cx + 126, y2: CARTE.cy + 144 },
+                boite: { x1: CARTE.cx - 56, y1: CARTE.cy + 126, x2: CARTE.cx + 56, y2: CARTE.cy + 144 } });
 
     const rayonOuvert = window.Port && window.Port.rayon ? Math.min(10, window.Port.rayon()) : 1;
     const source = t === 'large' ? (window.LARGE || [])
@@ -1534,8 +1588,8 @@
       transform: 'translate(' + C.cx + ',' + C.cy + ')',
       title: 'Le bourg\nToutes les distances se comptent d\'ici.' },
       sv('image', { class: 'mer-bourg-illustration', href: 'img/iles/ile-bourg-tour-sombre.png',
-        x: -91, y: -91, width: 182, height: 182, preserveAspectRatio: 'xMidYMid meet' }),
-      sv('text', { class: 'mer-bourg-nom', x: 0, y: 104, text: 'VOTRE ÎLE' })));
+        x: -125, y: -125, width: 250, height: 250, preserveAspectRatio: 'xMidYMid meet' }),
+      sv('text', { class: 'mer-bourg-nom', x: 0, y: 138, text: 'VOTRE ÎLE' })));
 
     const iles = sv('g', { class: 'mer-iles' });
     for (const p of planIles(t)) {
@@ -1558,7 +1612,9 @@
          détache un caillou du fond de mer sans avoir à le cerner d'un
          trait dur. */
       g.appendChild(sv('circle', { class: 'mer-ressac', r: ar(p.taille + 3.5) }));
-      const imageIle = window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(I) : I.image;
+      const imageIle = window.IleUtil && window.IleUtil.imageCartePour
+        ? window.IleUtil.imageCartePour(I)
+        : (window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(I) : I.image);
       if (imageIle) {
         const cote = p.taille * 2.55;
         g.appendChild(sv('image', { class: 'mer-illustration', href: imageIle,
@@ -2522,20 +2578,40 @@
     c.appendChild(U.section('Expérience générale', 'niveau ' + (h.niv || 1)));
     const niveauPct = Math.min(1, (h.xp || 0) / window.Etat.xpPourNiveau(h.niv || 1));
     c.appendChild(U.barre(niveauPct, 'grande vert', Math.round(niveauPct * 100) + '%', U.fmt(h.xp || 0) + ' / ' + U.fmt(window.Etat.xpPourNiveau(h.niv || 1))));
-    c.appendChild(U.section('Maîtrise des métiers'));
+    if (window.VieVillage) {
+      const vie = window.VieVillage.assurerHabitant(h), ville = window.VieVillage.resume();
+      c.appendChild(U.section('Vie au bourg', vie.humeur));
+      c.appendChild(el('div',{class:'moral-habitant'},
+        el('div',{class:'moral-score'},el('strong',{text:Math.round(vie.moral)}),el('span',{text:'/ 100'})),
+        el('div',{style:'flex:1'},el('div',{class:'tt',text:vie.plainte}),
+          el('div',{class:'eti',text:'Cible actuelle : ' + Math.round(vie.cible) + ' · harmonie du bourg : ' + ville.harmonie}))));
+      c.appendChild(el('div',{class:'indices-village'},
+        [['Propreté',ville.proprete],['Sécurité',ville.securite],['Loisirs',ville.loisir],['Logement',ville.logement],['Repas',ville.repas]].map(x =>
+          el('div',{class:'indice-village'},el('span',{text:x[0]}),el('b',{text:x[1]})) )));
+    }
+    c.appendChild(U.section('Maîtrise des métiers', 'niveaux sans limite'));
+    const metiers = el('div',{class:'progressions-verticales metiers'});
     for (const m of Object.keys(window.METIERS)) {
       const p = progressionIndividu(h, m), pct = p.pct;
-      c.appendChild(el('div', { class:'fiche-jauge' },
-        el('div', { class:'rangee entre' }, el('span', { text:window.METIERS[m].nom }), el('span', { class:'eti-or', text:'niveau ' + p.niveau })),
-        U.barre(pct, 'vert', '', U.fmt(p.dans) + ' / ' + U.fmt(p.pour))));
+      const meta = window.METIERS[m], src = window.Img && window.Img.metier(m);
+      metiers.appendChild(el('div',{class:'jauge-verticale',title:meta.nom + ' · ' + U.fmt(p.dans) + ' / ' + U.fmt(p.pour) + ' XP'},
+        el('b',{text:p.niveau}),
+        el('div',{class:'jauge-tube'},el('i',{style:'height:' + Math.round(pct * 100) + '%'})),
+        src ? el('img',{src,alt:'',class:'jauge-icone'}) : el('span',{class:'jauge-icone dessin'},U.ico(meta.ico,24)),
+        el('span',{text:meta.nom})));
     }
+    c.appendChild(metiers);
     c.appendChild(U.section('Attributs d’aventure', 'progression par pratique'));
-    for (const [id, nom] of [['force','Force'], ['dexterite','Dextérité'], ['endurance','Endurance'], ['intelligence','Intelligence']]) {
+    const attrs = el('div',{class:'progressions-verticales attributs'});
+    for (const [id, nom, image] of [['force','Force','dmg'], ['dexterite','Dextérité','aspd'], ['endurance','Endurance','hp'], ['intelligence','Intelligence','esh']]) {
       const p = window.Etat.progresAttributHabitant(h, id);
-      c.appendChild(el('div', { class:'fiche-attribut' },
-        el('div', { class:'rangee entre' }, el('span', { text:nom }), el('span', { class:'eti-or', text:'niveau ' + p.niveau })),
-        U.barre(p.pct, 'grande or', '', U.fmt(p.dans) + ' / ' + U.fmt(p.pour))));
+      attrs.appendChild(el('div',{class:'jauge-verticale aventure',title:nom + ' · ' + U.fmt(p.dans) + ' / ' + U.fmt(p.pour) + ' XP'},
+        el('b',{text:p.niveau}),
+        el('div',{class:'jauge-tube'},el('i',{style:'height:' + Math.round(p.pct * 100) + '%'})),
+        el('img',{src:'img/objets/aventure/stats/' + image + '.png',alt:'',class:'jauge-icone'}),
+        el('span',{text:nom})));
     }
+    c.appendChild(attrs);
     c.appendChild(el('button', { class:'b', style:'margin-top:14px', text:'Retour à la collection', onclick:() => ouvrirHabitants('collection') }));
   }
   function rendreRoles(c) {
@@ -3395,6 +3471,10 @@
       U.segments([{ v: 'sprite', n: 'Sprites' }, { v: 'bloc', n: 'Volumes' },
                   { v: 'aucun', n: 'Aucun' }], o.habitants || 'sprite',
         v => R().ecrire('habitants', v))));
+    c.appendChild(ligneReglage('Nom des bâtiments',
+      'Maintenez Alt pour lire le village, ou laissez les noms visibles en permanence.',
+      U.segments([{v:'alt',n:'Avec Alt'},{v:'toujours',n:'Toujours'},{v:'aucun',n:'Masqués'}],
+        o.nomsBatiments || 'alt', v => R().ecrire('nomsBatiments',v))));
     c.appendChild(ligneReglage('Densité de la foule',
       'Combien de silhouettes animent les terrasses, en plus de vos habitants.',
       U.segments([{ v: 0, n: 'Clairsemée' }, { v: 1, n: 'Dense' }, { v: 2, n: 'Foule' }], o.foule,
@@ -3418,7 +3498,7 @@
     c.appendChild(U.section('Raccourcis'));
     const t = el('table', { class: 'tabl' });
     for (const [k, v] of [['O', 'replier le dock'], ['C', 'carnet du chantier'], ['R', 'réserves'],
-      ['H', 'habitants'], ['B', 'le bourg'], ['G', 'réglages'], ['W', 'tout fermer'],
+      ['H', 'habitants'], ['B', 'le bourg'], ['G', 'réglages'], ['Alt', 'noms des bâtiments'], ['W', 'tout fermer'],
       ['Échap', 'fermer la fenêtre du dessus / annuler une pose']])
       t.appendChild(el('tr', {}, el('th', { text: k }), el('td', { text: v })));
     c.appendChild(el('div', { class: 'cadre creux' }, t));

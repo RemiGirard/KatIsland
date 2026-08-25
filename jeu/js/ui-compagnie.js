@@ -44,7 +44,7 @@
     return l;
   }
 
-  let choisi = '__general';
+  let choisi = '__general', atelierChoisi = null, trempeSlot = 0;
 
   function ouvrir(qui) {
     if (qui) choisi = qui;
@@ -56,6 +56,7 @@
       },
       onglets: [
         { id: 'equipement', nom: 'Équipement', rendu: rendreEquipement },
+        { id: 'atelier', nom: 'Renfort & trempe', rendu: rendreAtelier },
         { id: 'talents', nom: 'Talents', rendu: rendreTalents },
         { id: 'posture', nom: 'Postures', rendu: rendrePostures },
         { id: 'sac', nom: 'Le sac', rendu: rendreSac },
@@ -92,12 +93,15 @@
   function libelleObjet(it) {
     const b = GD().baseById(it.base);
     const nom = b ? (nomDe(b.cats) || nomDe(b.name) || it.base) : it.base;
-    return nom + '  ·  T' + it.tier;
+    const propre = it.nom || nom;
+    return propre + '  ·  T' + it.tier + ((it.amelioration || 0) ? '  ·  +' + it.amelioration : '');
   }
   function illustrationObjet(it, taille) {
     const b = it && GD().baseById(it.base);
-    if (!b || !b.image) return null;
-    return el('img', { src:b.image, alt:'', class:'objet-aventure-art',
+    const u = it && it.unique && GD().uniqueById ? GD().uniqueById(it.unique) : null;
+    const src = (u && u.image) || (b && b.image);
+    if (!src) return null;
+    return el('img', { src, alt:'', class:'objet-aventure-art', onerror:function(){ if (b && b.image && this.src.indexOf(b.image) < 0) this.src=b.image; },
       style:'width:' + (taille || 62) + 'px;height:' + (taille || 62) + 'px' });
   }
   function carteObjet(it, actions) {
@@ -111,12 +115,19 @@
       lignes.appendChild(el('span', { class: 'puce mini',
         text: def && GD().lineFmt ? GD().lineFmt(def, L.val) : (L.id + ' ' + Math.round(L.val)) }));
     }
-    const carte = el('div', { class: 'cadre', style: 'border-left:3px solid ' + col },
+    if (G().assurerObjet) G().assurerObjet(it);
+    const renfort = Math.max(0, Math.min(20, it.amelioration || 0));
+    const carte = el('div', { class: 'cadre objet-renfort renfort-' + renfort,
+      style: '--rarete:' + col + ';--renfort:' + renfort },
       el('div', { class: 'rangee entre' },
         el('div', { class:'rangee' }, illustrationObjet(it, 58),
           el('span', { class: 'tt', style: 'font-size:13px', text: libelleObjet(it) })),
-        el('span', { class: 'eti', style: 'color:' + col, text: R.name })),
+        el('span', { class: 'eti', style: 'color:' + col, text: R.name + (renfort ? '  +' + renfort : '') })),
       lignes);
+    if ((it.trempes || []).length) carte.appendChild(el('div',{class:'objet-trempes'},(it.trempes || []).map(t => {
+      const d = GD().temperById && GD().temperById(t.id);
+      return el('span',{text:(d ? d.nom : t.id) + ' · rang ' + (t.puissance || 1)});
+    })));
     if (actions) carte.appendChild(el('div', { class: 'rangee enroule', style: 'margin-top:8px' }, actions));
     return carte;
   }
@@ -176,6 +187,64 @@
         refus ? el('span', { class: 'note mauvais', text: refus }) : null,
       ]));
     }
+  }
+
+  function objetsPossedes() {
+    const g = G().gen(), out = [];
+    for (const it of (g.bag || [])) out.push({it,ou:'Sac'});
+    const porteurs = [{holder:g,nom:'Maître d’œuvre'}];
+    for (const m of membres().filter(x => x.id !== '__general')) {
+      const hs = G().heroState(m.id); if (hs) porteurs.push({holder:hs,nom:m.nom});
+    }
+    for (const p of porteurs) for (const slot in (p.holder.gear || {})) {
+      const it = p.holder.gear[slot]; if (it) out.push({it,ou:p.nom + ' · ' + (GD().GENERAL.slotName[slot] || slot)});
+    }
+    return out;
+  }
+
+  function rendreAtelier(c) {
+    const l = objetsPossedes();
+    c.appendChild(el('div',{class:'note',text:"Le renforcement possède vingt niveaux et augmente toute la puissance de la pièce. La trempe ajoute un effet réellement joué en combat ; son second emplacement s’ouvre à +8. Les matériaux décisifs viennent des gardiens et des expéditions."}));
+    if (!window.Etat.aBatiment('forge')) c.appendChild(el('div',{class:'appel alerte',text:'La forge doit être construite pour travailler ces pièces.'}));
+    if (!l.length) { c.appendChild(el('div',{class:'vide',text:'Aucune pièce à travailler. Descendez dans la Tour pour en trouver.'})); return; }
+    if (!atelierChoisi || !l.some(x => x.it === atelierChoisi)) atelierChoisi = l[0].it;
+    const bande = el('div',{class:'atelier-objets'});
+    for (const x of l) bande.appendChild(el('button',{class:'atelier-objet' + (x.it === atelierChoisi ? ' actif' : ''),title:x.ou + ' · ' + libelleObjet(x.it),onclick:()=>{
+      atelierChoisi=x.it; trempeSlot=0; U.ouvrir('compagnie',{});
+    }},illustrationObjet(x.it,52),el('span',{text:'+' + (x.it.amelioration || 0)})));
+    c.appendChild(bande);
+    const it = atelierChoisi; if (G().assurerObjet) G().assurerObjet(it);
+    c.appendChild(U.section('Pièce choisie'));
+    c.appendChild(carteObjet(it));
+    const max = GD().ITEM_UPGRADE_MAX || 20, niveau = it.amelioration || 0;
+    const cout = GD().itemUpgradeCost(it);
+    c.appendChild(el('div',{class:'atelier-renfort'},
+      el('div',{class:'rangee entre'},el('div',{},el('div',{class:'tt',text:'Renforcement ' + niveau + ' / ' + max}),
+        el('div',{class:'eti',text:'Puissance totale × ' + (GD().itemUpgradeMult(it)).toFixed(2).replace('.',',')})),
+        niveau >= max ? el('span',{class:'niv',text:'maximum'}) : null),
+      el('div',{class:'renfort-paliers'},Array.from({length:20},(_,i)=>el('i',{class:i<niveau?'on':''}))),
+      cout ? U.listeRes(cout,{verifier:true}) : null,
+      niveau < max ? el('button',{class:'b primaire',text:'Renforcer en +' + (niveau + 1),disabled:!window.Etat.aBatiment('forge') || !window.Etat.assez(cout),onclick:()=>{
+        const r=G().upgradeItem(it); U.dire(r.ok?'Pièce renforcée en +' + r.niveau + '.':r.raison,r.ok?'bien':'alerte'); U.ouvrir('compagnie',{});
+      }}) : null));
+
+    c.appendChild(U.section('Trempe', niveau >= 8 ? 'deux emplacements' : 'second emplacement à +8'));
+    const slots = el('div',{class:'trempe-slots'});
+    const maxSlots = niveau >= 8 ? 2 : 1;
+    for (let i=0;i<2;i++) {
+      const t=it.trempes[i], d=t && GD().temperById(t.id), ouvert=i<maxSlots;
+      slots.appendChild(el('button',{class:'trempe-slot' + (i===trempeSlot?' actif':'') + (!ouvert?' ferme':''),disabled:!ouvert,onclick:()=>{trempeSlot=i;U.ouvrir('compagnie',{});}},
+        d ? el('img',{src:d.image,alt:''}) : el('span',{class:'trempe-vide',text:ouvert?'+':'—'}),
+        el('b',{text:d?d.nom:(ouvert?'Emplacement libre':'À +8')})));
+    }
+    c.appendChild(slots);
+    const coutT = GD().temperCost(it,trempeSlot);
+    c.appendChild(U.listeRes(coutT,{verifier:true}));
+    const aff = el('div',{class:'trempe-grille'});
+    for (const d of GD().TEMPER_AFFIXES || []) aff.appendChild(el('button',{class:'trempe-affixe',disabled:!window.Etat.aBatiment('forge') || !window.Etat.assez(coutT),onclick:()=>{
+      const r=G().temperItem(it,d.id,trempeSlot);U.dire(r.ok?'Trempe fixée : '+r.nom+'.':r.raison,r.ok?'bien':'alerte');U.ouvrir('compagnie',{});
+    }},el('img',{src:d.image,alt:''}),el('span',{},el('b',{text:d.nom}),el('small',{text:d.desc}))));
+    c.appendChild(aff);
   }
 
   /* =================================================================
