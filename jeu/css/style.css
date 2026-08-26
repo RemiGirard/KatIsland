@@ -1924,12 +1924,13 @@ button[title],.b[title],a[title]{cursor:pointer}
 .fen.carte{width:min(1440px,97vw);max-width:min(1440px,97vw);height:min(920px,94vh)}
 .fen.carte .corps{min-height:0;overflow:auto}
 
-.mer-fond{stroke:rgba(76,52,28,.7);stroke-width:2}
+.mer-papier-base{fill:#e4d09d;stroke:rgba(76,52,28,.72);stroke-width:2}
+.mer-fond{stroke:rgba(76,52,28,.36);stroke-width:1;opacity:.52}
 .mer-fond-image{opacity:.82;pointer-events:none}
 .mer-progression{margin:9px 0 10px;padding:9px 11px;border:1px solid rgba(205,178,105,.22);border-radius:5px;background:rgba(7,20,28,.42)}
 .mer-progression .b{flex:none;margin-left:12px}
-.mer-rhumbs line{stroke:var(--bord);stroke-width:1}
-.mer-anneau{fill:none;stroke:var(--bord2);stroke-width:1;stroke-dasharray:2 7}
+.mer-rhumbs line{stroke:#70583b;stroke-width:.8;opacity:.18}
+.mer-anneau{fill:none;stroke:#70583b;stroke-width:.75;stroke-dasharray:2 9;opacity:.24}
 /* les textes de la carte portent un halo de mer : ils coupent le trait
    qui passe dessous au lieu de se battre avec lui */
 .mer-carte text{
@@ -1956,10 +1957,10 @@ button[title],.b[title],a[title]{cursor:pointer}
 
 .mer-ile{cursor:pointer}
 .mer-zone{fill:none;pointer-events:all}
-.mer-illustration{pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.55));transition:filter .16s,opacity .16s,transform .16s;transform-box:fill-box;transform-origin:center}
-.mer-ile:hover .mer-illustration{filter:drop-shadow(0 5px 6px rgba(0,0,0,.65)) brightness(1.12);transform:scale(1.04)}
-.mer-ile.prise .mer-illustration{filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)) saturate(.62) brightness(.78)}
-.mer-ile.choisie .mer-illustration{filter:drop-shadow(0 0 8px rgba(232,197,104,.8)) brightness(1.1)}
+.mer-illustration{pointer-events:none;filter:none;transition:opacity .16s,filter .16s;transform-box:fill-box;transform-origin:center}
+.mer-ile:hover .mer-illustration{filter:brightness(1.06);transform:none}
+.mer-ile.prise .mer-illustration{filter:sepia(.28) saturate(.58);opacity:.66}
+.mer-ile.choisie .mer-illustration{filter:saturate(1.12) contrast(1.04);opacity:1}
 .mer-terre{fill:var(--panneau2);stroke-width:1.4;transition:fill .14s}
 /* la teinte répond à « est-ce à ma portée ? » ; la taille, elle, est
    dessinée par le script et dit la force au pixel près */
@@ -1993,7 +1994,7 @@ button[title],.b[title],a[title]{cursor:pointer}
 /* LA HOULE. Elle ne dit rien, et c'est son rôle : une carte marine sans
    mer dessinée n'est qu'un diagramme. Très discrète — elle doit se voir
    sans jamais se lire. */
-.mer-vague{fill:none;stroke:var(--bord);stroke-width:1;opacity:.5}
+.mer-vague{fill:none;stroke:#6d563c;stroke-width:.8;opacity:.30}
 
 /* LE RESSAC, autour de chaque terre : un liseré clair qui la détache du
    fond sans avoir à la cerner d'un trait dur. */
@@ -2084,11 +2085,16 @@ button[title],.b[title],a[title]{cursor:pointer}
 .mer-modes{position:absolute;left:50%;top:10px;z-index:3;transform:translateX(-50%);display:flex;padding:3px;gap:2px;border:1px solid rgba(72,54,33,.25);border-radius:5px;background:rgba(244,234,202,.91);box-shadow:0 3px 12px rgba(69,50,29,.18);backdrop-filter:blur(5px)}
 .mer-mode{padding:7px 11px;border:0;border-radius:3px;background:transparent;color:#715b3e;font-family:inherit;font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
 .mer-mode:hover{background:rgba(91,70,42,.08)}.mer-mode.on{background:#576f50;color:#fff}
-.mer-bourg-illustration{pointer-events:none;filter:drop-shadow(0 5px 5px rgba(57,39,22,.38))}
+.mer-bourg-cote{fill:#c8b46e;fill-opacity:.66;stroke:#4e3925;stroke-width:1.5;stroke-linejoin:round}
+.mer-bourg-hachures,.mer-bourg-sentier,.mer-bourg-quai{fill:none;stroke:#59432d;stroke-linecap:round;stroke-linejoin:round}
+.mer-bourg-hachures{stroke-width:1;opacity:.65}.mer-bourg-sentier{stroke-width:1.2;stroke-dasharray:2 2;opacity:.72}.mer-bourg-quai{stroke-width:1.6}
+.mer-bourg-tour-carte circle,.mer-bourg-tour-carte rect{fill:#4a433b;stroke:#2e271f;stroke-width:1}
+.mer-bourg-tour-carte circle:nth-child(2){fill:#aa9868}.mer-bourg-tour-carte .mer-bourg-feu{fill:#a9432d;stroke:#6f271d;stroke-width:.6}
 .mer-bourg-nom{font-size:10px;letter-spacing:.16em;font-weight:800}
-.mer-illustration{filter:drop-shadow(0 3px 3px rgba(65,42,22,.32))}
-.mer-ile:hover .mer-illustration{filter:drop-shadow(0 5px 6px rgba(61,39,21,.42)) brightness(1.08)}
-.mer-ressac{opacity:.23}
+.carte-pleine .mer-illustration{filter:none}
+.carte-pleine .mer-ile:hover .mer-illustration{filter:brightness(1.06);transform:none}
+.carte-pleine .mer-ile.prise .mer-illustration{filter:sepia(.28) saturate(.58);opacity:.66}
+.carte-pleine .mer-ile.choisie .mer-illustration{filter:saturate(1.12) contrast(1.04);opacity:1}
 
 .carte-pleine .mer-fiche{height:100%;overflow-y:auto;scrollbar-width:thin;background:#f4f1e9}
 .mer-fiche-carte{min-height:100%;box-sizing:border-box;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;margin:0!important;padding:14px!important}

@@ -1206,9 +1206,6 @@
              r0: 46, pas: 0.775, lieuesMax: 310, anneau: 50,
              unite: 'LIEUES', libelle: 'Le Grand Large' },
   };
-  /* Un couloir laissé libre plein nord pour les libellés d'anneaux :
-     sans lui, une terre finirait tôt ou tard posée sur « 15 LIEUES ». */
-  const NORD = 56 * Math.PI / 180;
   const CRAN = 5 * Math.PI / 180;   // le pas de rotation quand deux terres se serrent
   const MARGE = 4;                  // le vide gardé autour de chaque emprise
 
@@ -1248,18 +1245,25 @@
      est-ce à ma portée ? */
   const teinteForce = f => f <= 3 ? 'douce' : (f <= 6 ? 'rude' : 'ardente');
 
-  /* UNE COURONNE PAR TIER. L'ancien plan étalait les dix îles sur quatre
-     anneaux concentriques : seules quelques terres tenaient dans la vue
-     et la lecture ressemblait à un radar. Une couronne légèrement
-     irrégulière donne dix destinations lisibles d'un seul regard. */
-  const TAILLE_LOCAL = 1.78;
+  /* UN ARCHIPEL PAR TIER, PAS UNE RONDE D'ÎLES. Chaque tier occupe une
+     bande de mer assez profonde pour que ses forces 1 à 10 s'éloignent
+     réellement du bourg. Les bandes ne se recouvrent pas : même la plus
+     facile du tier suivant reste au-delà de la plus dure du précédent. */
+  const ARCHIPEL_DEPART = 195;
+  const ARCHIPEL_LARGEUR = 410;
+  const ARCHIPEL_PAS = 700;
+  const ANGLE_OR = Math.PI * (3 - Math.sqrt(5));
+  const tailleIleLocale = f => tailleIle(f) * (1.55 + Math.max(1, Math.min(10, f)) * .055);
   let cerclesMemo = null;
   function cerclesLocal() {
     if (cerclesMemo) return cerclesMemo;
     const out = [];
-    const s = tailleIle(10) * TAILLE_LOCAL * 1.275 + 10;
-    for (let tier = 1; tier <= 10; tier++)
-      out.push({ r: 455 + (tier - 1) * 365, s, n: 10, tier });
+    const s = tailleIleLocale(10) * 1.18 + 12;
+    for (let tier = 1; tier <= 10; tier++) {
+      const interieur = ARCHIPEL_DEPART + (tier - 1) * ARCHIPEL_PAS;
+      out.push({ interieur, exterieur: interieur + ARCHIPEL_LARGEUR,
+        r: interieur + ARCHIPEL_LARGEUR, s, n: 10, tier });
+    }
     cerclesMemo = out;
     return out;
   }
@@ -1336,8 +1340,8 @@
         pris.push({ pave: b, boite: b });
       }
     }
-    pris.push({ pave: { x1: CARTE.cx - 126, y1: CARTE.cy - 126, x2: CARTE.cx + 126, y2: CARTE.cy + 144 },
-                boite: { x1: CARTE.cx - 56, y1: CARTE.cy + 126, x2: CARTE.cx + 56, y2: CARTE.cy + 144 } });
+    pris.push({ pave: { x1: CARTE.cx - 88, y1: CARTE.cy - 78, x2: CARTE.cx + 88, y2: CARTE.cy + 88 },
+                boite: { x1: CARTE.cx - 56, y1: CARTE.cy + 70, x2: CARTE.cx + 56, y2: CARTE.cy + 88 } });
 
     const rayonOuvert = window.Port && window.Port.rayon ? Math.min(10, window.Port.rayon()) : 1;
     const source = t === 'large' ? (window.LARGE || [])
@@ -1351,20 +1355,23 @@
       a0: ile.secteur != null ? ile.secteur : 0,
       fixe: ile.secteur != null,
     }));
-    /* Dix caps réguliers par tier, avec une respiration radiale alternée.
-       La rotation dorée empêche les tiers successifs de former des
-       rayons parfaits tout en gardant la carte strictement stable. */
+    /* La force décide d'abord de la DISTANCE, puis de la taille. Un petit
+       bruit radial donne une côte naturelle mais reste bien inférieur à
+       l'écart entre deux forces : une force 7 ne peut donc jamais se
+       retrouver plus près qu'une force 6. Les angles suivent la spirale
+       d'or, enrichie d'un léger écart propre à l'île : pas de roue, pas
+       d'alignements en rayons, et une répartition stable entre parties. */
     if (t === 'local') {
       for (const p of l) {
         const ti = p.ile.tier || 1;
         const f = Math.max(1, Math.min(10, p.ile.force || 1));
         const c = cerclesLocal()[ti - 1];
         const i = f - 1;
-        const off = ((ti - 1) * 0.61803398875) % 1;
-        p.r = c.r + (i % 2 ? 34 : -34);
-        p.taille = tailleIle(f) * TAILLE_LOCAL;
-        p.a0 = -Math.PI / 2 + NORD / 2
-          + ((i + off) / 10) * (Math.PI * 2 - NORD);
+        const radial = (hachage(p.ile.id + ':distance') - .5) * 24;
+        p.r = c.interieur + (i / 9) * (c.exterieur - c.interieur) + radial;
+        p.taille = tailleIleLocale(f);
+        p.a0 = -Math.PI / 2 + ((ti - 1) * 10 + i) * ANGLE_OR
+          + (hachage(p.ile.id + ':cap') - .5) * .52;
       }
     }
     for (const p of l) {
@@ -1507,6 +1514,8 @@
     motif.appendChild(sv('image', { href: 'img/iles/fond-carte-parchemin-tuile.png',
       x: 0, y: 0, width: tuile, height: tuile, preserveAspectRatio: 'none' }));
     defs.appendChild(motif); carte.appendChild(defs);
+    carte.appendChild(sv('rect', { class: 'mer-papier-base', x: 0.5, y: 0.5,
+      width: C.L - 1, height: C.H - 1, rx: 5 }));
     carte.appendChild(sv('rect', { class: 'mer-fond', x: 0.5, y: 0.5,
       width: C.L - 1, height: C.H - 1, rx: 5,
       fill: 'url(#papier-mer-' + t + ')' }));
@@ -1602,13 +1611,26 @@
       x2: ar(cap.x), y2: ar(cap.y) }));
     carte.appendChild(routes);
 
-    /* LE BOURG, au centre : la même Tour sombre que sur l'île 3D. */
+    /* LE BOURG, au centre. La Tour reste reconnaissable, mais sous la
+       forme d'un symbole d'encre vu du dessus : une carte ne contient
+       jamais la maquette 3D de ce qu'elle représente. */
     carte.appendChild(sv('g', { class: 'mer-bourg',
       transform: 'translate(' + C.cx + ',' + C.cy + ')',
       title: 'Le bourg\nToutes les distances se comptent d\'ici.' },
-      sv('image', { class: 'mer-bourg-illustration', href: 'img/iles/ile-bourg-tour-sombre.png',
-        x: -125, y: -125, width: 250, height: 250, preserveAspectRatio: 'xMidYMid meet' }),
-      sv('text', { class: 'mer-bourg-nom', x: 0, y: 138, text: 'VOTRE ÎLE' })));
+      sv('path', { class:'mer-bourg-cote',
+        d:'M-72,-19 C-65,-47 -33,-62 -7,-53 C16,-66 52,-50 61,-25 C82,-4 67,30 43,39 C25,63 -14,61 -31,47 C-61,46 -82,14 -72,-19 Z' }),
+      sv('path', { class:'mer-bourg-hachures',
+        d:'M-57,-28 l12,5 M-64,-8 l14,4 M42,-37 l10,8 M49,26 l10,-4 M-32,42 l8,-9 M17,48 l5,-10' }),
+      sv('path', { class:'mer-bourg-sentier', d:'M0,16 C11,25 21,35 34,47' }),
+      sv('g', { class:'mer-bourg-tour-carte' },
+        sv('circle', { r:15 }), sv('circle', { r:8 }),
+        sv('rect', { x:-4,y:-21,width:8,height:7 }),
+        sv('rect', { x:-4,y:14,width:8,height:7 }),
+        sv('rect', { x:-21,y:-4,width:7,height:8 }),
+        sv('rect', { x:14,y:-4,width:7,height:8 }),
+        sv('circle', { class:'mer-bourg-feu', r:2.4 })),
+      sv('path', { class:'mer-bourg-quai', d:'M33,46 l16,10 M37,40 l17,11 M48,56 l7,-9' }),
+      sv('text', { class: 'mer-bourg-nom', x: 0, y: 75, text: 'VOTRE ÎLE' })));
 
     const iles = sv('g', { class: 'mer-iles' });
     for (const p of planIles(t)) {
@@ -1627,10 +1649,6 @@
       g.appendChild(sv('circle', { class: 'mer-zone', r: ar(Math.max(17, p.taille + 9)) }));
       if (choisi && choisi.id === I.id)
         g.appendChild(sv('circle', { class: 'mer-halo', r: ar(p.taille + 7) }));
-      /* LE RESSAC : un liseré clair autour de chaque terre. C'est ce qui
-         détache un caillou du fond de mer sans avoir à le cerner d'un
-         trait dur. */
-      g.appendChild(sv('circle', { class: 'mer-ressac', r: ar(p.taille + 3.5) }));
       const imageIle = window.IleUtil && window.IleUtil.imageCartePour
         ? window.IleUtil.imageCartePour(I)
         : (window.IleUtil && window.IleUtil.imagePour ? window.IleUtil.imagePour(I) : I.image);
