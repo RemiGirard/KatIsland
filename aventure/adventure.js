@@ -2091,12 +2091,15 @@
       const kmult = isBoss ? 1 : (kind.mult || 1);
       const diff = { hp: diff0.hp * kmult, dmg: diff0.dmg * kmult, tier: diff0.tier, biome: diff0.biome };
       const party = [];
-      const nP = 1 + g.party.length;
-      // plus de `stance: 'commandant'` en dur : `mkHero` lit `heroStance`, qui
-      // sait désormais répondre pour le Général (correctif 3).
-      party.push(mkHero('__general', null, { lvl: g.lvl, gear: g.gear, stats: g.stats }, 0, nP));
-      let i = 1;
-      for (const hid of g.party) {
+      /* La descente fige l'équipe au moment où le joueur appuie sur
+         « Descendre ». On ne relit pas une ancienne compagnie de héros et on
+         n'ajoute surtout plus le Général anonyme : chaque silhouette dans la
+         salle correspond à un habitant choisi au bourg. */
+      const idsPartants = (g.descent && Array.isArray(g.descent.party))
+        ? g.descent.party.slice() : g.party.slice();
+      const nP = idsPartants.length;
+      let i = 0;
+      for (const hid of idsPartants) {
         const def = AD().heroById(hid);
         const hs = GameState.heroState(hid);
         if (!def || !hs) continue;
@@ -2263,7 +2266,7 @@
       if (salle === 'chasse') {
         arena.floats.push({ x: cx(), y: cyc() - CELL, txt: ' ABATTEZ le trophée avant l\'escalier !', t: -0.4, col: '#ffe9a8' });
       }
-      arena.sel[party[0].id] = true;
+      if (party[0]) arena.sel[party[0].id] = true;
       onEnd = opts.onEnd || null;
       bgCanvas = null; // force bg rebuild
       initParticles();
@@ -2541,6 +2544,10 @@
         return;
       }
       p.hp -= n;
+      /* L'endurance n'augmente que si le coup traverse réellement esquive,
+         absorption, bouclier d'énergie et armure pour enlever des PV. */
+      if (window.GameState && GameState.enregistrerCoupRecu)
+        GameState.enregistrerCoupRecu(p.id, n);
       p.hitT = 0.14;
       burst(p.x, p.y - CELL * 0.3, elemCol || '#ff9a8a', 5);
       arena.floats.push({ x: p.x, y: p.y - CELL * 0.5, txt: '-' + Math.round(n), t: 0, col: elemCol || '#ffb0a0' });
@@ -2736,6 +2743,8 @@
         const avant = cible.hp;
         hurtFoe(cible, dose, (srcU && srcU.st && srcU.st.armorPen) || 0, ab.status || null);
         r.d = Math.max(0, avant - cible.hp);
+        if (r.d > 0 && srcU && srcU.side === 'party' && window.GameState && GameState.enregistrerPratiqueArme)
+          GameState.enregistrerPratiqueArme(srcU.id, r.d);
         // LE VOL DE VIE d'un pouvoir passe par l'entonnoir comme tout soin.
         if (ab.vamp && srcU) r.h += soigne(srcU, r.d * ab.vamp, srcU);
       } else if (ab.status) applyStatus(cible, ab.status, null);
@@ -4043,9 +4052,17 @@
               // ---- POINT D'ACCROCHE A : la compagnie porte un coup ----
               const coup = procsCoup(e, tgt, dmg);
               const pen = (e.st.armorPen || 0) + coup.pen;
+              const avant = tgt.hp;
               hurtFoe(tgt, coup.dmg, pen);
+              let pratiques = Math.max(0, avant - tgt.hp);
               // `double` : le coup part DEUX fois — et jamais sur un cadavre.
-              if (coup.encore && !tgt.dead) hurtFoe(tgt, coup.dmg, pen);
+              if (coup.encore && !tgt.dead) {
+                const avant2 = tgt.hp;
+                hurtFoe(tgt, coup.dmg, pen);
+                pratiques += Math.max(0, avant2 - tgt.hp);
+              }
+              if (pratiques > 0 && window.GameState && GameState.enregistrerPratiqueArme)
+                GameState.enregistrerPratiqueArme(e.id, pratiques);
               // le VOL DE VIE passe par l'entonnoir comme tous les soins
               if (e.st.lifesteal && !e.dead) soigne(e, coup.dmg * e.st.lifesteal, e);
             }
@@ -5582,7 +5599,7 @@
         butin = g.report || null;
         why = GameState.canStartDescent();
         floor = g.tally.lastCheckpoint || 1;
-        party = g.party.length + 1;
+        party = g.party.length;
       } catch (e) { }
       if (butin) return { mode: 'butin', butin, ok: true, floor, party, why: null };
       return { mode: why ? 'bloque' : 'partir', why, floor, party, ok: !why };

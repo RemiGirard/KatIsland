@@ -31,6 +31,14 @@
     if (!a.gardes) a.gardes = {};
     if (!a.gardiens) a.gardiens = {};
     if (!a.equipe) a.equipe = [];
+    if (!Array.isArray(a.equipes)) a.equipes = [];
+    /* Migration douce : l'ancienne équipe unique devient le premier groupe
+       enregistré. Une liste volontairement vidée ne se recrée pas ensuite. */
+    if (!a.equipesInit) {
+      if (a.equipe.length) a.equipes.push({ id:'equipe_1', nom:'Équipe 1', membres:a.equipe.slice(0, 4) });
+      a.equipesInit = 1;
+    }
+    if (a.equipeActive == null) a.equipeActive = a.equipes[0] ? a.equipes[0].id : null;
     if (!a.blesses) a.blesses = {};
     if (!a.tombes) a.tombes = [];
     return a;
@@ -249,17 +257,72 @@
     return true;
   }
   function placesEquipee() {
-    /* Le terrain d'entraînement et la caserne décident du nombre de
-       pattes qu'on peut emmener : on ne descend pas à vingt. */
-    let n = 2;
-    n += window.Etat.nivDeType('entrainement') > 0 ? 1 : 0;
-    n += Math.floor(window.Etat.nivDeType('caserne') / 2);
-    n += Math.floor(window.Etat.nivDeType('descente') / 2);
-    n += acq().equipee || 0;                 // « La grande équipée »
-    return Math.max(1, Math.min(8, n));
+    return 4;
+  }
+  function equipes() {
+    const t = T();
+    for (const eq of t.equipes) {
+      if (!Array.isArray(eq.membres)) eq.membres = [];
+      eq.membres = eq.membres.filter((id, i, a) => !!window.Etat.habitant(id) && a.indexOf(id) === i).slice(0, 4);
+    }
+    return t.equipes;
+  }
+  function equipeParId(id) { return equipes().find(eq => eq.id === id) || null; }
+  function enregistrerEquipe(id, nom, membres) {
+    if (window.GameState && window.GameState.gen().descent)
+      return { ok:false, pourquoi:'La compagnie est déjà sous terre.' };
+    const t = T(), propres = [];
+    for (const hid of (membres || [])) {
+      const h = window.Etat.habitant(hid);
+      if (!h || propres.indexOf(hid) >= 0 || propres.length >= 4) continue;
+      if (!disponible(h)) continue;
+      propres.push(hid);
+    }
+    if (!propres.length) return { ok:false, pourquoi:'Choisissez au moins un habitant.' };
+    let eq = id && equipeParId(id);
+    if (!eq) {
+      const n = t.equipes.length + 1;
+      eq = { id:'equipe_' + Date.now().toString(36) + '_' + n, nom:'Équipe ' + n, membres:[] };
+      t.equipes.push(eq);
+    }
+    eq.nom = String(nom || eq.nom || 'Équipe').trim().slice(0, 32) || 'Équipe';
+    eq.membres = propres;
+    if (t.equipeActive === eq.id) {
+      t.equipe=propres.slice();
+      if (window.GameState && window.GameState.syncVillageParty) window.GameState.syncVillageParty();
+    }
+    window.Etat.prevenir('equipesTour', { id:eq.id });
+    return { ok:true, equipe:eq };
+  }
+  function supprimerEquipe(id) {
+    if (window.GameState && window.GameState.gen().descent) return false;
+    const t=T(), i=t.equipes.findIndex(eq => eq.id === id); if (i < 0) return false;
+    t.equipes.splice(i,1);
+    if (t.equipeActive === id) { t.equipeActive=null; t.equipe=[]; }
+    if (window.GameState && window.GameState.syncVillageParty) window.GameState.syncVillageParty();
+    window.Etat.prevenir('equipesTour', { id, supprime:true });
+    return true;
+  }
+  function selectionnerEquipe(id) {
+    if (window.GameState && window.GameState.gen().descent)
+      return { ok:false, pourquoi:'Une descente est déjà en cours.' };
+    const t=T(), eq=equipeParId(id);
+    if (!eq || !eq.membres.length) return { ok:false, pourquoi:'Cette équipe est vide.' };
+    t.equipeActive=id;
+    t.equipe=eq.membres.filter(hid => disponible(window.Etat.habitant(hid))).slice(0,4);
+    if (!t.equipe.length) return { ok:false, pourquoi:'Aucun membre de cette équipe n’est disponible.' };
+    if (window.GameState && window.GameState.syncVillageParty) window.GameState.syncVillageParty();
+    window.Etat.prevenir('equipee', { equipe:id, membres:t.equipe.slice() });
+    return { ok:true, equipe:eq };
+  }
+  function memoriserEquipeActive() {
+    const eq=equipeParId(T().equipeActive);
+    if (eq) eq.membres=T().equipe.slice(0,4);
   }
   function dansEquipee(hid) { return T().equipe.indexOf(hid) >= 0; }
   function emmener(hid) {
+    if (window.GameState && window.GameState.gen().descent)
+      return { ok:false, pourquoi:'La compagnie est déjà sous terre. Il faut remonter avant de la modifier.' };
     const h = window.Etat.habitant(hid);
     if (!h) return { ok: false, pourquoi: 'Cet habitant n\'existe plus.' };
     if (dansEquipee(hid)) return { ok: false, pourquoi: 'Il est déjà de l\'équipée.' };
@@ -268,16 +331,21 @@
     if (T().blesses[hid]) return { ok: false, pourquoi: h.nom + ' est en convalescence.' };
     if (T().equipe.length >= placesEquipee())
       return { ok: false, pourquoi: 'L\'équipée est au complet (' + placesEquipee() + ').' };
-    /* On descend en quittant son poste : c'est le vrai coût. */
-    window.Etat.libererHabitant(hid);
     T().equipe.push(hid);
+    memoriserEquipeActive();
+    if (window.GameState && window.GameState.syncVillageParty) window.GameState.syncVillageParty();
     window.Etat.prevenir('equipee', { hid, dedans: true });
     return { ok: true };
   }
-  function laisser(hid) {
+  function laisser(hid, force) {
+    if (!force && window.GameState && window.GameState.gen().descent) return false;
     const i = T().equipe.indexOf(hid);
     if (i < 0) return false;
     T().equipe.splice(i, 1);
+    /* Une blessure retire temporairement l'habitant de la compagnie en cours,
+       pas de la composition enregistrée que le joueur a créée. */
+    if (!force) memoriserEquipeActive();
+    if (window.GameState && window.GameState.syncVillageParty) window.GameState.syncVillageParty();
     window.Etat.prevenir('equipee', { hid, dedans: false });
     return true;
   }
@@ -289,6 +357,7 @@
   function nettoyer() {
     const t = T();
     t.equipe = t.equipe.filter(id => !!window.Etat.habitant(id));
+    equipes();
     for (const id in t.blesses) if (!window.Etat.habitant(id)) delete t.blesses[id];
   }
 
@@ -297,7 +366,7 @@
     const h = window.Etat.habitant(hid); if (!h) return null;
     T().blesses[hid] = { jusqua: E().tJeu + duree, depuis: E().tJeu };
     if (h) window.Etat.gagnerAttribut(h, 'endurance', 1);
-    laisser(hid);
+    laisser(hid, true);
     window.Etat.libererHabitant(hid);
     window.Etat.journal(h.nom + ' remonte mal en point : convalescence.', 'alerte');
     window.Etat.prevenir('blesse', { hid, duree });
@@ -336,7 +405,7 @@
      vienne le chercher. Le bourg a le temps de décider. */
   function tomber(hid, ou) {
     const h = window.Etat.habitant(hid); if (!h) return null;
-    laisser(hid);
+    laisser(hid, true);
     window.Etat.libererHabitant(hid);
     /* LA VIE DÉPENSÉE. Elle part AVANT qu'on décide du sort du corps :
        c'est elle qui départage un chat qu'on peut aller chercher d'un
@@ -434,6 +503,7 @@
     gardienDe, gardienOuvert, gardiensOuverts, ouvrirGardien,
     coutRelance, relancerGardien, chanceGardien, forceEquipee,
     equipee, placesEquipee, dansEquipee, emmener, laisser, disponible,
+    equipes, equipeParId, enregistrerEquipe, supprimerEquipe, selectionnerEquipe,
     blesser, convalescence, tomber, ramener, abandonner, coutRite,
     get tombes() { return T().tombes; },
     get blesses() { return T().blesses; },

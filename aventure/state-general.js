@@ -189,6 +189,181 @@
   GameState.heroState = function (id) {
     return GameState.gen().roster.find(h => h.id === id) || null;
   };
+
+  /* ------------------------------------------------------------------
+     LES HÉROS SONT LES HABITANTS DU BOURG
+
+     Deux listes vivaient jusque-là en parallèle : `Tour.equipe` contenait
+     les habitants choisis par le joueur, tandis que `g.party` contenait les
+     anciens héros trouvés dans le donjon. L'arène lisait la seconde et
+     engendrait en plus un Général anonyme. La préparation affichée et le
+     combat réel ne racontaient donc pas la même chose.
+
+     Cette passerelle fait de la sélection du bourg l'unique vérité. Une fiche
+     d'aventure conserve équipement, talents et posture, mais son identité et
+     ses caractéristiques viennent toujours de l'habitant vivant.
+     ------------------------------------------------------------------ */
+  const GEN_CATALOGUE_HERO = GD.heroById.bind(GD);
+  /* AUCUNE CLASSE À CHOISIR. Le profil de combat est une conséquence de
+     l'arme tenue, et change aussitôt qu'on en change. `cls` reste un détail
+     interne nécessaire aux animations, pouvoirs et arbres hérités. */
+  const GEN_STYLES_ARMES = {
+    epee:      { nom:'Épée',       cls:'guerrier',   base:'lancier',   tint:'#b85d45', hp:118, dmg:12, aspd:1.02, mspd:72, armor:10, range:0,   attr:'force' },
+    hache:     { nom:'Hache',      cls:'guerrier',   base:'lancier',   tint:'#a9503d', hp:120, dmg:14, aspd:0.88, mspd:68, armor:11, range:0,   attr:'force' },
+    lance:     { nom:'Lance',      cls:'garde',      base:'lancier',   tint:'#557fa2', hp:128, dmg:11, aspd:0.96, mspd:68, armor:14, range:0,   attr:'force' },
+    masse:     { nom:'Masse',      cls:'garde',      base:'targier',   tint:'#746a58', hp:136, dmg:12, aspd:0.82, mspd:62, armor:16, range:0,   attr:'force' },
+    dagues:    { nom:'Dagues',     cls:'eclaireur',  base:'eclaireur', tint:'#b49545', hp:96,  dmg:9,  aspd:1.34, mspd:94, armor:6,  range:0,   attr:'dexterite' },
+    arc:       { nom:'Arc',        cls:'tireur',     base:'fronde',    tint:'#5c9b69', hp:90,  dmg:12, aspd:1.10, mspd:78, armor:5,  range:160, attr:'dexterite' },
+    arbalete:  { nom:'Arbalète',   cls:'tireur',     base:'fronde',    tint:'#497b65', hp:94,  dmg:15, aspd:0.78, mspd:70, armor:7,  range:175, attr:'dexterite' },
+    baton:     { nom:'Bâton',      cls:'mage',       base:'mage',      tint:'#8062b3', hp:84,  dmg:16, aspd:0.78, mspd:64, armor:3,  range:175, attr:'intelligence' },
+    sceptre:   { nom:'Sceptre',    cls:'soigneur',   base:'soigneur',  tint:'#63a979', hp:94,  dmg:11, aspd:0.90, mspd:68, armor:6,  range:145, attr:'intelligence' },
+    bombe:     { nom:'Explosifs',  cls:'artificier', base:'sapeur',    tint:'#c18138', hp:102, dmg:15, aspd:0.76, mspd:68, armor:8,  range:135, attr:'intelligence' },
+  };
+  const GEN_STYLE_PAYSAN = { nom:'Paysan', cls:'guerrier', base:'lancier', tint:'#8b8378', hp:88, dmg:5, aspd:0.88, mspd:66, armor:2, range:0, attr:'force' };
+  function genHabitant(id) {
+    return window.Etat && window.Etat.habitant ? window.Etat.habitant(id) : null;
+  }
+  function genNiveauCarac(h, id) {
+    if (!h || !window.Etat || !window.Etat.progresAttributHabitant) return 1;
+    return window.Etat.progresAttributHabitant(h, id).niveau || 1;
+  }
+  function genFamilleArme(hs) {
+    const it = hs && hs.gear && hs.gear.arme;
+    const b = it && GD.baseById(it.base);
+    return (b && b.fam) || null;
+  }
+  function genProgressionArme(h, fam) {
+    if (!h) return { niveau:1, dans:0, pour:20, pct:0 };
+    if (!h.armeXp || typeof h.armeXp !== 'object') h.armeXp = {};
+    const xp = fam ? (h.armeXp[fam] || 0) : 0;
+    return window.Etat && window.Etat.progressionInfinie
+      ? window.Etat.progressionInfinie(xp, 20, 1.28)
+      : { niveau:1, dans:xp, pour:20, pct:Math.min(1, xp / 20) };
+  }
+  function genChangerStyle(hs, ancienFam) {
+    if (!hs || !hs.village) return;
+    if (!hs.talentsArmes || typeof hs.talentsArmes !== 'object') hs.talentsArmes = {};
+    if (!hs.stancesArmes || typeof hs.stancesArmes !== 'object') hs.stancesArmes = {};
+    const avant = ancienFam || hs.styleArme || 'paysan';
+    hs.talentsArmes[avant] = Array.isArray(hs.talents) ? hs.talents.slice() : [];
+    hs.stancesArmes[avant] = hs.stance || null;
+    const apres = genFamilleArme(hs) || 'paysan';
+    hs.styleArme = apres;
+    hs.talents = Array.isArray(hs.talentsArmes[apres]) ? hs.talentsArmes[apres].slice() : [];
+    hs.stance = hs.stancesArmes[apres] || null;
+  }
+  function genFicheVillage(id) {
+    const h = genHabitant(id); if (!h) return null;
+    /* Ne jamais rappeler `GameState.gen()` depuis le résolveur : `gen()`
+       nettoie lui-même les arbres en demandant `heroById`, ce qui formerait
+       une récursion. L'état brut suffit ici. */
+    const brut = GameState.state && GameState.state.general;
+    const hs = brut && Array.isArray(brut.roster) && brut.roster.find(x => x.id === id);
+    const fam = genFamilleArme(hs);
+    const R = (fam && GEN_STYLES_ARMES[fam]) || GEN_STYLE_PAYSAN;
+    const cls = R.cls;
+    const force = genNiveauCarac(h, 'force'), dex = genNiveauCarac(h, 'dexterite');
+    const end = genNiveauCarac(h, 'endurance'), intel = genNiveauCarac(h, 'intelligence');
+    const actif = R.attr === 'force' ? force : R.attr === 'dexterite' ? dex : intel;
+    const maitrise = genProgressionArme(h, fam).niveau;
+    const rang = Math.max(1, h.niv || 1);
+    const pvTrait = window.HAB && window.HAB.produit ? window.HAB.produit(h, 'pv') : 1;
+    const dmgTrait = window.HAB && window.HAB.produit ? window.HAB.produit(h, 'degats') : 1;
+    return {
+      id, village:true, habitantId:id, name:{cats:h.nom,birds:h.nom}, cls,
+      style:R.nom, weaponFam:fam, sansArme:!fam,
+      base:R.base, tint:R.tint, icon:'', portrait:h.portrait || null,
+      stats:{
+        hp: Math.round(R.hp * (1 + (end - 1) * 0.065 + (rang - 1) * 0.018) * pvTrait),
+        dmg: Math.round(R.dmg * (1 + (actif - 1) * 0.045 + (maitrise - 1) * 0.065 + (rang - 1) * 0.012) * dmgTrait * 10) / 10,
+        aspd: Math.round(R.aspd * (1 + (dex - 1) * 0.018) * 100) / 100,
+        mspd: Math.round(R.mspd * (1 + (dex - 1) * 0.012)),
+        armor: Math.round((R.armor + (end - 1) * 1.4) * 10) / 10,
+        range:R.range,
+      },
+      perk:null, talent:null,
+    };
+  }
+  GameState.heroDefinition = function (id) {
+    return GEN_CATALOGUE_HERO(id) || genFicheVillage(id);
+  };
+  /* Tous les anciens appelants passent par `GD.heroById`. On leur donne le
+     même résolveur plutôt que d'entretenir deux chemins de lecture. */
+  GD.heroById = id => GameState.heroDefinition(id);
+
+  GameState.syncVillageParty = function () {
+    const g = GameState.gen();
+    const habitants = (window.Etat && window.Etat.E && window.Etat.E.habitants) || [];
+    const idsVivants = habitants.map(h => h.id);
+    const selection = (window.Etat && window.Etat.E && window.Etat.E.aventure
+      && window.Etat.E.aventure.equipe) || [];
+    const avant = new Map((g.roster || []).map(h => [h.id, h]));
+    const suivant = [];
+    for (const h of habitants) {
+      const hs = avant.get(h.id) || { id:h.id, gear:{}, talents:[], stance:null, hurtUntil:0, xp:0 };
+      hs.village = true; hs.habitantId = h.id;
+      if (!hs.gear) hs.gear = {};
+      if (!Array.isArray(hs.talents)) hs.talents = [];
+      if (!hs.talentsArmes || typeof hs.talentsArmes !== 'object') hs.talentsArmes = {};
+      if (!hs.stancesArmes || typeof hs.stancesArmes !== 'object') hs.stancesArmes = {};
+      const style = genFamilleArme(hs) || 'paysan';
+      if (!hs.styleArme) {
+        hs.styleArme = style;
+        hs.talentsArmes[style] = hs.talents.slice();
+        hs.stancesArmes[style] = hs.stance || null;
+      }
+      if (hs.styleArme !== style) genChangerStyle(hs, hs.styleArme);
+      hs.lvl = Math.max(1, h.niv || 1);
+      suivant.push(hs);
+    }
+    /* Les anciens compagnons de catalogue disparaissent du roster, mais leurs
+       objets ne sont pas détruits : ils retournent une seule fois dans le sac. */
+    for (const ancien of (g.roster || [])) if (idsVivants.indexOf(ancien.id) < 0) {
+      for (const slot in (ancien.gear || {})) {
+        const it = ancien.gear[slot];
+        if (it && g.bag.indexOf(it) < 0) g.bag.push(it);
+      }
+    }
+    g.roster = suivant;
+    g.party = selection.filter((id, i, a) => idsVivants.indexOf(id) >= 0 && a.indexOf(id) === i);
+    return g.party.slice();
+  };
+  GameState.styleCombat = function (id) {
+    const hs = GameState.heroState(id), h = genHabitant(id);
+    const fam = genFamilleArme(hs), R = (fam && GEN_STYLES_ARMES[fam]) || GEN_STYLE_PAYSAN;
+    return Object.assign({ id:fam || 'paysan', equipe:!!fam }, R,
+      { progression:genProgressionArme(h, fam) });
+  };
+  GameState.maitrisesHabitant = function (id) {
+    const h = genHabitant(id); if (!h) return [];
+    if (!h.armeXp || typeof h.armeXp !== 'object') h.armeXp = {};
+    const courant = GameState.styleCombat(id).id;
+    return Object.keys(GEN_STYLES_ARMES).map(fam => Object.assign({ id:fam }, GEN_STYLES_ARMES[fam],
+      { progression:genProgressionArme(h, fam), xp:h.armeXp[fam] || 0 }))
+      .filter(x => x.xp > 0 || courant === x.id);
+  };
+  GameState.enregistrerPratiqueArme = function (id, degats) {
+    const brut = GameState.state && GameState.state.general;
+    const hs = brut && Array.isArray(brut.roster) && brut.roster.find(x => x.id === id);
+    const h = genHabitant(id), fam = genFamilleArme(hs);
+    if (!hs || !hs.village || !h || !fam || !(degats > 0)) return;
+    if (!h.armeXp || typeof h.armeXp !== 'object') h.armeXp = {};
+    h.armeXp[fam] = (h.armeXp[fam] || 0) + Math.max(0.08, Math.min(1.5, degats * 0.035));
+    const voie = GD.voieDe((hs.gear || {}).arme);
+    const attr = voie === 'distance' ? 'dexterite' : voie === 'magie' ? 'intelligence' : 'force';
+    if (window.Etat.assurerProgression) window.Etat.assurerProgression(h);
+    if (!h.caracXp || typeof h.caracXp !== 'object') h.caracXp = {};
+    h.caracXp[attr] = (h.caracXp[attr] || 0) + Math.max(0.03, Math.min(0.5, degats * 0.012));
+  };
+  GameState.enregistrerCoupRecu = function (id, degats) {
+    const brut = GameState.state && GameState.state.general;
+    const hs = brut && Array.isArray(brut.roster) && brut.roster.find(x => x.id === id);
+    const h = genHabitant(id);
+    if (!hs || !hs.village || !h || !(degats > 0)) return;
+    if (window.Etat.assurerProgression) window.Etat.assurerProgression(h);
+    if (!h.caracXp || typeof h.caracXp !== 'object') h.caracXp = {};
+    h.caracXp.endurance = (h.caracXp.endurance || 0) + Math.max(0.08, Math.min(1.25, degats * 0.04));
+  };
   GameState.heroHurt = function (id) {
     const h = GameState.heroState(id);
     return !!(h && h.hurtUntil && h.hurtUntil > Date.now());
@@ -277,7 +452,10 @@
     //    niveau. L'arrondi au dixième est celui de l'arène : ne pas y toucher,
     //    sinon les chiffres de l'écran et ceux du combat divergent.
     if (o.def) {
-      const lvlMult = 1 + 0.12 * Math.max(0, (o.holder.lvl || 1) - 1);
+      /* La fiche d'un habitant intègre déjà ses quatre caractéristiques et
+         son niveau du village. Ne pas lui appliquer une seconde exponentielle
+         de compagnon par-dessus. */
+      const lvlMult = o.def.village ? 1 : (1 + 0.12 * Math.max(0, (o.holder.lvl || 1) - 1));
       for (const k of GD.GEN_STAT_ORDER) st[k] = Math.round((o.def.stats[k] || 0) * lvlMult * 10) / 10;
     } else {
       const base = o.holder.stats || {};
@@ -323,7 +501,7 @@
     // LA PUISSANCE DE LA COMPAGNIE = la somme des fiches RÉSOLUES, talents
     // compris. Avant, ce cumul recopiait `def.stats` et ignorait l'arbre :
     // quarante points dépensés ne pesaient rien hors écran.
-    for (const id of ['__general'].concat(g.party)) {
+    for (const id of g.party) {
       const st = GameState.combatStats(id);
       for (const k of GEN_KEYS()) out[k] += st[k] || 0;
     }
@@ -355,7 +533,7 @@
   };
   GameState.partyPower = function () {
     const st = GameState.generalStats();
-    const dps = (st.dmg || 0) * Math.max(0.2, (st.aspd || 1) / Math.max(1, GameState.gen().party.length + 1));
+    const dps = (st.dmg || 0) * Math.max(0.2, (st.aspd || 1) / Math.max(1, GameState.gen().party.length));
     const tank = (st.hp || 1) * (1 + (st.armor || 0) / 120);
     return Math.round(Math.sqrt(Math.max(1, dps * tank)));
   };
@@ -428,19 +606,27 @@
 
   GameState.canStartDescent = function () {
     const g = GameState.gen();
+    if (GameState.syncVillageParty) GameState.syncVillageParty();
     if (g.descent) return 'en_cours';
     if (g.report) return 'rapport';
+    if (!g.party.length) return 'equipe';
     if (g.fatigue >= GD.GENERAL.fatigueMax) return 'fatigue';
     const cp = g.tally.lastCheckpoint || 1;
-    if (!GameState.canAfford(GD.descentCost(cp, g.party.length + 1))) return 'cout';
+    if (!GameState.canAfford(GD.descentCost(cp, g.party.length))) return 'cout';
     return null;
   };
 
   GameState.startDescent = function () {
     const g = GameState.gen();
+    if (GameState.syncVillageParty) GameState.syncVillageParty();
     if (GameState.canStartDescent()) return false;
     const cp = g.tally.lastCheckpoint || 1;
-    if (!GameState.spend(GD.descentCost(cp, g.party.length + 1))) return false;
+    if (!GameState.spend(GD.descentCost(cp, g.party.length))) return false;
+    /* Une équipe enregistrée n'abandonne pas son travail au simple clic dans
+       la Tour. Les quatre habitants quittent leur poste seulement maintenant,
+       lorsque le départ est effectivement confirmé. */
+    if (window.Etat && window.Etat.libererHabitant)
+      for (const id of g.party) window.Etat.libererHabitant(id);
     const seed = ((Date.now() / 1000) | 0) ^ ((g.tally.descents + 1) * 2654435761);
     g.descent = {
       floor: cp,
@@ -627,7 +813,7 @@
 
     if (!won) {
       d.log.push({ icon: '', name: kind.name, txt: 'La compagnie est débordée. On décroche.' });
-      finishDescent(g, d, true);
+      finishDescent(g, d, true, 'defaite');
       return true;
     }
     // la fiche RÉSOLUE de la compagnie (talents compris) : elle sert aux
@@ -790,12 +976,12 @@
   };
 
   // ---------------- FIN DE DESCENTE ----------------
-  function finishDescent(g, d, fled) {
+  function finishDescent(g, d, fled, issue) {
     // sauvegarde le checkpoint pour la prochaine descente
     g.tally.lastCheckpoint = d.checkpoint;
     if (d.checkpoint > g.tally.bestFloor) g.tally.bestFloor = d.checkpoint;
     g.report = {
-      floor: d.floor, checkpoint: d.checkpoint, fled: !!fled,
+      floor: d.floor, checkpoint: d.checkpoint, fled: !!fled, issue:issue || (fled ? 'repli' : 'terminee'),
       loot: d.loot, xp: d.xp, log: d.log, party: d.party, at: Date.now(),
       bestFloor: Math.max(g.tally.bestFloor, d.checkpoint),
     };
@@ -809,7 +995,7 @@
     const d = g.descent;
     if (!d) return false;
     d.log.push({ icon: '', name: 'Repli', txt: 'La compagnie remonte à la surface.' });
-    finishDescent(g, d, true);
+    finishDescent(g, d, true, 'repli');
     return true;
   };
   // le joueur encaisse le butin
@@ -832,6 +1018,18 @@
     for (const id of (r.party || g.party)) {
       const hs = GameState.heroState(id);
       if (!hs) continue;
+      if (hs.village && window.Etat) {
+        const hab = window.Etat.habitant(id);
+        if (hab) {
+          /* L'expérience générale appartient à l'habitant. Les maîtrises et
+             caractéristiques, elles, ont déjà progressé coup par coup dans
+             l'arène : on ne les double pas artificiellement au rapport. */
+          const part = Math.max(1, Math.round((r.xp || 0) / Math.max(1, (r.party || g.party).length)));
+          window.Etat.gagnerXpHabitant(hab, part);
+          hs.lvl = Math.max(1, hab.niv || 1);
+        }
+        continue;
+      }
       hs.xp = (hs.xp || 0) + Math.round(r.xp * 0.5);
       // LA COURBE PASSE DE 1,4 À 1,20. À 1,4, le 4e pouvoir demandait ~500
       // descentes complètes et le 5e ~990 : on écrivait des arbres que
@@ -961,7 +1159,11 @@
     // REPLI DÉFENSIF : plusieurs harnais chargent l'état sans `data-talents.js`.
     // Sans ce garde, un barème absent ne rendait pas 0 point — il faisait
     // TOMBER l'onglet entier du Général, écran blanc à la clé.
-    const lvl = o.holder.lvl || 1;
+    let lvl = o.holder.lvl || 1;
+    if (o.holder.village) {
+      const h = genHabitant(o.holder.id), fam = genFamilleArme(o.holder);
+      lvl = fam ? genProgressionArme(h, fam).niveau : 1;
+    }
     const bar = o.cls === 'general' ? GD.generalTalentPoints : GD.talentPointsForLevel;
     const bareme = typeof bar === 'function' ? bar(lvl) : 0;
     return Math.max(0, bareme + (o.holder.talentBonusPts | 0) - GameState.talentSpent(id));
@@ -1077,6 +1279,7 @@
   GameState.heroPowerIds = function (id) {
     const o = GameState.talentOwner(id);
     if (!o) return [];
+    if (o.holder.village && !genFamilleArme(o.holder)) return [];
     const out = [];
     const base = GD.CLASS_POWER[o.cls];
     if (base) out.push(base);
@@ -1167,7 +1370,7 @@
   GameState.talentMeta = function () {
     const g = GameState.gen();
     const out = { loot: 0, xp: 0, rare: 0 };
-    for (const id of ['__general'].concat(g.party)) {
+    for (const id of g.party) {
       const m = GameState.talentBonuses(id).metas;
       out.loot += m.loot || 0;
       out.xp += m.xp || 0;
@@ -1181,7 +1384,7 @@
   // majorité des parties (`g.auto` vaut true par défaut).
   GameState.talentPower = function () {
     let s = 0, procs = 0;
-    for (const id of ['__general'].concat(GameState.gen().party)) {
+    for (const id of GameState.gen().party) {
       for (const pid of GameState.heroPowerIds(id)) {
         const P = GD.powerById(pid);
         if (!P || !P.cd) continue;
@@ -1198,7 +1401,7 @@
   GameState.partyStat = function (stat) {
     const g = GameState.gen();
     let n = 0;
-    const porteurs = [g].concat(g.party.map(id => GameState.heroState(id)).filter(Boolean));
+    const porteurs = g.party.map(id => GameState.heroState(id)).filter(Boolean);
     for (const h of porteurs) {
       for (const slot of GD.GENERAL.slots) {
         const it = (h.gear || {})[slot];
@@ -1215,18 +1418,18 @@
     return n;
   };
 
-  // La CLASSE décide de ce qu'on peut porter : un mage ne met pas de plaque,
-  // un tireur ne prend pas la hache. Le refus dit pourquoi — sinon le joueur
-  // clique dans le vide sans comprendre.
+  // Les habitants n'ont plus de classe fixe : toute arme et toute armure leur
+  // sont accessibles. Seules les incompatibilités physiques restent vraies.
   GameState.equipRefus = function (item, heroId) {
+    const holder = heroId ? GameState.heroState(heroId) : GameState.gen();
     const cls = heroId ? ((GD.heroById(heroId) || {}).cls || 'general') : 'general';
-    const motif = GD.equipRefus(cls, item);
+    const motif = holder && holder.village ? null : GD.equipRefus(cls, item);
     if (motif) return motif;
     // une arme à deux mains condamne le bouclier, et réciproquement
-    const holder = heroId ? GameState.heroState(heroId) : GameState.gen();
     const gear = (holder && holder.gear) || {};
     const b = GD.baseById(item.base);
     if (b && b.slot === 'bouclier' && GD.armeDeuxMains(gear.arme)) return 'son arme se tient à deux mains';
+    if (holder && holder.village) return null;
     /* LE COUPLAGE ARME / ARMURE. On refuse dans les DEUX sens : poser une
        plaque sur un mage, comme donner un arc à quelqu'un déjà en plaque.
        Sans la réciproque, l'ordre d'équipement décidait de la règle — on
@@ -1255,6 +1458,7 @@
     if (!holder) return false;
     if (!holder.gear) holder.gear = {};
     if (GameState.equipRefus(item, heroId)) return false;
+    const ancienStyle = holder.village && item.slot === 'arme' ? (genFamilleArme(holder) || 'paysan') : null;
     const old = holder.gear[item.slot] || null;
     holder.gear[item.slot] = item;
     // on prend une arme à deux mains : le bouclier retourne au coffre
@@ -1264,6 +1468,7 @@
     }
     g.bag.splice(ix, 1);
     if (old) g.bag.push(old);
+    if (ancienStyle) genChangerStyle(holder, ancienStyle);
     GameState.notify();
     return true;
   };
@@ -1271,8 +1476,10 @@
     const g = GameState.gen();
     const holder = heroId ? GameState.heroState(heroId) : g;
     if (!holder || !holder.gear || !holder.gear[slot]) return false;
+    const ancienStyle = holder.village && slot === 'arme' ? (genFamilleArme(holder) || 'paysan') : null;
     g.bag.push(holder.gear[slot]);
     holder.gear[slot] = null;
+    if (ancienStyle) genChangerStyle(holder, ancienStyle);
     GameState.notify();
     return true;
   };

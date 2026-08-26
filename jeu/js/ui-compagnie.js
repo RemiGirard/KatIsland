@@ -32,11 +32,12 @@
     return x[f] || x.cats || x.birds || '';
   }
   function membres() {
+    if (G().syncVillageParty) G().syncVillageParty();
     const g = G().gen();
-    const l = [{ id: '__general', nom: 'Le maître d\'œuvre', cls: 'general', lvl: g.lvl }];
-    /* ATTENTION : `roster` contient des FICHES, `party` des identifiants.
-       Les confondre fait disparaître tous les compagnons de l'écran. */
-    for (const fiche of g.roster) {
+    const l = [];
+    /* La compagnie d'aventure est la sélection de la Tour, pas l'ancien
+       catalogue de héros ni un maître d'œuvre ajouté en secret. */
+    for (const fiche of g.roster.filter(x => x.village && g.party.indexOf(x.id) >= 0)) {
       const hid = fiche && fiche.id;
       const def = hid && GD().heroById(hid), hs = hid && G().heroState(hid);
       if (def && hs) l.push({ id: hid, nom: nomDe(def.name), cls: def.cls, lvl: hs.lvl || 1, def });
@@ -44,19 +45,26 @@
     return l;
   }
 
-  let choisi = '__general', atelierChoisi = null, trempeSlot = 0;
+  let choisi = null, atelierChoisi = null, trempeSlot = 0;
 
-  function ouvrir(qui) {
+  function ouvrir(qui, onglet) {
+    if (G().syncVillageParty) G().syncVillageParty();
+    const l = membres();
+    if (!l.length) {
+      U.dire('Choisissez d’abord au moins un habitant pour la Tour.', 'alerte');
+      return;
+    }
     if (qui) choisi = qui;
+    if (!l.some(m => m.id === choisi)) choisi = l[0].id;
     U.ouvrir('compagnie', {
-      titre: 'La compagnie', sous: 'Ce qu\'elle porte et ce qu\'elle sait', classe: 'large',
+      onglet:onglet || undefined,
+      titre: 'Préparer la compagnie', sous: 'Habitants, équipement, talents et comportement', classe: 'large',
       sousVif: () => {
         const g = G().gen();
-        return (1 + g.roster.length) + ' membres  ·  ' + g.party.length + ' en ligne';
+        return g.party.length + ' habitant' + (g.party.length > 1 ? 's' : '') + ' prêt' + (g.party.length > 1 ? 's' : '');
       },
       onglets: [
         { id: 'equipement', nom: 'Équipement', rendu: rendreEquipement },
-        { id: 'atelier', nom: 'Renfort & trempe', rendu: rendreAtelier },
         { id: 'talents', nom: 'Talents', rendu: rendreTalents },
         { id: 'posture', nom: 'Postures', rendu: rendrePostures },
         { id: 'sac', nom: 'Le sac', rendu: rendreSac },
@@ -67,14 +75,30 @@
   /* Le sélecteur de membre, en tête de chaque page. */
   function selecteur(c) {
     const l = membres();
+    if (!l.length) {
+      c.appendChild(el('div', { class:'vide', text:'Aucun habitant n’est sélectionné pour la Tour.' }));
+      return null;
+    }
     /* un membre par bouton, nom entier : « Le » ne dit rien à personne. */
     c.appendChild(U.segments(l.map(m => ({
       v: m.id,
-      n: m.id === '__general' ? 'Maître d\'œuvre' : m.nom,
+      n: m.nom,
       t: m.nom + '  ·  niveau ' + m.lvl,
     })), choisi, v => { choisi = v; U.ouvrir('compagnie', {}); }));
     const m = l.find(x => x.id === choisi) || l[0];
     choisi = m.id;
+    const style = G().styleCombat ? G().styleCombat(m.id) : null;
+    if (style) {
+      const p = style.progression || { niveau:1, pct:0, dans:0, pour:20 };
+      c.appendChild(el('div', { class:'maitrise-aventure' },
+        el('div', { class:'rangee entre' },
+          el('span', { class:'eti', text:style.equipe ? 'Style pratiqué' : 'Origine' }),
+          el('b', { text:style.nom + (style.equipe ? ' · maîtrise ' + p.niveau : '') })),
+        style.equipe
+          ? el('div', { class:'maitrise-aventure-jauge' }, el('i', { style:'width:' + Math.round(p.pct * 100) + '%' }))
+          : el('div', { class:'note', text:'Équipez une arme : elle définit le style, les dégâts, les pouvoirs et l’arbre qui progressera.' }),
+        style.equipe ? el('small', { text:Math.round(p.dans) + ' / ' + Math.round(p.pour) + ' XP dans ce rang' }) : null));
+    }
     const st = G().combatStats(m.id);
     c.appendChild(U.stats([
       ['niveau', m.lvl],
@@ -134,8 +158,9 @@
 
   function rendreEquipement(c) {
     const m = selecteur(c);
+    if (!m) return;
     const g = G().gen();
-    const holder = m.id === '__general' ? g : G().heroState(m.id);
+    const holder = G().heroState(m.id);
     if (!holder) return;
     if (!holder.gear) holder.gear = {};
     const slots = GD().GENERAL.slots;
@@ -146,7 +171,7 @@
       if (it) {
         c.appendChild(carteObjet(it,
           el('button', { class: 'b mini danger', text: 'Retirer', onclick: () => {
-            G().unequipItem(s, m.id === '__general' ? null : m.id);
+            G().unequipItem(s, m.id);
             U.ouvrir('compagnie', {});
           } })));
         c.lastChild.insertBefore(el('div', { class: 'eti', text: nomS }), c.lastChild.firstChild);
@@ -161,9 +186,10 @@
 
   function rendreSac(c) {
     const m = selecteur(c);
+    if (!m) return;
     const g = G().gen();
     c.appendChild(el('div', { class: 'note',
-      text: 'Ce que la compagnie a rapporté du fond. Une pièce refusée l\'est pour une raison : chaque classe a ses armes.' }));
+      text: 'Ce que la compagnie a rapporté du fond. Chaque habitant peut apprendre toutes les armes et porter toutes les armures.' }));
     const tresors = GD().TRESORS_AVENTURE || [];
     if (tresors.length) {
       c.appendChild(U.section('Trésors de la Tour', Object.keys(g.tresors || {}).length + ' / ' + tresors.length));
@@ -182,11 +208,11 @@
     }
     const tri = g.bag.slice().sort((a, b) => (b.power || 0) - (a.power || 0));
     for (const it of tri) {
-      const refus = GD().equipRefus(m.cls, it);
+      const refus = G().equipRefus(it, m.id);
       c.appendChild(carteObjet(it, [
         el('button', { class: 'b mini primaire', text: refus ? 'refusé' : 'Équiper', disabled: !!refus,
           title: refus || '', onclick: () => {
-            G().equipItem(it, m.id === '__general' ? null : m.id);
+            G().equipItem(it, m.id);
             U.ouvrir('compagnie', {});
           } }),
         el('button', { class: 'b mini danger', text: 'Vendre', onclick: () => {
@@ -202,11 +228,13 @@
   }
 
   function objetsPossedes() {
+    if (G().syncVillageParty) G().syncVillageParty();
     const g = G().gen(), out = [];
     for (const it of (g.bag || [])) out.push({it,ou:'Sac'});
-    const porteurs = [{holder:g,nom:'Maître d’œuvre'}];
-    for (const m of membres().filter(x => x.id !== '__general')) {
-      const hs = G().heroState(m.id); if (hs) porteurs.push({holder:hs,nom:m.nom});
+    const porteurs = [];
+    for (const hs of (g.roster || []).filter(x=>x.village)) {
+      const def=GD().heroById(hs.id);
+      if (def) porteurs.push({holder:hs,nom:nomDe(def.name)});
     }
     for (const p of porteurs) for (const slot in (p.holder.gear || {})) {
       const it = p.holder.gear[slot]; if (it) out.push({it,ou:p.nom + ' · ' + (GD().GENERAL.slotName[slot] || slot)});
@@ -214,38 +242,46 @@
     return out;
   }
 
-  function rendreAtelier(c) {
+  function rafraichirForge(bid) {
+    if (window.UIFen && bid) window.UIFen.ouvrirBatiment(bid);
+  }
+
+  function rendreAtelier(c, mode, bid) {
     const l = objetsPossedes();
-    c.appendChild(el('div',{class:'note',text:"Le renforcement possède vingt niveaux et augmente toute la puissance de la pièce. La trempe ajoute un effet réellement joué en combat ; son second emplacement s’ouvre à +8. Les matériaux décisifs viennent des gardiens et des expéditions."}));
-    if (!window.Etat.aBatiment('forge')) c.appendChild(el('div',{class:'appel alerte',text:'La forge doit être construite pour travailler ces pièces.'}));
+    c.appendChild(el('div',{class:'note',text:mode==='trempe'
+      ? "La trempe grave un bonus de combat sur une pièce. Le second emplacement s’ouvre lorsque la pièce atteint +8."
+      : "Le renforcement possède vingt niveaux et augmente toute la puissance de la pièce. Les matériaux profonds viennent des gardiens et des expéditions."}));
     if (!l.length) { c.appendChild(el('div',{class:'vide',text:'Aucune pièce à travailler. Descendez dans la Tour pour en trouver.'})); return; }
     if (!atelierChoisi || !l.some(x => x.it === atelierChoisi)) atelierChoisi = l[0].it;
     const bande = el('div',{class:'atelier-objets'});
     for (const x of l) bande.appendChild(el('button',{class:'atelier-objet' + (x.it === atelierChoisi ? ' actif' : ''),title:x.ou + ' · ' + libelleObjet(x.it),onclick:()=>{
-      atelierChoisi=x.it; trempeSlot=0; U.ouvrir('compagnie',{});
+      atelierChoisi=x.it; trempeSlot=0; rafraichirForge(bid);
     }},illustrationObjet(x.it,52),el('span',{text:'+' + (x.it.amelioration || 0)})));
     c.appendChild(bande);
     const it = atelierChoisi; if (G().assurerObjet) G().assurerObjet(it);
     c.appendChild(U.section('Pièce choisie'));
     c.appendChild(carteObjet(it));
     const max = GD().ITEM_UPGRADE_MAX || 20, niveau = it.amelioration || 0;
-    const cout = GD().itemUpgradeCost(it);
-    c.appendChild(el('div',{class:'atelier-renfort'},
+    if (mode !== 'trempe') {
+      const cout = GD().itemUpgradeCost(it);
+      c.appendChild(el('div',{class:'atelier-renfort'},
       el('div',{class:'rangee entre'},el('div',{},el('div',{class:'tt',text:'Renforcement ' + niveau + ' / ' + max}),
         el('div',{class:'eti',text:'Puissance totale × ' + (GD().itemUpgradeMult(it)).toFixed(2).replace('.',',')})),
         niveau >= max ? el('span',{class:'niv',text:'maximum'}) : null),
       el('div',{class:'renfort-paliers'},Array.from({length:20},(_,i)=>el('i',{class:i<niveau?'on':''}))),
       cout ? U.listeRes(cout,{verifier:true}) : null,
-      niveau < max ? el('button',{class:'b primaire',text:'Renforcer en +' + (niveau + 1),disabled:!window.Etat.aBatiment('forge') || !window.Etat.assez(cout),onclick:()=>{
-        const r=G().upgradeItem(it); U.dire(r.ok?'Pièce renforcée en +' + r.niveau + '.':r.raison,r.ok?'bien':'alerte'); U.ouvrir('compagnie',{});
+      niveau < max ? el('button',{class:'b primaire',text:'Renforcer en +' + (niveau + 1),disabled:!window.Etat.assez(cout),onclick:()=>{
+        const r=G().upgradeItem(it); U.dire(r.ok?'Pièce renforcée en +' + r.niveau + '.':r.raison,r.ok?'bien':'alerte'); rafraichirForge(bid);
       }}) : null));
+      return;
+    }
 
     c.appendChild(U.section('Trempe', niveau >= 8 ? 'deux emplacements' : 'second emplacement à +8'));
     const slots = el('div',{class:'trempe-slots'});
     const maxSlots = niveau >= 8 ? 2 : 1;
     for (let i=0;i<2;i++) {
       const t=it.trempes[i], d=t && GD().temperById(t.id), ouvert=i<maxSlots;
-      slots.appendChild(el('button',{class:'trempe-slot' + (i===trempeSlot?' actif':'') + (!ouvert?' ferme':''),disabled:!ouvert,onclick:()=>{trempeSlot=i;U.ouvrir('compagnie',{});}},
+      slots.appendChild(el('button',{class:'trempe-slot' + (i===trempeSlot?' actif':'') + (!ouvert?' ferme':''),disabled:!ouvert,onclick:()=>{trempeSlot=i;rafraichirForge(bid);}},
         d ? el('img',{src:d.image,alt:''}) : el('span',{class:'trempe-vide',text:ouvert?'+':'—'}),
         el('b',{text:d?d.nom:(ouvert?'Emplacement libre':'À +8')})));
     }
@@ -253,8 +289,8 @@
     const coutT = GD().temperCost(it,trempeSlot);
     c.appendChild(U.listeRes(coutT,{verifier:true}));
     const aff = el('div',{class:'trempe-grille'});
-    for (const d of GD().TEMPER_AFFIXES || []) aff.appendChild(el('button',{class:'trempe-affixe',disabled:!window.Etat.aBatiment('forge') || !window.Etat.assez(coutT),onclick:()=>{
-      const r=G().temperItem(it,d.id,trempeSlot);U.dire(r.ok?'Trempe fixée : '+r.nom+'.':r.raison,r.ok?'bien':'alerte');U.ouvrir('compagnie',{});
+    for (const d of GD().TEMPER_AFFIXES || []) aff.appendChild(el('button',{class:'trempe-affixe',disabled:!window.Etat.assez(coutT),onclick:()=>{
+      const r=G().temperItem(it,d.id,trempeSlot);U.dire(r.ok?'Trempe fixée : '+r.nom+'.':r.raison,r.ok?'bien':'alerte');rafraichirForge(bid);
     }},el('img',{src:d.image,alt:''}),el('span',{},el('b',{text:d.nom}),el('small',{text:d.desc}))));
     c.appendChild(aff);
   }
@@ -264,13 +300,18 @@
      ================================================================= */
   function rendreTalents(c) {
     const m = selecteur(c);
+    if (!m) return;
+    if (m.def && m.def.sansArme) {
+      c.appendChild(el('div', { class:'vide', text:'Un paysan sans arme n’a pas encore de style. Équipez une arme pour ouvrir son arbre de pratique.' }));
+      return;
+    }
     const arbre = GD().talentTree(m.cls);
     const pts = G().talentPts(m.id);
     const engages = G().talentSpent(m.id);
     c.appendChild(el('div', { class: 'rangee entre' },
       el('span', { class: 'eti', text: engages + ' point(s) engagé(s)' }),
       el('span', { class: 'niv', text: pts + ' à dépenser' })));
-    if (!arbre) { c.appendChild(el('div', { class: 'vide', text: 'Pas d\'arbre pour cette classe.' })); return; }
+    if (!arbre) { c.appendChild(el('div', { class: 'vide', text: 'Pas encore d’arbre pour ce style d’arme.' })); return; }
     const o = G().talentOwner(m.id);
     const pris = id => o && o.holder.talents.indexOf(id) >= 0;
 
@@ -309,6 +350,11 @@
      ================================================================= */
   function rendrePostures(c) {
     const m = selecteur(c);
+    if (!m) return;
+    if (m.def && m.def.sansArme) {
+      c.appendChild(el('div', { class:'vide', text:'Équipez une arme avant de choisir une posture de combat.' }));
+      return;
+    }
     const l = GD().stancesFor(m.cls) || [];
     const o = G().talentOwner(m.id);
     const cour = (o && o.holder.stance) || GD().defaultStance(m.cls);
@@ -322,9 +368,14 @@
           s.id === cour ? el('span', { class: 'niv', text: 'en cours' }) : null),
         el('div', { class: 'note', style: 'margin-top:4px', text: s.desc || '' })));
     }
-    if (!l.length) c.appendChild(el('div', { class: 'vide', text: 'Aucune posture pour cette classe.' }));
+    if (!l.length) c.appendChild(el('div', { class: 'vide', text: 'Aucune posture pour ce style d’arme.' }));
   }
 
-  window.UICompagnie = { ouvrir, get choisi() { return choisi; } };
+  window.UICompagnie = {
+    ouvrir,
+    rendreForgeRenfort:(c,bid)=>rendreAtelier(c,'renfort',bid),
+    rendreForgeTrempe:(c,bid)=>rendreAtelier(c,'trempe',bid),
+    get choisi() { return choisi; }
+  };
 
 })();

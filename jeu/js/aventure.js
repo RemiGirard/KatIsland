@@ -16,9 +16,10 @@
   const U = () => window.UI, el = () => window.UI.el;
   const E = () => window.Etat.E;
 
-  let ouvert = false, tArene = 0, accHorsEcran = 0, accCotes = 0;
-  let plateau, scene, cvA, titre, sous, boutons, pied, gauche, droite;
-  let choisiCote = '__general';
+  let ouvert = false, preparation = false, tArene = 0, accHorsEcran = 0, accCotes = 0;
+  let plateau, scene, cvA, titre, sous, boutons, pied, gauche, droite, palier, prepa;
+  let choisiCote = null;
+  let equipeEdition = null, membresEdition = [], nomEdition = '';
 
   /* =================================================================
      LE TICK — deux régimes
@@ -31,10 +32,30 @@
     if (window.Tour) window.Tour.tick(dt);
     if (!window.GameState || !window.GameState.generalTick) return;
     const g = window.GameState.gen();
-    if (!g.descent) { majBarre(0); return; }
+    if (!g.descent) {
+      if (ouvert && g.report && g.report.issue === 'defaite') {
+        if (afficherDefaite(g.report)) { majTete(); majPied(); }
+      }
+      majBarre(0); return;
+    }
     if (ouvert && window.Adventure) {
       tArene += dt;
       window.GameState.generalTick(dt);
+      const apres = window.GameState.gen().descent;
+      const rapport = window.GameState.gen().report;
+      if (!apres && rapport && rapport.issue === 'defaite') {
+        afficherDefaite(rapport); majTete(); majPied(); majBarre(0); return;
+      }
+      if (apres && apres.phase === 'palier') {
+        if (afficherPalier(apres)) {
+          majTete();
+          majPied();
+          majCotes();
+        }
+        majBarre(1);
+        return;
+      }
+      masquerPalier();
       try { window.Adventure.draw(tArene); } catch (e) { console.warn('arène :', e.message); }
       majPied();
       accCotes += dt;
@@ -68,31 +89,203 @@
     pied = document.getElementById('plateau-pied');
     gauche = document.getElementById('plateau-gauche');
     droite = document.getElementById('plateau-droite');
+    palier = document.getElementById('plateau-palier');
+    if (!palier && scene) {
+      palier = document.createElement('div');
+      palier.id = 'plateau-palier';
+      palier.className = 'plateau-palier';
+      scene.appendChild(palier);
+    }
+    prepa = document.getElementById('plateau-preparation');
+    if (!prepa && scene) {
+      prepa = document.createElement('div');
+      prepa.id = 'plateau-preparation';
+      prepa.className = 'plateau-preparation';
+      scene.appendChild(prepa);
+    }
   }
 
   function ouvrir() {
     refs();
+    if (window.GameState.syncVillageParty) window.GameState.syncVillageParty();
     const g = window.GameState.gen();
     if (!g.descent) { U().dire('Aucune descente en cours.', 'alerte'); return; }
+    U().fermerTout();
+    preparation = false;
     ouvert = true;
     plateau.classList.add('vu');
+    document.body.classList.add('plateau-fenetres');
+    masquerPreparation();
     titre.textContent = 'La descente';
     window.Adventure.attach(cvA);
     brancherPointeur();
     majTete();
     majPied();
     majCotes();
+    if (g.descent.phase === 'palier') afficherPalier(g.descent);
+    else masquerPalier();
   }
   function fermer() {
     ouvert = false;
+    preparation = false;
     if (plateau) plateau.classList.remove('vu');
+    document.body.classList.remove('plateau-fenetres');
     if (window.Adventure && window.Adventure.detach) window.Adventure.detach();
+  }
+
+  function masquerPreparation() {
+    if (prepa) prepa.classList.remove('visible');
+  }
+
+  function ouvrirPreparation() {
+    refs();
+    if (window.GameState.syncVillageParty) window.GameState.syncVillageParty();
+    const g = window.GameState.gen();
+    if (g.descent) { ouvrir(); return; }
+    if (!g.party.length) { U().dire('Cette équipe ne contient aucun habitant disponible.', 'alerte'); return; }
+    U().fermerTout();
+    preparation = true; ouvert = true; choisiCote = g.party[0];
+    plateau.classList.add('vu');
+    document.body.classList.add('plateau-fenetres');
+    if (window.Adventure && window.Adventure.detach) window.Adventure.detach();
+    masquerPalier();
+    afficherPreparation();
+    majTete(); majPied(); majCotes();
+  }
+
+  function afficherPreparation() {
+    if (!prepa) return;
+    U().vide(prepa);
+    const g=window.GameState.gen(), cp=g.tally.lastCheckpoint || 1;
+    const cout=window.GameData.descentCost(cp, Math.max(1,g.party.length));
+    const lot={}; for (const k in cout) { const id=window.GameState.versBourg(k); lot[id]=(lot[id]||0)+cout[k]; }
+    prepa.appendChild(el()('div',{class:'plateau-preparation-carte'},
+      el()('span',{class:'plateau-palier-surtitre',text:'TOUR SOMBRE'}),
+      el()('h2',{text:'Préparer la descente'}),
+      el()('p',{text:'Sélectionne un habitant à gauche pour régler son équipement, ses talents et son comportement. Le combat ne commencera qu’après confirmation.'}),
+      el()('div',{class:'plateau-preparation-res'},
+        el()('span',{class:'eti',text:'Départ étage '+cp+' · ravitaillement'}),U().listeRes(lot,{verifier:true})),
+      el()('button',{class:'b primaire grande',text:'Descendre avec cette équipe',disabled:!!window.GameState.canStartDescent(),onclick:lancerDepuisPreparation})));
+    prepa.classList.add('visible');
+  }
+
+  function lancerDepuisPreparation() {
+    const g=window.GameState.gen(), cp=g.tally.lastCheckpoint || 1;
+    if (!window.GameState.startDescent()) { U().dire('Le départ est impossible : vérifie l’équipe et le ravitaillement.', 'alerte'); return; }
+    preparation=false; masquerPreparation();
+    window.Adventure.attach(cvA); brancherPointeur();
+    window.Etat.journal('La compagnie descend dans la Tour sombre (étage '+cp+').','guerre');
+    majTete(); majPied(); majCotes();
+  }
+
+  function portraitEquipe(A,h,taille) {
+    const src=window.Img && window.Img.portrait ? window.Img.portrait(h) : null;
+    return A('span',{class:'equipe-tour-portrait',style:'width:'+taille+'px;height:'+taille+'px'},
+      src ? A('img',{src,alt:h.nom}) : A('b',{text:(h.nom||'?').slice(0,1).toUpperCase()}));
+  }
+
+  function ouvrirEquipes() {
+    if (!window.Tour) return;
+    if (window.GameState && window.GameState.gen().descent) { ouvrir(); return; }
+    U().ouvrir('equipes-tour',{
+      titre:'Équipes de la Tour',sous:'Groupes enregistrés · quatre habitants maximum',
+      onglets:[{id:'equipes',nom:'Mes équipes',rendu:rendreEquipes}],
+    });
+  }
+
+  function rendreEquipes(c) {
+    const A=el(), equipes=window.Tour.equipes();
+    const g=window.GameState.gen();
+    if (g.report) c.appendChild(A('div',{class:'cadre actif'},
+      A('div',{class:'rangee entre'},A('div',{},A('b',{text:'Rapport de la dernière descente'}),A('div',{class:'note',text:'Décharge le butin avant de préparer un nouveau départ.'})),
+        A('button',{class:'b primaire',text:'Décharger',onclick:()=>{recolter();ouvrirEquipes();}}))));
+    c.appendChild(A('div',{class:'note',text:'Une équipe enregistrée reste disponible sans retirer ses membres de leur travail. Ils quittent leur poste uniquement lorsque tu confirmes la descente.'}));
+    const liste=A('div',{class:'equipes-tour-liste'});
+    for (const eq of equipes) {
+      const membres=eq.membres.map(id=>window.Etat.habitant(id)).filter(Boolean);
+      const portraits=A('div',{class:'equipe-tour-portraits'});
+      for (let i=0;i<4;i++) portraits.appendChild(membres[i] ? portraitEquipe(A,membres[i],58) : A('span',{class:'equipe-tour-portrait vide',text:'+'}));
+      liste.appendChild(A('article',{class:'equipe-tour-ligne','data-cle':eq.id},
+        A('div',{class:'equipe-tour-identite'},A('b',{text:eq.nom}),A('span',{text:membres.length+' / 4 membres'})),
+        portraits,
+        A('div',{class:'equipe-tour-actions'},
+          A('button',{class:'b mini',text:'Modifier',onclick:()=>ouvrirEditionEquipe(eq.id)}),
+          A('button',{class:'b mini danger',text:'Supprimer',onclick:()=>{window.Tour.supprimerEquipe(eq.id);ouvrirEquipes();}}),
+          A('button',{class:'b primaire',text:'Sélectionner',disabled:!membres.length||!!g.report,onclick:()=>{
+            const r=window.Tour.selectionnerEquipe(eq.id);
+            if (!r.ok) { U().dire(r.pourquoi,'alerte'); return; }
+            U().fermer('equipes-tour'); ouvrirPreparation();
+          }}))));
+    }
+    if (!equipes.length) liste.appendChild(A('div',{class:'vide',text:'Aucune équipe enregistrée. Crée ton premier groupe pour préparer une descente.'}));
+    c.appendChild(liste);
+    c.appendChild(A('button',{class:'b primaire',style:'margin-top:12px',text:'+ Créer une équipe',onclick:()=>ouvrirEditionEquipe(null)}));
+  }
+
+  function ouvrirEditionEquipe(id) {
+    const eq=id && window.Tour.equipeParId(id);
+    equipeEdition=id || null;
+    membresEdition=eq ? eq.membres.slice(0,4) : [];
+    nomEdition=eq ? eq.nom : 'Équipe '+(window.Tour.equipes().length+1);
+    U().fermer('equipes-tour');
+    U().ouvrir('equipe-tour-edition',{
+      titre:eq ? 'Modifier '+eq.nom:'Créer une équipe',sous:'Choisis jusqu’à quatre habitants',classe:'habitants-fen',
+      onglets:[{id:'selection',nom:'Habitants',rendu:rendreEditionEquipe}],
+    });
+  }
+
+  function rendreEditionEquipe(c) {
+    const A=el(), habitants=E().habitants.slice().sort((a,b)=>(b.niv||1)-(a.niv||1));
+    c.appendChild(A('div',{class:'equipe-tour-edition-tete'},
+      A('label',{class:'eti',text:'Nom de l’équipe'}),
+      A('input',{class:'champ',value:nomEdition,maxlength:32,oninput:ev=>{nomEdition=ev.target.value;}}),
+      A('b',{text:membresEdition.length+' / 4'})));
+    const grille=A('div',{class:'collection-grille equipe-tour-selection'});
+    for (const h of habitants) {
+      const choisi=membresEdition.indexOf(h.id)>=0, disponible=window.Tour.disponible(h);
+      const R=window.HAB.RARETES[h.rarete]||window.HAB.RARETES.commun;
+      grille.appendChild(A('button',{class:'carte-habitant'+(choisi?' equipe-choisie':'')+(!disponible?' equipe-indisponible':''),disabled:!disponible && !choisi,onclick:()=>{
+        const i=membresEdition.indexOf(h.id);
+        if(i>=0)membresEdition.splice(i,1);
+        else if(membresEdition.length<4)membresEdition.push(h.id);
+        else {U().dire('Une équipe compte au maximum quatre habitants.','alerte');return;}
+        U().ouvrir('equipe-tour-edition',{});
+      }},portraitEquipe(A,h,150),A('span',{class:'carte-infos'},
+        A('span',{class:'collection-nom',text:h.nom}),
+        A('span',{class:'collection-meta',text:disponible?(choisi?'Sélectionné':'Disponible'):'Indisponible'}),
+        A('span',{class:'carte-infos-ligne'},A('span',{class:'collection-badge r-'+R.id,text:R.nom}),A('span',{class:'collection-niveau',text:'Niv. '+(h.niv||1)})))));
+    }
+    c.appendChild(grille);
+    c.appendChild(A('div',{class:'rangee entre',style:'margin-top:14px'},
+      A('button',{class:'b',text:'Annuler',onclick:()=>{U().fermer('equipe-tour-edition');ouvrirEquipes();}}),
+      A('button',{class:'b primaire',text:'Enregistrer l’équipe',disabled:!membresEdition.length,onclick:()=>{
+        const r=window.Tour.enregistrerEquipe(equipeEdition,nomEdition,membresEdition);
+        if(!r.ok){U().dire(r.pourquoi,'alerte');return;}
+        U().fermer('equipe-tour-edition');ouvrirEquipes();
+      }})));
   }
 
   function majTete() {
     const g = window.GameState.gen();
     const d = g.descent;
     const biome = d ? window.GameData.dungeonBiome(d.floor) : null;
+    if (preparation && !d) {
+      const eq=window.Tour && window.Tour.equipeParId ? window.Tour.equipeParId(E().aventure.equipeActive) : null;
+      titre.textContent='Tour sombre · préparation';
+      sous.textContent=(eq ? eq.nom+' · ' : '')+g.party.length+' / 4 habitants';
+      U().vide(boutons);
+      boutons.appendChild(el()('button',{class:'b',text:'Changer d’équipe',onclick:()=>{fermer();ouvrirEquipes();}}));
+      boutons.appendChild(el()('button',{class:'b primaire',text:'Descendre',disabled:!!window.GameState.canStartDescent(),onclick:lancerDepuisPreparation}));
+      boutons.appendChild(el()('button',{class:'b',text:'Retour au bourg',onclick:fermer}));
+      return;
+    }
+    if (!d && g.report && g.report.issue === 'defaite') {
+      titre.textContent='La compagnie est vaincue';
+      sous.textContent='Étage '+g.report.floor+' · retour au dernier checkpoint';
+      U().vide(boutons);
+      boutons.appendChild(el()('button',{class:'b',text:'Retour au bourg',onclick:()=>{recolter();fermer();}}));
+      return;
+    }
     titre.textContent = d ? 'Étage ' + d.floor : 'La descente';
     const per = d && window.Tour ? window.Tour.peril(d.floor) : null;
     sous.textContent = d
@@ -166,7 +359,8 @@
       const n = parseInt(ev.key, 10);
       if (n >= 1 && n <= 6) {
         const g = window.GameState.gen();
-        try { window.Adventure.castAbility('__general', n - 1); } catch (e) { }
+        const hid = choisiCote || (g.descent && g.descent.party && g.descent.party[0]) || g.party[0];
+        if (hid) try { window.Adventure.castAbility(hid, n - 1); } catch (e) { }
       }
     });
   }
@@ -245,6 +439,7 @@
 
   function rendre(c) {
     const A = el();
+    if (window.GameState.syncVillageParty) window.GameState.syncVillageParty();
     const g = window.GameState.gen();
     const d = g.descent;
     const rec = E().aventure.record || 0;
@@ -281,25 +476,33 @@
           onclick: () => { window.GameState.abortDescent(); recolter(); } })));
     } else {
       const cp = g.tally.lastCheckpoint || 1;
-      const cout = window.GameData.descentCost(cp, g.party.length + 1);
+      const cout = window.GameData.descentCost(cp, Math.max(1, g.party.length));
       const lot = {};
       for (const k in cout) { const id = window.GameState.versBourg(k); lot[id] = (lot[id] || 0) + cout[k]; }
       const refus = window.GameState.canStartDescent();
       const RAISONS = { en_cours: 'une descente est déjà en cours', rapport: 'déchargez d\'abord le rapport',
+                        equipe: 'choisissez au moins un habitant',
                         fatigue: 'la compagnie est épuisée', cout: 'vivres insuffisants' };
       c.appendChild(A('div', { class: 'cadre' },
         A('div', { class: 'eti-or', text: 'partir de l\'étage ' + cp }),
         A('div', { class: 'sep' }),
         A('div', { class: 'eti', text: 'ravitaillement' }),
         U().listeRes(lot, { verifier: true }),
+        A('div', { class:'note', style:'margin-top:8px',
+          text:g.party.length ? g.party.map(id => {
+            const h = window.Etat.habitant(id); return h ? h.nom : id;
+          }).join(' · ') : 'La porte restera fermée tant que l’équipée est vide.' }),
         A('div', { class: 'rangee entre', style: 'margin-top:8px' },
           A('span', { class: 'eti', text: refus ? RAISONS[refus] || refus : 'la compagnie est prête' }),
-          A('button', { class: 'b primaire', text: 'Descendre', disabled: !!refus,
-            onclick: () => {
-              if (!window.GameState.startDescent()) { U().dire('Impossible de partir.', 'alerte'); return; }
-              window.Etat.journal('La compagnie descend dans la Tour sombre (étage ' + cp + ').', 'guerre');
-              ouvrir();
-            } }))));
+          A('div', { class:'rangee' },
+            A('button', { class:'b', text:'Équipement et talents', disabled:!g.party.length,
+              onclick:() => window.UICompagnie.ouvrir(g.party[0]) }),
+            A('button', { class: 'b primaire', text: 'Descendre', disabled: !!refus,
+              onclick: () => {
+                if (!window.GameState.startDescent()) { U().dire('Impossible de partir.', 'alerte'); return; }
+                window.Etat.journal('La compagnie descend dans la Tour sombre (étage ' + cp + ').', 'guerre');
+                ouvrir();
+              } })))));
     }
 
     /* ---- LE PÉRIL DU MOMENT ---- */
@@ -356,43 +559,72 @@
     if (forge) avanceeCorps.appendChild(A('button', { class: 'b primaire', text: 'Ouvrir l’arsenal de la forge',
       onclick: () => window.UIFen.ouvrirBatiment(forge.id) }));
 
-    /* ---- la compagnie ---- */
-    avanceeCorps.appendChild(U().section('La compagnie'));
+    /* ---- préparation réelle des habitants ---- */
+    avanceeCorps.appendChild(U().section('Préparer les habitants'));
     avanceeCorps.appendChild(A('div', { class: 'cadre' },
       A('div', { class: 'rangee entre' },
         A('div', {},
-          A('div', { class: 'tt', style: 'font-size:14px', text: 'Le maître d\'œuvre' }),
+          A('div', { class: 'tt', style: 'font-size:14px', text: 'Compagnie du village' }),
           A('div', { class: 'eti', style: 'margin-top:4px',
-            text: 'niveau ' + g.lvl + '  ·  ' + U().fmt(g.xp) + ' xp  ·  ' +
-                  g.roster.length + ' compagnon(s)  ·  ' + g.party.length + ' en ligne' })),
-        A('button', { class: 'b mini primaire', text: 'Équipement et talents',
-          onclick: () => window.UICompagnie.ouvrir() })),
-      A('div', { style: 'margin-top:8px' },
-        U().barre(Math.min(1, (g.xp || 0) / Math.max(1, window.GameData.GENERAL.xpFor(g.lvl))), 'bleu',
-          'expérience', U().fmt(g.xp) + ' / ' + U().fmt(window.GameData.GENERAL.xpFor(g.lvl)))),
-      g.fatigue > 0.05 ? A('div', { style: 'margin-top:8px' },
+            text:g.party.length + ' habitant' + (g.party.length > 1 ? 's' : '') + ' sélectionné' + (g.party.length > 1 ? 's' : '') })),
+        A('button', { class: 'b mini primaire', text: 'Équipement et arbres',
+          disabled:!g.party.length, onclick: () => window.UICompagnie.ouvrir(g.party[0]) })),
+      g.fatigue > 0.05 ? A('div', { style: 'margin-top:10px' },
         U().barre(g.fatigue / window.GameData.GENERAL.fatigueMax, 'rouge', 'fatigue',
           (Math.round(g.fatigue * 10) / 10) + ' / ' + window.GameData.GENERAL.fatigueMax)) : null));
-    /* `roster` contient des FICHES, `party` des identifiants : on ne peut
-       pas parcourir l'un comme l'autre. */
-    for (const fiche of g.roster) {
-      const hid = fiche && fiche.id;
-      const def = hid && window.GameData.heroById(hid);
-      const hs = hid && window.GameState.heroState(hid);
-      if (!def || !hs) continue;
-      const nomH = (typeof def.name === 'string') ? def.name : (def.name.cats || def.name.birds || hid);
-      const dedans = g.party.indexOf(hid) >= 0;
-      avanceeCorps.appendChild(A('div', { class: 'cadre' + (dedans ? ' actif' : '') },
-        A('div', { class: 'rangee entre' },
-          A('div', {}, A('div', { class: 'tt', text: nomH }),
-            A('div', { class: 'eti', text: (window.GameData.HERO_CLASSES[def.cls] || {}).name + ' · niveau ' + (hs.lvl || 1) })),
-          A('button', { class: 'b mini' + (dedans ? ' danger' : ' primaire'), text: dedans ? 'Laisser' : 'Emmener',
-            onclick: () => { window.GameState.toggleParty(hid); } }))));
-    }
-    if (!g.roster.length)
-      avanceeCorps.appendChild(A('div', { class: 'note faible', text: "Personne encore. On ne recrute pas sous terre : la compagnie se forme ici, "
-              + 'au bourg. Choisissez des habitants, équipez-les, et ce sont eux qui descendront.' }));
     c.appendChild(avancee);
+  }
+
+  function masquerPalier() {
+    if (palier) { palier.classList.remove('visible'); delete palier.dataset.etage; delete palier.dataset.type; }
+  }
+
+  function afficherDefaite(r) {
+    if (!palier || !r) return false;
+    if (palier.classList.contains('visible') && palier.dataset.type === 'defaite') return false;
+    U().vide(palier);
+    palier.appendChild(el()('div',{class:'plateau-palier-carte plateau-defaite-carte'},
+      el()('span',{class:'plateau-palier-surtitre',text:'DESCENTE INTERROMPUE'}),
+      el()('h2',{text:'La compagnie est vaincue'}),
+      el()('p',{text:'Le groupe remonte de l’étage '+r.floor+'. Les ressources déjà mises en sacoche sont conservées, mais il faudra revoir l’équipement, les talents ou le script avant de repartir.'}),
+      el()('div',{class:'plateau-palier-prochain',text:'Prochain départ : checkpoint '+r.checkpoint}),
+      el()('div',{class:'rangee enroule plateau-palier-actions'},
+        el()('button',{class:'b primaire',text:'Recomposer l’équipe',onclick:()=>{recolter();masquerPalier();fermer();ouvrirEquipes();}}),
+        el()('button',{class:'b',text:'Retour au bourg',onclick:()=>{recolter();masquerPalier();fermer();}}))));
+    palier.classList.add('visible'); palier.dataset.type='defaite';
+    return true;
+  }
+
+  /* L'arène terminée ne reste plus figée sous les yeux du joueur. Le palier
+     devient un véritable écran de décision, sans lancer l'étage suivant. */
+  function afficherPalier(d) {
+    if (!palier || !d) return false;
+    if (palier.classList.contains('visible') && palier.dataset.type === 'palier' && palier.dataset.etage === String(d.floor)) return false;
+    U().vide(palier);
+    const prochain = d.floor + 1;
+    const biome = window.GameData.dungeonBiome(prochain);
+    palier.appendChild(el()('div', { class:'plateau-palier-carte' },
+      el()('span', { class:'plateau-palier-surtitre', text:'ÉTAGE NETTOYÉ' }),
+      el()('h2', { text:'Palier ' + d.floor }),
+      el()('p', { text:'La compagnie souffle. Prépare son équipement et ses talents avant de choisir la suite.' }),
+      el()('div', { class:'plateau-palier-prochain',
+        text:'Prochain : étage ' + prochain + (biome ? ' · ' + biome.name : '') }),
+      el()('div', { class:'rangee enroule plateau-palier-actions' },
+        el()('button', { class:'b', text:'Équipement & talents', onclick:() => {
+          if (window.UICompagnie) window.UICompagnie.ouvrir();
+        } }),
+        el()('button', { class:'b primaire', text:'Descendre', onclick:() => {
+          if (window.GameState.descendreEncore()) { masquerPalier(); majTete(); U().dire('La compagnie reprend la descente.', 'bien'); }
+        } }),
+        el()('button', { class:'b', text:'Remonter au bourg', onclick:() => {
+          if (window.GameState.abortDescent && window.GameState.abortDescent()) {
+            recolter(); masquerPalier(); fermer(); U().dire('La compagnie remonte avec son butin.', 'bien');
+          }
+        } }))));
+    palier.classList.add('visible');
+    palier.dataset.type = 'palier';
+    palier.dataset.etage = String(d.floor);
+    return true;
   }
 
   const ART_BUTIN = {
@@ -430,10 +662,13 @@
 
   function membresEnLigne() {
     const g = window.GameState.gen();
-    const out = [{ id:'__general', nom:"Maître d'œuvre", cls:'general', lvl:g.lvl || 1 }];
+    const out = [];
     for (const id of (g.party || [])) {
       const def = window.GameData.heroById(id), hs = window.GameState.heroState(id);
-      if (def && hs) out.push({ id, nom:nomDe(def.name), cls:def.cls, lvl:hs.lvl || 1 });
+      const style = window.GameState.styleCombat ? window.GameState.styleCombat(id) : null;
+      if (def && hs) out.push({ id, nom:nomDe(def.name), cls:def.cls,
+        style:def.style || 'Paysan', maitrise:style && style.progression ? style.progression.niveau : 1,
+        sansArme:!!def.sansArme, lvl:hs.lvl || 1 });
     }
     return out;
   }
@@ -441,6 +676,7 @@
   function majCotes() {
     if (!gauche || !droite || !ouvert) return;
     const A = el(), membres = membresEnLigne();
+    if (!membres.length) { U().vide(gauche); U().vide(droite); return; }
     if (!membres.some(m => m.id === choisiCote)) choisiCote = membres[0].id;
     const hp = window.Adventure && window.Adventure.partyHp ? window.Adventure.partyHp() : {};
     U().vide(gauche);
@@ -454,7 +690,7 @@
           A('div', { class:'plateau-portrait', text:m.nom.slice(0,1).toUpperCase() }),
           A('div', { style:'min-width:0;flex:1' },
             A('div', { class:'tt', text:m.nom }),
-            A('div', { class:'eti', text:m.cls + ' · niveau ' + m.lvl }))),
+            A('div', { class:'eti', text:m.style + (m.sansArme ? '' : ' · maîtrise ' + m.maitrise) + ' · niveau ' + m.lvl }))),
         A('div', { class:'plateau-vie' }, A('i', { style:'width:' + Math.round(pct * 100) + '%' })),
         A('div', { class:'rangee entre', style:'margin-top:4px' },
           puceStat(A, 'hp', Math.round(vie) + ' / ' + Math.round(st.hp), 'PV'),
@@ -473,6 +709,16 @@
         puceStat(A, 'armor', Math.round(st.armor || 0), 'armure'), puceStat(A, 'mspd', Math.round(st.mspd || 0), 'vitesse'),
         puceStat(A, 'range', Math.round(st.range || 0), 'portée'),
         A('span', { class:'plateau-stat-illustree', text:window.GameState.talentPts(m.id) + ' pts libres' }))));
+    droite.appendChild(A('div',{class:'cote-titre',style:'margin-top:16px',text:'Script de combat'}));
+    const scripts=window.GameData.stancesFor(m.cls)||[], ownerScript=window.GameState.talentOwner(m.id);
+    const scriptActif=(ownerScript&&ownerScript.holder.stance)||window.GameData.defaultStance(m.cls);
+    if (scripts.length) {
+      const sel=A('select',{class:'plateau-script',onchange:ev=>{window.GameState.setHeroStance(m.id,ev.target.value);majCotes();}});
+      for(const s of scripts) sel.appendChild(A('option',{value:s.id,selected:s.id===scriptActif,text:s.name||s.nom||s.id}));
+      droite.appendChild(sel);
+      const sd=scripts.find(s=>s.id===scriptActif);
+      if(sd&&sd.desc) droite.appendChild(A('div',{class:'note',style:'margin-top:6px',text:sd.desc}));
+    } else droite.appendChild(A('div',{class:'note faible',text:'Équipe une arme pour définir un style de combat.'}));
     droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Pouvoirs' }));
     const pouvoirs = window.GameState.heroPowers(m.id);
     if (!pouvoirs.length) droite.appendChild(A('div', { class:'note faible', text:'Aucun pouvoir équipé.' }));
@@ -480,14 +726,16 @@
       A('div', { class:'tt', text:p.name || p.nom || p.id }),
       A('div', { class:'note', text:p.desc || '' })));
     droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Arbre de compétences' }));
-    const arbre = window.GameData.talentTree(m.cls);
+    const arbre = m.sansArme ? null : window.GameData.talentTree(m.cls);
     if (arbre) for (const br of arbre.branches) {
       const acquis = br.nodes.filter(n => talents.indexOf(n.id) >= 0).length;
       droite.appendChild(A('div', { class:'rangee entre ligne-deblocage' },
         A('span', { text:br.name || br.nom || br.id }), A('span', { class:acquis ? 'eti-or' : 'eti', text:acquis + ' / ' + br.nodes.length })));
     }
-    droite.appendChild(A('button', { class:'b primaire', style:'width:100%;margin-top:12px', text:'Équipement et arbre complet',
-      onclick:() => window.UICompagnie.ouvrir(m.id) }));
+    droite.appendChild(A('div',{class:'plateau-config-actions'},
+      A('button',{class:'b primaire',text:'Inventaire',onclick:()=>window.UICompagnie.ouvrir(m.id,'equipement')}),
+      A('button',{class:'b',text:'Talents',onclick:()=>window.UICompagnie.ouvrir(m.id,'talents')}),
+      A('button',{class:'b',text:'Postures',onclick:()=>window.UICompagnie.ouvrir(m.id,'posture')})));
   }
 
   /* ==================================================================
@@ -610,7 +858,11 @@
                       (window.HAB.produit(h, 'pv') * window.HAB.produit(h, 'degats')).toFixed(2).replace('.', ',') +
                       ' au combat' }))),
           A('button', { class: 'b mini danger', text: 'Laisser au bourg',
-            onclick: () => { T.laisser(h.id); if (window.App) window.App.majAffectations(); } }))));
+            disabled:!!window.GameState.gen().descent,
+            onclick: () => { T.laisser(h.id); if (window.App) window.App.majAffectations(); } }),
+          A('button', { class:'b mini primaire', text:'Équiper / talents',
+            disabled:!!window.GameState.gen().descent,
+            onclick:() => window.UICompagnie.ouvrir(h.id) }))));
     }
     if (!eq.length) box.appendChild(A('div', { class: 'vide',
       html: 'Personne ne descend.<br>Choisissez qui accompagne la compagnie.' }));
@@ -618,7 +870,7 @@
     /* les candidats */
     const libres = window.Etat.E.habitants.filter(h => !T.dansEquipee(h.id) && T.disponible(h))
       .sort((a, b) => (b.niv || 1) - (a.niv || 1)).slice(0, 8);
-    if (eq.length < places && libres.length) {
+    if (!window.GameState.gen().descent && eq.length < places && libres.length) {
       box.appendChild(A('div', { class: 'eti', style: 'margin-top:12px', text: 'à emmener' }));
       const g = A('div', { class: 'rangee enroule' });
       for (const h of libres) {
@@ -738,7 +990,7 @@
     return box;
   }
 
-  window.UIAventure = { rendre, ouvrir, fermer, tick, recolter,
+  window.UIAventure = { rendre, ouvrir, ouvrirEquipes, ouvrirPreparation, fermer, tick, recolter,
     get ouvert() { return ouvert; } };
   window.Aventure = { tick };
 

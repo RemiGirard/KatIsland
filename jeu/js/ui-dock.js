@@ -7,8 +7,8 @@
    · LE DOCK, à gauche, superposé au village : TOUS les chargements en
      cours du bourg, la file du chantier en tête. Il se replie d'un
      clic pour rendre le village entier à l'œil.
-   · LES PRODUCTIONS, à droite : les ressources que les bâtiments déjà
-     construits savent fabriquer, avec un raccourci pour lancer le poste.
+   · LE PILOTAGE, à droite : les ressources quand rien n'est sélectionné,
+     puis toutes les commandes du bâtiment cliqué, sans fenêtre flottante.
    ============================================================ */
 "use strict";
 (function () {
@@ -17,8 +17,10 @@
   const E = () => window.Etat.E;
 
   let dock, liste, pied, tete, bandeau, menaceLigne, poignee, survol;
-  let prod, prodCorps, prodPoignee;
+  let prod, prodCorps, prodPoignee, prodEntete, prodRetour, prodTabs;
   let replie = false, prodReplie = false, prodChoisie = null;
+  let batimentChoisi = null, ongletBatiment = null;
+  let sousPanneauBatiment = null;
 
   function construire() {
     const couche = document.getElementById('couche');
@@ -42,13 +44,16 @@
 
     /* ---------------- productions, à droite ---------------- */
     prodCorps = el('div', { id: 'productions-corps' });
+    prodEntete = el('div', { id: 'productions-identite' });
+    prodRetour = el('button', { class: 'b mini prod-retour', text: 'Ressources',
+      title: 'Revenir aux ressources productibles', onclick: fermerBatiment });
+    prodTabs = el('div', { id: 'batiment-languettes', role: 'tablist' });
     prod = el('div', { id: 'productions' },
       el('div', { id: 'productions-tete' },
-        el('div', {},
-          el('div', { class: 'tt', text: 'Productions' }),
-          el('div', { class: 'eti', text: 'Ce que le bourg sait faire' })),
-        el('button', { class: 'b mini', text: 'Replier', onclick: basculerProductions })),
-      prodCorps);
+        prodEntete,
+        el('div', { class: 'productions-actions' }, prodRetour,
+          el('button', { class: 'b mini', text: 'Replier', onclick: basculerProductions }))),
+      prodTabs, prodCorps);
     prodPoignee = el('div', { id: 'productions-poignee', title: 'Replier / déplier les productions' },
       el('span', { text: '›' }));
     prodPoignee.addEventListener('click', basculerProductions);
@@ -62,6 +67,7 @@
     couche.appendChild(el('div', { id: 'messages' }));
 
     majTete();
+    majEnteteProductions();
   }
 
   function basculer() {
@@ -77,6 +83,75 @@
     prod.classList.toggle('replie', prodReplie);
     prodPoignee.style.right = prodReplie ? '0px' : '';
     prodPoignee.firstChild.textContent = prodReplie ? '‹' : '›';
+  }
+
+  function deplierProductions() {
+    if (!prodReplie) return;
+    prodReplie = false;
+    prod.classList.remove('replie');
+    prodPoignee.style.right = '';
+    prodPoignee.firstChild.textContent = '›';
+  }
+
+  function majEnteteProductions() {
+    if (!prodEntete) return;
+    const b = batimentChoisi && E().bat[batimentChoisi];
+    prod.classList.toggle('batiment-ouvert', !!b);
+    prodRetour.hidden = !b;
+    U.rendreDans(prodEntete, h => {
+      if (!b) {
+        h.appendChild(el('div', {},
+          el('div', { class:'tt', text:'Productions' }),
+          el('div', { class:'eti', text:'Ce que le bourg sait faire' })));
+        return;
+      }
+      const def = window.BAT[b.type];
+      const src = window.Img && window.Img.bat(b.type);
+      if (src) h.appendChild(el('img', { class:'batiment-entete-art', src, alt:'' }));
+      h.appendChild(el('div', { class:'batiment-entete-texte' },
+        el('div', { class:'tt', text:def.nom }),
+        el('div', { class:'eti' + (b.endommage > 0 ? ' mauvais' : ''),
+          text:def.metier + ' · niveau ' + b.niv + (b.endommage > 0 ? ' · endommagé' : '') })));
+    });
+  }
+
+  function ouvrirBatiment(bid, onglet) {
+    const b = E().bat[bid];
+    if (!b || b.chantier) return;
+    const meme = batimentChoisi === bid;
+    batimentChoisi = bid;
+    if (!meme || onglet) ongletBatiment = onglet || null;
+    if (!meme || onglet) sousPanneauBatiment = null;
+    prodChoisie = null;
+    if (window.Village) window.Village.selection(bid);
+    deplierProductions();
+    majProductions();
+  }
+
+  function fermerBatiment() {
+    batimentChoisi = null;
+    ongletBatiment = null;
+    sousPanneauBatiment = null;
+    if (window.Village) window.Village.selection(null);
+    majProductions();
+  }
+
+  function choisirOngletBatiment(id) {
+    ongletBatiment = id;
+    sousPanneauBatiment = null;
+    majProductions();
+  }
+
+  function ouvrirSousPanneau(opts) {
+    if (!batimentChoisi || !opts || typeof opts.rendu !== 'function') return;
+    sousPanneauBatiment = opts;
+    deplierProductions();
+    majProductions();
+  }
+
+  function fermerSousPanneau() {
+    sousPanneauBatiment = null;
+    majProductions();
   }
 
   function majTete() {
@@ -130,6 +205,13 @@
 
   function majProductions() {
     if (!prodCorps) return;
+    if (batimentChoisi && E().bat[batimentChoisi]) {
+      majBatiment();
+      return;
+    }
+    if (batimentChoisi) batimentChoisi = null;
+    majEnteteProductions();
+    U.vide(prodTabs);
     const items = productionsDisponibles();
     if (prodChoisie && !items.some(x => x.id === prodChoisie)) prodChoisie = null;
     U.rendreDans(prodCorps, hote => {
@@ -157,6 +239,67 @@
       if (prodChoisie) {
         const item = items.find(x => x.id === prodChoisie);
         if (item) hote.appendChild(detailProduction(item));
+      }
+    });
+  }
+
+  function majBatiment() {
+    const b = E().bat[batimentChoisi];
+    if (!b) { fermerBatiment(); return; }
+    majEnteteProductions();
+    const tous = window.UIFen && window.UIFen.ongletsBatiment
+      ? window.UIFen.ongletsBatiment(batimentChoisi) : [];
+    const ouverts = tous.filter(t => (t.niveau || 1) <= b.niv);
+    if (!ouverts.some(t => t.id === ongletBatiment)) ongletBatiment = ouverts.length ? ouverts[0].id : null;
+    const actif = ouverts.find(t => t.id === ongletBatiment);
+
+    U.rendreDans(prodTabs, rail => {
+      for (const t of ouverts) {
+        const contenu = [];
+        if (t.image) contenu.push(el('img', { src:t.image, alt:'' }));
+        else contenu.push(el('span', { class:'bat-tab-lettre', text:t.nom.charAt(0) }));
+        rail.appendChild(el('button', {
+          class:'batiment-languette ' + (t.couleur || 'bleu') + (t === actif ? ' on' : ''),
+          title:t.nom, role:'tab', 'aria-selected':t === actif ? 'true' : 'false',
+          onclick:() => choisirOngletBatiment(t.id),
+        }, ...contenu));
+      }
+    });
+
+    U.rendreDans(prodCorps, hote => {
+      if (sousPanneauBatiment) {
+        hote.appendChild(el('button', { class:'batiment-sous-retour',
+          text:'‹  Retour à ' + actif.nom.toLowerCase(), onclick:fermerSousPanneau }));
+        hote.appendChild(el('div', { class:'batiment-onglet-titre sous' },
+          el('div', {}, el('div', { class:'tt', text:sousPanneauBatiment.titre || actif.nom }),
+            el('div', { class:'eti', text:sousPanneauBatiment.sous || window.BAT[b.type].nom }))));
+        const sous = el('div', { class:'batiment-panneau batiment-sous-panneau' });
+        sousPanneauBatiment.rendu(sous);
+        hote.appendChild(sous);
+        return;
+      }
+      if (!actif) {
+        hote.appendChild(el('div', { class:'prod-vide' },
+          el('div', { class:'tt', text:'Bâtiment au repos' }),
+          el('div', { class:'note', text:'Ce bâtiment ne demande aucune commande pour le moment.' })));
+        return;
+      }
+      hote.appendChild(el('div', { class:'batiment-onglet-titre' },
+        actif.image ? el('img', { src:actif.image, alt:'' }) : null,
+        el('div', {}, el('div', { class:'tt', text:actif.nom }),
+          el('div', { class:'eti', text:window.BAT[b.type].nom }))));
+      const panneau = el('div', { class:'batiment-panneau' });
+      actif.rendu(panneau);
+      hote.appendChild(panneau);
+
+      const suivants = tous.filter(t => (t.niveau || 1) > b.niv)
+        .sort((a, z) => a.niveau - z.niveau);
+      if (suivants.length) {
+        const niveau = suivants[0].niveau;
+        const noms = suivants.filter(t => t.niveau === niveau).map(t => t.nom.toLowerCase());
+        hote.appendChild(el('div', { class:'batiment-prochain' },
+          el('span', { text:'Niveau ' + niveau }),
+          el('b', { text:noms.join(' · ') })));
       }
     });
   }
@@ -607,6 +750,7 @@
   }
 
   window.UIDock = { construire, majDock, majBandeau, majProductions, montrerSurvol, basculer,
+    ouvrirBatiment, fermerBatiment, choisirOngletBatiment, ouvrirSousPanneau, fermerSousPanneau,
     estSuivie, basculerSuivi,
     get replie() { return replie; },
     get productionReplie() { return prodReplie; } };

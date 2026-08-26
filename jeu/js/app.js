@@ -97,7 +97,10 @@
     window.Village.hooks({
       selection: batimentClique,
       survol: b => window.UIDock.montrerSurvol(b),
-      sol: () => { if (!window.Village.enConstruction()) window.UIFen.ouvrirChantier('batir'); },
+      /* Le sol rend le village à l'image : il referme la commande du
+         bâtiment et retrouve naturellement la liste des productions.
+         Le chantier reste accessible dans son menu permanent du bas. */
+      sol: () => { if (!window.Village.enConstruction()) window.UIDock.fermerBatiment(); },
       pose: (type, pos) => window.UIFen.poserIci(pos),
       poseRefus: () => U().dire('Pas de place ici : essayez une autre terrasse.', 'alerte'),
       redim: () => { synchroniserVillage(); },
@@ -304,7 +307,7 @@
      CLIC SUR UN ÉDIFICE
      ================================================================= */
   function batimentClique(bat) {
-    if (!bat) return;
+    if (!bat) { window.UIDock.fermerBatiment(); return; }
     if (E().bat[bat.id]) { window.UIFen.ouvrirBatiment(bat.id); return; }
     const job = E().chantier.file.find(j => j.bat === bat.id);
     if (job) { window.UIFen.ouvrirChantier('file'); return; }

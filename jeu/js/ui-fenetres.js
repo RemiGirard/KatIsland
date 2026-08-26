@@ -171,9 +171,9 @@
   }
 
   function choisirHabitant(bid, i) {
-    U.ouvrir('affecter', {
+    window.UIDock.ouvrirSousPanneau({
       titre: 'Qui prend ce poste ?', sous: window.BAT[E().bat[bid].type].nom,
-      onglets: [{ id: 'l', nom: 'Candidats', rendu: c => {
+      rendu: c => {
         const cands = window.Jeu.candidatsPoste(bid, i);
         const b = E().bat[bid];
         const rec = b && b.postes[i] && b.postes[i].rec ? window.REC[b.postes[i].rec] : null;
@@ -189,13 +189,22 @@
           c.appendChild(el('div', { class: 'cadre', style: 'cursor:pointer',
             onclick: () => {
               window.Jeu.assigner(bid, i, cd.h.id);
-              U.fermer('affecter'); rafraichirVillage();
+              window.UIDock.fermerSousPanneau(); rafraichirVillage();
             } },
             el('div', { class: 'rangee' }, vignetteHabitant(cd.h, rec),
               el('button', { class: 'b mini primaire', text: 'Affecter' }))));
         }
-      } }],
+      },
     });
+  }
+
+  function illustrationRecette(rec, taille, classe) {
+    if (!rec) return null;
+    const sortie = Object.keys(rec.out || {})[0];
+    const src = rec.image || (window.Img && sortie && window.Img.res(sortie, true))
+      || (window.Img && window.Img.metier(rec.metier));
+    return src ? el('img', { src, alt:'', class:classe || 'poste-recette-art',
+      style:'width:' + taille + 'px;height:' + taille + 'px' }) : null;
   }
 
   function blocPoste(b, i) {
@@ -211,7 +220,8 @@
     box.appendChild(el('div', { class: 'haut' },
       h ? vignetteHabitant(h, rec)
         : el('div', { class: 'rangee', style: 'flex:1' },
-            el('div', { class: 'av' }, U.ico({ f: 'oeuf', c: ['#3a3448', '#241f30'] }, 20)),
+            el('div', { class: 'av' }, window.Img && window.Img.bat(b.type)
+              ? el('img', { src:window.Img.bat(b.type), alt:'', class:'poste-bat-art' }) : null),
             el('div', { class: 'qui' },
               el('i', { text: 'poste ' + (i + 1) }),
               el('b', { class: 'faible', text: 'personne au poste' }))),
@@ -239,7 +249,7 @@
     /* --- ce qu'on y fait --- */
     box.appendChild(el('div', { class: 'rangee entre', style: 'margin-bottom:8px' },
       el('div', { class: 'rangee', style: 'flex:1;min-width:0' },
-        rec ? U.ico(window.METIERS[rec.metier].ico, 18) : null,
+        rec ? illustrationRecette(rec, 27) : null,
         el('span', { class: 'tt', style: 'font-size:14px;flex:1;min-width:0',
           text: rec ? rec.nom : 'aucune tâche' }),
         rec ? el('span', { class: 'niv', title: 'Nombre de cycles restants',
@@ -329,7 +339,7 @@
         for (let k = 0; k < file.length; k++) {
           const f = file[k], fr = window.REC[f.rec];
           detailCorps.appendChild(el('div', { class: 'job', style: 'margin-top:4px' },
-            U.ico(window.METIERS[fr.metier].ico, 16),
+            illustrationRecette(fr, 23),
             el('span', { class: 'jn', text: fr.nom }),
             el('span', { class: 'jr', text: f.n == null ? 'en boucle' : '×' + f.n }),
             el('div', { class: 'fl' },
@@ -357,10 +367,10 @@
      et ce qu'elle peut faire tomber.
      ------------------------------------------------------------------ */
   function choisirTache(bid, i, aLaSuite) {
-    U.ouvrir('tache', {
+    window.UIDock.ouvrirSousPanneau({
       titre: aLaSuite ? 'Ajouter à la file' : 'Que fait-on ici ?',
       sous: window.BAT[E().bat[bid].type].nom,
-      onglets: [{ id: 't', nom: 'Tâches', rendu: c => {
+      rendu: c => {
         const b = E().bat[bid];
         if (!b) return;
         const dispo = window.BatUtil.recettesDe(b.type, b.niv, b);
@@ -377,11 +387,9 @@
             onclick: ok ? () => {
               if (aLaSuite) window.Jeu.ajouterFile(bid, i, rid, null);
               else window.Jeu.definirRecette(bid, i, rid, null);
-              U.fermer('tache'); rafraichirVillage();
+              window.UIDock.fermerSousPanneau(); rafraichirVillage();
             } : null },
-            el('div', { class: 'vig' }, r.image
-              ? el('img', { src:r.image, alt:'', class:'illustration-recette' })
-              : U.ico(window.METIERS[r.metier].ico, 32)),
+            el('div', { class: 'vig' }, illustrationRecette(r, 58, 'illustration-recette')),
             el('div', { class: 'cc' },
               el('h3', { text: r.nom }),
               el('div', { class: 'm', text: ok ? U.duree(r.duree / Math.max(0.001, v)) + ' par cycle  ·  ' +
@@ -400,7 +408,7 @@
               el('div', { class: 'note', style: 'margin-top:8px', text: r.desc })));
           c.appendChild(carte);
         }
-      } }],
+      },
     });
   }
 
@@ -465,6 +473,56 @@
     }
   }
 
+  /* Une seule grammaire pour tous les bâtiments. Le volet droit utilise
+     ces métadonnées pour afficher des languettes illustrées et ne révèle
+     les fonctions avancées qu'au niveau où elles deviennent pertinentes. */
+  function ongletsBatiment(bid) {
+    const bb = E().bat[bid];
+    if (!bb) return [];
+    const def = window.BAT[bb.type];
+    const imageRes = id => window.Img ? window.Img.res(id, true) : null;
+    const imageBat = () => window.Img ? window.Img.bat(bb.type) : null;
+    const ong = [];
+    const ajouter = (id, nom, rendu, niveau, couleur, image) => ong.push({
+      id, nom, rendu, niveau: niveau || 1, couleur: couleur || 'bleu',
+      image: image || imageBat(),
+    });
+
+    if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
+      c => rendrePostes(c, bid), 1, 'bleu', imageBat());
+    if (bb.type === 'caserne' && window.UIArmee) {
+      ong.unshift({ id:'effectifs', nom:'Effectifs', rendu:c => window.UIArmee.rendreEffectifs(c, bid), niveau:1, couleur:'bleu', image:imageRes('arme') });
+      ajouter('colonne', 'Colonne', c => window.UIArmee.rendreColonne(c, bid), 2, 'vert', imageRes('armure'));
+      ajouter('techniques', 'Techniques', c => window.UIArmee.rendreTechniques(c, bid), 3, 'orange', imageRes('parchemin'));
+    }
+    if (bb.type === 'entrainement' && window.Entrainement)
+      ong.unshift({ id:'entrainer', nom:'Entraîner', rendu:c => rendreEntrainementIndividuel(c, bid), niveau:1, couleur:'bleu', image:imageBat() });
+    if (bb.type === 'forge' && window.Armee) {
+      ong.unshift({ id:'arsenal', nom:'Arsenal', rendu:c => rendreArsenal(c, bid), niveau:1, couleur:'bleu', image:imageRes('arme') });
+      if (window.UICompagnie) {
+        ajouter('renfort', 'Renforcement', c => window.UICompagnie.rendreForgeRenfort(c, bid), 2, 'vert', imageRes('armure'));
+        ajouter('trempe', 'Trempe', c => window.UICompagnie.rendreForgeTrempe(c, bid), 3, 'orange', imageRes('poussiere_trempe'));
+      }
+    }
+
+    /* Le jaune signifie toujours « faire grandir le bâtiment ». */
+    ajouter('niveau', 'Améliorer', c => rendreNiveau(c, bid), 1, 'jaune', imageRes('plan'));
+
+    if (bb.postes.length && aVuUneAmelioration(bb))
+      ajouter('amelio', 'Perfectionnements', c => rendreAmelio(c, bid), 2, 'violet', imageRes('plan'));
+    if (bb.postes.length && aVuUnOutil(bb))
+      ajouter('outil', 'Outillage', c => rendreOutil(c, bid), 2, 'vert', imageRes('outil'));
+    if (window.RaffUtil && window.RaffUtil.pourBat(bb.type).length && aVuUneAnnexe(bb))
+      ajouter('annexe', 'Annexes', c => rendreAnnexes(c, bid), 3, 'orange', imageBat());
+
+    /* Le port et la Tour sont interceptés par ouvrirBatiment et gardent
+       toujours leurs pages dédiées. Ces entrées ne servent qu'aux rares
+       appelants historiques qui rendent encore les portes en panneau. */
+    if (def.porte === 'aventure') ong.unshift({ id:'descente', nom:'Descente', rendu:c => window.UIAventure.rendre(c), niveau:1, couleur:'bleu', image:imageBat() });
+    if (def.porte === 'expedition') ong.unshift({ id:'expedition', nom:'Expédition', rendu:c => window.UIExpedition.rendre(c), niveau:1, couleur:'bleu', image:imageBat() });
+    return ong;
+  }
+
   function ouvrirBatiment(bid) {
     /* LE PORT N'A PLUS DE FENÊTRE. Il EST la carte marine — on l'ouvre
        donc directement, et tout ce qu'on y faisait vit maintenant dans
@@ -472,62 +530,21 @@
        chaque appelant : le clic dans le village, la vignette du dock et
        le raccourci du bilan passent tous par cette porte. */
     const bp = window.Etat.E.bat[bid];
-    if (bp && bp.type === 'port' && !bp.chantier) { ouvrirCarteMarine(null, null); return; }
+    if (bp && bp.type === 'port' && !bp.chantier) {
+      if (window.UIDock) window.UIDock.fermerBatiment();
+      ouvrirCarteMarine(null, null); return;
+    }
+    /* La Tour n'ouvre plus une fiche de bâtiment chargée. Elle commence par
+       les groupes enregistrés, puis seulement par le grand écran de préparation. */
+    if (bp && bp.type === 'descente' && !bp.chantier && window.UIAventure) {
+      if (window.UIDock) window.UIDock.fermerBatiment();
+      window.UIAventure.ouvrirEquipes(); return;
+    }
     const b = E().bat[bid];
     if (!b) return;
-    const def = window.BAT[b.type];
-    const ancre = window.Village ? window.Village.ecran(bid) : null;
-    if (window.Village) window.Village.selection(bid);
-
-    U.ouvrir('bat:' + bid, {
-      titre: def.nom, sous: def.metier + ' · niveau ' + b.niv,
-      ancre,
-      titreVif: () => window.BAT[E().bat[bid] ? E().bat[bid].type : b.type].nom,
-      sousVif: () => {
-        const bb = E().bat[bid]; if (!bb) return '';
-        return def.metier + ' · niveau ' + bb.niv + (bb.endommage > 0 ? ' · ENDOMMAGÉ' : '');
-      },
-      surFermeture: () => { if (window.Village) window.Village.selection(null); },
-      onglets: () => {
-        const bb = E().bat[bid];
-        const ong = [];
-        if (bb && bb.postes.length) ong.push({ id: 'postes', nom: bb.type === 'caserne' ? 'Recrutement' : 'Postes', rendu: c => rendrePostes(c, bid) });
-        if (bb && bb.type === 'caserne' && window.UIArmee) {
-          ong.unshift({ id: 'effectifs', nom: 'Effectifs', rendu: c => window.UIArmee.rendreEffectifs(c, bid) });
-          ong.push({ id: 'colonne', nom: 'Colonne', rendu: c => window.UIArmee.rendreColonne(c, bid) });
-          ong.push({ id: 'techniques', nom: 'Techniques', rendu: c => window.UIArmee.rendreTechniques(c, bid) });
-        }
-        if (bb && bb.type === 'entrainement' && window.Entrainement)
-          ong.unshift({ id:'entrainer', nom:'Entraîner', rendu:c => rendreEntrainementIndividuel(c, bid) });
-        if (bb && bb.type === 'forge' && window.Armee)
-          ong.unshift({ id: 'arsenal', nom: 'Arsenal', rendu: c => rendreArsenal(c, bid) });
-        ong.push({ id: 'niveau', nom: 'Niveau', rendu: c => rendreNiveau(c, bid) });
-
-        /* CE QUI N'EXISTE PAS ENCORE NE S'AFFICHE PAS.
-           Trois onglets vides le premier jour, c'est trois promesses
-           qu'on ne tient pas — et un jeu qui paraît trois fois plus
-           compliqué qu'il ne l'est. Chacun attend son heure. */
-        if (bb && bb.postes.length && aVuUneAmelioration(bb))
-          ong.push({ id: 'amelio', nom: 'Améliorations', rendu: c => rendreAmelio(c, bid) });
-        if (bb && bb.postes.length && aVuUnOutil(bb))
-          ong.push({ id: 'outil', nom: 'Outillage', rendu: c => rendreOutil(c, bid) });
-        if (bb && window.RaffUtil && window.RaffUtil.pourBat(bb.type).length && aVuUneAnnexe(bb))
-          ong.push({ id: 'annexe', nom: 'Annexes', rendu: c => rendreAnnexes(c, bid) });
-
-        if (def.porte === 'aventure') ong.unshift({ id: 'descente', nom: 'Descente', rendu: c => window.UIAventure.rendre(c) });
-        if (def.porte === 'expedition') ong.unshift({ id: 'expedition', nom: 'Expédition', rendu: c => window.UIExpedition.rendre(c) });
-        /* LE PORT a deux panneaux à lui : sa flotte, et la carte des
-           îles. Ils passent devant les postes — c'est pour eux qu'on
-           ouvre ce bâtiment. */
-        if (bb && bb.type === 'port') {
-          ong.unshift({ id: 'chantier', nom: 'Chantier naval', rendu: c => rendreChantier(c) });
-          ong.unshift({ id: 'iles', nom: 'Les îles', rendu: (c, F) => rendreIles(c, F) });
-          ong.unshift({ id: 'flotte', nom: 'La flotte', rendu: c => rendreFlotte(c) });
-        }
-        ong.push({ id: 'notice', nom: 'Notice', rendu: c => rendreNotice(c, bid) });
-        return ong;
-      },
-    });
+    if (window.UIDock && window.UIDock.ouvrirBatiment) {
+      window.UIDock.ouvrirBatiment(bid);
+    }
   }
 
   function rendrePostes(c, bid) {
@@ -709,7 +726,9 @@
       const val = a.effet(rang)[cle] || 0;
       c.appendChild(el('div', { class: 'cadre' + (rang ? ' actif' : '') },
         el('div', { class: 'rangee' },
-          el('div', { class: 'av' + (rang ? ' or' : '') }, U.ico(a.ico, 20)),
+          el('div', { class: 'av' + (rang ? ' or' : '') },
+            window.Img && window.Img.bat(b.type)
+              ? el('img', { src:window.Img.bat(b.type), alt:'', class:'amelio-art' }) : null),
           el('div', { style: 'flex:1;min-width:0' },
             el('div', { class: 'rangee entre' },
               el('span', { class: 'tt', style: 'font-size:14px', text: a.nom }),
@@ -861,7 +880,7 @@
     const portraits = el('div',{class:'entrainement-portraits'});
     for (const h of habitants) portraits.appendChild(el('button',{
       class:'entrainement-portrait' + (h.id === entrainementHabId ? ' actif' : ''),
-      title:h.nom, onclick:() => { entrainementHabId = h.id; U.ouvrir('bat:' + bid,{}); }
+      title:h.nom, onclick:() => { entrainementHabId = h.id; window.UIDock.ouvrirBatiment(bid, 'entrainer'); }
     }, avatarHab(h,44), el('span',{text:h.nom.split(' ')[0]})));
     c.appendChild(portraits);
     const h = window.Etat.habitant(entrainementHabId);
@@ -881,7 +900,7 @@
         el('button',{class:'b primaire',text:'Faire une séance',disabled:!ok,onclick:() => {
           const r = window.Entrainement.pratiquer(h.id,id);
           U.dire(r.ok ? d.nom + ' : +' + r.gain + ' XP.' : r.raison,r.ok ? 'bien' : 'alerte');
-          U.ouvrir('bat:' + bid,{});
+          window.UIDock.ouvrirBatiment(bid, 'entrainer');
         }})));
     }
     c.appendChild(grille);
@@ -3591,6 +3610,7 @@
 
   window.UIFen = {
     ouvrirBatiment, ouvrirChantier, ouvrirReserves, ouvrirHabitants, ouvrirBourg, ouvrirRecherches, ouvrirReglages,
+    ongletsBatiment,
     entrerConstruction, quitterConstruction, poserIci,
     get typeAPoser() { return typeAPoser; },
   };

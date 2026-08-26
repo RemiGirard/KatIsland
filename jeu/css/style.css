@@ -741,6 +741,12 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
    --------------------------------------------------------------- */
 #plateau{position:fixed;inset:0;z-index:80;background:var(--fond2);display:none;flex-direction:column}
 #plateau.vu{display:flex}
+body.plateau-fenetres #couche{z-index:90}
+/* Seules les fenêtres ouvertes volontairement depuis l'aventure passent au-
+   dessus du plateau. Le bandeau, le dock, les productions, la menace et le
+   chantier du village disparaissent entièrement pendant ce mode. */
+body.plateau-fenetres #couche > :not(.fen):not(#messages){display:none!important}
+body.plateau-fenetres #scene{visibility:hidden}
 #plateau-tete{display:flex;align-items:center;gap:14px;padding:11px 16px;
   background:var(--panneau);border-bottom:1px solid var(--bord)}
 #plateau-tete .ti{flex:1}
@@ -756,6 +762,21 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:99px;
    moteur choisit sa résolution interne, le CSS choisit sa taille
    affichée — les deux ne se disputent plus. */
 #plateau-scene canvas{width:100%;height:100%;display:block;border-radius:var(--r2)}
+.plateau-palier{position:absolute;inset:0;z-index:5;display:none;place-items:center;padding:28px;background:rgba(7,16,22,.76);backdrop-filter:blur(5px)}
+.plateau-palier.visible{display:grid}
+.plateau-palier-carte{width:min(510px,92%);padding:30px;border:1px solid rgba(214,177,73,.48);border-radius:10px;background:linear-gradient(145deg,rgba(31,44,52,.98),rgba(17,28,35,.98));box-shadow:0 22px 70px rgba(0,0,0,.45);text-align:center;color:#eef1ed}
+.plateau-palier-surtitre{color:var(--or);font:800 10px 'Condense','Inter',sans-serif;letter-spacing:.2em}
+.plateau-palier-carte h2{margin:8px 0 6px;font:700 30px 'Condense','Inter',sans-serif;text-transform:uppercase}
+.plateau-palier-carte p{margin:0 auto 14px;max-width:390px;color:#bbc6c8;font-size:12px;line-height:1.6}
+.plateau-palier-prochain{margin:12px 0 18px;padding:10px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);color:#e7d394;font-size:11px}
+.plateau-palier-actions{justify-content:center;gap:8px}
+.plateau-preparation{position:absolute;inset:0;z-index:4;display:none;place-items:center;padding:34px;background:radial-gradient(circle at 50% 48%,rgba(39,53,59,.46),rgba(7,16,22,.94) 68%)}
+.plateau-preparation.visible{display:grid}
+.plateau-preparation-carte{width:min(590px,90%);padding:34px;border:1px solid rgba(214,177,73,.36);border-radius:10px;background:rgba(20,31,38,.93);box-shadow:0 24px 80px rgba(0,0,0,.5);text-align:center;color:#edf0eb}
+.plateau-preparation-carte h2{margin:8px 0;font:700 30px 'Condense','Inter',sans-serif;text-transform:uppercase}.plateau-preparation-carte p{max-width:470px;margin:0 auto 18px;color:#b9c3c5;font-size:12px;line-height:1.65}
+.plateau-preparation-res{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:16px 0;padding:12px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+.plateau-script{width:100%;padding:9px;border:1px solid rgba(214,177,73,.3);border-radius:5px;background:#24343d;color:#eef1ed;font:700 10px 'Inter',sans-serif}
+.plateau-config-actions{display:grid;grid-template-columns:1fr;gap:6px;margin-top:12px}.plateau-config-actions .b{width:100%}
 #plateau .plateau-cote{min-width:0;padding:14px 12px;overflow:auto;background:rgba(25,35,43,.82);border-right:1px solid var(--bord)}
 #plateau #plateau-droite{border-right:0;border-left:1px solid var(--bord)}
 .plateau-cote .cote-titre{margin-bottom:10px;font-family:'Condense','Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--doux)}
@@ -1378,12 +1399,21 @@ button[title],.b[title],a[title]{cursor:pointer}
   position:fixed;right:16px;top:80px;bottom:16px;width:var(--prod);
   display:flex;flex-direction:column;background:#15222b;
   border:1px solid rgba(255,255,255,.10);border-radius:6px;
-  box-shadow:0 12px 34px rgba(4,10,14,.25);z-index:15;overflow:hidden;
-  transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s;
+  box-shadow:0 12px 34px rgba(4,10,14,.25);z-index:15;overflow:visible;
+  transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s,width .18s;
 }
 #productions.replie{transform:translateX(calc(var(--prod) + 32px));opacity:0}
-#productions-tete{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 14px 13px;border-bottom:1px solid rgba(255,255,255,.09)}
-#productions-corps{flex:1;min-height:0;overflow:auto;padding:10px}
+#productions.batiment-ouvert{width:min(410px,calc(100vw - 72px))}
+#productions.batiment-ouvert.replie{transform:translateX(calc(100% + 34px))}
+#productions-tete{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 12px 11px;background:#15222b;border-bottom:1px solid rgba(255,255,255,.09);border-radius:6px 6px 0 0;min-height:58px}
+#productions-identite{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+#productions-identite > .tt,#productions-identite > .eti{display:block}
+#productions-identite > .eti{margin-top:3px}
+.batiment-entete-art{width:48px;height:48px;object-fit:contain;flex:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,.28))}
+.batiment-entete-texte{min-width:0}.batiment-entete-texte .tt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.batiment-entete-texte .eti{margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.productions-actions{display:flex;align-items:center;gap:5px;flex:none}.productions-actions .b{padding-left:8px;padding-right:8px}
+.prod-retour[hidden]{display:none!important}
+#productions-corps{flex:1;min-height:0;overflow:auto;padding:10px;background:#15222b;border-radius:0 0 6px 6px}
 #productions-poignee{
   position:fixed;right:326px;top:92px;width:23px;height:44px;display:grid;place-items:center;
   background:#15222b;border:1px solid rgba(255,255,255,.10);border-right:0;
@@ -1391,6 +1421,7 @@ button[title],.b[title],a[title]{cursor:pointer}
   transition:right .2s cubic-bezier(.4,0,.2,1),background .12s;
 }
 #productions-poignee:hover{background:#20313c}
+#productions.batiment-ouvert + #productions-poignee{right:min(426px,calc(100vw - 64px))}
 .prod-intro{font-size:10.5px;line-height:1.5;color:#93a09f;padding:2px 3px 10px}
 #productions-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
 .prod-res{
@@ -1413,6 +1444,33 @@ button[title],.b[title],a[title]{cursor:pointer}
 .prod-actif{font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:var(--vert);flex:none}
 .prod-flux{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:8px 0}.prod-fleche{color:#6f7c7c}
 .prod-vide{padding:30px 16px;text-align:center}.prod-vide .note{margin-top:7px}
+
+/* Navigation d'un bâtiment : des languettes imagées, toujours au même
+   endroit et avec le même sens. Elles remplacent les anciennes fenêtres
+   flottantes sans recouvrir le village. */
+#batiment-languettes{display:none;position:absolute;right:100%;top:70px;width:42px;z-index:-1;flex-direction:column;align-items:flex-end;gap:4px}
+#productions.batiment-ouvert #batiment-languettes{display:flex}
+.batiment-languette{width:36px;height:46px;padding:5px 6px 5px 3px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.13);border-right:0;border-radius:5px 0 0 5px;cursor:pointer;opacity:.82;transform:translateX(1px);transition:width .12s,opacity .12s,filter .12s}
+.batiment-languette:hover,.batiment-languette.on{width:42px;opacity:1;filter:brightness(1.12)}
+.batiment-languette img{width:27px;height:27px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.28))}
+.batiment-languette.bleu{background:#316a78}.batiment-languette.jaune{background:#c49b05}.batiment-languette.vert{background:#5d8d2a}.batiment-languette.orange{background:#bf6815}.batiment-languette.violet{background:#735a91}
+.bat-tab-lettre{color:#fff;font:700 16px 'Condense',sans-serif}
+.batiment-onglet-titre{display:flex;align-items:center;gap:9px;padding:3px 3px 11px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.09)}
+.batiment-onglet-titre img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.batiment-onglet-titre .eti{margin-top:3px}
+.batiment-panneau > * + *{margin-top:10px}
+.batiment-panneau .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.batiment-panneau .stats > div{min-width:0;padding:8px}.batiment-panneau .stats .v{font-size:14px}
+.batiment-panneau .tabl{font-size:10px}.batiment-panneau .tabl th,.batiment-panneau .tabl td{padding:6px 5px}
+.batiment-panneau .arsenal-grille,.batiment-panneau .outil-grille{grid-template-columns:minmax(0,1fr)}
+.batiment-panneau .cadre{padding:10px}
+.batiment-prochain{display:flex;justify-content:space-between;gap:10px;margin-top:12px;padding:9px 10px;border:1px dashed rgba(255,255,255,.13);border-radius:4px;color:#84918f;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+.batiment-prochain b{color:#aab4b1;font-weight:600;text-align:right}
+.batiment-sous-retour{display:block;width:100%;padding:8px 9px;margin-bottom:8px;color:#bdc7c5;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:4px;text-align:left;font:650 9px 'Inter',sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer}
+.batiment-sous-retour:hover{background:rgba(255,255,255,.08);color:#fff}
+.batiment-onglet-titre.sous{padding-left:5px}.batiment-sous-panneau .cat-item{grid-template-columns:66px minmax(0,1fr)}
+.poste-recette-art,.poste-bat-art,.amelio-art{display:block;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}
+.poste-bat-art,.amelio-art{width:28px;height:28px}.illustration-recette{display:block;width:58px;height:58px;object-fit:contain}
 
 /* Fenêtres : une feuille sobre, bien séparée du décor. */
 .fen{
@@ -1792,6 +1850,7 @@ button[title],.b[title],a[title]{cursor:pointer}
   #dock-poignee{left:252px;top:calc(var(--bandeau) + var(--menace-ui) + 18px)}
   #productions{right:8px;top:calc(var(--bandeau) + var(--menace-ui) + 8px);bottom:8px}
   #productions-poignee{right:294px;top:calc(var(--bandeau) + var(--menace-ui) + 18px)}
+  #productions.batiment-ouvert + #productions-poignee{right:min(418px,calc(100vw - 64px))}
   #bulles{width:calc(100vw - 16px);min-width:0;bottom:8px}
   #bulles.replie #chantier-bas{min-width:0;width:100%}
 }
@@ -2126,3 +2185,13 @@ button[title],.b[title],a[title]{cursor:pointer}
 .tresor-aventure img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 4px 5px rgba(31,25,18,.2))}
 .tresor-aventure b{font-size:11px}.tresor-aventure small{font-size:9px;color:var(--faible)}
 .tresor-aventure.cache{opacity:.38;filter:grayscale(1)}
+.maitrise-aventure{margin:10px 0 8px;padding:10px;border:1px solid rgba(99,83,62,.22);background:rgba(246,239,221,.55)}
+.maitrise-aventure-jauge{height:7px;margin:8px 0 5px;border-radius:8px;overflow:hidden;background:rgba(35,44,43,.15)}
+.maitrise-aventure-jauge i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#789552,#b9cc78)}
+.maitrise-aventure small{display:block;color:var(--faible);font-size:9px;text-align:right}
+.equipes-tour-liste{display:flex;flex-direction:column;gap:9px;margin-top:12px}.equipe-tour-ligne{display:grid;grid-template-columns:minmax(110px,1fr) auto auto;align-items:center;gap:14px;padding:11px;border:1px solid var(--bord);background:rgba(255,255,255,.42)}
+.equipe-tour-identite{display:flex;flex-direction:column;gap:3px}.equipe-tour-identite b{font-size:14px}.equipe-tour-identite span{color:var(--faible);font-size:9px}.equipe-tour-portraits{display:flex;gap:5px}
+.equipe-tour-portrait{display:inline-grid;place-items:center;overflow:hidden;flex:none;border:1px solid rgba(112,91,62,.28);border-radius:6px;background:rgba(53,58,53,.08);color:var(--faible)}.equipe-tour-portrait img{width:100%;height:100%;display:block;object-fit:cover}.equipe-tour-portrait.vide{width:58px;height:58px;border-style:dashed;font-size:18px}.equipe-tour-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.equipe-tour-edition-tete{display:grid;grid-template-columns:auto minmax(180px,1fr) auto;gap:10px;align-items:center;margin-bottom:12px;padding:10px;border:1px solid var(--bord);background:rgba(255,255,255,.45)}.equipe-tour-edition-tete .champ{width:100%}
+.equipe-tour-selection .equipe-tour-portrait{width:100%!important;height:100%!important;border:0;border-radius:0}.equipe-tour-selection .carte-habitant.equipe-choisie{outline:3px solid #9cac58;outline-offset:-3px}.equipe-tour-selection .carte-habitant.equipe-choisie::after{content:'✓';position:absolute;right:8px;top:8px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#789552;color:white;font-weight:900}.equipe-tour-selection .carte-habitant.equipe-indisponible{filter:grayscale(1);opacity:.48}
+@media(max-width:800px){.equipe-tour-ligne{grid-template-columns:1fr}.equipe-tour-actions{justify-content:flex-start}.equipe-tour-portraits{order:2}.equipe-tour-actions{order:3}}
