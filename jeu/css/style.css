@@ -2078,6 +2078,21 @@ button[title],.b[title],a[title]{cursor:pointer}
 .carte-flanc button.b{border-color:rgba(38,52,57,.20);color:#4e5e61;background:#f7f6f1}
 .carte-flanc button.b:hover:not(:disabled){background:#e7ebe3}.carte-flanc button.b.primaire{background:#5c754b;border-color:#5c754b;color:#fff}
 
+/* LA CALE reste dans le flanc du port : la liste n'est plus une fenêtre
+   cachée derrière la carte plein écran. Portrait, effectif et coût en
+   places se lisent avant les boutons de chargement. */
+.cale-entete{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:3px 2px 10px}
+.cale-entete>div{min-width:0}.cale-entete .tt{font-size:16px}.cale-entete> b{flex:none;font:800 20px 'Condense',sans-serif;color:#4f6848}
+.cale-jauge{margin-bottom:11px}.cale-unites{display:flex;flex-direction:column;gap:7px}
+.cale-unite{display:grid;grid-template-columns:64px minmax(0,1fr);gap:9px;padding:8px;border:1px solid rgba(38,52,57,.13);border-radius:5px;background:rgba(255,255,255,.50)}
+.cale-unite.embarquee{border-color:#9caf82;background:#f7f8f0}
+.cale-unite-art{width:64px;height:64px;display:grid;place-items:center;overflow:hidden;border-radius:4px;background:#e3e6dd;color:#657269;font:800 20px 'Condense',sans-serif}
+.cale-unite-art img{width:100%;height:100%;object-fit:contain}.cale-unite-corps{min-width:0}.cale-unite-corps b{font-size:11px;color:#2c393e}
+.cale-unite-nombre{font:800 11px 'Condense',sans-serif;color:#536f49}.cale-unite-corps>.eti{margin-top:3px;color:#77817e}
+.cale-unite-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.cale-unite-actions .b{min-width:34px;padding-left:6px;padding-right:6px}
+.cale-pied{position:sticky;bottom:-18px;display:flex;gap:6px;margin:12px -2px -18px;padding:10px 2px 2px;background:linear-gradient(transparent,#f5f3ed 20%)}
+.cale-pied .b.primaire{flex:1}.cale-vide{padding:24px 10px;margin:8px 0;border:1px dashed rgba(38,52,57,.17);border-radius:5px}.cale-vide .note{margin-top:6px}
+
 .carte-pleine .carte-mer.a-flanc .mer-toile{
   position:relative;min-width:0;width:100%;height:100%;border:1px solid rgba(99,73,42,.38);
   border-radius:8px;box-shadow:0 8px 24px rgba(65,50,32,.15);background:#cbb982

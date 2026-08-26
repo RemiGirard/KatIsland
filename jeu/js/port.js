@@ -215,12 +215,11 @@
   /* Ce que le bourg a de ce type, MOINS ce qui est déjà embarqué —
      ailleurs comme ici. Sans cette soustraction, on chargerait trois
      fois la même compagnie sur trois navires. */
-  function disponible(type, saufNavire) {
+  function disponible(type) {
     const a = E().armee;
     const total = (a && a.types && a.types[type]) || 0;
     let pris = 0;
     for (const n of navires()) {
-      if (saufNavire && n.id === saufNavire) continue;
       for (const c of n.cargo) if (c.type === type) pris += c.n;
     }
     return Math.max(0, total - pris);
@@ -239,10 +238,11 @@
     if (!u) return { ok: false, pourquoi: 'Type inconnu.' };
     const pop = u.pop || 1;
     const libre = nav.places - placesPrises(nav.cargo);
-    const possible = Math.min(n, disponible(type, id), Math.floor(libre / pop));
+    const possible = Math.min(n, disponible(type), Math.floor(libre / pop));
     if (possible <= 0) return { ok: false, pourquoi: libre < pop ? 'La cale est pleine.' : 'Aucune unité de ce type disponible.' };
     const c = nav.cargo.find(x => x.type === type);
     if (c) c.n += possible; else nav.cargo.push({ type, n: possible });
+    window.Etat.prevenir('port', nav);
     return { ok: true, embarque: possible };
   }
   function decharger(id, type, n) {
@@ -252,11 +252,15 @@
     if (i < 0) return { ok: false };
     nav.cargo[i].n -= (n == null ? nav.cargo[i].n : n);
     if (nav.cargo[i].n <= 0) nav.cargo.splice(i, 1);
+    window.Etat.prevenir('port', nav);
     return { ok: true };
   }
   function viderCale(id) {
     const nav = navire(id);
-    if (nav && nav.etat === 'quai') nav.cargo = [];
+    if (nav && nav.etat === 'quai') {
+      nav.cargo = [];
+      window.Etat.prevenir('port', nav);
+    }
   }
 
   /* ==================================================================

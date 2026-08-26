@@ -913,7 +913,7 @@
      seul geste qui compte selon son état : charger s'il est à quai,
      attendre s'il est en mer, se battre s'il mouille devant une île.
      ================================================================== */
-  function rendreFlotte(c) {
+  function rendreFlotte(c, cle, rafraichir) {
     const P = window.Port;
     if (!P) return;
     const navs = P.navires();
@@ -925,7 +925,7 @@
       ['îles prises', P.assure().prises.length],
     ]));
 
-    for (const n of navs) c.appendChild(carteNavire(n));
+    for (const n of navs) c.appendChild(carteNavire(n, cle, rafraichir));
 
     const v = P.peutArmer();
     const bloc = el('div', { class: 'cadre' },
@@ -941,7 +941,7 @@
     c.appendChild(bloc);
   }
 
-  function carteNavire(n) {
+  function carteNavire(n, cle, rafraichir) {
     const P = window.Port;
     const et = P.etatNavire(n);
     const ile = P.ileDe(n);
@@ -972,8 +972,14 @@
 
     const actions = el('div', { class: 'rangee', style: 'margin-top:12px;gap:6px' });
     if (n.etat === 'quai') {
-      actions.appendChild(el('button', { class: 'b', text: 'Charger',
-        onclick: () => ouvrirCale(n.id) }));
+      actions.appendChild(el('button', { class: 'b', text: 'Charger la cale',
+        onclick: () => {
+          if (cle) {
+            navireCaleFlanc[cle] = n.id;
+            ongletFlanc[cle] = 'cale';
+            if (rafraichir) rafraichir();
+          } else ouvrirCale(n.id);
+        } }));
       const ag = P.peutAgrandir(n.id);
       actions.appendChild(el('button', { class: 'b', text: 'Agrandir la cale',
         disabled: !ag.ok,
@@ -1095,51 +1101,76 @@
     return u ? (u.name && u.name.cats ? u.name.cats : t) : t;
   }
 
-  /* LA CALE. On embarque type par type, la place est comptée : c'est le
-     seul endroit du jeu où l'on choisit VRAIMENT sa compagnie. */
+  /* LA CALE. Son contenu est maintenant un vrai panneau réutilisable :
+     sur la carte du port il vit dans le flanc gauche, donc jamais derrière
+     la page plein écran. Le vieux dialogue ne sert que de repli. */
+  function rendreContenuCale(c, navId, options) {
+    options = options || {};
+    const P = window.Port, n = P.navire(navId);
+    if (!n) return;
+    const refaire = options.rafraichir || function () {};
+    const pris = P.placesPrises(n.cargo);
+    c.appendChild(el('div', { class:'cale-entete' },
+      el('div', {}, el('div', { class:'tt', text:n.nom }),
+        el('div', { class:'note', text:'Composez les troupes qui partiront réellement.' })),
+      el('b', { text:pris + ' / ' + n.places })));
+    c.appendChild(el('div', { class:'cale-jauge' },
+      U.barre(pris / Math.max(1, n.places), 'grande ' + (pris >= n.places ? 'or' : 'vert'),
+        'places occupées', Math.max(0, n.places - pris) + ' libres')));
+
+    const types = P.typesEmbarquables();
+    if (!types.length) {
+      c.appendChild(el('div', { class:'vide cale-vide' },
+        el('div', { class:'tt', text:'Aucune unité disponible' }),
+        el('div', { class:'note',
+          text:"Formez d'abord des unités à la caserne. Elles apparaîtront ensuite ici pour être embarquées." })));
+    }
+    const liste = el('div', { class:'cale-unites' });
+    for (const t of types) {
+      const d = window.GameData.UNIT_TYPES[t] || {};
+      const pop = d.pop || 1;
+      const embarque = (n.cargo.find(x => x.type === t) || { n:0 }).n;
+      const libre = P.disponible(t);
+      const placeLibre = Math.max(0, n.places - P.placesPrises(n.cargo));
+      const ajoutPossible = Math.min(libre, Math.floor(placeLibre / pop));
+      const src = window.Img && window.Img.unite ? window.Img.unite(t) : null;
+      liste.appendChild(el('div', { class:'cale-unite' + (embarque ? ' embarquee' : '') },
+        el('div', { class:'cale-unite-art' },
+          src ? window.Img.vignette(src, 58, nomUnite(t)) : el('span', { text:nomUnite(t).charAt(0) })),
+        el('div', { class:'cale-unite-corps' },
+          el('div', { class:'rangee entre' },
+            el('b', { text:nomUnite(t) }),
+            el('span', { class:'cale-unite-nombre', text:embarque + ' à bord' })),
+          el('div', { class:'eti', text:libre + ' disponible' + (libre > 1 ? 's' : '')
+            + ' · ' + pop + ' place' + (pop > 1 ? 's' : '') + ' par unité' }),
+          el('div', { class:'cale-unite-actions' },
+            ...[1, 5, 25].map(k => el('button', { class:'b mini', text:'+' + k,
+              disabled:ajoutPossible <= 0, onclick:() => {
+                const r = P.charger(n.id, t, k);
+                if (!r.ok) U.dire(r.pourquoi, 'alerte');
+                refaire();
+              } })),
+            el('button', { class:'b mini', text:'Tout', disabled:ajoutPossible <= 0,
+              onclick:() => { const r=P.charger(n.id,t,ajoutPossible);
+                if (!r.ok) U.dire(r.pourquoi,'alerte'); refaire(); } }),
+            el('button', { class:'b mini danger', text:'−1', disabled:embarque <= 0,
+              onclick:() => { P.decharger(n.id,t,1); refaire(); } }),
+            el('button', { class:'b mini danger', text:'Retirer', disabled:embarque <= 0,
+              onclick:() => { P.decharger(n.id,t); refaire(); } }))));
+    }
+    if (types.length) c.appendChild(liste);
+    c.appendChild(el('div', { class:'cale-pied' },
+      el('button', { class:'b', text:'Vider la cale', disabled:!n.cargo.length,
+        onclick:() => { P.viderCale(n.id); refaire(); } }),
+      el('button', { class:'b primaire', text:options.finTexte || 'Choisir une île',
+        onclick:options.fin || (() => { U.fermer('cale'); ouvrirDestination(navId); }) })));
+  }
+
   function ouvrirCale(navId) {
-    U.ouvrir('cale', {
-      titre: 'La cale', sous: "Ce qu'on emmène", classe: 'large',
-      onglets: [{ id: 'c', nom: 'Embarquement', rendu: c => {
-        const P = window.Port, n = P.navire(navId);
-        if (!n) return;
-        const pris = P.placesPrises(n.cargo);
-        c.appendChild(el('div', { class: 'note',
-          text: 'La cale de ' + n.nom + ' tient ' + n.places + ' places. Une unité en prend une, '
-              + 'les plus lourdes davantage. Ce qui reste à quai ne se bat pas.' }));
-        c.appendChild(el('div', { style: 'margin-top:8px' },
-          U.barre(pris / Math.max(1, n.places), 'grande ' + (pris >= n.places ? 'or' : 'vert'),
-            'cale', pris + ' / ' + n.places)));
-        const types = P.typesEmbarquables();
-        if (!types.length) {
-          c.appendChild(el('div', { class: 'vide' },
-            el('div', { text: 'Aucune unité au bourg.' }),
-            el('div', { class: 'note', style: 'margin-top:8px',
-              text: "Formez des recrues au terrain d'entraînement : il faut un chaton, une arme et du pain." })));
-          return;
-        }
-        for (const t of types) {
-          const embarque = (n.cargo.find(x => x.type === t) || { n: 0 }).n;
-          const libre = P.disponible(t, n.id);
-          c.appendChild(el('div', { class: 'cadre' },
-            el('div', { class: 'rangee entre' },
-              el('span', { class: 'tt', style: 'font-size:14px', text: nomUnite(t) }),
-              el('span', { class: 'eti', text: embarque + ' embarqué(s) · ' + libre + ' au bourg' })),
-            el('div', { class: 'rangee', style: 'margin-top:8px;gap:6px' },
-              ...[1, 5, 25].map(k => el('button', { class: 'b mini',
-                text: '+' + k, disabled: libre <= 0,
-                onclick: () => { P.charger(n.id, t, k); } })),
-              el('button', { class: 'b mini', text: 'tout', disabled: libre <= 0,
-                onclick: () => { P.charger(n.id, t, libre); } }),
-              el('button', { class: 'b mini danger', text: '−', disabled: embarque <= 0,
-                onclick: () => { P.decharger(n.id, t, 1); } }))));
-        }
-        c.appendChild(el('div', { class: 'rangee', style: 'margin-top:12px;gap:6px' },
-          el('button', { class: 'b', text: 'Vider la cale', onclick: () => P.viderCale(n.id) }),
-          el('button', { class: 'b primaire', text: 'Choisir une île',
-            onclick: () => { U.fermer('cale'); ouvrirDestination(navId); } })));
-      } }],
-    });
+    U.ouvrir('cale', { titre:'La cale', sous:"Ce qu'on emmène", classe:'large',
+      onglets:[{ id:'c', nom:'Embarquement', rendu:c => rendreContenuCale(c, navId, {
+        rafraichir:() => U.ouvrir('cale', {})
+      }) }] });
   }
 
   /* ==================================================================
@@ -1850,20 +1881,31 @@
      mémoire.
      ================================================================== */
   const ongletFlanc = {};          // l'onglet ouvert, par carte
-  function panneauxDuPort(bid) {
+  const navireCaleFlanc = {};      // le navire que ce flanc est en train de charger
+  function panneauxDuPort(bid, cle, rafraichir) {
     /* La carte n'est pas la fiche technique du bâtiment. Postes, niveau,
        améliorations, outillage et notice restent accessibles en cliquant
        le port sur l'île ; ici on ne garde que ce qui sert à partir. */
-    return [
-      { id: 'flotte',   nom: 'Flotte',   rendu: c => rendreFlotte(c) },
-      { id: 'chantier', nom: 'Chantier', rendu: c => rendreChantier(c) },
+    const pans = [
+      { id:'flotte', nom:'Flotte', rendu:c => rendreFlotte(c, cle, rafraichir) },
+      { id:'chantier', nom:'Chantier', rendu:c => rendreChantier(c) },
     ];
+    const navId = navireCaleFlanc[cle];
+    const nav = navId && window.Port.navire(navId);
+    if (nav && nav.etat === 'quai') pans.splice(1, 0, {
+      id:'cale', nom:'Cale', rendu:c => rendreContenuCale(c, nav.id, {
+        rafraichir,
+        finTexte:'Chargement terminé',
+        fin:() => { ongletFlanc[cle]='flotte'; if (rafraichir) rafraichir(); },
+      })
+    });
+    return pans;
   }
   function flancDuPort(cle, rafraichir) {
     const E2 = window.Etat.E;
     const bid = Object.keys(E2.bat).find(k => E2.bat[k].type === 'port');
     if (!bid) return null;
-    const pans = panneauxDuPort(bid);
+    const pans = panneauxDuPort(bid, cle, rafraichir);
     const actif = pans.find(x => x.id === ongletFlanc[cle]) || pans[0];
     /* LE MÊME BANDEAU QUE PARTOUT AILLEURS. J'avais invente des pastilles
        a moi : un deuxieme langage d'onglets dans un jeu qui en a deja un,
