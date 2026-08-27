@@ -185,7 +185,7 @@
        évolutions, que cette sauvegarde doit permettre d'essayer. */
     for (const id in e.bat) {
       const b = e.bat[id];
-      b.niv = 1; b.xp = 0; b.outil = null; b.am = {}; b.raff = {};
+      b.niv = 1; b.xp = 0; b.outil = null; b.outilsRecette = {}; b.am = {}; b.raff = {};
       window.Etat.majPostes(b);
       window.Village.rehausser(id, 1);
     }

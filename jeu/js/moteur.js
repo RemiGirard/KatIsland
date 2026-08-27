@@ -240,6 +240,49 @@
     return f;
   }
 
+  /* LA MAÎTRISE DE L'ATELIER. Le bâtiment apprend lui aussi en tournant :
+     son expérience existait déjà dans les sauvegardes, mais ne racontait
+     rien au joueur. Les paliers deviennent progressivement plus longs et
+     restent sans plafond. Le bonus demeure volontairement mesuré : la
+     maîtrise récompense une chaîne bien installée sans remplacer les
+     habitants, l'outillage ou les améliorations concrètes. */
+  function maitriseAtelier(b) {
+    const xp = Math.max(0, Number(b && b.xp) || 0);
+    const base = 35;
+    const niveau = Math.max(1, Math.floor(Math.sqrt(xp / base)) + 1);
+    const debut = base * Math.pow(niveau - 1, 2);
+    const fin = base * Math.pow(niveau, 2);
+    const pour = Math.max(1, fin - debut);
+    const dans = Math.max(0, xp - debut);
+    return {
+      niveau, xp, debut, fin, dans, pour,
+      pct: Math.max(0, Math.min(1, dans / pour)),
+      bonus: Math.min(1.5, 0.012 * (niveau - 1)),
+    };
+  }
+
+  /* Un outil est désormais attaché à une ACTIVITÉ, pas posé vaguement
+     dans tout le bâtiment. Les anciennes sauvegardes qui possèdent
+     `b.outil` continuent de fonctionner comme avant jusqu'à son usure. */
+  function outilActif(b, rec) {
+    if (!b) return null;
+    if (rec && b.outilsRecette && b.outilsRecette[rec.id]) return b.outilsRecette[rec.id];
+    return b.outil || null;
+  }
+
+  /* Au niveau 5, la scierie cesse d'être un simple hangar : le joueur
+     choisit comment le contremaître organise la chaîne. */
+  function organisationScierie(b, rec) {
+    const neutre = { vitesse:1, rendement:0, butin:1 };
+    if (!b || b.type !== 'scierie' || b.niv < 5 || !rec) return neutre;
+    const mode = b.organisationScierie || 'equilibre';
+    const transformation = ['sciage','tresser_osier','ecorce','poutres','secher_bois'].includes(rec.id);
+    if (mode === 'debit') return { vitesse:rec.id === 'coupe_bois' ? 0.92 : (transformation ? 1.22 : 1), rendement:0, butin:1 };
+    if (mode === 'futaie') return { vitesse:rec.id === 'coupe_bois' ? 1.05 : 1, rendement:0, butin:rec.id === 'coupe_bois' ? 1.55 : 1 };
+    if (mode === 'zero') return { vitesse:transformation ? 0.92 : 1, rendement:transformation ? 0.18 : 0, butin:1 };
+    return neutre;
+  }
+
   /* Vitesse d'un poste, tous facteurs réunis. C'est la formule que le
      joueur cherche à faire grimper : niveau du bâtiment, rang du métier,
      l'habitant lui-même, l'outillage, le moral, l'état du bâtiment. */
@@ -247,14 +290,17 @@
     let v = 1;
     const A = acquis();
     v *= 1 + 0.12 * (b.niv - 1);
+    v *= 1 + maitriseAtelier(b).bonus;
+    v *= organisationScierie(b, rec).vitesse;
     v *= 1 + 0.03 * (window.Etat.rangMetier(rec.metier) - 1);
     v *= facteurHabitant(hab, rec, b);
     v *= 1 + amelioDe(b, 'cadence');              // l'atelier, affûté
     v *= 1 + A.global;                            // les recherches du bourg
     v *= 1 + (A.metier[rec.metier] || 0);         // la branche du métier
-    if (b.outil && b.outil.restant > 0) {
-      const q = window.OutilUtil && window.OutilUtil.de(b.outil);
-      v *= q ? q.mult : ((b.outil.type === 'outilacier') ? 1.9 : 1.4);
+    const outil = outilActif(b, rec);
+    if (outil && outil.restant > 0) {
+      const q = window.OutilUtil && window.OutilUtil.de(outil);
+      v *= q ? q.mult : ((outil.type === 'outilacier') ? 1.9 : 1.4);
     }
     if (b.endommage > 0) v *= 0.4;
     /* LE TERRITOIRE. C'est le seul multiplicateur qui ne s'achète pas :
@@ -433,7 +479,8 @@
     /* LE RENDEMENT : une chance, par unité produite, d'en sortir une de
        plus. Là encore c'est une probabilité et non un arrondi — sinon
        les petites recettes ne verraient jamais l'amélioration. */
-    const rend = amelioDe(b, 'rendement') + A.rendement + (A.rendementMetier[rec.metier] || 0);
+    const organisation = organisationScierie(b, rec);
+    const rend = amelioDe(b, 'rendement') + A.rendement + (A.rendementMetier[rec.metier] || 0) + organisation.rendement;
     const sorties = {};
     for (const k in rec.out) {
       let n = rec.out[k];
@@ -447,6 +494,7 @@
        Un Chanceux au poste la fait grimper de quarante pour cent. */
     const chance = window.HAB.produit(hab, 'butin')
                  * (1 + amelioDe(b, 'oeil') + A.butin)
+                 * organisation.butin
                  * (1 + (window.Expedition ? window.Expedition.bonusButin() : 0) * 0.5);
     /* Deux sources qui se cumulent : le butin PROPRE à la recette — ce
        qu'on trouve en faisant précisément ce geste-là — et les
@@ -518,15 +566,17 @@
 
     /* L'outil s'use. C'est un puits à ressources volontaire : la forge
        doit tourner en permanence pour que le reste du bourg avance. */
-    if (b.outil && b.outil.restant > 0) {
+    const outil = outilActif(b, rec);
+    if (outil && outil.restant > 0) {
       /* Bricoleur et Casseur : l'outillage tient, ou ne tient pas. */
       const u = window.HAB.produit(hab, 'usure');
-      b.outil.restant -= (u >= 1) ? (1 + (Math.random() < (u - 1) ? 1 : 0))
-                                  : (Math.random() < u ? 1 : 0);
-      if (b.outil.restant < 0) b.outil.restant = 0;
-      if (b.outil.restant <= 0) {
-        window.Etat.journal('L\'outillage du ' + window.BAT[b.type].nom.toLowerCase() + ' est hors d\'usage.', 'alerte');
-        b.outil = null;
+      outil.restant -= (u >= 1) ? (1 + (Math.random() < (u - 1) ? 1 : 0))
+                                : (Math.random() < u ? 1 : 0);
+      if (outil.restant < 0) outil.restant = 0;
+      if (outil.restant <= 0) {
+        window.Etat.journal('L\'outillage de « ' + rec.nom + ' » est hors d\'usage.', 'alerte');
+        if (b.outilsRecette && b.outilsRecette[rec.id] === outil) delete b.outilsRecette[rec.id];
+        else if (b.outil === outil) b.outil = null;
       }
     }
     /* Ce qui vient d'être produit MONTE au-dessus de l'atelier. C'est le
@@ -1087,8 +1137,9 @@
     window.Etat.affecterPoste(habId, bid, i);
     return { ok: true };
   }
-  function outiller(bid, typeOutil) {
+  function outiller(bid, typeOutil, recId) {
     const b = S().bat[bid]; if (!b) return { ok: false };
+    if (recId && !window.REC[recId]) return { ok:false, raison:'Activité inconnue.' };
     const q = window.OutilUtil && window.OutilUtil.de({ type:typeOutil, qualite:typeOutil });
     let ressource = typeOutil;
     /* Le fer ancien (`outil`) et le fer détaillé (`outilfer`) cohabitent :
@@ -1102,8 +1153,12 @@
     if (!window.Etat.assez(cout)) return { ok: false, raison: 'Aucun outillage disponible.' };
     window.Etat.depenser(cout);
     const base = q ? q.cycles : (typeOutil === 'outilacier' ? 520 : 190);
-    b.outil = { type:ressource, qualite:q ? q.id : typeOutil,
+    const outil = { type:ressource, qualite:q ? q.id : typeOutil,
       restant:Math.round(base * (1 + acquis().outilDuree)), maximum:Math.round(base * (1 + acquis().outilDuree)) };
+    if (recId) {
+      if (!b.outilsRecette) b.outilsRecette = {};
+      b.outilsRecette[recId] = outil;
+    } else b.outil = outil;
     window.Etat.prevenir('poste', { bat: bid });
     return { ok: true };
   }
@@ -1244,7 +1299,7 @@
     poserBatiment, ameliorer, raffiner, reparer, annulerOuvrage, deplacerOuvrage,
     definirRecette, ajouterFile, retirerFile, deplacerFile, cyclesPossibles,
     assignerAuto, assigner, candidatsPoste, outiller,
-    taches, vitessePoste, vitesseChantier, multGlobal, facteurHabitant, besoinTotal,
+    taches, vitessePoste, vitesseChantier, multGlobal, facteurHabitant, maitriseAtelier, outilActif, organisationScierie, besoinTotal,
     moralEffectif, defenseTotale, bonusNegoce, tauxMenace, declencherRaid,
     palierMenace, PALIERS_MENACE, sortiePossible, gainSortie, forceSortie,
     reservePortions, nbBatiments,

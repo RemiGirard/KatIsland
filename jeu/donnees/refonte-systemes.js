@@ -113,6 +113,14 @@
       return window.OUTILS_QUALITES.find(q => q.id === id || q.res === id) || window.OUTILS_QUALITES[0];
     },
     imageMetier: function (metier) { return 'img/outils/' + (metier || 'batisse') + '.png'; },
+    imageQualite: function (metier, qualite) {
+      /* La scierie possède sept silhouettes réellement différentes ;
+         les autres métiers gardent leur nécessaire dédié en attendant
+         leur propre passe illustrée. */
+      if (metier === 'bois' && qualite)
+        return 'img/outils/scierie/' + qualite + '.png';
+      return this.imageMetier(metier);
+    },
   };
 
   recette('outil_bois', { bat:'scierie', nom:'Assembler des outils en bois', metier:'bois', duree:34, niv:2,

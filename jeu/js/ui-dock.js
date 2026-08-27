@@ -335,6 +335,16 @@
       flux.appendChild(U.puce(item.id, s.rec.out[item.id], { mini: true, gain: true }));
       ligne.appendChild(flux);
 
+      const estOutil = (window.OUTILS_QUALITES || []).some(q => q.res === item.id || q.legacy === item.id)
+        || item.id === 'outil' || item.id === 'outilacier';
+
+      if (estOutil) {
+        ligne.appendChild(el('button', { class:'b mini pleine primaire', text:'Fabriquer dans Outillage',
+          onclick:() => ouvrirBatiment(s.bid, 'outil') }));
+        box.appendChild(ligne);
+        continue;
+      }
+
       if (poste) {
         ligne.appendChild(el('button', { class: 'b mini pleine' + ((!besoinHabitant || libre) ? ' primaire' : ''),
           disabled: besoinHabitant && !libre,

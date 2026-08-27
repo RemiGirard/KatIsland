@@ -745,6 +745,7 @@
       for (const bid in (d.bat || {})) {
         if (!d.bat[bid].am) d.bat[bid].am = {};
         if (!d.bat[bid].raff) d.bat[bid].raff = {};   // sauvegarde d'avant les annexes
+        if (!d.bat[bid].outilsRecette) d.bat[bid].outilsRecette = {};
       }
       /* LE PORTAIL EST DEVENU LE PORT. Depuis que la guerre passe par la
          mer, le portail d'expédition n'a plus d'objet — mais le joueur

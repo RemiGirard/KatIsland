@@ -79,6 +79,7 @@
   /* L'OUTILLAGE : il n'existe pas avant la forge. */
   function aVuUnOutil(b) {
     if (jamaisRevient('outil')) return true;
+    if (b.type === 'scierie' && b.niv >= 2) { retenir('outil'); return true; }
     const stock = (window.OUTILS_QUALITES || []).some(q => window.Etat.qte(q.res) > 0 || (q.legacy && window.Etat.qte(q.legacy) > 0));
     if (b.outil || stock || window.Etat.qte('outil') > 0 || window.Etat.qte('outilacier') > 0
         || window.Etat.aBatiment('forge')) { retenir('outil'); return true; }
@@ -473,6 +474,428 @@
     }
   }
 
+  /* =================================================================
+     LA SCIERIE — BÂTIMENT PILOTE
+
+     Un atelier n'est plus une pile de fiches « poste 1, poste 2… ».
+     Le joueur pilote des FLUX et affecte 1, 10 ou tous les habitants
+     disponibles en un geste. La fiche individuelle reste accessible au
+     moment où l'on veut choisir une personne précise.
+     ================================================================= */
+  const SCIERIE_IMG = 'img/interface/scierie/';
+  const SCIERIE_ART = {
+    coupe_bois:'abattage.png', sciage:'sciage.png', tresser_osier:'osier.png',
+    ecorce:'ecorce.png', poutres:'poutre.png', secher_bois:'sechoir.png',
+    cadence:'lame-avoyee.png', rendement:'gabarit-coupe.png',
+    economie:'bac-chutes.png', oeil:'marquage-forestier.png',
+    etabli:'chariot-grumes.png', chaine:'chaine-bois.png', maitrise:'maitrise-scierie.png',
+  };
+  let affectationScierie = null;
+  function artScierie(id) { return SCIERIE_IMG + (SCIERIE_ART[id] || SCIERIE_ART.chaine); }
+
+  function posteLibreScierie(b, rid) {
+    let i = b.postes.findIndex(p => !p.hab && p.rec === rid);
+    if (i < 0) i = b.postes.findIndex(p => !p.hab && !p.rec);
+    if (i < 0) i = b.postes.findIndex(p => !p.hab);
+    return i;
+  }
+
+  function retirerScierie(bid, rid) {
+    const b = E().bat[bid];
+    if (!b) return 0;
+    const rec = window.REC[rid];
+    const postes = b.postes.map((p, i) => ({ p, i, h:p.hab ? window.Etat.habitant(p.hab) : null }))
+      .filter(x => x.p.rec === rid && x.h)
+      /* On retire d'abord les moins adaptés ; les spécialistes restent. */
+      .sort((a, z) => window.Jeu.facteurHabitant(a.h, rec, b) - window.Jeu.facteurHabitant(z.h, rec, b));
+    if (postes.length) {
+      window.Etat.libererHabitant(postes[0].p.hab);
+      U.dire(postes[0].h.nom + ' quitte cette activité.', 'info');
+      rafraichirVillage();
+      return 1;
+    }
+    return 0;
+  }
+
+  function occupationHabitant(h) {
+    if (!h.aff) return 'Disponible';
+    if (h.aff.k === 'chantier') return 'Au chantier';
+    if (h.aff.k === 'poste') {
+      const b = E().bat[h.aff.bat], p = b && b.postes[h.aff.i];
+      const nomBat = b && window.BAT[b.type] ? window.BAT[b.type].nom : 'Atelier';
+      const nomRec = p && p.rec && window.REC[p.rec] ? window.REC[p.rec].nom : 'sans tâche';
+      return nomBat + ' · ' + nomRec;
+    }
+    return 'Occupé';
+  }
+
+  function carteAffectationScierie(h, b, rec, dejaIci) {
+    const metier = window.METIERS[rec.metier] || { nom:rec.metier };
+    const pratique = progressionIndividu(h, rec.metier);
+    const facteur = window.Jeu.facteurHabitant(h, rec, b);
+    const R = window.HAB.RARETES[h.rarete] || window.HAB.RARETES.commun;
+    const av = avatarHab(h, 100, 'affectation-portrait');
+    delete av.dataset.bulle;
+    const traits = bandeTraits(h, { serre:true });
+    return el('button', {
+      'data-cle':h.id,
+      class:'affectation-carte r-' + R.id + (dejaIci ? ' deja-ici' : ''),
+      disabled:dejaIci,
+      onclick:dejaIci ? null : () => {
+        const libre = posteLibreScierie(b, rec.id);
+        if (libre < 0) { U.dire('Tous les postes de la scierie sont déjà tenus.', 'alerte'); return; }
+        window.Jeu.definirRecette(b.id, libre, rec.id, null);
+        window.Jeu.assigner(b.id, libre, h.id);
+        U.dire(h.nom + ' rejoint « ' + rec.nom + ' ».', 'bien');
+        U.fermer('affectation-scierie');
+        rafraichirVillage();
+      },
+    },
+      av,
+      dejaIci ? el('span', { class:'affectation-deja', text:'ICI' }) : null,
+      el('span', { class:'affectation-infos' },
+        el('strong', { text:h.nom }),
+        el('b', { text:metier.nom + ' · niveau ' + pratique.niveau }),
+        el('span', { class:'affectation-rendement', text:'Rendement ×' + facteur.toFixed(2).replace('.', ',') }),
+        traits,
+        h.aff ? el('small', { text:occupationHabitant(h) }) : null));
+  }
+
+  function rendreAffectationScierie(c) {
+    const cible = affectationScierie;
+    if (!cible) return;
+    const b = E().bat[cible.bid], rec = window.REC[cible.rid];
+    if (!b || !rec) return;
+    const travailleurs = cible.mode === 'travail';
+    const deja = h => h.aff && h.aff.k === 'poste' && h.aff.bat === b.id &&
+      b.postes[h.aff.i] && b.postes[h.aff.i].rec === rec.id;
+    const habitants = E().habitants.filter(h => travailleurs
+      ? !!(h.aff && (h.aff.k === 'poste' || h.aff.k === 'chantier'))
+      : !h.aff)
+      .sort((a, z) => window.Jeu.facteurHabitant(z, rec, b) - window.Jeu.facteurHabitant(a, rec, b));
+    const meta = window.METIERS[rec.metier] || { nom:rec.metier };
+    const libres = E().habitants.filter(h => !h.aff).length;
+    const occupes = E().habitants.filter(h => h.aff && (h.aff.k === 'poste' || h.aff.k === 'chantier')).length;
+    c.appendChild(el('div', { class:'affectation-languettes', role:'tablist' },
+      el('button', { class:'batiment-languette bleu' + (!travailleurs ? ' on' : ''), title:'Habitants disponibles (' + libres + ')', onclick:() => {
+        affectationScierie.mode = 'libres'; ouvrirAffectationScierie(cible.bid, cible.rid);
+      } }, el('img', { src:artScierie('maitrise'), alt:'' })),
+      el('button', { class:'batiment-languette vert' + (travailleurs ? ' on' : ''), title:'Ouvriers au travail (' + occupes + ')', onclick:() => {
+        affectationScierie.mode = 'travail'; ouvrirAffectationScierie(cible.bid, cible.rid);
+      } }, el('img', { src:artScierie('chaine'), alt:'' }))));
+    c.appendChild(el('div', { class:'affectation-resume' },
+      el('div', {}, el('b', { text:travailleurs ? 'Changer d’affectation' : 'Habitants disponibles' }),
+        el('span', { text:meta.nom + ' mis en avant · ' + habitants.length + ' choix' })),
+      el('strong', { text:travailleurs ? occupes : libres })));
+    if (!habitants.length) {
+      c.appendChild(el('div', { class:'affectation-vide', text:travailleurs ? 'Personne ne travaille encore ailleurs.' : 'Tous les habitants ont déjà une occupation. Utilisez l’onglet vert pour en déplacer un.' }));
+      return;
+    }
+    const grille = el('div', { class:'affectation-grille' });
+    for (const h of habitants) grille.appendChild(carteAffectationScierie(h, b, rec, deja(h)));
+    c.appendChild(grille);
+  }
+
+  function ouvrirAffectationScierie(bid, rid) {
+    const b = E().bat[bid], rec = window.REC[rid];
+    if (!b || !rec) return;
+    if (posteLibreScierie(b, rid) < 0) { U.dire('Tous les postes de la scierie sont déjà tenus.', 'alerte'); return; }
+    if (!affectationScierie || affectationScierie.bid !== bid || affectationScierie.rid !== rid)
+      affectationScierie = { bid, rid, mode:'libres' };
+    const panneau = document.getElementById('productions');
+    const r = panneau ? panneau.getBoundingClientRect() : { left:innerWidth - 420, top:80 };
+    U.ouvrir('affectation-scierie', {
+      titre:'Affecter à la scierie', sous:rec.nom, classe:'affectation-fen',
+      ancre:{ cx:r.left - 180, cy:Math.min(innerHeight - 40, r.top + 480), sol:r.top + 70 },
+      onglet:'liste', onglets:[{ id:'liste', nom:'Habitants', rendu:rendreAffectationScierie }],
+      surFermeture:() => { affectationScierie = null; },
+    });
+  }
+
+  function fluxScierie(rec) {
+    const l = el('div', { class:'scierie-flux' });
+    const entrees = Object.keys(rec.in || {}), sorties = Object.keys(rec.out || {});
+    if (!entrees.length) l.appendChild(el('span', { class:'scierie-source', text:'forêt' }));
+    for (const k of entrees) l.appendChild(U.puce(k, rec.in[k], { mini:true, insuffisant:window.Etat.qte(k) < rec.in[k] }));
+    l.appendChild(el('span', { class:'scierie-fleche', text:'→' }));
+    for (const k of sorties) l.appendChild(U.puce(k, rec.out[k], { mini:true, gain:true }));
+    return l;
+  }
+
+  function estRecetteOutil(rec) {
+    if (!rec) return false;
+    const ressources = (window.OUTILS_QUALITES || []).reduce((s, q) => {
+      s[q.res] = true; if (q.legacy) s[q.legacy] = true; return s;
+    }, { outil:true, outilacier:true });
+    return Object.keys(rec.out || {}).some(id => ressources[id]);
+  }
+
+  function choisirOutilActivite(bid, rid) {
+    const b = E().bat[bid], rec = window.REC[rid];
+    if (!b || !rec) return;
+    window.UIDock.ouvrirSousPanneau({
+      titre:'Choisir un outil', sous:rec.nom,
+      rendu:c => {
+        const art = window.OutilUtil ? window.OutilUtil.imageMetier(rec.metier) : null;
+        const actuel = window.Jeu.outilActif(b, rec);
+        const qa = actuel && window.OutilUtil ? window.OutilUtil.de(actuel) : null;
+        c.appendChild(el('div', { class:'outil-affectation-tete' },
+          art ? el('img', { src:art, alt:'' }) : null,
+          el('div', {}, el('div', { class:'tt', text:(window.METIERS[rec.metier] || {}).nom || 'Outillage' }),
+            el('div', { class:'note', text:'Un outil est consommé ici et s’use uniquement lorsque cette activité termine un cycle.' }))));
+        if (actuel) {
+          const pct = actuel.restant / Math.max(1, actuel.maximum || actuel.restant);
+          c.appendChild(el('div', { class:'outil-affecte-actuel', style:qa ? '--outil-col:' + qa.col : '' },
+            el('div', { class:'rangee entre' }, el('b', { text:qa ? qa.nom : 'Outillage' }),
+              el('span', { text:actuel.restant + ' cycles' })),
+            el('div', { class:'mini-progression' }, el('i', { style:'width:' + Math.round(pct * 100) + '%' }))));
+        }
+        const disponibles = (window.OUTILS_QUALITES || []).map(q => {
+          const normal = window.Etat.qte(q.res), ancien = q.legacy ? window.Etat.qte(q.legacy) : 0;
+          return { q, stock:normal + ancien };
+        }).filter(x => x.stock > 0);
+        if (!disponibles.length) {
+          c.appendChild(el('div', { class:'vide', text:'Aucun outil disponible. Fabriquez-en dans l’onglet Outillage.' }));
+          c.appendChild(el('button', { class:'b pleine primaire', text:'Aller à Outillage', onclick:() => window.UIDock.ouvrirBatiment(bid, 'outil') }));
+          return;
+        }
+        const grille = el('div', { class:'outil-affectation-grille' });
+        for (const x of disponibles) {
+          const image = window.OutilUtil && window.OutilUtil.imageQualite
+            ? window.OutilUtil.imageQualite(rec.metier, x.q.id) : art;
+          grille.appendChild(el('button', { class:'outil-affectation-choix', style:'--outil-col:' + x.q.col, onclick:() => {
+            const r = window.Jeu.outiller(bid, x.q.id, rid);
+            U.dire(r.ok ? 'Outils de ' + x.q.nom.toLowerCase() + ' affectés à « ' + rec.nom + ' ».' : r.raison, r.ok ? 'bien' : 'alerte');
+            if (r.ok) window.UIDock.fermerSousPanneau();
+          } },
+            image ? el('img', { src:image, alt:'' }) : U.icoRes(x.q.res, 34),
+            el('span', {}, el('b', { text:x.q.nom }), el('i', { text:'×' + x.q.mult.toFixed(2).replace('.', ',') + ' · ' + x.q.cycles + ' cycles' })),
+            el('strong', { text:'×' + U.fmt(x.stock) })));
+        }
+        c.appendChild(grille);
+      },
+    });
+  }
+
+  function boutonOutilActivite(b, rec) {
+    const outil = window.Jeu.outilActif(b, rec);
+    const q = outil && window.OutilUtil ? window.OutilUtil.de(outil) : null;
+    const art = window.OutilUtil ? (q && window.OutilUtil.imageQualite
+      ? window.OutilUtil.imageQualite(rec.metier, q.id) : window.OutilUtil.imageMetier(rec.metier)) : null;
+    return el('button', { class:'outil-activite' + (outil ? ' equipe' : ''), style:q ? '--outil-col:' + q.col : '',
+      title:outil ? ((q ? q.nom : 'Outillage') + ' · ' + outil.restant + ' cycles\nChanger l’outil') : 'Affecter un outil à cette activité',
+      onclick:() => choisirOutilActivite(b.id, rec.id) },
+      art ? el('img', { src:art, alt:'' }) : el('span', { text:'+' }),
+      outil ? el('i', { text:q ? q.nom.charAt(0) : '•' }) : el('i', { text:'+' }));
+  }
+
+  function rendreLigneScierie(bid, rid, ouverte, opts) {
+    opts = opts || {};
+    const b = E().bat[bid], rec = window.REC[rid];
+    const postes = b.postes.filter(p => p.rec === rid && p.hab);
+    const actifs = postes.filter(p => !p.bloque);
+    const bloques = postes.length - actifs.length;
+    let debit = 0, progression = 0;
+    for (const p of actifs) {
+      const h = window.Etat.habitant(p.hab);
+      const v = window.Jeu.vitessePoste(b, rec, h);
+      const n = Object.values(rec.out || {}).reduce((s, q) => s + q, 0) || 1;
+      debit += 60 / (rec.duree / Math.max(0.001, v)) * n;
+      progression = Math.max(progression, Math.min(1, p.prog / rec.duree));
+    }
+    const raison = rec.raff && !(b.raff && b.raff[rec.raff])
+      ? 'annexe requise' : 'niveau ' + (rec.niv || 1);
+    const qualiteProduite = (window.OUTILS_QUALITES || []).find(q => rec.out && (rec.out[q.res] || (q.legacy && rec.out[q.legacy])));
+    const imageLigne = opts.outillage && window.OutilUtil && window.OutilUtil.imageQualite && qualiteProduite
+      ? window.OutilUtil.imageQualite('bois', qualiteProduite.id)
+      : (opts.outillage && rec.image ? rec.image : artScierie(rid));
+    const ligne = el('article', { class:'scierie-ligne' + (ouverte ? '' : ' verrouillee') },
+      el('div', { class:'scierie-illustration' },
+        el('img', { src:imageLigne, alt:'' }),
+        ouverte ? el('span', { text:String(postes.length), title:'Habitants affectés' }) : el('span', { class:'cadenas', text:'×' })),
+      el('div', { class:'scierie-ligne-corps' },
+        el('div', { class:'scierie-ligne-haut' },
+          el('div', {}, el('b', { text:rec.nom }), el('small', { text:ouverte ? (debit ? '+' + (Math.round(debit * 10) / 10).toString().replace('.', ',') + '/min' : 'au repos') : raison })),
+          el('div', { class:'scierie-ligne-actions' },
+            bloques ? el('span', { class:'scierie-attente', text:bloques + ' en attente' }) : null,
+            ouverte && !opts.sansOutil ? boutonOutilActivite(b, rec) : null)),
+        fluxScierie(rec),
+        ouverte ? el('div', { class:'scierie-progression' }, el('i', { style:'width:' + Math.round(progression * 100) + '%' })) : null,
+        ouverte ? el('div', { class:'scierie-commandes' },
+          el('button', { class:'moins', text:'−', title:'Retirer un ouvrier de cette activité', disabled:postes.length === 0, onclick:() => retirerScierie(bid, rid) }),
+          el('strong', { text:postes.length + ' / ' + b.postes.length, title:'Affectés à cette étape / postes de la scierie' }),
+          el('button', { class:'plus', text:'+', title:'Choisir précisément un habitant', disabled:posteLibreScierie(b, rid) < 0, onclick:() => ouvrirAffectationScierie(bid, rid) })) : null));
+    return ligne;
+  }
+
+  function rendreScierieChaine(c, bid) {
+    const b = E().bat[bid]; if (!b) return;
+    const m = window.Jeu.maitriseAtelier(b);
+    const tenus = b.postes.filter(p => p.hab).length;
+    c.appendChild(el('section', { class:'scierie-maitrise' },
+      el('img', { src:artScierie('maitrise'), alt:'' }),
+      el('div', { class:'scierie-maitrise-corps' },
+        el('div', { class:'rangee entre' },
+          el('span', {}, el('i', { text:'MAÎTRISE DE SCIERIE' }), el('b', { text:'Rang ' + m.niveau })),
+          el('strong', { text:'+' + Math.round(m.bonus * 100) + ' %', title:'Cadence gagnée par la pratique de cet atelier' })),
+        el('div', { class:'scierie-maitrise-jauge' }, el('i', { style:'width:' + Math.round(m.pct * 100) + '%' })),
+        el('small', { text:U.fmt(m.dans) + ' / ' + U.fmt(m.pour) + ' xp avant le rang suivant' })),
+      el('div', { class:'scierie-effectif' }, el('b', { text:tenus + ' / ' + b.postes.length }), el('span', { text:'au travail' }))));
+
+    c.appendChild(el('div', { class:'scierie-schema', title:'Le circuit principal de la scierie' },
+      el('span', {}, el('img', { src:SCIERIE_IMG + 'grumes.png', alt:'' }), el('i', { text:'GRUMES' })),
+      el('b', { text:'›' }),
+      el('span', {}, el('img', { src:SCIERIE_IMG + 'sciage.png', alt:'' }), el('i', { text:'DÉBIT' })),
+      el('b', { text:'›' }),
+      el('span', {}, el('img', { src:SCIERIE_IMG + 'planches.png', alt:'' }), el('i', { text:'PLANCHES' })),
+      el('b', { text:'+' }),
+      el('span', {}, el('img', { src:SCIERIE_IMG + 'corde.png', alt:'' }), el('i', { text:'CORDAGES' }))));
+
+    c.appendChild(el('div', { class:'scierie-consigne',
+      text:'Composez la chaîne habitant par habitant. Le + ouvre les portraits classés selon leur efficacité réelle en bûcheronnage ; le − libère un poste.' }));
+    const disponibles = window.BatUtil.recettesDe(b.type, b.niv, b);
+    const toutes = (window.BAT[b.type].recettes || []).filter(rid => !estRecetteOutil(window.REC[rid]));
+    const ouvertes = toutes.filter(rid => disponibles.includes(rid));
+    const prochaines = toutes.filter(rid => !disponibles.includes(rid))
+      .sort((a, z) => (window.REC[a].niv || 1) - (window.REC[z].niv || 1)).slice(0, 2);
+    const liste = el('div', { class:'scierie-chaines' });
+    for (const rid of ouvertes) liste.appendChild(rendreLigneScierie(bid, rid, true));
+    for (const rid of prochaines) liste.appendChild(rendreLigneScierie(bid, rid, false));
+    c.appendChild(liste);
+  }
+
+  const SCIERIE_AMELIO = {
+    cadence:{ nom:'Lame avoyée', desc:'Une dent à gauche, une à droite : la coupe mord mieux et tous les postes accélèrent.' },
+    rendement:{ nom:'Gabarit de coupe', desc:'Les mesures se répètent sans erreur et davantage de pièces sortent bonnes.' },
+    economie:{ nom:'Bac à chutes', desc:'Les morceaux utiles retournent dans la chaîne au lieu de finir sous les bottes.' },
+    oeil:{ nom:'Marquage forestier', desc:'Les arbres prometteurs sont repérés avant la coupe : les trouvailles deviennent plus fréquentes.' },
+    etabli:{ nom:'Chariot à grumes', desc:'Une ligne supplémentaire reçoit ses propres habitants sans agrandir le bâtiment.' },
+  };
+
+  function rendreScierieAtelier(c, bid) {
+    const b = E().bat[bid]; if (!b) return;
+    if (!b.am) b.am = {};
+    c.appendChild(el('div', { class:'scierie-consigne', text:'Chaque amélioration est une vraie pièce de l’atelier. Elle reste visible, gagne des crans et transforme durablement la chaîne.' }));
+    const chemin = el('div', { class:'scierie-atelier' });
+    for (const a of window.AMELIO) {
+      const meta = SCIERIE_AMELIO[a.id] || a;
+      const rang = b.am[a.id] || 0, fini = rang >= a.max;
+      const cout = fini ? {} : window.AmelioUtil.coutAmelio(b.type, a.id, rang);
+      const payable = !fini && window.Etat.assez(cout);
+      const effet = a.effet(rang), cle = Object.keys(a.effet(1))[0];
+      const valeur = effet[cle] || 0;
+      const art = el('div', { class:'scierie-amelio-art' },
+        el('img', { src:artScierie(a.id), alt:'' }), el('span', { text:rang + '/' + a.max }));
+      const action = fini ? el('span', { class:'scierie-termine', text:'INSTALLÉ AU MAXIMUM' }) :
+        el('div', { class:'scierie-achat' }, U.listeRes(cout, { verifier:true }),
+          el('button', { class:'b mini primaire', text:'Installer', disabled:!payable, onclick:() => {
+            const r = window.Jeu.acheterAmelio(bid, a.id);
+            U.dire(r.ok ? meta.nom + ' amélioré.' : r.raison, r.ok ? 'bien' : 'alerte');
+            rafraichirVillage();
+          } }));
+      const corps = el('div', { class:'scierie-amelio-corps' },
+        el('div', { class:'rangee entre' }, el('b', { text:meta.nom }),
+          el('strong', { text:cle === 'postes' ? '+' + valeur + ' poste' + (valeur > 1 ? 's' : '') : '+' + Math.round(valeur * 100) + ' %' })),
+        el('p', { text:meta.desc }),
+        el('div', { class:'scierie-crans' }, ...Array.from({ length:a.max }, (_, i) => el('i', { class:i < rang ? 'on' : '' }))),
+        action);
+      chemin.appendChild(el('article', { class:'scierie-amelio' + (rang ? ' active' : '') }, art, corps));
+    }
+    c.appendChild(chemin);
+  }
+
+  const SCIERIE_PROGRESSION = 'img/interface/scierie/progression/';
+  const SCIERIE_NIVEAUX = [
+    null,
+    { nom:'La lisière', image:'parc-grumes.png', ouvre:'Chaîne · abattage · 1 poste' },
+    { nom:'Le banc de sciage', image:'banc-scie.png', ouvre:'Onglet Outillage · planches · 2 postes' },
+    { nom:'L’atelier de valorisation', image:'atelier-osier.png', ouvre:'Onglet Atelier · osier et écorce · 3 postes' },
+    { nom:'Les corps d’annexes', image:'sechoir-couvert.png', ouvre:'Onglet Annexes · 5 postes' },
+    { nom:'Le contremaître', image:'bureau-contremaitre.png', ouvre:'Onglet Organisation · poutres · 8 postes' },
+    { nom:'La roue motrice', image:'roue-hydraulique.png', ouvre:'Transmission renforcée · 12 postes' },
+    { nom:'Le chariot sur rails', image:'chariot-rails.png', ouvre:'Manutention lourde · 18 postes' },
+    { nom:'Le grand parc à grumes', image:'parc-grumes.png', ouvre:'Stockage de flux · 26 postes' },
+    { nom:'La salle des outils', image:'salle-outils.png', ouvre:'Atelier industriel · 38 postes' },
+    { nom:'La scierie de maître', image:'blason-maitre.png', ouvre:'Maîtrise complète · 55 postes' },
+  ];
+
+  function rendreNiveauScierie(c, bid) {
+    const b = E().bat[bid]; if (!b) return;
+    const max = window.BAT[b.type].nivMax || 10;
+    const courant = SCIERIE_NIVEAUX[b.niv] || SCIERIE_NIVEAUX[1];
+    c.appendChild(el('section', { class:'scierie-niveau-hero' },
+      el('img', { src:SCIERIE_PROGRESSION + courant.image, alt:'' }),
+      el('div', {}, el('i', { text:'SCIERIE · NIVEAU ' + b.niv }), el('b', { text:courant.nom }),
+        el('span', { text:courant.ouvre })),
+      el('strong', { text:window.BatUtil.postesDe(b.type, b.niv) + ' postes' })));
+
+    if (b.niv < max) {
+      const suivant = SCIERIE_NIVEAUX[b.niv + 1];
+      const cout = window.BatUtil.coutNiveau(b.type, b.niv + 1);
+      const temps = window.BatUtil.tempsNiveau(b.type, b.niv + 1);
+      const enFile = E().chantier.file.some(j => j.bat === bid);
+      const visuel = el('div', { class:'scierie-extension-visuel' },
+        el('img', { src:SCIERIE_PROGRESSION + suivant.image, alt:'' }),
+        el('span', { text:'NIV. ' + (b.niv + 1) }));
+      const action = el('div', { class:'rangee entre', style:'margin-top:8px' },
+        el('span', { class:'eti', text:'chantier · ' + U.duree(temps) }),
+        el('button', { class:'b primaire', text:enFile ? 'Déjà en file' : 'Construire l’extension',
+          disabled:enFile || !window.Etat.assez(cout), onclick:() => {
+            const r = window.Jeu.ameliorer(bid);
+            U.dire(r.ok ? suivant.nom + ' entre au chantier.' : r.raison, r.ok ? 'bien' : 'alerte');
+          } }));
+      const corps = el('div', { class:'scierie-extension-corps' },
+        el('div', { class:'eti-or', text:'PROCHAINE EXTENSION' }),
+        el('h3', { text:suivant.nom }),
+        el('p', { text:suivant.ouvre }),
+        el('div', { class:'scierie-extension-capacite' },
+          el('span', { text:window.BatUtil.postesDe(b.type, b.niv) + ' postes' }),
+          el('b', { text:'→' }),
+          el('span', { text:window.BatUtil.postesDe(b.type, b.niv + 1) + ' postes' })),
+        U.listeRes(cout, { verifier:true }), action);
+      c.appendChild(el('section', { class:'scierie-prochaine-extension' }, visuel, corps));
+    } else {
+      c.appendChild(el('div', { class:'scierie-maitre', text:'Scierie de maître atteinte : tous les onglets et toutes les organisations sont disponibles.' }));
+    }
+
+    c.appendChild(U.section('Feuille de route'));
+    const route = el('div', { class:'scierie-feuille-route' });
+    for (let niv = 1; niv <= max; niv++) {
+      const p = SCIERIE_NIVEAUX[niv];
+      route.appendChild(el('div', { class:'scierie-palier' + (niv < b.niv ? ' acquis' : (niv === b.niv ? ' courant' : ' futur')) },
+        el('img', { src:SCIERIE_PROGRESSION + p.image, alt:'' }),
+        el('div', {}, el('b', { text:'Niveau ' + niv + ' · ' + p.nom }), el('span', { text:p.ouvre })),
+        el('i', { text:niv < b.niv ? '✓' : (niv === b.niv ? 'ICI' : 'VERROUILLÉ') })));
+    }
+    c.appendChild(route);
+  }
+
+  const ORGANISATIONS_SCIERIE = [
+    { id:'equilibre', nom:'Atelier équilibré', image:'blason-maitre.png', effet:'Aucun compromis : tous les flux gardent leur rendement normal.' },
+    { id:'debit', nom:'Débit continu', image:'banc-scie.png', effet:'+22 % aux transformations, mais −8 % à l’abattage.' },
+    { id:'futaie', nom:'Futaie raisonnée', image:'parc-grumes.png', effet:'+5 % à l’abattage et +55 % de trouvailles en forêt.' },
+    { id:'zero', nom:'Zéro chute', image:'salle-outils.png', effet:'+18 % de rendement aux transformations, mais −8 % de cadence.' },
+  ];
+
+  function rendreOrganisationScierie(c, bid) {
+    const b = E().bat[bid]; if (!b) return;
+    const actif = b.organisationScierie || 'equilibre';
+    c.appendChild(el('div', { class:'scierie-consigne',
+      text:'Le contremaître change la logique de toute la chaîne. Le choix est gratuit et peut être modifié à tout moment.' }));
+    const grille = el('div', { class:'scierie-organisations' });
+    for (const o of ORGANISATIONS_SCIERIE) {
+      grille.appendChild(el('button', { class:'scierie-organisation' + (actif === o.id ? ' active' : ''), onclick:() => {
+        b.organisationScierie = o.id;
+        window.Etat.prevenir('poste', { bat:bid });
+        U.dire('Organisation adoptée : ' + o.nom + '.', 'bien');
+      } },
+        el('img', { src:SCIERIE_PROGRESSION + o.image, alt:'' }),
+        el('span', {}, el('b', { text:o.nom }), el('i', { text:o.effet })),
+        el('strong', { text:actif === o.id ? 'ACTIVE' : 'CHOISIR' })));
+    }
+    c.appendChild(grille);
+  }
+
   /* Une seule grammaire pour tous les bâtiments. Le volet droit utilise
      ces métadonnées pour afficher des languettes illustrées et ne révèle
      les fonctions avancées qu'au niveau où elles deviennent pertinentes. */
@@ -488,7 +911,17 @@
       image: image || imageBat(),
     });
 
-    if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
+    if (bb.type === 'scierie') {
+      ajouter('chaine', 'Chaîne', c => rendreScierieChaine(c, bid), 1, 'bleu', artScierie('chaine'));
+      ajouter('niveau', 'Agrandir', c => rendreNiveauScierie(c, bid), 1, 'jaune', SCIERIE_PROGRESSION + 'parc-grumes.png');
+      ajouter('outil', 'Outillage', c => rendreOutillageScierie(c, bid), 2, 'vert',
+        window.OutilUtil ? window.OutilUtil.imageQualite('bois', 'bois') : imageRes('outil'));
+      ajouter('amelio', 'Atelier', c => rendreScierieAtelier(c, bid), 3, 'violet', artScierie('cadence'));
+      if (window.RaffUtil && window.RaffUtil.pourBat(bb.type).length)
+        ajouter('annexe', 'Annexes', c => rendreAnnexes(c, bid), 4, 'orange', SCIERIE_PROGRESSION + 'sechoir-couvert.png');
+      ajouter('organisation', 'Organisation', c => rendreOrganisationScierie(c, bid), 5, 'bleu', SCIERIE_PROGRESSION + 'bureau-contremaitre.png');
+      return ong;
+    } else if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
       c => rendrePostes(c, bid), 1, 'bleu', imageBat());
     if (bb.type === 'caserne' && window.UIArmee) {
       ong.unshift({ id:'effectifs', nom:'Effectifs', rendu:c => window.UIArmee.rendreEffectifs(c, bid), niveau:1, couleur:'bleu', image:imageRes('arme') });
@@ -509,9 +942,12 @@
     ajouter('niveau', 'Améliorer', c => rendreNiveau(c, bid), 1, 'jaune', imageRes('plan'));
 
     if (bb.postes.length && aVuUneAmelioration(bb))
-      ajouter('amelio', 'Perfectionnements', c => rendreAmelio(c, bid), 2, 'violet', imageRes('plan'));
+      ajouter('amelio', bb.type === 'scierie' ? 'Atelier' : 'Perfectionnements',
+        c => bb.type === 'scierie' ? rendreScierieAtelier(c, bid) : rendreAmelio(c, bid),
+        2, 'violet', bb.type === 'scierie' ? artScierie('cadence') : imageRes('plan'));
     if (bb.postes.length && aVuUnOutil(bb))
-      ajouter('outil', 'Outillage', c => rendreOutil(c, bid), 2, 'vert', imageRes('outil'));
+      ajouter('outil', 'Outillage', c => bb.type === 'scierie' ? rendreOutillageScierie(c, bid) : rendreOutil(c, bid),
+        2, 'vert', bb.type === 'scierie' ? (window.OutilUtil ? window.OutilUtil.imageMetier('bois') : imageRes('outil')) : imageRes('outil'));
     if (window.RaffUtil && window.RaffUtil.pourBat(bb.type).length && aVuUneAnnexe(bb))
       ajouter('annexe', 'Annexes', c => rendreAnnexes(c, bid), 3, 'orange', imageBat());
 
@@ -826,6 +1262,40 @@
     return t;
   }
 
+  function rendreOutillageScierie(c, bid) {
+    const b = E().bat[bid]; if (!b) return;
+    const art = window.OutilUtil ? window.OutilUtil.imageMetier('bois') : null;
+    const qualites = window.OUTILS_QUALITES || [];
+    const toutes = (window.BAT[b.type].recettes || []).filter(rid => estRecetteOutil(window.REC[rid]));
+    const fabriquables = {};
+    for (const rid of toutes) for (const id in (window.REC[rid].out || {})) fabriquables[id] = true;
+    c.appendChild(el('div', { class:'scierie-consigne',
+      text:'Ici, on fabrique les nécessaires de travail. Pour en équiper une activité, revenez dans Chaîne et utilisez le petit bouton d’outil en haut à droite de sa carte.' }));
+
+    c.appendChild(U.section('Réserve d’outils'));
+    const stock = el('div', { class:'outil-stock-compact' });
+    for (const q of qualites) {
+      const n = window.Etat.qte(q.res) + (q.legacy ? window.Etat.qte(q.legacy) : 0);
+      if (n <= 0 && !fabriquables[q.res] && !(q.legacy && fabriquables[q.legacy])) continue;
+      const image = window.OutilUtil && window.OutilUtil.imageQualite
+        ? window.OutilUtil.imageQualite('bois', q.id) : art;
+      stock.appendChild(el('div', { class:'outil-stock-case' + (n ? '' : ' vide'), style:'--outil-col:' + q.col,
+        title:q.nom + ' · cadence ×' + q.mult.toFixed(2).replace('.', ',') + ' · ' + q.cycles + ' cycles' },
+        image ? el('img', { src:image, alt:'' }) : U.icoRes(q.res, 32),
+        el('span', { text:q.nom }), el('b', { text:U.fmt(n) })));
+    }
+    c.appendChild(stock);
+
+    c.appendChild(U.section('Fabriquer'));
+    const disponibles = window.BatUtil.recettesDe(b.type, b.niv, b);
+    if (!toutes.length) {
+      c.appendChild(el('div', { class:'vide', text:'Cet atelier ne sait fabriquer aucun outil.' })); return;
+    }
+    const liste = el('div', { class:'scierie-chaines outillage' });
+    for (const rid of toutes) liste.appendChild(rendreLigneScierie(bid, rid, disponibles.includes(rid), { outillage:true, sansOutil:true }));
+    c.appendChild(liste);
+  }
+
   function rendreOutil(c, bid) {
     const b = E().bat[bid];
     if (!b) return;
@@ -1134,29 +1604,34 @@
       const placeLibre = Math.max(0, n.places - P.placesPrises(n.cargo));
       const ajoutPossible = Math.min(libre, Math.floor(placeLibre / pop));
       const src = window.Img && window.Img.unite ? window.Img.unite(t) : null;
+      const actions = el('div', { class:'cale-unite-actions' },
+        ...[1, 5, 25].map(k => el('button', { class:'b mini', text:'+' + k,
+          disabled:ajoutPossible <= 0, onclick:() => {
+            const r = P.charger(n.id, t, k);
+            if (!r.ok) U.dire(r.pourquoi, 'alerte');
+            refaire();
+          } })),
+        el('button', { class:'b mini', text:'Tout', disabled:ajoutPossible <= 0,
+          onclick:() => {
+            const r=P.charger(n.id,t,ajoutPossible);
+            if (!r.ok) U.dire(r.pourquoi,'alerte');
+            refaire();
+          } }),
+        el('button', { class:'b mini danger', text:'−1', disabled:embarque <= 0,
+          onclick:() => { P.decharger(n.id,t,1); refaire(); } }),
+        el('button', { class:'b mini danger', text:'Retirer', disabled:embarque <= 0,
+          onclick:() => { P.decharger(n.id,t); refaire(); } }));
+      const corps = el('div', { class:'cale-unite-corps' },
+        el('div', { class:'rangee entre' },
+          el('b', { text:nomUnite(t) }),
+          el('span', { class:'cale-unite-nombre', text:embarque + ' à bord' })),
+        el('div', { class:'eti', text:libre + ' disponible' + (libre > 1 ? 's' : '')
+          + ' · ' + pop + ' place' + (pop > 1 ? 's' : '') + ' par unité' }),
+        actions);
       liste.appendChild(el('div', { class:'cale-unite' + (embarque ? ' embarquee' : '') },
         el('div', { class:'cale-unite-art' },
           src ? window.Img.vignette(src, 58, nomUnite(t)) : el('span', { text:nomUnite(t).charAt(0) })),
-        el('div', { class:'cale-unite-corps' },
-          el('div', { class:'rangee entre' },
-            el('b', { text:nomUnite(t) }),
-            el('span', { class:'cale-unite-nombre', text:embarque + ' à bord' })),
-          el('div', { class:'eti', text:libre + ' disponible' + (libre > 1 ? 's' : '')
-            + ' · ' + pop + ' place' + (pop > 1 ? 's' : '') + ' par unité' }),
-          el('div', { class:'cale-unite-actions' },
-            ...[1, 5, 25].map(k => el('button', { class:'b mini', text:'+' + k,
-              disabled:ajoutPossible <= 0, onclick:() => {
-                const r = P.charger(n.id, t, k);
-                if (!r.ok) U.dire(r.pourquoi, 'alerte');
-                refaire();
-              } })),
-            el('button', { class:'b mini', text:'Tout', disabled:ajoutPossible <= 0,
-              onclick:() => { const r=P.charger(n.id,t,ajoutPossible);
-                if (!r.ok) U.dire(r.pourquoi,'alerte'); refaire(); } }),
-            el('button', { class:'b mini danger', text:'−1', disabled:embarque <= 0,
-              onclick:() => { P.decharger(n.id,t,1); refaire(); } }),
-            el('button', { class:'b mini danger', text:'Retirer', disabled:embarque <= 0,
-              onclick:() => { P.decharger(n.id,t); refaire(); } }))));
+        corps));
     }
     if (types.length) c.appendChild(liste);
     c.appendChild(el('div', { class:'cale-pied' },

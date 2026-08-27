@@ -99,7 +99,11 @@
   b('scierie', {
     nom:'Scierie', metier:'Bûcheron', cat:'recolte', rangees:[1,2],
     desc:"Un hangar ouvert, la scie à cadre battue par la roue, la grume sur son chariot. Tout le reste du bourg est bâti avec ce qui en sort.",
-    cout:{poisson:15}, temps:40, postes:P(1,1,2,2,2,3,3,3,4,4),
+    /* La scierie pilote désormais une vraie chaîne : un seul bûcheron au
+       départ, puis des équipes assez larges pour que l'affectation groupée
+       ait un sens. Deux scieries de maître peuvent absorber plus de cent
+       habitants sans produire cent cartes de poste dans l'interface. */
+    cout:{poisson:15}, temps:40, postes:P(1,2,3,5,8,12,18,26,38,55),
     recettes:['coupe_bois','sciage','tresser_osier','poutres','ecorce','secher_bois'],
   });
   x('coupe_bois', { bat:'scierie', nom:'Abattre en lisière', metier:'bois', duree:8,
