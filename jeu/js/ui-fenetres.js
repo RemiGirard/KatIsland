@@ -523,6 +523,8 @@
   const PUITS_ART={tirer_eau:'tirer.png',pleine:'nappe-pleine.png',basse:'nappe-basse.png',treuil:'treuil.png',bourg:'bourg.png',cultures:'irrigation.png',ateliers:'ateliers.png',equilibre:'equilibre.png',profond:'profond.png',pluie:'pluie.png',reservoir:'reservoir.png',repos:'repos.png',priorite_bourg:'priorite-bourg.png',priorite_cultures:'priorite-cultures.png',priorite_ateliers:'priorite-ateliers.png',maitrise:'maitrise.png'};
   const BERGERIE_IMG='img/interface/bergerie/';
   const BERGERIE_ART={tondre:'tondre.png',paitre:'paitre.png',abattre_mouton:'abattre.png',abattre_complet:'abattoir.png',fondre_suif:'suif.png',chandelles:'chandelles.png',troupeau:'troupeau.png',paturage:'paturage.png',sec:'paturage-sec.png',agneau:'agneau.png',berger:'berger.png',abri:'abri.png',laine:'laine.png',renouvellement:'renouvellement.png',viande:'viande.png',maitrise:'maitrise.png'};
+  const ETABLE_IMG='img/interface/etable/';
+  const ETABLE_ART={traire:'traire.png',fumier:'fumier.png',abattre_vache:'abattre.png',abattre_boeuf:'abattoir.png',litiere:'litiere.png',troupeau:'troupeau.png',sante:'sante.png',sale:'sale.png',veau:'veau.png',ration:'ration.png',abreuvoir:'abreuvoir.png',abri:'abri.png',lait:'lait.png',renouvellement:'renouvellement.png',fumure:'fumure.png',maitrise:'maitrise.png'};
   let affectationScierie = null;
   function artScierie(id) { return SCIERIE_IMG + (SCIERIE_ART[id] || SCIERIE_ART.chaine); }
   function artPecherie(id) { return PECHERIE_IMG + (PECHERIE_ART[id] || PECHERIE_ART.banc); }
@@ -533,6 +535,7 @@
   function artFleurs(id){return FLEURS_IMG+(FLEURS_ART[id]||FLEURS_ART.floraison);}
   function artPuits(id){return PUITS_IMG+(PUITS_ART[id]||PUITS_ART.treuil);}
   function artBergerie(id){return BERGERIE_IMG+(BERGERIE_ART[id]||BERGERIE_ART.troupeau);}
+  function artEtable(id){return ETABLE_IMG+(ETABLE_ART[id]||ETABLE_ART.troupeau);}
 
   function posteLibreScierie(b, rid) {
     let i = b.postes.findIndex(p => !p.hab && p.rec === rid);
@@ -1077,6 +1080,20 @@
     c.appendChild(liste);
   }
 
+  function rendreEtableChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,tr=s.troupeau/Math.max(1,s.maximum),sa=s.sante/100,li=s.litiere/100,reserve=G.etableReserve(b);
+    c.appendChild(el('section',{class:'scierie-maitrise etable-maitrise'},el('img',{src:artEtable('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DE L’ÉTABLE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'aux soins'}))));
+    c.appendChild(el('section',{class:'etable-cheptel'},el('img',{src:artEtable(s.sante<40?'sale':(s.troupeau<=reserve+.5?'veau':'troupeau')),alt:''}),el('div',{},
+      el('div',{class:'rangee entre'},el('b',{text:'Cheptel'}),el('strong',{text:s.troupeau.toFixed(1)+' / '+s.maximum.toFixed(1)})),U.barre(tr,tr<.35?'rouge':'verte','Bêtes',reserve+' reproductrices protégées'),
+      el('div',{class:'rangee entre etable-jauge-titre'},el('b',{text:'Santé'}),el('strong',{text:Math.round(s.sante)+' %'})),U.barre(sa,sa<.35?'rouge':'verte','Santé','agit sur lait et naissances'),
+      el('div',{class:'rangee entre etable-jauge-titre'},el('b',{text:'Litière'}),el('strong',{text:Math.round(s.litiere)+' %'})),U.barre(li,li<.25?'rouge':'','Litière','se salit avec le troupeau'))));
+    const strategies=[{id:'lait',nom:'Troupeau laitier',art:'lait',effet:'+16 % de lait'},{id:'renouvellement',nom:'Veaux sous la mère',art:'renouvellement',effet:'Naissances accélérées · 4 reproductrices protégées',niv:2},{id:'fumure',nom:'Boucle des champs',art:'fumure',effet:'+22 % de fumier pour amender les champs',niv:3}],choix=el('div',{class:'scierie-organisations etable-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artEtable(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Étable niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Sortir le fumier et refaire la litière sont désormais des soins réels. Le fumier devient une ressource stockée et remplace la paille dans l’amendement des champs.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artEtable,source:'troupeau'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artEtable,source:'troupeau'}));c.appendChild(liste);
+  }
+
   function rendrePersonnelEcosysteme(c, bid) {
     const b = E().bat[bid], G = window.EcosystemesBatiments; if (!b || !G) return;
     const cfg = G.personnel(b), ouv = (b.postes || []).filter(p => p.hab)
@@ -1555,6 +1572,14 @@
       ajouter('personnel','Bergers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artBergerie('berger'));
       if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Abattoir',c=>rendreAnnexes(c,bid),3,'orange',artBergerie('abattoir'));
       ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artBergerie,arts:{abri:'abri',banc:'tondre',eau:'paturage',manteau:'laine'}}),4,'vert',artBergerie('abri'));
+      return ong;
+    } else if(bb.type==='etable'){
+      ajouter('chaine','Cheptel',c=>rendreEtableChaine(c,bid),1,'bleu',artEtable('troupeau'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artEtable('abri'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('elevage'):imageRes('outil'));
+      ajouter('personnel','Vachers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artEtable('maitrise'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Abattoir',c=>rendreAnnexes(c,bid),3,'orange',artEtable('abattoir'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artEtable,arts:{abri:'abri',eau:'abreuvoir',tabouret:'traire',lanterne:'sante'}}),4,'vert',artEtable('abri'));
       return ong;
     } else if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
       c => rendrePostes(c, bid), 1, 'bleu', imageBat());

@@ -37,8 +37,8 @@
 
 ### Animaux et transformation alimentaire
 
-- [ ] **Bergerie** — taille du troupeau, pâturage, mise bas et qualité de laine ; préserver des reproducteurs ralentit la production immédiate mais développe le cheptel.
-- [ ] **Étable** — alimentation, santé et cycle lait/reproduction ; ration riche contre autonomie du troupeau.
+- [x] **Bergerie** — taille du troupeau, pâturage, mise bas et qualité de laine ; préserver des reproducteurs ralentit la production immédiate mais développe le cheptel.
+- [x] **Étable** — alimentation, santé et cycle lait/reproduction ; ration riche contre autonomie du troupeau.
 - [ ] **Rucher** — reine, humeur des ruches, réserve de miel et réseau de pollinisation des parcelles.
 - [ ] **Moulin à vent** — fenêtres de vent et files de mouture ; stockage automatique des commandes pour profiter des rafales.
 - [ ] **Moulin à eau** — débit de roue et vannes ; arbitrage entre eau disponible et cadence stable.
@@ -162,3 +162,19 @@ Un bâtiment est terminé lorsqu'il possède une boucle compréhensible en quelq
 - **Décision** : nappe phréatique locale qui se vide et se recharge ; distribution équilibrée, habitants d’abord, irrigation prioritaire ou grand débit. Les choix modifient réellement récupération, humidité des potagers ou rendement d’eau.
 - **Anti-microgestion** : la nappe se recharge seule et la distribution choisie reste automatique ; ralentir, relever les équipes ou construire un autre puits devient une décision structurelle.
 - **Visuels** : planche transparente de 16 icônes, découpée sur grille stricte et activée dans les jauges, recettes, priorités et onglets.
+
+### Bergerie
+
+- **Avant** : six activités variées mais un nombre infini de moutons invisibles ; pâturage, tonte et abattage ne modifiaient aucun état local.
+- **Écart avec la scierie** : aucune lecture du troupeau, aucune conséquence différée et aucune protection contre une boucle d’abattage permanente.
+- **Décision** : cheptel, capacité et pâturage propres à chaque bergerie ; naissances automatiques et seuil de reproducteurs protégé selon les orientations laine, renouvellement ou viande.
+- **Anti-microgestion** : un poste d’abattage attend automatiquement plutôt que de franchir la réserve, puis reprend après les naissances.
+- **Visuels** : 16 illustrations transparentes activées pour le troupeau, les recettes, le pâturage, les politiques et la maîtrise.
+
+### Étable
+
+- **Avant** : le fumier produisait directement des légumes et refaire une litière faisait apparaître six laits ; le troupeau n’existait pas réellement.
+- **Écart avec la scierie** : aucun cheptel, aucune santé ou propreté, et deux raccourcis économiques qui masquaient les relations avec les champs.
+- **Décision** : cheptel vivant, santé et litière locales ; orientations lait, renouvellement ou fumure. Le fumier devient une ressource illustrée que la jachère consomme réellement.
+- **Anti-microgestion** : santé et naissances évoluent seules ; les soins restaurent durablement l’étable et l’abattage protège les reproductrices.
+- **Visuels** : planche 4 × 4 transparente et une illustration de ressource fumier ajoutée au manifeste du jeu.
