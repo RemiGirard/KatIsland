@@ -88,6 +88,7 @@ input[type="password"],input[type="email"],input[type="url"],textarea,
 
 #scene{position:fixed;inset:0;display:grid;place-items:center;line-height:0;background:var(--fond2)}
 #c{
+  width:100%;height:100%;
   image-rendering:pixelated;image-rendering:crisp-edges;
   display:block;background:#000;
   cursor:var(--curseur-patte),pointer;
