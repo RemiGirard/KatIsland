@@ -15,7 +15,7 @@
   let racine, portrait, bulle, surtitre, titre, texte, objectif, progression;
   let boutonAction, boutonSuite, boutonReplier, minuterieSprite = 0, animationCourante = '';
   let contexte = null, fileContextes = [], remarque = null, minuterieRemarque = 0;
-  let replieAvantRemarque = false, derniereRemarqueReelle = 0;
+  let derniereRemarqueReelle = 0;
   let initialise = false, etapeAffichee = null;
 
   const aBat = type => window.Etat.aBatiment(type);
@@ -43,7 +43,7 @@
     {
       id:'pecherie', minute:1, sprite:['construire','neutre'],
       surtitre:'ÉTAPE 1 · SE NOURRIR', titre:'Construis la Pêcherie',
-      texte:"Ouvre « Construire » dans le volet de droite, choisis Récolte puis pose la Pêcherie. Elle ne coûte rien : affecte ton premier habitant au chantier pour l’achever.",
+      texte:"Ouvre « Construire » dans le volet de droite, choisis Récolte puis pose la Pêcherie. Elle ne coûte rien et le maître d’œuvre lance automatiquement le chantier.",
       objectif:'Pêcherie construite', fini:() => aBat('pecherie'), action:'construction', actionTexte:'Ouvrir Construire',
     },
     {
@@ -54,35 +54,35 @@
       progres:() => [window.Etat.qte('poisson'),15,'poissons'], action:'pecherie', actionTexte:'Voir la Pêcherie',
     },
     {
-      id:'scierie', minute:5, sprite:['construire','parle'],
-      surtitre:'ÉTAPE 3 · LE BOIS', titre:'Construis la Scierie',
-      texte:"Le plan vient d’apparaître dans Récolte. Le chantier immobilise un habitant : laisse finir l’ouvrage, puis rends-lui un poste de production.",
-      objectif:'Scierie construite', fini:() => aBat('scierie'), action:'construction', actionTexte:'Ouvrir Construire',
-    },
-    {
-      id:'bois', minute:7, sprite:['parle','lire'],
-      surtitre:'ÉTAPE 4 · PRÉPARER LE BOURG', titre:'Commence la coupe du bois',
-      texte:"Dans la Scierie, l’onglet Chaîne contient « Abattre en lisière ». Affecte ton habitant et lance cette tâche en boucle.",
-      objectif:'Produire les premières bûches', fini:() => vu('bois'), action:'scierie', actionTexte:'Voir la Scierie',
-    },
-    {
-      id:'maison', minute:10, sprite:['construire','neutre'],
-      surtitre:'ÉTAPE 5 · UN TOIT', titre:'Construis une Maison',
-      texte:"Une maison ouvre une place, mais personne n’arrive automatiquement. Réunis 34 bois, pose-la depuis la catégorie Vie, puis nous ouvrirons les portes.",
-      objectif:'Maison construite', fini:() => aBat('maison'), progres:() => [window.Etat.qte('bois'),34,'bois'],
-      action:'construction', actionTexte:'Ouvrir Construire',
-    },
-    {
-      id:'habitant', minute:12, sprite:['parle','neutre'],
-      surtitre:'ÉTAPE 6 · ACCUEILLIR', titre:'Choisis un nouvel habitant',
-      texte:"Ouvre les Habitants puis l’onglet Portes. Prépare assez de poisson, ouvre le bourg et compare les trois voyageurs : leur talent et leurs traits sont définitifs.",
+      id:'habitant', minute:4, sprite:['parle','surpris'],
+      surtitre:'ÉTAPE 3 · ACCUEILLIR', titre:'Ouvre déjà les portes du bourg',
+      texte:"Tu as deux couchages dès le départ, donc une place est déjà libre. Ouvre Habitants puis Portes, rassemble 18 portions de vivres et compare les trois voyageurs avant d’en accueillir un.",
       objectif:'Accueillir un deuxième habitant', fini:() => E().habitants.length >= 2,
       progres:() => [E().habitants.length,2,'habitants'], action:'portes', actionTexte:'Voir les Portes',
     },
     {
+      id:'scierie', minute:5, sprite:['construire','parle'],
+      surtitre:'ÉTAPE 4 · LE BOIS', titre:'Construis la Scierie',
+      texte:"Le plan vient d’apparaître dans Récolte. Pose la Scierie : le chantier avance seul pendant que ton habitant continue de produire.",
+      objectif:'Scierie construite', fini:() => aBat('scierie'), action:'construction', actionTexte:'Ouvrir Construire',
+    },
+    {
+      id:'bois', minute:7, sprite:['parle','lire'],
+      surtitre:'ÉTAPE 5 · PRÉPARER LE BOURG', titre:'Commence la coupe du bois',
+      texte:"Dans la Scierie, l’onglet Chaîne contient « Abattre en lisière ». Affecte un habitant et lance cette tâche en boucle.",
+      objectif:'Produire les premières bûches', fini:() => vu('bois'), action:'scierie', actionTexte:'Voir la Scierie',
+    },
+    {
+      id:'maison', minute:10, sprite:['construire','neutre'],
+      surtitre:'ÉTAPE 6 · UN TOIT', titre:'Construis une Maison',
+      texte:"Tes deux paillasses de départ sont occupées. Une Maison ajoute une vraie place au bourg : réunis 34 bois puis pose-la depuis la catégorie Vie.",
+      objectif:'Maison construite', fini:() => aBat('maison'), progres:() => [window.Etat.qte('bois'),34,'bois'],
+      action:'construction', actionTexte:'Ouvrir Construire',
+    },
+    {
       id:'caserne', minute:14, sprite:['construire','parle'],
       surtitre:'ÉTAPE 7 · SE PRÉPARER', titre:'Construis la Caserne',
-      texte:"La Caserne ne demande que du bois et du poisson. Avec deux habitants, l’un peut maintenir les vivres pendant que l’autre rejoint le chantier.",
+      texte:"La Caserne ne demande que du bois et du poisson. Pose-la sans interrompre les ateliers : le maître d’œuvre s’occupe du chantier.",
       objectif:'Caserne construite', fini:() => aBat('caserne'), action:'construction', actionTexte:'Ouvrir Construire',
     },
     {
@@ -127,44 +127,69 @@
       { texte:"Ça tient debout ! Je n’en doutais presque pas.", sprite:['applaudit','valide'] },
       { texte:"Un toit de plus et déjà trois fois plus de choses à ranger.", sprite:['applaudit','neutre'] },
       { texte:"Joli chantier. Les murs sont droits… de suffisamment loin.", sprite:['rigole','applaudit'] },
+      { texte:"J’ai supervisé depuis une caisse. C’était extrêmement technique.", sprite:['ecrire','valide'] },
+      { texte:"Bâtiment terminé ! Ne lèche pas les murs, la chaux est encore fraîche.", sprite:['surpris','rigole'] },
+      { texte:"Une inauguration sans ruban ? Très bien, je mâcherai la ficelle.", sprite:['doute','applaudit'] },
     ],
     ameliore: [
       { texte:"Plus grand, plus efficace… toujours pas de coussin pour le conseiller.", sprite:['applaudit','doute'] },
       { texte:"Ce bâtiment prend de l’allure. Et de la place.", sprite:['valide','applaudit'] },
       { texte:"Nouveau niveau, nouvelles languettes à renifler.", sprite:['lire','reflechit'] },
+      { texte:"Ils ont ajouté un étage. Mes petits escaliers sont toujours en attente.", sprite:['doute','parle'] },
+      { texte:"Plus solide, plus joli, et officiellement approuvé par une patte humide.", sprite:['valide','rigole'] },
     ],
     affectation: [
       { texte:"Bonne patte, bon poste. Enfin, normalement.", sprite:['reflechit','neutre'] },
       { texte:"Un habitant occupé, c’est une barre qui avance.", sprite:['ecrire','valide'] },
       { texte:"Je note l’affectation. Avec une écriture parfaitement officielle.", sprite:['ecrire','parle'] },
+      { texte:"Le poste est pourvu. Moi, je reste conseiller : c’est un poste assis.", sprite:['dors','rigole'] },
+      { texte:"Une patte sur l’outil, l’autre déjà tournée vers la pause.", sprite:['attend','neutre'] },
     ],
     poste: [
       { texte:"Une nouvelle tâche ? Mes moustaches approuvent ce planning.", sprite:['ecrire','valide'] },
       { texte:"Ça va travailler. Je me place à une distance très prudente.", sprite:['courir','neutre'] },
       { texte:"Bon choix. Si ça casse, je dirai que je n’étais pas là.", sprite:['doute','rigole'] },
+      { texte:"La boucle est lancée. Si quelqu’un demande, tout était prévu.", sprite:['valide','doute'] },
+      { texte:"Excellent. Je surveille le travail depuis ce rayon de soleil.", sprite:['dors','neutre'] },
     ],
     poisson: [
       { texte:"Ça sent la marée jusque dans mes moustaches.", sprite:['mange','neutre'] },
       { texte:"Encore un poisson et j’exige une part de conseiller.", sprite:['mange','parle'] },
       { texte:"La rivière travaille gratuitement. J’aime beaucoup son contrat.", sprite:['rigole','neutre'] },
+      { texte:"Celui-là me regardait. Je l’ai vaincu administrativement.", sprite:['doute','valide'] },
+      { texte:"Une réserve de poisson est une réserve de moral. Surtout le mien.", sprite:['mange','rigole'] },
     ],
     bois: [
       { texte:"Belle pile de bois. Pas le moment d’y faire mes griffes.", sprite:['doute','neutre'] },
       { texte:"Chaque bûche ressemble déjà un peu à une maison.", sprite:['reflechit','valide'] },
       { texte:"La scierie ronronne presque aussi fort que moi.", sprite:['dors','rigole'] },
+      { texte:"Bois sec, plan droit, conseiller pas dessous : parfait.", sprite:['valide','surpris'] },
+      { texte:"Je comptais les bûches, puis l’une d’elles a bougé. J’ai recommencé.", sprite:['doute','ecrire'] },
     ],
     production: [
       { texte:"Ce petit bruit-là, c’est le son d’un poste qui tourne bien.", sprite:['attend','valide'] },
       { texte:"Les réserves montent. Doucement, mais avec beaucoup de sérieux.", sprite:['ecrire','neutre'] },
       { texte:"Un cycle terminé. Personne n’a perdu de moustache : excellent bilan.", sprite:['valide','rigole'] },
+      { texte:"Les chiffres montent. Je prétends que c’est grâce à mon tableau.", sprite:['ecrire','rigole'] },
+      { texte:"Le bourg produit, moi je contrôle la qualité des siestes.", sprite:['dors','valide'] },
     ],
     portes: [
       { texte:"Trois candidats, une place. Aucun stress. Enfin… presque.", sprite:['surpris','reflechit'] },
       { texte:"Regarde les traits avant la jolie frimousse. Oui, je sais, c’est difficile.", sprite:['reflechit','parle'] },
+      { texte:"Choisis avec le cœur. Puis vérifie quand même le talent.", sprite:['reflechit','valide'] },
+      { texte:"Trois voyageurs ! Cache les coussins, ça donne l’air prospère.", sprite:['surpris','rigole'] },
+    ],
+    habitant: [
+      { texte:"Bienvenue au bourg ! J’ai caché les formulaires sous le paillasson.", sprite:['applaudit','rigole'] },
+      { texte:"Une bouche de plus, deux pattes de plus et beaucoup plus d’avis.", sprite:['surpris','parle'] },
+      { texte:"Le bourg grandit. Mon autorité aussi, théoriquement.", sprite:['valide','doute'] },
+      { texte:"Un nouveau voisin ! Je vais lui expliquer qui possède ce coussin.", sprite:['mange','rigole'] },
     ],
     recherche: [
       { texte:"Une nouvelle idée ! Je savais que fixer ce parchemin finirait par marcher.", sprite:['reflechit','valide'] },
       { texte:"Le savoir ne prend pas de place dans l’entrepôt. Très pratique.", sprite:['lire','rigole'] },
+      { texte:"Recherche terminée. J’avais la même idée hier, mais sans les détails.", sprite:['ecrire','doute'] },
+      { texte:"La science avance. Moi aussi, mais seulement jusqu’au prochain coussin.", sprite:['lire','dors'] },
     ],
   };
 
@@ -191,7 +216,7 @@
     portrait = element('button', 'conseiller-portrait');
     portrait.type = 'button'; portrait.title = 'Écouter Biscotte';
     portrait.addEventListener('click', () => {
-      T().replie = false; if (remarque) replieAvantRemarque = false; rendre(); sauver();
+      T().replie = false; rendre(); sauver();
     });
     portrait.appendChild(element('img'));
     portrait.appendChild(element('span', 'conseiller-signal', '!'));
@@ -204,7 +229,7 @@
     boutonReplier = element('button', 'conseiller-replier', '−');
     boutonReplier.type = 'button'; boutonReplier.title = 'Réduire le conseil';
     boutonReplier.addEventListener('click', () => {
-      T().replie = true; if (remarque) replieAvantRemarque = true; rendre(); sauver();
+      T().replie = true; rendre(); sauver();
     });
     tete.append(identite, boutonReplier);
     surtitre = element('div', 'conseiller-surtitre');
@@ -325,10 +350,10 @@
     if ((contexte && contexte.id === c.id) || fileContextes.some(x => x.id === c.id)) return;
     if (remarque) {
       clearTimeout(minuterieRemarque); remarque = null;
-      /* Le conseil important prend la main et reste donc ouvert. */
     }
     if (contexte) fileContextes.push(c); else contexte = c;
-    T().replie = false;
+    /* Un nouveau conseil allume le badge, sans annuler le choix du joueur
+       s'il a volontairement réduit Biscotte. */
     rendre();
   }
 
@@ -348,14 +373,11 @@
     t.remarquesRecentes.push(r.texte);
     if (t.remarquesRecentes.length > 7) t.remarquesRecentes.shift();
     derniereRemarqueReelle = maintenant;
-    replieAvantRemarque = !!t.replie;
-    t.replie = false;
     remarque = r;
     rendre();
     clearTimeout(minuterieRemarque);
     minuterieRemarque = setTimeout(() => {
       remarque = null;
-      if (!contexte) T().replie = replieAvantRemarque;
       rendre(); sauver();
     }, 5600);
   }
@@ -443,6 +465,7 @@
     else if (quoi === 'affectation') petiteRemarque('affectation', .38);
     else if (quoi === 'poste') petiteRemarque('poste', .24);
     else if (quoi === 'portes' && data) petiteRemarque('portes', .65);
+    else if (quoi === 'habitant' && E().habitants.length > 1) petiteRemarque('habitant', .8);
     else if (quoi === 'recherche') petiteRemarque('recherche', .8);
     else if (quoi === 'cycle' && data) {
       const recu = data.recu || {};

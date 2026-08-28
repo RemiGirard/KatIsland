@@ -127,6 +127,129 @@ body.vue-plan-active #c{visibility:hidden}
   #bouton-plan-village{left:8px;bottom:8px;width:28px;height:28px}
 }
 
+/* ---------------------------------------------------------------
+   TABLEAU DE BORD DE LA CARTE
+   Règle absolue : il ne recouvre RIEN. Il vit sous la couche
+   d'interface (le dock de gauche et les productions de droite passent
+   toujours devant) et se tient dans la bande centrale restée libre.
+   --------------------------------------------------------------- */
+#plan-hud{position:fixed;inset:0;pointer-events:none;z-index:4}
+#plan-hud[hidden]{display:none}
+#plan-hud > *{pointer-events:auto}
+
+#plan-volet{
+  position:absolute;
+  left:calc(var(--dock) + 22px);right:calc(var(--prod) + 30px);
+  top:calc(var(--bandeau) + 22px);
+  display:flex;flex-direction:column;
+  max-height:calc(100vh - var(--bandeau) - 92px);
+}
+#plan-volet .plan-barre{
+  flex:none;display:flex;align-items:center;gap:8px;padding:6px 7px 6px 11px;
+  background:rgba(18,15,26,.93);border:1px solid var(--bord);border-radius:var(--r);
+  backdrop-filter:blur(8px);box-shadow:0 5px 18px rgba(0,0,0,.3);
+}
+#plan-volet.ouvert .plan-barre{border-radius:var(--r) var(--r) 0 0}
+#plan-volet .plan-titre{
+  flex:none;font-family:'Condense',sans-serif;font-size:14px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--or);
+}
+#plan-recherche{
+  flex:1;min-width:90px;max-width:230px;padding:5px 9px;
+  border:1px solid var(--bord2);border-radius:var(--r2);
+  background:var(--creux);color:var(--texte);font:inherit;font-size:12px;
+  outline:none;transition:border-color .14s;
+}
+#plan-recherche::placeholder{color:var(--faible)}
+#plan-recherche:focus{border-color:rgba(230,192,105,.6)}
+#plan-replier{
+  width:24px;height:24px;flex:none;display:grid;place-items:center;
+  border:1px solid var(--bord2);border-radius:var(--r3);
+  background:var(--panneau);color:var(--doux);font:700 13px/1 'Condense',sans-serif;
+  transition:color .14s,border-color .14s,background .14s,transform .14s;
+}
+#plan-replier:hover{color:var(--texte);border-color:var(--bord3);background:var(--panneau2)}
+#plan-volet.ouvert #plan-replier{transform:rotate(180deg);color:var(--or)}
+
+/* Le tiroir de nomenclature : fermé, il ne prend pas un pixel. */
+#plan-volet .plan-tiroir{display:none}
+#plan-volet.ouvert .plan-tiroir{
+  display:flex;flex-direction:column;gap:7px;min-height:0;
+  padding:8px 9px 9px;
+  background:rgba(18,15,26,.95);border:1px solid var(--bord);border-top:none;
+  border-radius:0 0 var(--r) var(--r);backdrop-filter:blur(8px);
+  box-shadow:0 8px 20px rgba(0,0,0,.34);
+}
+#plan-index{
+  flex:1;min-height:0;max-height:46vh;overflow-y:auto;overflow-x:hidden;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));
+  gap:2px;align-content:start;padding-right:2px;
+}
+#plan-index::-webkit-scrollbar{width:6px}
+#plan-index::-webkit-scrollbar-thumb{background:var(--panneau3);border-radius:3px}
+.plan-item{
+  display:flex;align-items:center;gap:7px;padding:4px 6px;
+  border:1px solid transparent;border-radius:var(--r3);
+  background:none;color:var(--texte);text-align:left;width:100%;
+  font-size:12px;line-height:1.25;transition:background .12s,border-color .12s;
+}
+.plan-item:hover,.plan-item.vise{background:var(--panneau2);border-color:var(--bord2)}
+/* Le repère : le même numéro que celui cerclé sur la planche. */
+.plan-item .rep{
+  width:19px;height:19px;flex:none;display:grid;place-items:center;
+  border:1px solid var(--bord2);border-radius:50%;
+  font-family:'Condense',sans-serif;font-size:11px;line-height:1;color:var(--doux);
+}
+.plan-item:hover .rep,.plan-item.vise .rep{color:var(--texte)}
+.plan-item .nom{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-item .niv{
+  flex:none;font-family:'Condense',sans-serif;font-size:12px;
+  color:var(--doux);letter-spacing:.04em;
+}
+.plan-item .alerte{flex:none;color:var(--corail);font-size:11px}
+.plan-vide{grid-column:1/-1;padding:10px 4px;color:var(--faible);font-size:11.5px;text-align:center}
+
+#plan-legende{flex:1;display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end}
+.plan-cat{
+  display:flex;align-items:center;gap:5px;padding:2px 6px;
+  border:1px solid var(--bord);border-radius:999px;background:var(--panneau);
+  color:var(--doux);font-size:11px;transition:opacity .12s,color .12s,border-color .12s;
+}
+.plan-cat:hover{color:var(--texte);border-color:var(--bord2)}
+/* La pastille porte l'échantillon de HACHURE ; la couleur n'est qu'un liseré. */
+.plan-cat .pastille{
+  width:16px;height:16px;flex:none;border-radius:2px;overflow:hidden;
+  line-height:0;padding:2px;
+}
+.plan-cat .pastille canvas{width:100%;height:100%;display:block}
+.plan-cat .n{font-family:'Condense',sans-serif;font-size:11px;color:var(--faible)}
+.plan-cat.off{opacity:.35;text-decoration:line-through}
+.plan-note{flex:none;color:var(--faible);font-size:10.5px;line-height:1.35}
+
+/* Les commandes de cadrage restent elles aussi dans la bande centrale. */
+#plan-outils{
+  position:absolute;left:calc(var(--dock) + 22px);bottom:18px;
+  display:flex;gap:5px;
+}
+#plan-outils button{
+  width:30px;height:30px;display:grid;place-items:center;
+  border:1px solid var(--bord2);border-radius:var(--r3);
+  background:rgba(18,15,26,.86);color:var(--doux);
+  font:700 15px/1 'Condense',sans-serif;backdrop-filter:blur(5px);
+  transition:color .14s,border-color .14s,background .14s;
+}
+#plan-outils button:hover{color:var(--or);border-color:rgba(230,192,105,.55);background:rgba(29,23,40,.94)}
+
+/* Dock ou productions repliés : la barre récupère la place libérée. */
+body.dock-replie #plan-volet,body.dock-replie #plan-outils{left:20px}
+body.prod-replie #plan-volet{right:24px}
+
+@media(max-width:900px){
+  #plan-volet{left:12px;right:12px;top:calc(var(--bandeau) + 16px)}
+  #plan-volet .plan-titre{display:none}
+  #plan-outils{left:12px;bottom:12px}
+}
+
 #couche{position:fixed;inset:0;pointer-events:none;z-index:5}
 #couche > *{pointer-events:auto}
 
@@ -271,6 +394,10 @@ body.vue-plan-active #c{visibility:hidden}
 .tache:hover{border-color:var(--bord2);background:var(--panneau2)}
 .tache:active{transform:translateY(1px)}
 .tache.chantier::before{background:var(--or)}
+.tache.chantier.file-attente{opacity:.68;background:rgba(255,255,255,.018);border-style:dashed}
+.tache.chantier.file-attente::before{background:#756947}
+.tache.chantier.file-attente .tache-mini i,.tache.chantier.file-attente .tache-gain{color:#a89e82}
+.tache.chantier.file-attente .barre.attente{opacity:.42}
 .tache.bloquee::before{background:var(--corail)}
 .tache.aventure::before{background:var(--bleu)}
 .tache.expedition::before{background:var(--violet)}
@@ -842,6 +969,11 @@ body.plateau-fenetres #scene{visibility:hidden}
 .plateau-mini-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:8px}
 .plateau-mini-stats span{padding:5px 6px;border-radius:5px;background:rgba(255,255,255,.035);font-size:9px;color:var(--doux)}
 .plateau-objectif{padding:10px;border:1px solid rgba(214,177,73,.26);border-radius:7px;background:linear-gradient(145deg,rgba(214,177,73,.08),rgba(255,255,255,.018));box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.plateau-objectif-desc{margin-bottom:9px;color:#d7ddd9;font-size:10px;line-height:1.48}
+.plateau-conditions{display:grid;gap:5px;margin-top:9px}
+.plateau-condition{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px;border:1px solid rgba(255,255,255,.08);border-radius:5px;background:rgba(7,16,22,.28);color:#c8d0cf;font-size:9px}
+.plateau-condition b{width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.09);color:#e7d394;font-size:10px}
+.plateau-condition strong{color:#e7d394;font-size:8px;white-space:nowrap}.plateau-condition.accomplie{border-color:rgba(130,181,112,.38);background:rgba(91,140,77,.13);color:#e6f0df}.plateau-condition.accomplie b{background:#668f56;color:#fff}.plateau-condition.accomplie strong{color:#b9d9aa}
 .prep-exp-intro{padding:14px;margin-bottom:15px;border-left:3px solid var(--or);background:rgba(214,177,73,.08)}
 .prep-exp-intro .tt{margin:4px 0 6px;font-size:15px}.prep-exp-cale{margin:8px 0 14px}
 .prep-exp-rapport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 10px}
@@ -1858,6 +1990,7 @@ button[title],.b[title],a[title]{cursor:pointer}
   border-radius:4px;text-align:left;font:inherit;cursor:pointer;
 }
 .chantier-statut:hover{background:rgba(255,255,255,.07)}
+.chantier-statut.chantier-info{cursor:default}.chantier-statut.chantier-info:hover{background:rgba(255,255,255,.035)}
 .chantier-statut span,.chantier-statut b,.chantier-statut i{display:block}
 .chantier-statut b{font-size:10px}.chantier-statut i{margin-top:2px;color:#8f9c99;font-size:8px;font-style:normal}
 .chantier-statut strong{color:#e2ba57;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase}
@@ -2539,11 +2672,15 @@ button[title],.b[title],a[title]{cursor:pointer}
 .etable-cheptel{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(160,126,89,.32);border-radius:6px;background:linear-gradient(110deg,rgba(128,92,61,.15),rgba(91,122,80,.07))}.etable-cheptel>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.etable-cheptel>div{min-width:0}.etable-cheptel .rangee b{font-size:10px;color:#e8e0d6}.etable-cheptel .rangee strong{font-size:10px;color:#d6ad7b}.etable-cheptel .barre{margin:4px 0 6px}.etable-jauge-titre{margin-top:4px}.etable-strategies{margin-bottom:7px}.etable-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.etable-strategies .scierie-organisation img{width:52px;height:52px}.etable-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
 @media(max-width:420px){.etable-cheptel{grid-template-columns:62px minmax(0,1fr)}.etable-cheptel>img{width:60px;height:60px}}
 
+.rucher-maitrise{border-color:rgba(204,157,45,.40);background:linear-gradient(125deg,rgba(176,126,26,.18),rgba(100,126,61,.06))}.rucher-maitrise .scierie-maitrise-corps span i{color:#ddb64d}.rucher-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#bb7d22,#e2c150)}
+.rucher-colonie{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(202,154,42,.32);border-radius:6px;background:linear-gradient(110deg,rgba(167,115,21,.16),rgba(93,125,57,.07))}.rucher-colonie>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.rucher-colonie>div{min-width:0}.rucher-colonie .rangee b{font-size:10px;color:#ebe2c7}.rucher-colonie .rangee strong{font-size:10px;color:#dfb84b}.rucher-colonie .barre{margin:4px 0 6px}.rucher-jauge-titre{margin-top:4px}.rucher-reine{display:flex;align-items:center;gap:6px;margin-top:5px;padding:4px;border-radius:4px;background:rgba(255,255,255,.035)}.rucher-reine img{width:30px;height:30px;object-fit:contain}.rucher-reine span{display:flex;flex-direction:column}.rucher-reine b{font-size:8px}.rucher-reine i{font-style:normal;font-size:7px;color:#9da59a}.rucher-strategies{margin-bottom:7px}.rucher-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.rucher-strategies .scierie-organisation img{width:52px;height:52px}.rucher-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.rucher-colonie{grid-template-columns:62px minmax(0,1fr)}.rucher-colonie>img{width:60px;height:60px}}
+
 /* ============================================================
    BISCOTTE — conseiller animé, toujours dans le même coin du jeu.
    La bulle s'ouvre vers la gauche afin de ne jamais pousser le volet droit.
    ============================================================ */
-#conseiller{position:fixed;right:16px;bottom:14px;z-index:190;display:flex;align-items:flex-end;gap:9px;max-width:min(470px,calc(100vw - 24px));pointer-events:none;font-family:inherit}
+#conseiller{position:fixed;right:calc(var(--prod,330px) + 64px);bottom:14px;z-index:190;display:flex;align-items:flex-end;gap:9px;max-width:min(470px,calc(100vw - 24px));pointer-events:none;font-family:inherit}
 .conseiller-portrait{position:relative;flex:none;width:82px;height:98px;padding:0;border:0;background:transparent;filter:drop-shadow(0 7px 5px rgba(7,16,19,.34));cursor:pointer;pointer-events:auto;transform-origin:50% 100%;animation:conseiller-flotte 2.4s ease-in-out infinite}
 .conseiller-portrait img{position:absolute;left:50%;bottom:0;width:auto;height:92px;max-width:82px;object-fit:contain;image-rendering:pixelated;transform:translateX(-50%)}
 .conseiller-signal{position:absolute;right:0;top:2px;display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:2px solid #f1e7ca;border-radius:14px;background:#c36b46;box-shadow:0 2px 5px rgba(0,0,0,.3);color:#fff8e7;font:900 10px 'Condense',sans-serif}
@@ -2563,5 +2700,6 @@ button[title],.b[title],a[title]{cursor:pointer}
 #conseiller.remarque .conseiller-bulle{width:310px;border-color:rgba(147,183,122,.58)}#conseiller.remarque .conseiller-surtitre{color:#9fc480}#conseiller.remarque .conseiller-tete{margin-bottom:8px;padding-bottom:7px}#conseiller.remarque .conseiller-texte{font-style:italic;color:#e0e7df}
 @keyframes conseiller-flotte{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-3px) rotate(1deg)}}
 @keyframes conseiller-ouvre{from{opacity:0;transform:scale(.88) translate(12px,8px)}to{opacity:1;transform:none}}
-@media(max-width:650px){#conseiller{right:8px;bottom:8px;max-width:calc(100vw - 16px)}.conseiller-bulle,#conseiller.remarque .conseiller-bulle{width:min(330px,calc(100vw - 88px));padding:12px}.conseiller-portrait{width:66px;height:80px}.conseiller-portrait img{height:76px;max-width:64px}.conseiller-bulle h2{font-size:16px}.conseiller-texte{font-size:11px}.conseiller-objectif{font-size:10px}}
+@media(max-width:780px){#conseiller{right:8px;bottom:8px;max-width:calc(100vw - 16px)}}
+@media(max-width:650px){.conseiller-bulle,#conseiller.remarque .conseiller-bulle{width:min(330px,calc(100vw - 88px));padding:12px}.conseiller-portrait{width:66px;height:80px}.conseiller-portrait img{height:76px;max-width:64px}.conseiller-bulle h2{font-size:16px}.conseiller-texte{font-size:11px}.conseiller-objectif{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.conseiller-portrait,.conseiller-bulle{animation:none}.conseiller-progression>i span{transition:none}}

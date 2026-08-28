@@ -113,6 +113,17 @@
     prodPoignee.firstChild.textContent = '›';
   }
 
+  function ouvrirConstruction() {
+    choisirVuePilote('construction');
+  }
+
+  function montrerChantier(bid) {
+    if (replie) basculer();
+    if (!bid || !window.Village || !window.Village.batiment(bid)) return;
+    window.Village.selection(bid);
+    if (window.Village.ping) window.Village.ping(bid, '#ead58e');
+  }
+
   function majEnteteProductions() {
     if (!prodEntete) return;
     const b = batimentChoisi && E().bat[batimentChoisi];
@@ -379,18 +390,20 @@
 
   function majConstruction() {
     const types = window.Jeu.catalogue();
-    const file = E().chantier.file || [], ouvriers = E().chantier.ouvriers || [];
+    const file = E().chantier.file || [];
     const presentes = FAMILLES_CONSTRUCTION.filter(f => types.some(t => f.cats.includes(window.BAT[t].cat)));
     if (!presentes.some(f => f.id === familleConstruction) && presentes.length)
       familleConstruction = presentes[0].id;
     const fam = presentes.find(f => f.id === familleConstruction);
     const lot = fam ? types.filter(t => fam.cats.includes(window.BAT[t].cat)) : [];
     U.rendreDans(prodCorps, hote => {
-      const statut = el('button', { class:'chantier-statut', onclick:() => window.UIFen.ouvrirChantier('file'),
-        title:'Gérer le chantier' },
-        el('span', {}, el('b', { text:file.length ? file.length + ' ouvrage' + (file.length > 1 ? 's' : '') : 'File vide' }),
-          el('i', { text:ouvriers.length + ' ouvrier' + (ouvriers.length > 1 ? 's' : '') + ' affecté' + (ouvriers.length > 1 ? 's' : '') })),
-        el('strong', { text:'Gérer' }));
+      const statut = el('div', { class:'chantier-statut chantier-info',
+        title:'La file complète est visible dans le menu de gauche' },
+        el('span', {}, el('b', { text:file.length ? file[0].nom + ' en cours' : 'Aucune construction' }),
+          el('i', { text:file.length > 1
+            ? (file.length - 1) + ' en attente · un ouvrage à la fois'
+            : (file.length ? 'un ouvrage à la fois' : 'le chantier est disponible') })),
+        el('strong', { text:'FILE À GAUCHE' }));
       hote.appendChild(statut);
       const cats = el('div', { class:'construction-categories', role:'tablist' });
       for (const f of presentes) cats.appendChild(el('button', {
@@ -411,7 +424,12 @@
     const def = window.BAT[type], cout = window.Jeu.coutConstruction(type);
     const abordable = window.Etat.assez(cout), src = window.Img && window.Img.bat(type);
     const couts = Object.keys(cout).slice(0, 3);
-    const carte = el('button', { class:'plan-carte' + (abordable ? '' : ' pauvre'),
+    /* La clé appartient au PLAN, pas à sa position dans la grille. Sans elle,
+       le premier bouton de « Récolte » était fondu avec le premier bouton de
+       « Défense » : Pêcherie devenait textuellement Le Port tout en gardant
+       son ancien nœud d'image. */
+    const carte = el('button', { 'data-cle':'plan:' + type,
+      class:'plan-carte' + (abordable ? '' : ' pauvre'),
       title:def.nom + '\n' + def.desc, onclick:() => choisirConstruction(type) },
       el('span', { class:'plan-carte-art' },
         src ? el('img', { src, alt:'Illustration de ' + def.nom }) : U.ico({ f:'marteau', c:['#aaa','#666'] }, 52)),
@@ -804,7 +822,7 @@
           rien.appendChild(el('div', { class: 'note', style: 'margin-top:8px',
             text: "L'île est nue. Posez un premier édifice : la pêcherie nourrit, la scierie bâtit." }));
           rien.appendChild(el('button', { class: 'b primaire', style: 'margin-top:12px',
-            text: 'Choisir quoi bâtir', onclick: () => window.UIFen.ouvrirChantier() }));
+            text: 'Choisir quoi bâtir', onclick: ouvrirConstruction }));
         } else if (libres) {
           rien.appendChild(el('div', { class: 'note', style: 'margin-top:8px',
             text: libres + ' habitant' + (libres > 1 ? 's' : '') + ' sans emploi. Un poste tenu, et le bourg repart.' }));
@@ -841,7 +859,13 @@
         if (vrai) vu.noeud = vrai;
       }
     const cp = document.getElementById('dock-compte');
-    if (cp) cp.textContent = t.length ? t.length + ' en cours' : 'rien en cours';
+    if (cp) {
+      const enAttente = t.filter(x => x.attenteFile).length;
+      const enCours = t.length - enAttente;
+      cp.textContent = enCours
+        ? enCours + ' en cours' + (enAttente ? ' · ' + enAttente + ' en attente' : '')
+        : (enAttente ? enAttente + ' en attente' : 'rien en cours');
+    }
     majPied();
   }
 
@@ -849,14 +873,15 @@
      alors qu'une carte qui descend d'un cran reste LA MÊME carte, et
      ne va pas recopier le contenu d'une voisine dedans. */
   function carte(x) {
-    const cls = 'tache ' + x.k + (x.bloque ? ' bloquee' : '');
+    const cls = 'tache ' + x.k + (x.bloque ? ' bloquee' : '') + (x.attenteFile ? ' file-attente' : '');
     const teinte = x.bloque ? 'rouge' : (x.k === 'chantier' ? '' :
                    x.k === 'aventure' ? 'bleu' : x.k === 'expedition' ? 'violet' : 'vert');
     const pct = Math.round((x.prog || 0) * 100);
-    const gain = x.bloque ? 'en attente'
+    const gain = x.attenteFile ? 'après ' + x.positionFile + ' ouvrage' + (x.positionFile > 1 ? 's' : '')
+      : x.bloque ? 'en attente'
       : x.res && x.debit ? '+' + (Math.round(x.debit * 10) / 10).toString().replace('.', ',') + '/min'
       : (x.reste != null ? U.duree(x.reste) : pct + '%');
-    const titre = [x.nom, x.lieu, x.hab, x.detail, x.bloque ? 'En attente' : U.duree(x.reste)]
+    const titre = [x.nom, x.lieu, x.hab, x.detail, x.attenteFile || x.bloque ? 'En attente' : U.duree(x.reste)]
       .filter(Boolean).join('\n');
     let visuel = null;
     if (x.image && window.Img && window.Img.vignette)
@@ -884,14 +909,14 @@
       el('div', { class: 'tache-lecture' },
         el('div', { class: 'tache-mini' },
           el('span', { text: x.res && window.RES[x.res] ? window.RES[x.res].nom : x.nom }),
-          el('i', { text: pct + '%' })),
-        U.barre(x.prog, 'grande ' + teinte + (x.bloque ? ' raye' : '')),
+          el('i', { text:x.attenteFile ? 'n°' + (x.positionFile + 1) : pct + '%' })),
+        U.barre(x.prog, 'grande ' + teinte + (x.bloque ? ' raye' : '') + (x.attenteFile ? ' attente' : '')),
         el('div', { class: 'tache-gain', text: gain })));
   }
 
   function ouvrirDe(x) {
     if (x.k === 'poste') window.UIFen.ouvrirBatiment(x.bat);
-    else if (x.k === 'chantier') window.UIFen.ouvrirChantier('file');
+    else if (x.k === 'chantier') montrerChantier(x.bat);
     else if (x.k === 'aventure') window.UIAventure.ouvrir();
     else if (x.k === 'expedition') window.UIExpedition.ouvrir();
     else if (x.k === 'forge') {
@@ -958,6 +983,7 @@
 
   window.UIDock = { construire, majDock, majBandeau, majProductions, montrerSurvol, basculer,
     ouvrirBatiment, fermerBatiment, choisirOngletBatiment, ouvrirSousPanneau, fermerSousPanneau,
+    ouvrirConstruction, montrerChantier,
     estSuivie, basculerSuivi,
     get replie() { return replie; },
     get productionReplie() { return prodReplie; } };

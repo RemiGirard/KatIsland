@@ -116,12 +116,30 @@
        qui ont réellement changé. */
     if (neuf.hasAttribute('data-vif')) return;
 
-    /* une icône ne se compare pas pixel par pixel : sa signature suffit.
-       Une toile sans signature est un dessin vivant — on la laisse. */
-    if (vieux.nodeName === 'IMG' || vieux.nodeName === 'CANVAS') {
+    /* Une icône dessinée ne se compare pas pixel par pixel : sa signature
+       suffit. Une toile sans signature est un dessin vivant — on la laisse.
+
+       Une IMAGE, en revanche, doit suivre son `src`. L'ancien raccourci
+       quittait aussi pour tous les <img> sans `data-ico` : en changeant de
+       catégorie, la carte gardait donc l'illustration de la Pêcherie alors
+       que son texte devenait « Le Port ». On remplace seulement lorsque la
+       source change ; à source identique, la suite synchronise les attributs
+       ordinaires (alt, classe, chargement…). */
+    if (vieux.nodeName === 'CANVAS') {
       const sa = vieux.getAttribute('data-ico'), sb = neuf.getAttribute('data-ico');
       if (sa != null && sa !== sb) vieux.replaceWith(neuf);
       return;
+    }
+    if (vieux.nodeName === 'IMG') {
+      const sa = vieux.getAttribute('data-ico'), sb = neuf.getAttribute('data-ico');
+      if (sa != null || sb != null) {
+        if (sa !== sb) vieux.replaceWith(neuf);
+        return;
+      }
+      if (vieux.getAttribute('src') !== neuf.getAttribute('src')) {
+        vieux.replaceWith(neuf);
+        return;
+      }
     }
 
     const av = vieux.attributes;

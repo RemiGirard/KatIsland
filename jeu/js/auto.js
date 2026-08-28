@@ -25,8 +25,8 @@
       note: 'La file, elle, garde toujours la priorité.',
       cout: { ecu: 4000 }, ico: { f: 'roue', c: ['#6d5236', '#3a2c1e'] } },
     { id: 'chantier', nom: 'Le chef de chantier',
-      desc: "Tant qu'il y a un ouvrage en file, il y envoie des habitants libres ; quand la file se vide, il les rend aux ateliers.",
-      note: 'Vous fixez combien de bras il a le droit de prendre.',
+      desc: "Organise les équipes du maître d’œuvre et accélère de 35 % tous les ouvrages en file.",
+      note: 'Il ne prend aucun habitant dans les ateliers.',
       cout: { ecu: 6000, planche: 60 }, ico: { f: 'hache', c: ['#8d9199', '#5a5e66'] } },
     { id: 'outil', nom: "Le magasinier d'outils",
       desc: "Rééquipe un atelier dès que son outillage rend l'âme, si la réserve le permet.",
@@ -48,10 +48,9 @@
 
   function etatAuto() {
     const E = S();
-    if (!E.auto) E.auto = { actifs: {}, acquis: {}, brasChantier: 1 };
+    if (!E.auto) E.auto = { actifs: {}, acquis: {} };
     if (!E.auto.actifs) E.auto.actifs = {};
     if (!E.auto.acquis) E.auto.acquis = {};
-    if (E.auto.brasChantier == null) E.auto.brasChantier = 1;
     return E.auto;
   }
   const acquis = id => !!etatAuto().acquis[id];
@@ -103,21 +102,6 @@
           }
           if (libres <= 0) break;
         }
-      }
-    }
-
-    /* ---- le chef de chantier ---- */
-    if (actif('chantier')) {
-      const veut = Math.max(0, Math.min(6, E.auto.brasChantier | 0));
-      const enFile = E.chantier.file.length > 0;
-      if (enFile) {
-        let libres = window.Etat.habitantsLibres();
-        while (E.chantier.ouvriers.length < veut && libres.length) {
-          window.Etat.affecterChantier(libres[0].id);
-          libres = window.Etat.habitantsLibres();
-        }
-      } else if (E.chantier.ouvriers.length) {
-        for (const id of E.chantier.ouvriers.slice()) window.Etat.libererHabitant(id);
       }
     }
 

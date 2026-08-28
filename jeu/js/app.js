@@ -330,7 +330,7 @@
     if (!bat) { window.UIDock.fermerBatiment(); return; }
     if (E().bat[bat.id]) { window.UIFen.ouvrirBatiment(bat.id); return; }
     const job = E().chantier.file.find(j => j.bat === bat.id);
-    if (job) { window.UIFen.ouvrirChantier('file'); return; }
+    if (job) { window.UIDock.montrerChantier(job.bat); return; }
     window.UIFen.ouvrirChantier('batir');
   }
 
@@ -375,10 +375,6 @@
           continue;
         }
       }
-      if (h.aff && h.aff.k === 'chantier') {
-        const job = E2.chantier.file[0];
-        if (job && job.bat) { window.Village.affecterA(i, job.bat, 'batisse'); continue; }
-      }
       window.Village.affecter(i, -1, 0);
     }
     window.Village.pecheurs(lignesALEau);
@@ -392,7 +388,7 @@
       if (b.postes.some(p => p.hab && p.rec && !p.bloque)) actifs.push(bid);
     }
     const job = E2.chantier.file[0];
-    if (job && job.bat && E2.chantier.ouvriers.length) actifs.push(job.bat);
+    if (job && job.bat) actifs.push(job.bat);
     window.Village.actifs(actifs);
   }
 

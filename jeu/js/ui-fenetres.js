@@ -525,6 +525,8 @@
   const BERGERIE_ART={tondre:'tondre.png',paitre:'paitre.png',abattre_mouton:'abattre.png',abattre_complet:'abattoir.png',fondre_suif:'suif.png',chandelles:'chandelles.png',troupeau:'troupeau.png',paturage:'paturage.png',sec:'paturage-sec.png',agneau:'agneau.png',berger:'berger.png',abri:'abri.png',laine:'laine.png',renouvellement:'renouvellement.png',viande:'viande.png',maitrise:'maitrise.png'};
   const ETABLE_IMG='img/interface/etable/';
   const ETABLE_ART={traire:'traire.png',fumier:'fumier.png',abattre_vache:'abattre.png',abattre_boeuf:'abattoir.png',litiere:'litiere.png',troupeau:'troupeau.png',sante:'sante.png',sale:'sale.png',veau:'veau.png',ration:'ration.png',abreuvoir:'abreuvoir.png',abri:'abri.png',lait:'lait.png',renouvellement:'renouvellement.png',fumure:'fumure.png',maitrise:'maitrise.png'};
+  const RUCHER_IMG='img/interface/rucher/';
+  const RUCHER_ART={recolter_miel:'recolter.png',fondre_cire:'fondre-cire.png',fondre_rayons:'vieux-rayons.png',miel_de_fleurs:'miel-fleurs.png',reine:'reine.png',calme:'calme.png',agite:'agite.png',colonie:'colonie.png',reserve:'reserve.png',reseau:'reseau.png',enfumoir:'enfumoir.png',abri:'abri.png',douce:'douce.png',essaimage:'essaimage.png',miel:'miel.png',maitrise:'maitrise.png'};
   let affectationScierie = null;
   function artScierie(id) { return SCIERIE_IMG + (SCIERIE_ART[id] || SCIERIE_ART.chaine); }
   function artPecherie(id) { return PECHERIE_IMG + (PECHERIE_ART[id] || PECHERIE_ART.banc); }
@@ -536,6 +538,7 @@
   function artPuits(id){return PUITS_IMG+(PUITS_ART[id]||PUITS_ART.treuil);}
   function artBergerie(id){return BERGERIE_IMG+(BERGERIE_ART[id]||BERGERIE_ART.troupeau);}
   function artEtable(id){return ETABLE_IMG+(ETABLE_ART[id]||ETABLE_ART.troupeau);}
+  function artRucher(id){return RUCHER_IMG+(RUCHER_ART[id]||RUCHER_ART.colonie);}
 
   function posteLibreScierie(b, rid) {
     let i = b.postes.findIndex(p => !p.hab && p.rec === rid);
@@ -621,7 +624,7 @@
       .sort((a, z) => window.Jeu.facteurHabitant(z, rec, b) - window.Jeu.facteurHabitant(a, rec, b));
     const meta = window.METIERS[rec.metier] || { nom:rec.metier };
     const libres = E().habitants.filter(h => !h.aff).length;
-    const occupes = E().habitants.filter(h => h.aff && (h.aff.k === 'poste' || h.aff.k === 'chantier')).length;
+    const occupes = E().habitants.filter(h => h.aff && h.aff.k === 'poste').length;
     const artPrincipal = b.type === 'pecherie' ? artPecherie('maitrise') : artScierie('maitrise');
     const artTravail = b.type === 'pecherie' ? artPecherie('equipage') : artScierie('chaine');
     c.appendChild(el('div', { class:'affectation-languettes', role:'tablist' },
@@ -1092,6 +1095,21 @@
     for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artEtable(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Étable niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}c.appendChild(choix);
     c.appendChild(el('div',{class:'scierie-consigne',text:'Sortir le fumier et refaire la litière sont désormais des soins réels. Le fumier devient une ressource stockée et remplace la paille dans l’amendement des champs.'}));
     const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artEtable,source:'troupeau'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artEtable,source:'troupeau'}));c.appendChild(liste);
+  }
+
+  function rendreRucherChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,co=s.colonie/100,hu=s.humeur/100,re=s.reserve/100,nectar=G.nectarVillage();
+    c.appendChild(el('section',{class:'scierie-maitrise rucher-maitrise'},el('img',{src:artRucher('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE APICOLE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'aux ruches'}))));
+    c.appendChild(el('section',{class:'rucher-colonie'},el('img',{src:artRucher(s.humeur<35?'agite':(s.humeur>72?'calme':'colonie')),alt:''}),el('div',{},
+      el('div',{class:'rangee entre'},el('b',{text:'Vigueur de la colonie'}),el('strong',{text:Math.round(s.colonie)+' %'})),U.barre(co,co<.3?'rouge':'verte','Colonie','reine rang '+s.reine+' / 5'),
+      el('div',{class:'rangee entre rucher-jauge-titre'},el('b',{text:'Humeur'}),el('strong',{text:Math.round(s.humeur)+' %'})),U.barre(hu,hu<.35?'rouge':'','Humeur',s.humeur<35?'visites à calmer':'abeilles maniables'),
+      el('div',{class:'rangee entre rucher-jauge-titre'},el('b',{text:'Hausses remplies'}),el('strong',{text:Math.round(s.reserve)+' %'})),U.barre(re,re<.12?'rouge':'or','Réserve de miel','nectar du village '+Math.round(nectar)+' %'),
+      el('div',{class:'rucher-reine'},el('img',{src:artRucher('reine'),alt:''}),el('span',{},el('b',{text:'Reine sélectionnée · rang '+s.reine}),el('i',{text:s.reine>=5?'Lignée accomplie':Math.floor(s.selection)+' % vers le rang suivant'}))))));
+    const strategies=[{id:'douce',nom:'Conduite douce',art:'douce',effet:'Humeur apaisée · remplissage légèrement plus lent'},{id:'essaimage',nom:'Sélection de la reine',art:'essaimage',effet:'Colonie et progression de la reine accélérées',niv:2},{id:'miel',nom:'Récolte des hausses',art:'miel',effet:'+18 % de miel · réserve davantage sollicitée',niv:3}],choix=el('div',{class:'scierie-organisations rucher-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artRucher(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Rucher niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Les hausses se remplissent avec le nectar réel des champs de fleurs et tournesols. Une récolte attend automatiquement si le miel n’est pas encore operculé ; aucune fleur coupée n’est consommée.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artRucher,source:'reserve'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artRucher,source:'reserve'}));c.appendChild(liste);
   }
 
   function rendrePersonnelEcosysteme(c, bid) {
@@ -1581,6 +1599,14 @@
       if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Abattoir',c=>rendreAnnexes(c,bid),3,'orange',artEtable('abattoir'));
       ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artEtable,arts:{abri:'abri',eau:'abreuvoir',tabouret:'traire',lanterne:'sante'}}),4,'vert',artEtable('abri'));
       return ong;
+    } else if(bb.type==='rucher'){
+      ajouter('chaine','Colonies',c=>rendreRucherChaine(c,bid),1,'bleu',artRucher('colonie'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artRucher('abri'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('elevage'):imageRes('outil'));
+      ajouter('personnel','Apiculteurs',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artRucher('maitrise'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Cirerie',c=>rendreAnnexes(c,bid),3,'orange',artRucher('fondre_rayons'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artRucher,arts:{abri:'abri',voile:'enfumoir',enfumoir:'calme',eau:'reseau'}}),4,'vert',artRucher('abri'));
+      return ong;
     } else if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
       c => rendrePostes(c, bid), 1, 'bleu', imageBat());
     if (bb.type === 'caserne' && window.UIArmee) {
@@ -1740,7 +1766,7 @@
           },
         }))));
     c.appendChild(el('div', { class: 'note',
-      text: 'Un chantier n\'avance que si un habitant est affecté au chantier du bourg. Bâtir, c\'est renoncer à produire.' }));
+      text: 'Le maître d’œuvre prend automatiquement l’ouvrage en charge : vos habitants peuvent rester à leurs postes de production.' }));
   }
 
   /* ------------------------------------------------------------------
@@ -2854,7 +2880,7 @@
     carte.appendChild(sv('g', { class: 'mer-bourg',
       transform: 'translate(' + C.cx + ',' + C.cy + ')',
       title: 'Le bourg\nToutes les distances se comptent d\'ici.' },
-      sv('image', { class: 'mer-bourg-image', href: 'img/iles/ile-bourg-joueur.png',
+      sv('image', { class: 'mer-bourg-image', href: 'img/iles/ile-bourg-joueur-transparent.png',
         x: -82, y: -82, width: 164, height: 164, preserveAspectRatio: 'xMidYMid meet' }),
       sv('text', { class: 'mer-bourg-nom', x: 0, y: 91, text: 'VOTRE ÎLE' })));
 
@@ -2978,7 +3004,7 @@
     if (!choisi) {
       boite.appendChild(el('div', { class: 'mer-fiche-carte mer-fiche-accueil' },
         el('div', { class: 'mer-fiche-accueil-visuel' },
-          el('img', { src: 'img/iles/ile-bourg-joueur.png', alt: 'Votre île et son port' })),
+          el('img', { src: 'img/iles/ile-bourg-joueur-transparent.png', alt: 'Votre île et son port' })),
         el('div', { class: 'mer-fiche-accueil-corps' },
           el('div', { class: 'mer-fiche-sur', text: 'VOTRE PORT D’ATTACHE' }),
           el('div', { class: 'mer-fiche-grand-titre', text: 'Choisissez une destination' }),
@@ -3503,146 +3529,18 @@
   }
 
   /* =================================================================
-     LE CARNET DU MAÎTRE D'ŒUVRE
-     Catalogue, file d'attente, et affectation des bras au chantier.
+     CONSTRUCTION
+     Le catalogue vit dans le panneau droit et la file dans le panneau
+     gauche. Cet ancien point d'entrée reste seulement comme redirection
+     pour les boutons historiques et les anciennes extensions.
      ================================================================= */
   let typeAPoser = null;
   let coulAPoser = null;
 
   function ouvrirChantier(onglet) {
-    U.ouvrir('chantier', {
-      titre: 'Chantier du bourg', sous: "Maître d'œuvre",
-      onglet: onglet || 'batir',
-      sousVif: () => {
-        const f = E().chantier.file;
-        return f.length ? f.length + ' ouvrage' + (f.length > 1 ? 's' : '') + ' en attente'
-                        : "Maître d'œuvre · rien en cours";
-      },
-      onglets: [
-        { id: 'batir', nom: 'Bâtir', rendu: rendreCatalogue },
-        { id: 'file', nom: 'File', rendu: rendreFile },
-        { id: 'bras', nom: 'Ouvriers', rendu: rendreOuvriers },
-      ],
-    });
-  }
-
-  function vignetteBat(type) {
-    /* Les planches de bâtiments sont désormais la vignette principale.
-       Le dessin métier reste un repli pour les anciennes sauvegardes ou
-       les bâtiments ajoutés sans illustration. */
-    const def = window.BAT[type];
-    const image = window.Img && window.Img.bat ? window.Img.bat(type) : null;
-    if (image) return window.Img.vignette(image, 56, def.nom, 'vig-bat');
-    const parMetier = {
-      recolte: { f: 'epi', c: ['#c9a94e', '#8f7430'] },
-      atelier: { f: 'enclume', c: ['#4a4e56', '#7a7e86'] },
-      elevage: { f: 'pot', c: ['#e8e4d6', '#b8b2a0', '#8d9199'] },
-      stock: { f: 'tonneau', c: ['#8a6a45', '#5a412a'] },
-      vie: { f: 'oeuf', c: ['#e8dcc4', '#c4b696'] },
-      guerre: { f: 'epee', c: ['#c9cdd2', '#8a8f96'] },
-      commerce: { f: 'piece', c: ['#d8b048', '#8a6a2a'] },
-      porte: { f: 'etoile', c: ['#8fd8e0', '#4a8f9c'] },
-    };
-    return U.ico(parMetier[def.cat] || { f: 'cube', c: ['#8a8272'] }, 30);
-  }
-
-  function rendreCatalogue(c) {
-    const cat = window.Jeu.catalogue();
-    if (!cat.length) {
-      c.appendChild(el('div', { class: 'vide', text: 'Rien à bâtir pour l\'instant.' }));
-      return;
-    }
-    c.appendChild(el('div', { class: 'note',
-      text: 'Choisissez un ouvrage, puis désignez la parcelle dans le village. Les matériaux sont retenus dès la pose ; le chantier n\'avance que si un habitant y travaille.' }));
-    const groupes = { recolte: 'Récolte', atelier: 'Ateliers', elevage: 'Élevage',
-                      stock: 'Réserves', vie: 'Vie du bourg', commerce: 'Commerce',
-                      guerre: 'Guerre', porte: 'Les portes' };
-    for (const g in groupes) {
-      const l = cat.filter(t => window.BAT[t].cat === g);
-      if (!l.length) continue;
-      c.appendChild(el('div', { class: 'eti-or', style: 'margin-top:12px', text: groupes[g] }));
-      for (const type of l) c.appendChild(carteCatalogue(type));
-    }
-  }
-
-  function carteCatalogue(type) {
-    const def = window.BAT[type];
-    const cout = window.Jeu.coutConstruction(type);
-    const abordable = window.Etat.assez(cout);
-    const dejaUn = window.Etat.batsDeType(type).length;
-    const unique = ['port', 'descente', 'chateau', 'moulinEau'].includes(type);
-    const bloque = unique && dejaUn > 0;
-    const carte = el('div', { class: 'cat-item' + (abordable && !bloque ? '' : ' impossible'),
-      onclick: () => { if (bloque) { U.dire('Le bourg n\'en a qu\'un.', 'alerte'); return; }
-        if (!abordable) { U.dire('Matériaux insuffisants.', 'alerte'); return; }
-        entrerConstruction(type); } },
-      el('div', { class: 'vig' }, vignetteBat(type)),
-      el('div', { class: 'cc' },
-        el('h3', { text: def.nom + (dejaUn ? '  ×' + dejaUn : '') }),
-        el('div', { class: 'm', text: def.metier + ' · ' + U.duree(window.BatUtil.tempsNiveau(type, 1)) }),
-        U.listeRes(cout, { verifier: true, rien: 'gratuit' }),
-        el('div', { class: 'note', style: 'margin-top:4px', text: def.desc })));
-    return carte;
-  }
-
-  function rendreFile(c) {
-    const f = E().chantier.file;
-    if (!f.length) {
-      c.appendChild(el('div', { class: 'vide', text: 'La file est vide.\nLe maître d\'œuvre fait les cent pas.' }));
-      return;
-    }
-    const v = window.Jeu.vitesseChantier();
-    c.appendChild(el('div', { class: 'rangee entre' },
-      el('span', { class: 'eti', text: E().chantier.ouvriers.length + ' ouvrier(s) · cadence ×' + v.toFixed(2).replace('.', ',') }),
-      el('span', { class: v > 0 ? 'eti-or' : 'eti mauvais', text: v > 0 ? 'en cours' : 'à l\'arrêt' })));
-    f.forEach((job, i) => {
-      const tete = i === 0;
-      const pct = tete ? Math.min(1, E().chantier.prog / job.temps) : 0;
-      const reste = tete && v > 0 ? (job.temps - E().chantier.prog) / v : (v > 0 ? job.temps / v : null);
-      const j = el('div', { class: 'job' + (tete ? ' tete' : '') },
-        el('div', { style: 'flex:1;min-width:0' },
-          el('div', { class: 'rangee entre' },
-            el('span', { class: 'jn', text: (tete ? '' : (i + 1) + '. ') + job.nom }),
-            el('span', { class: 'jr', text: U.duree(reste) })),
-          tete ? el('div', { style: 'margin-top:4px' }, U.barre(pct, v > 0 ? '' : 'rouge')) : null),
-        el('div', { class: 'fl' },
-          el('button', { class: 'b mini', text: '↑', disabled: i === 0, onclick: () => window.Jeu.deplacerOuvrage(i, -1) }),
-          el('button', { class: 'b mini', text: '↓', disabled: i === f.length - 1, onclick: () => window.Jeu.deplacerOuvrage(i, 1) }),
-          el('button', { class: 'b mini danger', text: '×', title: 'Annuler et récupérer les matériaux',
-            onclick: () => { window.Jeu.annulerOuvrage(i); U.dire('Ouvrage annulé, matériaux rendus.'); } })));
-      c.appendChild(j);
-    });
-  }
-
-  function rendreOuvriers(c) {
-    const E2 = E();
-    c.appendChild(el('div', { class: 'note',
-      text: "Le chantier n'avance QUE si des habitants y travaillent. Chaque ouvrier supplémentaire ajoute 85 % de cadence — mais ce sont autant de postes de production laissés vides." }));
-    const affectes = E2.chantier.ouvriers.map(id => window.Etat.habitant(id)).filter(Boolean);
-    c.appendChild(el('div', { class: 'cadre' },
-      el('div', { class: 'rangee entre' },
-        el('span', { class: 'tt', text: 'Au chantier' }),
-        el('span', { class: 'eti-or', text: '×' + window.Jeu.vitesseChantier().toFixed(2).replace('.', ',') })),
-      el('div', { class: 'sep' }),
-      affectes.length ? el('div', { class: 'colonne' }, affectes.map(h =>
-        el('div', { class: 'rangee entre' },
-          el('span', { text: h.nom }),
-          el('button', { class: 'b mini danger', text: 'Retirer',
-            onclick: () => { window.Etat.libererHabitant(h.id); rafraichirVillage(); } }))))
-        : el('div', { class: 'note faible', text: 'Personne. Rien ne se bâtit.' })));
-
-    const libres = window.Etat.habitantsLibres();
-    c.appendChild(el('div', { class: 'cadre' },
-      el('div', { class: 'rangee entre' },
-        el('span', { class: 'tt', text: 'Disponibles' }),
-        el('span', { class: 'eti', text: libres.length + '' })),
-      el('div', { class: 'sep' }),
-      libres.length ? el('div', { class: 'colonne' }, libres.map(h =>
-        el('div', { class: 'rangee entre' },
-          el('span', { text: h.nom }),
-          el('button', { class: 'b mini primaire', text: 'Au chantier',
-            onclick: () => { window.Etat.affecterChantier(h.id); rafraichirVillage(); } }))))
-        : el('div', { class: 'note faible', text: 'Aucun habitant libre. Libérez un poste, ou faites naître du monde à la nurserie.' })));
+    U.fermer('chantier');
+    if (window.UIDock && window.UIDock.ouvrirConstruction)
+      window.UIDock.ouvrirConstruction();
   }
 
   /* =================================================================
@@ -3680,7 +3578,8 @@
     if (!r.ok) { U.dire(r.raison, 'alerte'); return; }
     U.dire(window.BAT[t].nom + ' : chantier ouvert.', 'bien');
     quitterConstruction();
-    ouvrirChantier('file');
+    if (window.UIDock && window.UIDock.montrerChantier)
+      window.UIDock.montrerChantier(r.id);
   }
 
   /* =================================================================
@@ -4070,9 +3969,7 @@
           el('span', { text: meta.nom + ' · ' + ou + (quoi ? ' · ' + quoi : '') })),
         h.aff ? el('button', { class: 'b mini', text: 'Libérer', onclick: () => {
           window.Etat.libererHabitant(h.id); rafraichirVillage();
-        } }) : el('button', { class: 'b mini', text: 'Chantier', onclick: () => {
-          window.Etat.affecterChantier(h.id); rafraichirVillage();
-        } })));
+        } }) : el('span', { class:'eti', text:'disponible' })));
     }
     c.appendChild(liste);
   }
@@ -4551,7 +4448,6 @@
      ils rangent derrière le joueur, ils ne jouent pas à sa place.
      ------------------------------------------------------------------ */
   function rendreAuto(c) {
-    const A = window.Auto.etatAuto();
     const engages = window.Auto.CONTREMAITRES.filter(x => window.Auto.acquis(x.id)).length;
     c.appendChild(el('div', { class: 'note',
       text: "Chacun s'engage une fois pour toutes, puis s'allume et s'éteint à volonté. Aucun ne fabrique quoi que ce soit : ils n'enlèvent que la corvée." }));
@@ -4577,18 +4473,6 @@
               const r = window.Auto.acheter(x.id);
               U.dire(r.ok ? x.nom + ' entre en fonction.' : r.raison, r.ok ? 'bien' : 'alerte');
             } }))));
-    }
-    if (window.Auto.acquis('chantier')) {
-      c.appendChild(U.section('Réglage du chef de chantier'));
-      c.appendChild(el('div', { class: 'cadre' },
-        el('div', { class: 'rangee entre' },
-          el('span', { class: 'eti', text: 'bras qu\'il a le droit de prendre' }),
-          el('span', { class: 'niv', text: A.brasChantier + '' })),
-        el('div', { style: 'margin-top:8px' },
-          U.segments([1, 2, 3, 4, 5, 6].map(n => ({ v: n, n: n + '' })), A.brasChantier,
-            v => { A.brasChantier = v; })),
-        el('div', { class: 'note', style: 'margin-top:8px',
-          text: 'Plus il en prend, plus le chantier avance — et moins il reste de monde aux ateliers.' })));
     }
     if (E().venteAuto) {
       c.appendChild(U.section('Ce que le colporteur a racheté'));

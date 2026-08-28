@@ -652,8 +652,8 @@
     raff:'cirerie', in:{miel:2,eau:2}, out:{cire:5}, loot:[{res:'miel',p:0.35,n:[1,2]}],
     desc:"Au bain-marie, filtré à la toile, coulé en pains. Le miel n'était que la moitié de ce que donne une ruche." });
   x('miel_de_fleurs', { bat:'rucher', nom:'Butiner le carré de fleurs', metier:'elevage', duree:36,
-    in:{fleur:3}, out:{miel:4}, loot:[{res:'cire',p:0.3,n:[1,2]}],
-    desc:"Une ruche à côté d'un champ de fleurs rend le double. Les abeilles ne vont pas chercher loin ce qu'elles ont sous l'aile." });
+    in:{}, out:{miel:4}, loot:[{res:'cire',p:0.3,n:[1,2]}],
+    desc:"Cette récolte dépend désormais des parcelles réellement en fleurs. Les abeilles ne butinent pas des bouquets sortis d’un entrepôt." });
 
   b('filature', {
     nom:'Filature', metier:'Tisserand', cat:'atelier', rangees:[1,2],

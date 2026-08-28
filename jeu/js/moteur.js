@@ -315,20 +315,11 @@
     return v;
   }
   function vitesseChantier() {
-    const E = S();
-    const n = E.chantier.ouvriers.length;
-    if (n <= 0) return 0;
-    let v = 1 + 0.85 * (n - 1);
+    /* Le maître d'œuvre et ses artisans anonymes assurent la construction :
+       aucun habitant du joueur ne doit être déplacé de son atelier. */
+    let v = 1;
     v *= 1 + 0.04 * (window.Etat.rangMetier('batisse') - 1);
-    /* chaque ouvrier apporte SON niveau, et un Bâtisseur vaut un quart
-       d'ouvrier de plus à lui seul. */
-    for (const id of E.chantier.ouvriers) {
-      const h = window.Etat.habitant(id);
-      if (!h) continue;
-      v *= 1 + 0.012 * ((h.niv || 1) - 1);
-      v *= window.HAB.produit(h, 'chantier');
-      if (h.talent === 'batisse') v *= 1.10;
-    }
+    if(window.Auto&&window.Auto.actif&&window.Auto.actif('chantier'))v*=1.35;
     v *= multGlobal();
     return v;
   }
@@ -628,29 +619,21 @@
   function tickChantier(dt) {
     const E = S();
     const f = E.chantier.file;
+    /* Migration immédiate des anciennes parties : personne ne reste prisonnier
+       de l'affectation de chantier supprimée. */
+    if(E.chantier.ouvriers.length){
+      for(const hid of E.chantier.ouvriers.slice())window.Etat.libererHabitant(hid);
+      E.chantier.ouvriers.length=0;
+    }
     if (!f.length) {
       E.chantier.prog = 0;
-      /* Une file terminée ne doit pas garder des habitants dans un faux
-         emploi. Ils reviennent automatiquement disponibles et le tableau
-         d'affectation peut les envoyer à la production suivante. */
-      if (E.chantier.ouvriers.length) {
-        const retour = E.chantier.ouvriers.slice();
-        for (const hid of retour) window.Etat.libererHabitant(hid);
-        window.Etat.journal((retour.length > 1 ? 'Les ouvriers quittent' : 'L\'ouvrier quitte') +
-                            ' le chantier achevé.', 'chantier');
-      }
       return;
     }
     const v = vitesseChantier();
-    if (v <= 0) return;                       // personne aux outils : rien n'avance
     const job = f[0];
     E.chantier.prog += dt * v;
     window.Etat.gagnerXp('batisse', dt * v * 0.9);
     if (E.chantier.prog >= job.temps) {
-      for (const hid of E.chantier.ouvriers) {
-        const h = window.Etat.habitant(hid);
-        if (h) window.Etat.gagnerXpHabitant(h, Math.max(1, Math.round(job.temps * 0.05)), 'batisse');
-      }
       E.chantier.prog = 0;
       f.shift();
       acheverOuvrage(job);
@@ -998,18 +981,7 @@
       nom: window.BAT[type].nom,
     });
     window.Etat.journal(window.BAT[type].nom + ' : chantier ouvert.', 'chantier');
-    /* LA PREMIÈRE FOIS SEULEMENT, on met quelqu'un aux outils et on le
-       dit. C'est la règle la plus importante du jeu — un chantier sans
-       ouvrier n'avance pas — et elle s'apprend mieux en la voyant
-       s'appliquer qu'en la lisant dans un panneau. */
-    if (!E.vus.premierChantier) {
-      E.vus.premierChantier = true;
-      const libre = window.Etat.habitantsLibres()[0];
-      if (libre && !E.chantier.ouvriers.length) {
-        window.Etat.affecterChantier(libre.id);
-        window.Etat.journal(libre.nom + ' se met au chantier. Tant qu\'il y reste, il ne produit rien ailleurs.', 'chantier');
-      }
-    }
+    E.vus.premierChantier = true;
     window.Etat.prevenir('chantier', null);
     return { ok: true, id: b.id };
   }
@@ -1288,18 +1260,24 @@
       }
     }
     if (E.chantier.file.length) {
-      const job = E.chantier.file[0];
       const v = vitesseChantier();
-      out.unshift({
-        k: 'chantier', id: 'chantier', nom: job.nom, lieu: 'Chantier',
-        hab: E.chantier.ouvriers.length ? (E.chantier.ouvriers.length + ' ouvrier' + (E.chantier.ouvriers.length > 1 ? 's' : '')) : 'personne aux outils',
-        detail: v > 0 ? 'cadence ×' + v.toFixed(2).replace('.', ',') : 'aucun ouvrier affecté',
-        prog: Math.min(1, E.chantier.prog / job.temps),
-        reste: v > 0 ? (job.temps - E.chantier.prog) / v : null,
-        bloque: v <= 0, attente: E.chantier.file.length - 1,
-        type: job.type || null,
+      /* Toute la file est exposée au panneau gauche. Un seul ouvrage, celui
+         d'indice zéro, reçoit une progression : les autres restent de vraies
+         attentes et ne peuvent jamais avancer en parallèle. */
+      const fileChantier = E.chantier.file.map((job, i) => ({
+        k: 'chantier', id: 'chantier:' + (job.bat || job.k) + ':' + i,
+        nom: job.nom, lieu: i === 0 ? 'Construction en cours' : 'File de construction',
+        hab: '',
+        detail: i === 0
+          ? 'cadence automatique ×' + v.toFixed(2).replace('.', ',')
+          : 'attend la fin de ' + i + ' ouvrage' + (i > 1 ? 's' : ''),
+        prog: i === 0 ? Math.min(1, E.chantier.prog / job.temps) : 0,
+        reste: i === 0 ? Math.max(0, (job.temps - E.chantier.prog) / v) : null,
+        bloque: false, attenteFile: i > 0, positionFile: i,
+        type: job.type || null, bat: job.bat || null,
         ico: window.METIERS.batisse.ico,
-      });
+      }));
+      out.unshift(...fileChantier);
     }
     if (E.armee && E.armee.forge) {
       const job = E.armee.forge;

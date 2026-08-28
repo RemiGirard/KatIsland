@@ -14,6 +14,32 @@
   <canvas id="c" aria-label="Le bourg en trois dimensions"></canvas>
   <canvas id="plan-village" aria-label="Plan architectural du bourg"></canvas>
 </div>
+
+<!-- Le tableau de bord de la carte. Il se tient dans la BANDE CENTRALE,
+     entre le dock de gauche et les productions de droite : la carte ne
+     doit jamais recouvrir les panneaux de jeu. -->
+<div id="plan-hud" hidden>
+  <div id="plan-volet">
+    <div class="plan-barre">
+      <div class="plan-titre">Plan</div>
+      <input id="plan-recherche" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Chercher un ouvrage…" aria-label="Chercher un ouvrage">
+      <div id="plan-legende"></div>
+      <button id="plan-replier" type="button" aria-expanded="false"
+              title="Ouvrir la nomenclature" aria-label="Ouvrir la nomenclature">▾</button>
+    </div>
+    <div class="plan-tiroir">
+      <div id="plan-index" role="listbox" aria-label="Nomenclature des ouvrages"></div>
+      <div class="plan-note">Chaque famille a sa hachure. Cliquez-en une pour la masquer.</div>
+    </div>
+  </div>
+  <div id="plan-outils">
+    <button data-plan-zoom="-" type="button" title="Dézoomer" aria-label="Dézoomer">−</button>
+    <button data-plan-zoom="0" type="button" title="Recadrer" aria-label="Recadrer la carte">⌖</button>
+    <button data-plan-zoom="+" type="button" title="Zoomer" aria-label="Zoomer">+</button>
+  </div>
+</div>
+
 <button id="bouton-plan-village" type="button" aria-label="Afficher le plan du village"
         aria-pressed="false" title="Vue du dessus — plan du village">▦</button>
 
@@ -90,7 +116,9 @@
      2. L'ÉCONOMIE DU BOURG
      ============================================================ -->
 <script src="jeu/js/icones.js"></script>
-<script src="img/images.js"></script>
+<!-- Le manifeste change dès qu'une nouvelle vignette est ajoutée. La version
+     empêche une partie déjà ouverte de conserver l'ancienne liste en cache. -->
+<script src="img/images.js?v=20260828-port"></script>
 <script src="jeu/js/images.js"></script>
 <script src="jeu/donnees/ressources.js"></script>
 <script src="jeu/donnees/batiments.js"></script>

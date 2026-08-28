@@ -77,8 +77,9 @@
 
   function rendre() {
     if (!rail) return;
+    if(onglet==='bras')onglet='file';
     const types = window.Jeu.catalogue();
-    const file = E().chantier.file, ouvriers = E().chantier.ouvriers;
+    const file = E().chantier.file;
 
     U().rendreDans(nav, hote => {
       const tab = (id, texte) => el('button', { 'data-cle': id,
@@ -86,7 +87,6 @@
         onclick: () => { onglet = id; replie = false; rendre(); } });
       hote.appendChild(tab('batir', 'Bâtir'));
       hote.appendChild(tab('file', 'File' + (file.length ? ' · ' + file.length : '')));
-      hote.appendChild(tab('bras', 'Ouvriers' + (ouvriers.length ? ' · ' + ouvriers.length : '')));
       hote.appendChild(el('button', { class: 'chantier-carnet', title: 'Ouvrir le carnet complet',
         'aria-label': 'Ouvrir le carnet complet', text: '↗',
         onclick: () => window.UIFen.ouvrirChantier(onglet) }));
@@ -109,7 +109,6 @@
     U().rendreDans(rail, hote => {
       if (replie) return;
       if (onglet === 'file') { rendreFileCompacte(hote); return; }
-      if (onglet === 'bras') { rendreOuvriersCompacts(hote); return; }
       const fam = FAMILLES.find(f => f.id === famille);
       const lot = fam ? types.filter(t => fam.cats.indexOf(window.BAT[t].cat) >= 0) : [];
       for (const t of lot) hote.appendChild(bulle(t));
@@ -135,33 +134,6 @@
     });
     hote.appendChild(el('button', { class: 'chantier-action', text: 'Gérer la file',
       onclick: () => window.UIFen.ouvrirChantier('file') }));
-  }
-
-  function rendreOuvriersCompacts(hote) {
-    const affectes = E().chantier.ouvriers;
-    const libres = window.Etat.habitantsLibres();
-    hote.appendChild(el('div', { class: 'chantier-bras' },
-      el('b', { text: affectes.length + '' }),
-      el('span', { text: 'au chantier' }),
-      el('i', { text: libres.length + ' libre' + (libres.length > 1 ? 's' : '') })));
-    hote.appendChild(el('button', { class: 'chantier-action primaire', text: '+ Affecter',
-      disabled: !libres.length || !E().chantier.file.length,
-      title: !E().chantier.file.length ? 'Aucun ouvrage en file' : 'Affecter le premier habitant libre',
-      onclick: () => {
-        const h = window.Etat.habitantsLibres()[0]; if (!h) return;
-        window.Etat.affecterChantier(h.id);
-        if (window.App) { window.App.majAffectations(); window.App.rafraichirUI(); }
-        rendre();
-      } }));
-    hote.appendChild(el('button', { class: 'chantier-action', text: '− Retirer', disabled: !affectes.length,
-      onclick: () => {
-        const id = E().chantier.ouvriers[E().chantier.ouvriers.length - 1];
-        if (id) window.Etat.libererHabitant(id);
-        if (window.App) { window.App.majAffectations(); window.App.rafraichirUI(); }
-        rendre();
-      } }));
-    hote.appendChild(el('button', { class: 'chantier-action', text: 'Gérer',
-      onclick: () => window.UIFen.ouvrirChantier('bras') }));
   }
 
   function bulle(t) {

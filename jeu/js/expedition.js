@@ -244,10 +244,10 @@
 
   function zoneDeLIle(ile) {
     const objectifs = {
-      guerriere: { id:'domination', nom:'Domination', desc:'Accumulez des points, contrôlez 60 % des positions et maintenez cette domination dix secondes.' },
-      marecageuse: { id:'tenir', nom:'Tenir la tête de pont', desc:'Résistez aux vagues jusqu’à l’arrivée des chaloupes.', duree:75 },
-      volcanique: { id:'decapitation', nom:'Décapitation', desc:'Ouvrez une route et sécurisez le camp adverse.' },
-      arcanique: { id:'elimination', nom:'Briser le foyer', desc:'Détruisez les forces de la Nuée malgré les décharges arcanes.' },
+      guerriere: { id:'domination', nom:'Domination', desc:'Pour gagner : atteignez le seuil de points tactiques, contrôlez au moins 60 % des drapeaux, puis conservez ces deux conditions pendant dix secondes.' },
+      marecageuse: { id:'tenir', nom:'Tenir la tête de pont', desc:'Conservez au moins une position alliée et résistez aux vagues jusqu’à la fin du compte à rebours.', duree:75 },
+      volcanique: { id:'decapitation', nom:'Décapitation', desc:'Ouvrez une route jusqu’au quartier général adverse, videz sa garnison puis capturez-le.' },
+      arcanique: { id:'elimination', nom:'Briser le foyer', desc:'Éliminez toutes les unités et toutes les positions encore tenues par la Nuée.' },
     };
     return {
       id: 'ile:' + ile.id, ile: ile.id, nom: ile.nom, diff: ile.diff,
@@ -296,9 +296,16 @@
         c.appendChild(A('div', { class:'rangee enroule prep-exp-cale' },
           cale.map(x => A('span', { class:'puce gain',
             text:(window.Armee ? window.Armee.nom(x.type) : x.type) + ' ×' + x.n }))));
+        const regle = z.objectif.id === 'domination'
+          ? 'Les drapeaux sont les seuls points de contrôle : ils produisent des points tactiques. Les feux de camp sont des emplacements à sécuriser puis à aménager.'
+          : z.objectif.id === 'tenir'
+            ? 'Le compte à rebours avance tant que la bataille continue. Gardez toujours une position sûre pour recevoir vos renforts.'
+            : z.objectif.id === 'decapitation'
+              ? 'Vous n’avez pas besoin de contrôler toute la carte : préparez une ligne d’attaque jusqu’au quartier général ennemi.'
+              : 'Chaque position et chaque unité ennemie restante doit disparaître.';
         c.appendChild(A('div', { class:'prep-exp-conseil' },
           A('b', { text:'Renseignement tactique' }),
-          A('span', { text:' Les positions doivent être sécurisées quelques secondes. Les éliminations et le terrain tenu financent ensuite leur aménagement. La Nuée reste invisible hors du champ de vision.' })));
+          A('span', { text:' ' + regle + ' La Nuée reste invisible hors du champ de vision.' })));
         c.appendChild(A('div', { class:'prep-exp-butin' },
           A('span', { class:'eti-or', text:'Butin prévu en cas de victoire' }),
           U().listeRes(z.butin || {}, { gain:true, rien:'Aucun butin connu.' })));
@@ -1075,9 +1082,9 @@
     U().vide(pied);
     const st = bataille.getBattleStatus ? bataille.getBattleStatus() : null;
     if (c) {
-      pied.appendChild(el()('span', { class: 'eti', text: 'contrôle' }));
-      pied.appendChild(el()('span', { class: 'puce gain', text: 'Bourg ' + Math.round((c.cats || 0) * 100) + '%' }));
-      pied.appendChild(el()('span', { class: 'puce', text: 'Nuée ' + Math.round((c.birds || 0) * 100) + '%' }));
+      pied.appendChild(el()('span', { class: 'eti', text: 'points de contrôle' }));
+      pied.appendChild(el()('span', { class: 'puce gain', text: 'Bourg ' + (c.heldCats || 0) + ' / ' + (c.total || 0) }));
+      pied.appendChild(el()('span', { class: 'puce', text: 'Nuée ' + (c.heldBirds || 0) + ' / ' + (c.total || 0) }));
     }
     if (st && st.score) pied.appendChild(el()('span', { class:'puce gain',
       text:'Points tactiques ' + st.score.cats + ' / ' + st.score.target }));
@@ -1139,29 +1146,52 @@
     const st = bataille && bataille.getBattleStatus ? bataille.getBattleStatus() : null;
     if (st) {
       const o = st.objective || {};
-      const progression = o.id === 'tenir'
-        ? Math.max(0, 1 - (o.left || 0) / Math.max(1, o.total || 1))
-        : (st.score ? (st.score.cats || 0) / Math.max(1, st.score.target || 1) : 0);
+      let progression = 0, progressionTexte = '', progressionDroite = '';
+      const conditions = [];
+      if (o.id === 'domination' && st.score) {
+        progression = Math.min(1, (st.score.cats || 0) / Math.max(1, st.score.target || 1));
+        progressionTexte = 'Points ' + st.score.cats + ' / ' + st.score.target;
+        progressionDroite = 'Nuée ' + st.score.birds;
+        conditions.push(
+          { ok:st.score.cats >= st.score.target, text:'Atteindre ' + st.score.target + ' points tactiques', etat:st.score.cats + ' / ' + st.score.target },
+          { ok:st.sites.cats >= st.score.requiredSites, text:'Contrôler ' + st.score.requiredSites + ' drapeau' + (st.score.requiredSites > 1 ? 'x' : ''), etat:st.sites.cats + ' / ' + st.score.requiredSites },
+          { ok:st.score.holdCats >= st.score.holdTarget, text:'Maintenir les deux conditions', etat:st.score.holdCats + ' / ' + st.score.holdTarget + ' s' });
+      } else if (o.id === 'tenir') {
+        progression = Math.max(0, 1 - (o.left || 0) / Math.max(1, o.total || 1));
+        progressionTexte = Math.ceil(o.left || 0) + ' s restantes';
+        conditions.push({ ok:(o.left || 0) <= 0, text:'Résister jusqu’à l’arrivée des chaloupes', etat:Math.ceil(o.left || 0) + ' s' });
+      } else if (o.id === 'decapitation') {
+        progression = st.enemy && !st.enemy.hq ? 1 : 0;
+        progressionTexte = st.enemy && st.enemy.hq ? 'QG ennemi encore debout' : 'QG capturé';
+        conditions.push({ ok:st.enemy && !st.enemy.hq, text:'Capturer le quartier général de la Nuée', etat:st.enemy && st.enemy.hq ? 'à prendre' : 'accompli' });
+      } else {
+        const restants = st.enemy ? st.enemy.positions + st.enemy.units : 0;
+        progression = restants <= 0 ? 1 : 1 / Math.max(1, restants + 1);
+        progressionTexte = restants + ' forces ennemies restantes';
+        conditions.push(
+          { ok:!st.enemy || st.enemy.positions <= 0, text:'Prendre toutes les positions ennemies', etat:(st.enemy ? st.enemy.positions : 0) + ' restantes' },
+          { ok:!st.enemy || st.enemy.units <= 0, text:'Éliminer les unités encore en campagne', etat:(st.enemy ? st.enemy.units : 0) + ' restantes' });
+      }
       droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Mission · ' + (o.nom || 'Objectif') }));
       droite.appendChild(A('div', { class:'plateau-objectif' },
-        U().barre(progression, 'grande or', o.id === 'tenir'
-          ? Math.ceil(o.left || 0) + ' s à tenir'
-          : 'Points ' + (st.score ? st.score.cats : 0) + ' / ' + (st.score ? st.score.target : 0),
-          o.id === 'domination' && st.score ? 'Nuée ' + st.score.birds : ''),
+        o.desc ? A('div', { class:'plateau-objectif-desc', text:o.desc }) : null,
+        U().barre(progression, 'grande or', progressionTexte, progressionDroite),
+        A('div', { class:'plateau-conditions' }, conditions.map((x, i) =>
+          A('div', { class:'plateau-condition' + (x.ok ? ' accomplie' : '') },
+            A('b', { text:x.ok ? '✓' : String(i + 1) }),
+            A('span', { text:x.text }),
+            A('strong', { text:x.etat })))),
         A('div', { class:'plateau-mini-stats' },
-          A('span', { text:'positions ' + st.sites.cats + ' / ' + (st.score ? st.score.requiredSites : st.sites.total) + ' requises' }),
-          o.id === 'domination' && st.score ? A('span', { text:'domination ' + st.score.holdCats + ' / ' + st.score.holdTarget + ' s' }) : null,
           st.sites.securing ? A('span', { text:st.sites.securing + ' en sécurisation' }) : null,
           A('span', { text:'pertes ' + st.losses }),
           st.wave ? A('span', { text:'prochaine vague ' + Math.ceil(st.wave.next) + ' s' }) : null)));
     }
     if (c) {
-      const den = Math.max(1, (c.cats || 0) + (c.birds || 0));
-      droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Contrôle du terrain' }));
-      droite.appendChild(U().barre((c.cats || 0) / den, 'grande vert', 'Bourg ' + (c.cats || 0), 'Nuée ' + (c.birds || 0)));
+      droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Drapeaux capturables' }));
+      droite.appendChild(U().barre(c.cats || 0, 'grande vert', 'Bourg ' + (c.heldCats || 0) + ' / ' + (c.total || 0), 'Nuée ' + (c.heldBirds || 0)));
     }
     droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Ordres' }));
-    droite.appendChild(A('div', { class:'note', text:'Les éliminations et chaque position sécurisée rapportent des points tactiques. Dépensez-les dans le menu radial : Caserne 34, Étendard 28, Tour 22, Totem 18 ou Avant-poste 14. Pour gagner, atteignez le seuil de points, contrôlez 60 % des positions et tenez dix secondes. Les unités et tous les bâtiments alliés révèlent le brouillard.' }));
+    droite.appendChild(A('div', { class:'note', text:'Drapeau : point de contrôle fixe, capturable et générateur de points. Feu de camp : emplacement à sécuriser, puis à aménager avec le menu radial — Caserne 34, Forge 28, Tour 22, Totem 18 ou Avant-poste 14. Chaque Forge donne +10 % de PV et de dégâts à toute l’armée ; leurs bonus se cumulent. Les unités et tous les bâtiments alliés révèlent le brouillard.' }));
     if (zoneEnCours.sortie) droite.appendChild(A('div', { class:'cadre actif', style:'margin-top:12px' },
       A('div', { class:'eti-or', text:'gain si victoire' }),
       A('div', { class:'tt', text:'−' + zoneEnCours.gainMenace + ' Menace' })));

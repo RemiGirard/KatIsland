@@ -23,8 +23,9 @@
     return cv;
   }
 
-  // Sprite de l'Étendard : celui de S si déclaré, sinon fallback dessiné ici.
-  // (Un drapeau planté qui rend tout le monde 10 % plus désagréable.)
+  // Sprite de la Forge de camp (kind historique `banner`) : modèle du lab si
+  // disponible, sinon atelier de forge dessiné ici. Aucun drapeau de repli :
+  // cette silhouette doit rester distincte du vrai point de contrôle.
   const bannerSprCache = {};
   function getBannerSprite(owner) {
     const key = owner || 'none';
@@ -41,36 +42,87 @@
       g.lineJoin = 'round'; g.lineCap = 'round';
       const col = owner ? FACTION_COL[owner] : NEUTRAL_COL;
       const col2 = owner ? FACTION_COL2[owner] : '#7a7a72';
-      // butte de pierres
+      // ombre et dalle de travail
       g.fillStyle = 'rgba(20,30,15,0.22)';
-      g.beginPath(); g.ellipse(56, 88, 26, 9, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#8a8478';
-      g.beginPath(); g.ellipse(56, 84, 20, 9, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#a8a296';
-      g.beginPath(); g.ellipse(50, 81, 8, 5, -0.3, 0, Math.PI * 2); g.fill();
-      g.beginPath(); g.ellipse(64, 82, 7, 4.5, 0.3, 0, Math.PI * 2); g.fill();
-      // hampe
-      g.strokeStyle = '#5a4630'; g.lineWidth = 4.5;
-      g.beginPath(); g.moveTo(54, 84); g.lineTo(58, 22); g.stroke();
-      g.fillStyle = '#7a6142';
-      g.beginPath(); g.arc(58, 20, 3.4, 0, Math.PI * 2); g.fill();
-      // drapeau échancré
+      g.beginPath(); g.ellipse(56, 89, 34, 10, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#898276'; g.fillRect(26, 77, 62, 10);
+      // atelier ouvert et toit teinté
+      g.fillStyle = '#72513a'; g.fillRect(29, 47, 55, 32);
       g.fillStyle = col;
-      g.beginPath();
-      g.moveTo(59, 24); g.lineTo(96, 30); g.lineTo(86, 41); g.lineTo(95, 52); g.lineTo(58, 54);
-      g.closePath(); g.fill();
-      g.strokeStyle = col2; g.lineWidth = 2; g.globalAlpha = 0.7; g.stroke(); g.globalAlpha = 1;
-      // épées croisées, sobres et menaçantes
-      g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 2.4;
-      g.beginPath(); g.moveTo(68, 32); g.lineTo(82, 46); g.stroke();
-      g.beginPath(); g.moveTo(82, 32); g.lineTo(68, 46); g.stroke();
-      g.lineWidth = 1.6; g.strokeStyle = 'rgba(255,255,255,0.6)';
-      g.beginPath(); g.moveTo(69, 43); g.lineTo(74, 43); g.stroke();
-      g.beginPath(); g.moveTo(76, 43); g.lineTo(81, 43); g.stroke();
+      g.beginPath(); g.moveTo(23, 49); g.lineTo(55, 30); g.lineTo(91, 49); g.closePath(); g.fill();
+      g.strokeStyle = col2; g.lineWidth = 2; g.stroke();
+      g.fillStyle = '#493526'; g.fillRect(35, 55, 20, 24);
+      // cheminée courte
+      g.fillStyle = '#6f6256'; g.fillRect(69, 22, 12, 28);
+      g.fillStyle = '#91857a'; g.fillRect(67, 20, 16, 5);
+      // foyer incandescent
+      g.fillStyle = '#2c2420';
+      g.beginPath(); g.arc(45, 66, 8, Math.PI, 0); g.lineTo(53, 78); g.lineTo(37, 78); g.closePath(); g.fill();
+      g.fillStyle = '#ef6a2d'; g.beginPath(); g.arc(45, 70, 5, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#ffd36a'; g.beginPath(); g.arc(45, 70, 2.5, 0, Math.PI * 2); g.fill();
+      // enclume au premier plan
+      g.fillStyle = '#343c40';
+      g.beginPath(); g.moveTo(57, 66); g.lineTo(82, 66); g.lineTo(76, 72); g.lineTo(69, 72); g.lineTo(73, 82); g.lineTo(59, 82); g.lineTo(63, 72); g.lineTo(57, 70); g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1.2; g.stroke();
       spr = cv;
     }
     bannerSprCache[key] = spr;
     return spr;
+  }
+
+  /* Un emplacement constructible n'est pas un point de contrôle. Son feu de
+     bivouac indique une position occupable sans lui donner la silhouette d'un
+     bâtiment ni d'un drapeau. La couleur du petit cercle de pierres suffit à
+     rappeler qui le tient. */
+  const campfireSprCache = {};
+  function getCampfireSprite(owner) {
+    const key = owner || 'none';
+    if (campfireSprCache[key]) return campfireSprCache[key];
+    const cv = document.createElement('canvas');
+    cv.width = 112; cv.height = 112;
+    const g = cv.getContext('2d');
+    const col = owner ? FACTION_COL[owner] : NEUTRAL_COL;
+    g.lineJoin = 'round'; g.lineCap = 'round';
+
+    // ombre et sol très discrets : aucun socle artificiel
+    const ombre = g.createRadialGradient(56, 80, 2, 56, 80, 27);
+    ombre.addColorStop(0, 'rgba(28,24,18,.28)');
+    ombre.addColorStop(1, 'rgba(28,24,18,0)');
+    g.fillStyle = ombre;
+    g.beginPath(); g.ellipse(56, 81, 29, 11, 0, 0, Math.PI * 2); g.fill();
+
+    // cercle de pierres, avec deux pierres teintées pour la propriété
+    const pierres = [[37,77,6],[43,68,6],[54,65,6],[66,67,6],[74,75,6],[69,84,6],[57,87,6],[44,84,6]];
+    for (let i = 0; i < pierres.length; i++) {
+      const p = pierres[i];
+      g.fillStyle = i === 1 || i === 5 ? col : (i % 2 ? '#9b9385' : '#b0a696');
+      g.beginPath(); g.ellipse(p[0], p[1], p[2], p[2] * .7, (i - 3) * .18, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = 'rgba(44,37,29,.42)'; g.lineWidth = 1.2; g.stroke();
+    }
+
+    // deux bûches croisées
+    g.strokeStyle = '#4a2f1d'; g.lineWidth = 9;
+    g.beginPath(); g.moveTo(43,82); g.lineTo(68,68); g.stroke();
+    g.beginPath(); g.moveTo(44,68); g.lineTo(69,82); g.stroke();
+    g.strokeStyle = '#8a5530'; g.lineWidth = 5;
+    g.beginPath(); g.moveTo(43,82); g.lineTo(68,68); g.stroke();
+    g.beginPath(); g.moveTo(44,68); g.lineTo(69,82); g.stroke();
+
+    // flamme courte, lisible même après réduction
+    g.fillStyle = '#c84428';
+    g.beginPath();
+    g.moveTo(56,73); g.bezierCurveTo(45,66,51,55,57,43);
+    g.bezierCurveTo(58,53,68,57,64,67); g.bezierCurveTo(62,72,59,74,56,73);
+    g.fill();
+    g.fillStyle = '#f28b32';
+    g.beginPath();
+    g.moveTo(56,70); g.bezierCurveTo(51,65,56,59,58,54);
+    g.bezierCurveTo(63,61,62,67,56,70); g.fill();
+    g.fillStyle = '#ffe08a';
+    g.beginPath(); g.ellipse(57.5, 65, 2.7, 5.2, .18, 0, Math.PI * 2); g.fill();
+
+    campfireSprCache[key] = cv;
+    return cv;
   }
 
   // §B (DESIGN13) : sprite de l'Avant-poste — petit fortin/tente, marqueur simple

@@ -32,7 +32,7 @@
   const VERS_DOC = {
     pecherie:'Pêcherie', scierie:'Scierie', champ:'Champ', tournesol:'Champ de tournesols',
     pepiniere:'Pépinière', potager:'Potager', fleurs:'Champ de fleurs', puits:'Puits',
-    maison:'Maison', grange:'Grange', entrepot:'Entrepôt', carriere:'Carrière',
+    grange:'Grange', entrepot:'Entrepôt', carriere:'Carrière',
     mine:'Mine', charbonniere:'Charbonnière', fonderie:'Fonderie', forge:'Forge',
     armurerie:'Armurerie', tuilerie:'Tuilerie', poterie:'Poterie', verrerie:'Verrerie',
     moulin:'Moulin à vent', moulinEau:'Moulin à eau', cuisine:'Four banal', fumoir:'Fumoir',
@@ -53,6 +53,11 @@
 
   let iDoc = null;
   function indexDoc(type){
+    /* Dans le document V44, la maison urbaine fusionnable n'est PAS le type
+       spécial nommé « Maison » (maisonSpeciale, composée de trois parcelles).
+       C'est le type natif -1 : une case à la fois, empilable, capable de former
+       mitoyennetés, arches et terrasses selon ses voisines. */
+    if(type === 'maison') return -1;
     if(!iDoc){
       iDoc = {};
       D().TYPES.forEach((t,k)=>{ iDoc[t.nom] = k; });
@@ -298,7 +303,13 @@
          `ponton:true` : le quai est dessiné par l'architecture spéciale du
          type. Sa cellule d'ancrage (partie 0) reste la même. */
       if(!T || (!part || !part.ponton) && !(T.bordEau && sp.p === 0)) continue;
-      const i = sp.r % 4;
+      /* Les architectures V19 sont dessinées avec leur façade sur la
+         face `r`, mais leur rive est volontairement sur la face opposée
+         (`r + 2`, voir placementOk). Utiliser `r` envoyait donc la jetée
+         dynamique et les navires à travers la capitainerie, sur la
+         pelouse. Les anciens pontons (notamment la pêcherie) gardent leur
+         convention historique : leur part pointe déjà vers l'eau. */
+      const i = (sp.r + (T.archV19 ? 2 : 0)) % 4;
       const A = doc.P[c.q[i]], B = doc.P[c.q[(i+1)%4]];
       const mx = (A[0]+B[0])/2, mz = (A[1]+B[1])/2;
       let dx = mx - c.cx, dz = mz - c.cz;

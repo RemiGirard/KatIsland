@@ -51,13 +51,12 @@
      ponton à 0,02. La ligne de flottaison d'un navire est donc l'origine
      de son modèle : la carène passe dessous, le pont dessus.
 
-     LA DEMI-LARGEUR DU TABLIER (0,34) est le seul nombre qu'on emprunte
-     à `ponton()` de village-doc.js — village3d.js en duplique déjà trois
-     autres pour la même raison : le document ne les expose pas. S'il
-     élargit son ponton, c'est ici qu'il faut le suivre.
+     LA DEMI-LARGEUR DU TABLIER suit maintenant le ponton propre au port,
+     dessiné dans village-doc.js. Port3D ne lui ajoute plus de seconde
+     jetée : il ne fait que placer les coques le long de ses bords.
      ------------------------------------------------------------------ */
   const MER        = 0;
-  const QUAI_DEMI  = 0.34;     // demi-largeur du tablier du ponton
+  const QUAI_DEMI  = 0.09;     // demi-largeur du ponton intégré au port
   const ECART_QUAI = 0.07;     // le pare-battage entre la coque et le bois
 
   /* LE DÉHALAGE. Les navires d'un même bord se rangent l'un derrière
@@ -157,7 +156,7 @@
   const flotteurs = new Map();           // id de navire -> son bateau
   let horloge = 0;
   let quai = null, quaiT = 1e9;          // le ponton du port, relu de loin en loin
-  let mole = null, moleNiv = -1;         // la jetée bâtie, et pour quel niveau
+  let mole = null, moleNiv = -1;         // compatibilité avec l'ancienne jetée ajoutée
 
   /* ==================================================================
      LES COULEURS
@@ -383,18 +382,18 @@
     return g;
   }
 
-  /* On ne rebâtit la jetée que si le port a CHANGÉ DE NIVEAU : c'est une
-     géométrie fixe, elle n'a rien à faire dans la boucle d'images. */
-  function assurerMole() {
-    const b = window.Etat.batsDeType('port')[0];
-    const niv = b ? (b.niv || 1) : 1;
+  /* COMPATIBILITÉ À CHAUD. Les anciennes versions ajoutaient ici un
+     second môle, plus large et d'un autre dessin, au bout du ponton du
+     bâtiment. Le ponton de village-doc.js rejoint désormais lui-même
+     l'eau : on retire donc un éventuel ancien môle et l'on n'en recrée
+     jamais. Les navires restent entièrement dynamiques. */
+  function retirerMoleHistorique() {
+    if (!mole) return;
     const g = poser();
-    if (mole && moleNiv === niv) { placerMole(); return; }
-    if (mole) { g.remove(mole); liberer(mole); }
-    mole = creerMole(niv);
-    moleNiv = niv;
-    g.add(mole);
-    placerMole();
+    g.remove(mole);
+    liberer(mole);
+    mole = null;
+    moleNiv = -1;
   }
   function placerMole() {
     if (!mole || !quai) return;
@@ -998,10 +997,9 @@
 
     horloge += dt;
     accorder(flotte);
-    /* LA JETÉE. Elle suit le niveau du port et non la flotte : on la
-       vérifie une fois par image, mais on ne la rebâtit qu'au niveau
-       suivant. */
-    assurerMole();
+    /* Le seul ponton est celui du bâtiment. Ce garde nettoie encore une
+       éventuelle jetée créée avant une mise à jour à chaud. */
+    retirerMoleHistorique();
     groupe.visible = true;
 
     for (const nav of flotte) {

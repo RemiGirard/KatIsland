@@ -39,7 +39,7 @@
 
 - [x] **Bergerie** — taille du troupeau, pâturage, mise bas et qualité de laine ; préserver des reproducteurs ralentit la production immédiate mais développe le cheptel.
 - [x] **Étable** — alimentation, santé et cycle lait/reproduction ; ration riche contre autonomie du troupeau.
-- [ ] **Rucher** — reine, humeur des ruches, réserve de miel et réseau de pollinisation des parcelles.
+- [x] **Rucher** — reine, humeur des ruches, réserve de miel et réseau de pollinisation des parcelles.
 - [ ] **Moulin à vent** — fenêtres de vent et files de mouture ; stockage automatique des commandes pour profiter des rafales.
 - [ ] **Moulin à eau** — débit de roue et vannes ; arbitrage entre eau disponible et cadence stable.
 - [ ] **Four banal / cuisine** — marmite visuelle : déposer quelques ingrédients, régler la chaleur, découvrir puis mémoriser les recettes.
@@ -178,3 +178,11 @@ Un bâtiment est terminé lorsqu'il possède une boucle compréhensible en quelq
 - **Décision** : cheptel vivant, santé et litière locales ; orientations lait, renouvellement ou fumure. Le fumier devient une ressource illustrée que la jachère consomme réellement.
 - **Anti-microgestion** : santé et naissances évoluent seules ; les soins restaurent durablement l’étable et l’abattage protège les reproductrices.
 - **Visuels** : planche 4 × 4 transparente et une illustration de ressource fumier ajoutée au manifeste du jeu.
+
+### Rucher
+
+- **Avant** : le miel et la cire sortaient d’une colonie invisible ; « butiner le carré de fleurs » consommait des fleurs coupées dans l’entrepôt.
+- **Écart avec la scierie** : ni colonie, ni humeur, ni réserve locale, aucune conséquence de cadence et aucun lien réel avec les parcelles fleuries.
+- **Décision** : vigueur de colonie, humeur, hausses de miel, reine sur cinq rangs et réseau de nectar calculé depuis les champs de fleurs et tournesols. Les conduites douce, essaimage ou miel changent la trajectoire du rucher.
+- **Anti-microgestion** : les hausses se remplissent seules ; une récolte vide attend puis reprend automatiquement. La sélection de reine progresse lentement lorsque les conditions restent bonnes.
+- **Visuels** : la première génération avec fond brun a été rejetée. La seconde planche possède un véritable alpha, 16 cases strictes et 16 découpes utilisées dans l’interface.

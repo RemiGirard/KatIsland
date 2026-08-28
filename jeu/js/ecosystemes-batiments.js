@@ -106,6 +106,15 @@
         {id:'lanterne',nom:'Lanterne d’étable',desc:'Les soins de nuit deviennent plus sûrs et moins stressants.',base:{cire:5,outil:1}},
       ],
     },
+    rucher:{
+      nom:'Rucher', rythme:'Calme des visites', unite:'colonie',
+      confort:[
+        {id:'abri',nom:'Abri de l’apiculteur',desc:'Les cadres sont inspectés au sec et loin du passage.',base:{bois:8,paille:5}},
+        {id:'voile',nom:'Voiles de rechange',desc:'Une protection propre rend les visites plus calmes.',base:{toile:4,corde:2}},
+        {id:'enfumoir',nom:'Enfumoir doux',desc:'Une fumée régulière apaise sans affoler la colonie.',base:{outil:1,bois:7,herbe:4}},
+        {id:'eau',nom:'Abreuvoir à abeilles',desc:'Quelques pierres dans une eau peu profonde évitent les noyades.',base:{poterie:3,eau:10}},
+      ],
+    },
   };
 
   function gere(b) { return !!(b && TYPES[b.type]); }
@@ -169,6 +178,14 @@
       if(typeof p.signature.sante!=='number')p.signature.sante=76;
       if(typeof p.signature.litiere!=='number')p.signature.litiere=72;
       if(!p.signature.politique)p.signature.politique='lait';
+    } else if(b.type==='rucher'){
+      if(typeof p.signature.colonie!=='number')p.signature.colonie=68;
+      if(typeof p.signature.humeur!=='number')p.signature.humeur=70;
+      if(typeof p.signature.reserve!=='number')p.signature.reserve=36;
+      if(typeof p.signature.maximum!=='number')p.signature.maximum=100;
+      if(typeof p.signature.reine!=='number')p.signature.reine=1;
+      if(typeof p.signature.selection!=='number')p.signature.selection=0;
+      if(!p.signature.politique)p.signature.politique='douce';
     }
     return p;
   }
@@ -305,6 +322,15 @@
           const naissance=(s.politique==='renouvellement'?1.7:1)*clamp(s.sante/75,.45,1.2);
           s.troupeau=clamp(s.troupeau+dt*.0017*naissance,0,s.maximum);
         }
+      } else if(b.type==='rucher'){
+        const s=p.signature,nectar=nectarVillage(),cad=CADENCES[p.cadence];
+        const cibleC=clamp(38+nectar*.45+s.reine*3+(s.politique==='essaimage'?10:0),0,98),pasC=1-Math.exp(-Math.max(0,dt)/210);
+        s.colonie=clamp(s.colonie+(cibleC-s.colonie)*pasC,0,100);
+        const cibleH=clamp(58+(s.politique==='douce'?20:0)-(cad.id==='forcage'?24:cad.id==='soutenue'?8:0),15,96),pasH=1-Math.exp(-Math.max(0,dt)/130);
+        s.humeur=clamp(s.humeur+(cibleH-s.humeur)*pasH,0,100);
+        const remplissage=.006*(.35+nectar/100)*(s.colonie/100)*(s.politique==='miel'?1.28:(s.politique==='douce'?.88:1));
+        s.reserve=clamp(s.reserve+dt*remplissage,0,100);
+        if(s.colonie>70&&s.humeur>64&&s.reine<5){s.selection+=dt*.003*(s.politique==='essaimage'?2:1);if(s.selection>=100){s.selection-=100;s.reine++;}}
       }
     }
   }
@@ -372,6 +398,9 @@
       if(rec.id==='fumier'&&s.politique==='fumure')facteur*=1.22;
       if((rec.id==='abattre_vache'||rec.id==='abattre_boeuf')&&s.politique==='renouvellement')facteur*=.88;
       for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='rucher'){
+      const s=personnel(b).signature;
+      if(copie.miel){let facteur=.55+(s.colonie/100)*.35+(s.humeur/100)*.18;if(rec.id==='miel_de_fleurs')facteur*=.65+nectarVillage()/100*.65;if(s.politique==='miel')facteur*=1.18;copie.miel=Math.max(1,arrondiVivant(copie.miel*facteur));}
     }
     return copie;
   }
@@ -428,6 +457,10 @@
       else if(rec.id==='litiere'){s.litiere=clamp(s.litiere+20,0,100);s.sante=clamp(s.sante+5,0,100);}
       else if(rec.id==='abattre_vache')s.troupeau=clamp(s.troupeau-1,0,s.maximum);
       else if(rec.id==='abattre_boeuf')s.troupeau=clamp(s.troupeau-1.5,0,s.maximum);
+    }else if(b.type==='rucher'){
+      if(rec.id==='recolter_miel'){s.reserve=clamp(s.reserve-2.4*(s.politique==='miel'?1.25:1),0,100);s.humeur=clamp(s.humeur-.7,0,100);}
+      else if(rec.id==='miel_de_fleurs'){s.reserve=clamp(s.reserve-4.2*(s.politique==='miel'?1.25:1),0,100);s.humeur=clamp(s.humeur-1.1,0,100);}
+      else if(rec.id==='fondre_rayons')s.humeur=clamp(s.humeur-.4,0,100);
     }
   }
 
@@ -447,6 +480,12 @@
     let ruchers=0,tournesols=0;
     for(const bid in E().bat){const t=E().bat[bid].type;if(t==='rucher')ruchers++;else if(t==='tournesol')tournesols++;}
     return clamp(28+ruchers*16+tournesols*5,0,96);
+  }
+
+  function nectarVillage(){
+    let total=12;
+    for(const bid in E().bat){const b=E().bat[bid];if(b.type==='fleurs')total+=personnel(b).signature.nectar*.35;else if(b.type==='tournesol')total+=personnel(b).signature.nectar*.12;}
+    return clamp(total,0,100);
   }
 
   function soutienRepos() {
@@ -470,6 +509,10 @@
       const cout=rec.id==='abattre_boeuf'?1.5:(rec.id==='abattre_vache'?1:0),s=personnel(b).signature;
       if(cout&&s.troupeau-cout<etableReserve(b))return {ok:false,raison:'reproductrices protégées'};
       if(rec.id==='traire'&&s.troupeau<2)return {ok:false,raison:'troupeau trop petit'};
+    }else if(b.type==='rucher'){
+      const s=personnel(b).signature,besoin=rec.id==='miel_de_fleurs'?4.2:(rec.id==='recolter_miel'?2.4:0);
+      if(besoin&&s.reserve<besoin)return {ok:false,raison:'hausses en remplissage'};
+      if(rec.id==='miel_de_fleurs'&&nectarVillage()<18)return {ok:false,raison:'réseau floral insuffisant'};
     }
     return {ok:true,raison:''};
   }
@@ -479,6 +522,6 @@
   window.EcosystemesBatiments = { TYPES, CADENCES, gere, definition, personnel, confort,
     disponibilite, equipeHabitant, affecterEquipe, repartirEquipes, ajouterEquipe, retirerEquipe,
     tickHabitant, tick, modifierSorties, finirRecette, peutDemarrer,
-    pollinisationCible, humiditeCible, nectarCible, soutienRepos, troupeauMax, reproducteurs,
+    pollinisationCible, humiditeCible, nectarCible, nectarVillage, soutienRepos, troupeauMax, reproducteurs,
     etableMax, etableReserve };
 })();

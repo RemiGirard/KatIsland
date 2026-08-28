@@ -423,13 +423,14 @@
 
       const map = { w, h, seed, theme: opts.theme || null, nodes, edges, obstacles: obs, epool, sym: central ? 'central' : 'axial' };
       /* Les expéditions du Bourg ne livrent plus une ville déjà bâtie.
-         Hors des deux camps de départ, la carte ne contient que des
-         positions fortifiables. Leur ancien `kind` reste un conseil de
-         construction pour l'IA ; le joueur, lui, choisira après capture. */
+         Les vrais points de contrôle (`controle`) restent des objectifs
+         fixes et capturables. Tous les autres emplacements deviennent des
+         bivouacs fortifiables ; leur ancien `kind` reste seulement un
+         conseil de construction pour l'IA. */
       if (opts.tacticalSites) {
         map.tacticalSites = true;
         for (const n of nodes) {
-          if (n.kind === 'hq') continue;
+          if (n.kind === 'hq' || n.kind === 'controle') continue;
           n.plannedKind = n.kind;
           n.kind = 'site';
           n.cap = 45;

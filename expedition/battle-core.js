@@ -52,21 +52,21 @@
   const AOE_MAX = (BGD.BALANCE && BGD.BALANCE.aoeMaxTargets) || 4;
   const AOE_DECAY = [1, 0.7, 0.4, 0.2];
   const NODE_INFO = {
-    site:       { name: 'Position tactique',   tip: 'Sécurisez-la, puis dépensez vos points tactiques pour choisir son aménagement.' },
+    site:       { name: 'Feu de camp',          tip: 'Emplacement constructible : sécurisez-le, puis choisissez son aménagement.' },
     hq:         { name: 'Quartier général',    tip: 'Produit des recrues. S’il tombe, tout tombe.' },
     production: { name: 'Caserne',             tip: 'Produit des unités en continu. À protéger, évidemment.' },
     defense:    { name: 'Tour de garde',       tip: 'Tire sur tout ennemi qui approche. Zéro sommation.' },
     reinforce:  { name: 'Totem de ralliement', tip: '+25% PV et dégâts aux unités alliées qui sortent à proximité.' },
-    controle:   { name: 'Point de contrôle',   tip: 'Les positions sécurisées rapportent des points tactiques tant qu’elles restent sous contrôle.' },
-    banner:     { name: 'Étendard',            tip: '+10% dégâts ET PV à toutes les troupes du propriétaire. Cumulable. Convoité, forcément.' },
+    controle:   { name: 'Point de contrôle',   tip: 'Drapeau fixe et capturable. Il rapporte des points tactiques tant qu’il reste sous contrôle.' },
+    banner:     { name: 'Forge de camp',       tip: '+10% dégâts et PV à toute l’armée. Les bonus de plusieurs forges se cumulent.' },
     neutral:    { name: 'Borne neutre',        tip: 'Un caillou stratégiquement décoratif. Capturez-le quand même.' },
     avantposte: { name: 'Avant-poste',         tip: 'Capturé : vos renforts y débarquent + aura de soin (2 PV/s) pour les alliés proches.' },
   };
   const SITE_BUILDS = [
     { kind:'production', name:'Caserne',     sigle:'C', cost:34, tip:'Produit régulièrement des lanciers. Puissante, mais très chère.' },
+    { kind:'banner',     name:'Forge',       sigle:'F', cost:28, tip:'Renforce toute l’armée de 10 %. Bonus cumulable.' },
     { kind:'defense',    name:'Tour',        sigle:'T', cost:22, tip:'Tire sur les ennemis qui approchent.' },
     { kind:'reinforce',  name:'Totem',       sigle:'R', cost:18, tip:'Renforce les troupes qui en sortent.' },
-    { kind:'banner',     name:'Étendard',    sigle:'E', cost:28, tip:'Améliore les PV et dégâts de toute l’armée.' },
     { kind:'avantposte', name:'Avant-poste', sigle:'A', cost:14, tip:'Soigne et devient un point de débarquement.' },
   ];
 
@@ -77,6 +77,8 @@
   const SEND_RATE = 12;       // (hérité) unités/s — désormais on libère par salves
   const SALVO_SIZE = 8;       // §régiment : un rang complet sort d'un coup
   const SALVO_GAP = 0.28;     // §régiment : délai entre deux salves (s)
+  const BUILD_MENU_RADIUS = 98;
+  const BUILD_MENU_BUTTON_R = 29;
   // §pixel : taille du bloc pixel-art (px écran) sur toute la scène ; 0 = off.
   // (réglable via BALANCE.pixelArt ; 1 = grain léger sur écrans DPR>1, no-op à DPR 1)
   const PIXEL_CSS = (BGD.BALANCE && BGD.BALANCE.pixelArt != null) ? BGD.BALANCE.pixelArt : 1;
@@ -131,6 +133,17 @@
     const spParts = [];
     const SP_CAP = 200;           // cap global de particules de sorts
     let shakeT = 0, shakeAmp = 0; // petit shake d'impact (météore, séisme)
+
+    /* Les positions proches du bord décalent le menu vers l'intérieur. Les
+       boutons restent ainsi entiers et les coordonnées de clic suivent le
+       même centre que le dessin. */
+    function buildMenuLayout(site) {
+      const marge = BUILD_MENU_RADIUS + BUILD_MENU_BUTTON_R + 24;
+      return {
+        x: bclamp(site.x, marge, map.w - marge),
+        y: bclamp(site.y, marge, map.h - marge),
+      };
+    }
 
     // =============================================================
     // §OBST — CHAMP DE FLUX BFS par destination (contournement d'obstacles).
@@ -389,11 +402,10 @@
     }
 
     // état de la victoire par points de contrôle
-    /* Sur les nouvelles cartes, chaque position est un point de contrôle :
-       le bâtiment choisi ensuite en modifie la fonction, jamais sa valeur
-       territoriale. Les anciennes cartes conservent leurs drapeaux dédiés. */
-    const ctrlNodes = map.tacticalSites ? ns.filter(n => n.kind !== 'hq')
-                                       : ns.filter(n => n.kind === 'controle');
+    /* Les drapeaux sont désormais de vrais points de contrôle fixes. Les
+       bivouacs constructibles restent capturables, mais ne comptent ni dans
+       la majorité territoriale ni dans la condition de victoire. */
+    const ctrlNodes = ns.filter(n => n.kind === 'controle');
     const ctrlTotal = ctrlNodes.length;
     /* Une seule monnaie tactique : les éliminations et les positions en
        rapportent, les implantations la dépensent, et la victoire exige
@@ -1733,13 +1745,15 @@
          le seuil. Elle devient occupée, puis doit être tenue quelques
          secondes. Une contre-attaque interrompt cette sécurisation. */
       if (map.tacticalSites && n.kind !== 'hq') {
-        /* Le bâtiment précédent tombe avec la garnison : ce qui change de
-           main est le point stratégique, pas une Caserne ennemie intacte.
-           Le nouveau propriétaire choisira donc sa propre implantation. */
-        const ancienType = n.kind;
-        n.kind = 'site'; n.built = false; n.cap = 45;
-        n.prodRate = 0; n.defBonus = 0; n.prodAcc = 0;
-        if (ancienType === 'banner') refreshBanners();
+        /* Le point de contrôle conserve son drapeau. Un autre bâtiment tombe
+           avec sa garnison et redevient un feu de camp aménageable. Dans les
+           deux cas, la troupe doit tenir la position avant qu'elle soit sûre. */
+        if (n.kind !== 'controle') {
+          const ancienType = n.kind;
+          n.kind = 'site'; n.built = false; n.cap = 45;
+          n.prodRate = 0; n.defBonus = 0; n.prodAcc = 0;
+          if (ancienType === 'banner') refreshBanners();
+        }
         n.secured = false;
         n.claimTotal = Math.max(2, cfg.captureSeconds || 4.5);
         n.claimLeft = n.claimTotal;
@@ -1779,8 +1793,10 @@
           emit({ type:'buildMenu', node:n, choices:SITE_BUILDS.slice() });
           emit({ type:'nodeSelected', node:n });
         } else {
-          const voulu = SITE_BUILDS.some(x => x.kind === n.plannedKind)
-            ? n.plannedKind : SITE_BUILDS[(n.id + Math.floor(simT)) % SITE_BUILDS.length].kind;
+          /* Même lors d'une capture, l'ordinateur suit sa doctrine globale :
+             l'ancien plannedKind aléatoire ne peut plus lui faire gaspiller
+             son premier emplacement en soutien. */
+          const voulu = doctrineConstructionIA(faction);
           construirePosition(n, voulu, faction);
         }
       }
@@ -2917,23 +2933,58 @@
       return gStrength(node) + fieldNear(BGD.other(f), node, 110);
     }
 
+    /* Doctrine de construction de l'IA.
+       1. une armée qui ne se renouvelle pas finit toujours par perdre ;
+       2. les forges donnent +10 % à TOUTE l'armée et se cumulent ;
+       3. les tours protègent ensuite ce capital ;
+       4. totems et avant-postes complètent le réseau.
+       Les quotas produisent volontairement la séquence
+       Caserne → Forge → Caserne → Tour, puis la répètent à plus grande échelle. */
+    function doctrineConstructionIA(f) {
+      const compte = { production:0, banner:0, defense:0, reinforce:0, avantposte:0 };
+      for (const n of ns) if (n.owner === f && compte[n.kind] != null) compte[n.kind]++;
+      const total = Object.keys(compte).reduce((s, k) => s + compte[k], 0);
+      const prochain = total + 1;
+      const besoins = [
+        ['production', Math.ceil(prochain * .50)],
+        ['banner',     Math.ceil(prochain * .25)],
+        ['defense',    Math.ceil(prochain * .18)],
+      ];
+      for (const b of besoins) if (compte[b[0]] < b[1]) return b[0];
+      return compte.reinforce <= compte.avantposte ? 'reinforce' : 'avantposte';
+    }
+
+    function chantierPourIA(chantiers, kind, foeF) {
+      const ennemis = ns.filter(n => n.owner === foeF);
+      const distanceFront = n => {
+        let d = 1e9;
+        for (const e of ennemis) d = Math.min(d, bdist(n.x, n.y, e.x, e.y));
+        return d;
+      };
+      return chantiers.slice().sort((a, b) => {
+        const da = distanceFront(a), db = distanceFront(b);
+        /* Casernes et forges à l'abri ; tours et soutien au contact. Le
+           plannedKind ne départage que deux positions équivalentes. */
+        const front = kind === 'defense' || kind === 'reinforce' || kind === 'avantposte';
+        const sa = (front ? da : -da) - (a.plannedKind === kind ? 12 : 0);
+        const sb = (front ? db : -db) - (b.plannedKind === kind ? 12 : 0);
+        return sa - sb;
+      })[0];
+    }
+
     function aiTick(f) {
       const mine = ns.filter(n => n.owner === f);
       if (!mine.length) return;
       const foeF = BGD.other(f);
-      /* L'IA paie les mêmes implantations. Si son choix prévu est encore
-         trop cher, elle attend au lieu de recevoir une Caserne gratuite. */
-      const chantier = mine.find(n => n.kind === 'site' && n.secured);
-      if (chantier) {
-        const voulu = SITE_BUILDS.some(x => x.kind === chantier.plannedKind)
-          ? chantier.plannedKind : 'avantposte';
-        if (construirePosition(chantier, voulu, f)) return;
-        const alternatives = ['defense', 'reinforce', 'avantposte', 'banner', 'production'];
-        const abordable = alternatives.find(k => {
-          const d = SITE_BUILDS.find(x => x.kind === k);
-          return d && d.cost <= (ctrlPts[f] || 0);
-        });
-        if (abordable && construirePosition(chantier, abordable, f)) return;
+      /* L'IA paie le même prix et ÉPARGNE pour le bâtiment prioritaire : elle
+         ne remplace plus une Caserne attendue par un avant-poste simplement
+         parce que ce dernier est immédiatement abordable. */
+      const chantiers = mine.filter(n => n.kind === 'site' && n.secured);
+      if (chantiers.length) {
+        const voulu = doctrineConstructionIA(f);
+        const chantier = chantierPourIA(chantiers, voulu, foeF);
+        const def = SITE_BUILDS.find(x => x.kind === voulu);
+        if (def && def.cost <= (ctrlPts[f] || 0) && construirePosition(chantier, voulu, f)) return;
       }
       const ctrl = getControl();
       // rubber-band en collectif : le camp minoritaire défend plus
@@ -2942,18 +2993,37 @@
         const my = ctrl[f], his = ctrl[foeF];
         aggro = my < his ? 0.75 : (my > his + 0.15 ? 1.35 : 1);
       }
-      // LA COURSE AUX POINTS. Premier à ctrlWin gagne — l'IA le savait à
-      // peine. Deux états changent tout son comportement :
-      //   — l'ADVERSAIRE approche de la victoire (> 55 % du compteur) : les
-      //     points de contrôle deviennent LA priorité, en attaque comme en
-      //     défense — tout le reste peut attendre ;
-      //   — ELLE-MÊME approche : elle se met à DÉFENDRE ce qu'elle tient au
-      //     lieu de risquer ses garnisons dans des assauts — il suffit de
-      //     tenir l'horloge.
       const foePts = (typeof ctrlPts === 'object' && ctrlPts[foeF]) || 0;
       const myPts = (typeof ctrlPts === 'object' && ctrlPts[f]) || 0;
-      const panique = foePts > ctrlWin * 0.55;
-      const conserve = myPts > ctrlWin * 0.55 && myPts > foePts;
+      let myCtrl = 0, foeCtrl = 0;
+      for (const cn of ctrlNodes) {
+        if (cn.secured === false) continue;
+        if (cn.owner === f) myCtrl++; else if (cn.owner === foeF) foeCtrl++;
+      }
+      const requisCtrl = Math.max(1, Math.ceil(ctrlTotal * .6));
+      const ownHq = mine.find(n => n.kind === 'hq');
+      const hqMenace = !!(ownHq && (ownHq.hurtT > 0 ||
+        fieldNear(foeF, ownHq, 135) > nodeGTot(ownHq) * .65 + 2));
+      const tenirPourMoi = objective.id === 'tenir' && f === pf;
+      const briserTenue = objective.id === 'tenir' && f !== pf;
+      const urgenceTenue = briserTenue && objectiveTotal > 0
+        ? bclamp(1 - objectiveLeft / objectiveTotal, 0, 1) : 0;
+      const paniqueDomination = objective.id === 'domination' &&
+        (foePts >= ctrlWin * .68 || (foeCtrl >= requisCtrl && foePts >= ctrlWin * .45));
+      const verrouilleDomination = objective.id === 'domination' &&
+        myCtrl >= requisCtrl && myPts >= ctrlWin * .72 && myPts > foePts;
+      const dernierCarre = objective.id === 'elimination' && mine.length <= 2;
+      const panique = paniqueDomination || hqMenace || urgenceTenue > .58;
+      const conserve = verrouilleDomination || tenirPourMoi || dernierCarre || hqMenace;
+
+      /* L'objectif modifie l'allure générale : la Nuée accélère quand le
+         compte à rebours du joueur s'épuise, les deux camps concentrent leurs
+         forces sur les QG en décapitation, et une tête de pont alliée joue la
+         prudence. */
+      if (briserTenue) aggro *= 1 + urgenceTenue * .75;
+      else if (objective.id === 'decapitation') aggro *= 1.20;
+      else if (objective.id === 'elimination') aggro *= 1.12;
+      else if (tenirPourMoi) aggro *= .82;
       // réserve de garnison : une IA douée immobilise MOINS d'unités dans ses
       // bâtiments (elle s'épuisait en petits groupes en thésaurisant partout)
       const reserve = n => Math.max(2, (n.kind === 'hq' ? 10 : 5) - aiLevel * 1.5)
@@ -2965,23 +3035,29 @@
       // renforts partaient toujours un combat trop tard. On regarde maintenant
       // les unités du joueur EN VOL : si ce qui arrive dépasse ce qui tient la
       // porte, le nœud appelle à l'aide AVANT le premier coup.
-      const defPrio = { hq: 4, banner: 3, site: conserve || panique ? 4.4 : 3,
-        controle: conserve || panique ? 4.2 : 2.5, production: 2, defense: 1,
-        reinforce: 1, avantposte: 0.5 };
+      const defPrio = {
+        hq: objective.id === 'decapitation' || dernierCarre ? 8 : 5,
+        production: 5.5, banner: 4.8,
+        controle: objective.id === 'domination' ? (conserve || panique ? 7 : 3.5) : 2.2,
+        site: 2.5, defense: 1.8, reinforce: 1.4, avantposte: 1.2,
+      };
       let hurt = null, hurtScore = -1;
       for (const n of mine) {
-        const entrant = fieldNear(f, n, 90);           // les unités ADVERSES proches ou en route
+        const entrant = fieldNear(foeF, n, 90);        // les unités ADVERSES proches ou en route
         const menace = n.hurtT > 0 || entrant > nodeGTot(n) * 0.8 + 2;
         if (!menace) continue;
         const sc = (defPrio[n.kind] || 0) * 10 + entrant - nodeGTot(n);
         if (sc > hurtScore) { hurtScore = sc; hurt = n; }
       }
-      if (hurt && Math.random() < (conserve ? 0.85 : 0.55 + aiLevel * 0.15)) {
+      const vital = hurt && (hurt.kind === 'hq' || hurt.kind === 'production' ||
+        hurt.kind === 'banner' || (hurt.kind === 'controle' && objective.id === 'domination'));
+      if (hurt && Math.random() < (vital ? .92 : conserve ? 0.85 : 0.55 + aiLevel * 0.15)) {
         const helpers = mine
           .filter(n => n !== hurt && nodeGTot(n) > reserve(n) + 3)
           .sort((a, b) => bdist(a.x, a.y, hurt.x, hurt.y) - bdist(b.x, b.y, hurt.x, hurt.y));
         // le QG en danger déclenche un vrai rapatriement (plusieurs nœuds)
-        const nHelp = hurt.kind === 'hq' ? 1 + Math.min(2, aiLevel) : 1;
+        const nHelp = hurt.kind === 'hq' ? 1 + Math.min(2, aiLevel)
+          : vital && aiLevel >= 2 ? 2 : 1;
         let sent = false;
         for (let i = 0; i < Math.min(nHelp, helpers.length); i++) {
           sendUnits(helpers[i], hurt, hurt.kind === 'hq' ? 0.65 : 0.5);
@@ -2990,14 +3066,7 @@
         if (sent) return;
       }
 
-      // 2) ATTAQUE : priorités stratégiques — caserne (production), étendard,
-      // points de contrôle, QG. Minoritaire aux points de contrôle (condition
-      // de victoire !) → ils passent en tête.
-      let myCtrl = 0, foeCtrl = 0;
-      for (const cn of ctrlNodes) {
-        if (cn.secured === false) continue;
-        if (cn.owner === f) myCtrl++; else if (cn.owner === foeF) foeCtrl++;
-      }
+      // 2) ATTAQUE : l'objectif choisit ce qui constitue une vraie cible.
       const ctrlHungry = myCtrl <= foeCtrl;
 
       // sources triées par surplus — la concentration se sert dans l'ordre
@@ -3008,24 +3077,36 @@
       if (!sources.length) return;
       const src = sources[0].n;
 
-      // EN MODE CONSERVATION, on n'attaque plus que l'opportun : les neutres
-      // faciles, et les points de contrôle si l'adversaire en reprend. Le temps
-      // joue pour nous — chaque assaut risqué est un cadeau fait au joueur.
-      const targets = ns.filter(n => n.owner !== f && !(conserve && n.owner === foeF && n.kind !== 'controle' && n.kind !== 'site'));
+      let targets = ns.filter(n => n.owner !== f);
+      /* Tenir/éliminer ne demande aucun territoire neutre : l'IA ignore les
+         diversions et frappe directement le camp qui porte l'objectif. */
+      if (objective.id === 'elimination' || briserTenue)
+        targets = targets.filter(n => n.owner === foeF);
+      /* Quand la domination est presque acquise, seuls les drapeaux peuvent
+         encore la garantir ou la briser. Les feux de camp n'entrent pas dans
+         ce calcul. */
+      if (verrouilleDomination)
+        targets = targets.filter(n => n.kind === 'controle');
       if (!targets.length) return;
       let tgt = null, bs = 1e18;
       for (const t of targets) {
         let prio = 0;
-        if (t.kind === 'production') prio = 2.6;                    // la caserne nourrit tout
-        else if (t.kind === 'banner') prio = 2.4;
-        // EN PANIQUE (l'adversaire va gagner aux points), un point de contrôle
-        // vaut plus que tout — y compris le QG : décapiter prend des minutes,
-        // l'horloge n'en laisse plus.
-        else if (t.kind === 'site') prio = panique ? 4.7 : ctrlHungry ? 3.4 : 2.2;
-        else if (t.kind === 'controle') prio = panique ? 4.5 : ctrlHungry ? 3 : 1.6;
-        else if (t.kind === 'hq') prio = panique ? 0.4 : aiLevel >= 2 ? 2.2 : 0.8;
-        else if (t.kind === 'defense' || t.kind === 'reinforce') prio = 0.7;
-        const ownerMult = t.owner ? 1 : 0.6; // les neutres restent des proies faciles
+        if (t.kind === 'production') prio = briserTenue ? 5.2 : 4.3;
+        else if (t.kind === 'banner') prio = 3.8;
+        else if (t.kind === 'controle') prio = objective.id === 'domination'
+          ? (paniqueDomination ? 7.2 : ctrlHungry ? 5 : 2.7) : 1.4;
+        else if (t.kind === 'hq') {
+          if (objective.id === 'decapitation') prio = 7.5;
+          else if (briserTenue) prio = 6.4;
+          else if (objective.id === 'elimination') prio = 3.8;
+          else prio = paniqueDomination ? .5 : 1.6;
+        } else if (t.kind === 'site') prio = objective.id === 'domination' ? 1.5 : 2.1;
+        else if (t.kind === 'defense') prio = 1.8;
+        else if (t.kind === 'reinforce') prio = 1.5;
+        else if (t.kind === 'avantposte') prio = 1.3;
+        /* Les neutres sont utiles en domination, mais deviennent une perte de
+           temps dès que la mission désigne explicitement le camp adverse. */
+        const ownerMult = t.owner ? 1 : (objective.id === 'domination' ? .72 : 1.25);
         // LA FORCE DU JOUEUR COMPTE : un nœud « faible » gardé par une armée
         // posée à côté n'est pas une cible, c'est une embuscade.
         const score = (defEstimate(f, t) - prio * (6 + aiLevel * 3)) * ownerMult
@@ -3039,11 +3120,14 @@
       // le besoin compte la défense RÉELLE — garnison + armée du joueur sur
       // place et en route — avec une marge qui grandit avec le niveau d'IA :
       // une IA douée ne part pas à 105 % contre une défense qu'elle voit venir.
-      const need = defEstimate(f, tgt) * (1.05 + aiLevel * 0.08);
+      const assautObjectif = (objective.id === 'decapitation' && tgt.kind === 'hq') ||
+        briserTenue || (objective.id === 'domination' && tgt.kind === 'controle' && paniqueDomination);
+      const need = defEstimate(f, tgt) * (assautObjectif ? .92 : 1.05 + aiLevel * 0.08);
       let pow = sources[0].spare * 1.1 * aggro;
       const wave = [sources[0]];
-      if (aiLevel >= 1) {
-        for (let i = 1; i < sources.length && wave.length < 1 + aiLevel && pow <= need; i++) {
+      const maxSources = assautObjectif ? Math.min(sources.length, Math.max(3, 1 + aiLevel)) : 1 + aiLevel;
+      if (aiLevel >= 1 || assautObjectif) {
+        for (let i = 1; i < sources.length && wave.length < maxSources && pow <= need; i++) {
           wave.push(sources[i]);
           pow += sources[i].spare * 1.1 * aggro;
         }
@@ -3051,8 +3135,10 @@
       const minGroup = 3 + aiLevel * 2; // taille minimale d'un assaut
       const total = wave.reduce((s, w) => s + w.spare, 0);
       if (total < minGroup) return;
-      if (pow > need || Math.random() < Math.max(0.03, 0.12 - aiLevel * 0.025) * aggro) {
-        const ratio = bclamp(0.5 + 0.25 * Math.random() * aggro + aiLevel * 0.05, 0.35, 0.9);
+      if (pow > need || (assautObjectif && pow > need * .72) || Math.random() < Math.max(0.03, 0.12 - aiLevel * 0.025) * aggro) {
+        const ratio = assautObjectif
+          ? bclamp(.68 + urgenceTenue * .18 + aiLevel * .04, .62, .94)
+          : bclamp(0.5 + 0.25 * Math.random() * aggro + aiLevel * 0.05, 0.35, 0.9);
         for (const w of wave) sendUnits(w.n, tgt, ratio);
       }
     }
@@ -3539,12 +3625,12 @@
       if (buildMenuId >= 0) {
         const site = nById[buildMenuId];
         if (site && site.owner === pf && site.secured && site.kind === 'site') {
-          const rayon = 62;
+          const menu = buildMenuLayout(site);
           for (let i = 0; i < SITE_BUILDS.length; i++) {
             const a = -Math.PI / 2 + i * Math.PI * 2 / SITE_BUILDS.length;
-            const bx = site.x + Math.cos(a) * rayon;
-            const by = site.y + Math.sin(a) * rayon;
-            if (bdist(w.x, w.y, bx, by) <= 21) {
+            const bx = menu.x + Math.cos(a) * BUILD_MENU_RADIUS;
+            const by = menu.y + Math.sin(a) * BUILD_MENU_RADIUS;
+            if (bdist(w.x, w.y, bx, by) <= BUILD_MENU_BUTTON_R + 3) {
               construirePosition(site, SITE_BUILDS[i].kind, pf);
               emit({ type:'nodeSelected', node:site });
               return;
@@ -3600,7 +3686,7 @@
     // ---- rendu -----------------------------------------------------------
     function drawNode(n, t) {
       const col = n.owner ? FACTION_COL[n.owner] : NEUTRAL_COL;
-      const dessinKind = n.kind === 'site' ? 'controle' : n.kind;
+      const dessinKind = n.kind;
       // halo faction
       const haloR = 38 * COMBAT_SCALE;
       const halo = ctx.createRadialGradient(n.x, n.y + 4, 4, n.x, n.y + 4, haloR);
@@ -3620,14 +3706,15 @@
       // §skins : skin lab dessiné EN DIRECT (boucle d'anim 3.2 s, déphasée par
       // nœud pour éviter l'effet chorale) ; sans skin, sprite cuit historique
       // (l'Étendard et l'Avant-poste passent par leur helper dédié)
-      const lv = window.LabSkins ? LabSkins.building(dessinKind, n.owner) : null;
+      const lv = dessinKind !== 'site' && window.LabSkins ? LabSkins.building(dessinKind, n.owner) : null;
       let drawn = false;
       if (lv) {
         ctx.lineJoin = 'round'; ctx.lineCap = 'round';
         try { lv.draw(ctx, t + n.id * 0.53); drawn = true; } catch (e) { drawn = false; }
       }
       if (!drawn) {
-        const spr = dessinKind === 'banner' ? getBannerSprite(n.owner)
+        const spr = dessinKind === 'site' ? getCampfireSprite(n.owner)
+          : dessinKind === 'banner' ? getBannerSprite(n.owner)
           : dessinKind === 'avantposte' ? getOutpostSprite(n.owner)
             : Sprites.getNodeCanvas(dessinKind, n.owner, 112);
         ctx.drawImage(spr, 0, 0);
@@ -3688,37 +3775,97 @@
       if (buildMenuId < 0) return;
       const n = nById[buildMenuId];
       if (!n || n.owner !== pf || !n.secured || n.kind !== 'site') return;
-      const rayon = 62;
+      const menu = buildMenuLayout(n);
+      const mx = menu.x, my = menu.y;
       ctx.save();
-      ctx.fillStyle = 'rgba(13,20,24,.82)';
-      ctx.beginPath(); ctx.arc(n.x, n.y, 47, 0, Math.PI * 2); ctx.fill();
+
+      if (bdist(mx, my, n.x, n.y) > 2) {
+        ctx.strokeStyle = 'rgba(239,212,127,.72)';
+        ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(mx, my); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.fillStyle = 'rgba(12,19,23,.94)';
+      ctx.strokeStyle = 'rgba(239,212,127,.72)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(mx, my, 54, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.font = '900 8px Nunito, system-ui, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#ffe9a8';
-      ctx.fillText('' + Math.floor(ctrlPts[pf]) + ' PT', n.x, n.y - 4);
-      ctx.font = '700 6px Nunito, system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.74)';
+      ctx.fillText('POINTS DISPONIBLES', mx, my - 21);
+      ctx.font = '900 19px Nunito, system-ui, sans-serif';
+      ctx.fillStyle = '#ffe08a';
+      ctx.fillText('' + Math.floor(ctrlPts[pf]), mx, my - 3);
+      ctx.font = '800 8px Nunito, system-ui, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,.72)';
-      ctx.fillText('À DÉPENSER', n.x, n.y + 6);
+      ctx.fillText('CHOISISSEZ UN BÂTIMENT', mx, my + 18);
+
+      let survole = null;
       for (let i = 0; i < SITE_BUILDS.length; i++) {
         const d = SITE_BUILDS[i];
         const a = -Math.PI / 2 + i * Math.PI * 2 / SITE_BUILDS.length;
-        const x = n.x + Math.cos(a) * rayon, y = n.y + Math.sin(a) * rayon;
-        const sur = bdist(pX, pY, x, y) <= 21;
+        const x = mx + Math.cos(a) * BUILD_MENU_RADIUS, y = my + Math.sin(a) * BUILD_MENU_RADIUS;
+        const sur = bdist(pX, pY, x, y) <= BUILD_MENU_BUTTON_R + 3;
         const disponible = ctrlPts[pf] >= d.cost;
-        ctx.fillStyle = !disponible ? 'rgba(35,40,43,.94)' : sur ? '#efd47f' : 'rgba(25,36,43,.96)';
+        if (sur) survole = d;
+        ctx.fillStyle = !disponible ? 'rgba(33,38,41,.97)' : sur ? '#f0d37a' : 'rgba(20,31,37,.98)';
         ctx.strokeStyle = !disponible ? 'rgba(255,255,255,.18)' : sur ? '#ffffff' : 'rgba(239,212,127,.72)';
-        ctx.lineWidth = sur ? 2.5 : 1.5;
-        ctx.beginPath(); ctx.arc(x, y, sur ? 20 : 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = !disponible ? '#727a79' : sur ? '#182128' : '#efd47f';
-        ctx.font = '900 12px Nunito, system-ui, sans-serif';
-        ctx.fillText(d.sigle, x, y - 5);
-        ctx.font = '800 6px Nunito, system-ui, sans-serif';
-        ctx.fillText(d.cost + ' pt', x, y + 7);
-        if (sur) {
-          ctx.font = '800 7px Nunito, system-ui, sans-serif';
-          ctx.fillStyle = disponible ? '#ffffff' : '#ffb7a8';
-          ctx.fillText(d.name.toUpperCase() + ' · ' + d.cost + ' PT', x, y + 27);
+        ctx.lineWidth = sur ? 3 : 2;
+        ctx.beginPath(); ctx.arc(x, y, sur ? BUILD_MENU_BUTTON_R + 2 : BUILD_MENU_BUTTON_R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        let apercu = null;
+        try {
+          apercu = d.kind === 'avantposte' ? getOutpostSprite(pf)
+            : (window.Sprites && Sprites.getNodeCanvas ? Sprites.getNodeCanvas(d.kind, pf, 112) : null);
+        } catch (e) { apercu = null; }
+        ctx.globalAlpha = disponible ? 1 : .35;
+        if (apercu && apercu.width > 0) ctx.drawImage(apercu, x - 21, y - 27, 42, 42);
+        else {
+          ctx.fillStyle = disponible ? '#efd47f' : '#747b79';
+          ctx.font = '900 18px Nunito, system-ui, sans-serif';
+          ctx.fillText(d.sigle, x, y - 7);
         }
+        ctx.globalAlpha = 1;
+
+        ctx.font = '900 9px Nunito, system-ui, sans-serif';
+        const nomW = Math.max(58, ctx.measureText(d.name.toUpperCase()).width + 14);
+        ctx.fillStyle = sur ? 'rgba(239,212,127,.98)' : 'rgba(12,19,23,.96)';
+        ctx.strokeStyle = sur ? '#ffffff' : 'rgba(239,212,127,.55)'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x - nomW / 2, y + 19, nomW, 27, 6);
+        else ctx.rect(x - nomW / 2, y + 19, nomW, 27);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = sur ? '#182128' : '#ffffff';
+        ctx.font = '900 9px Nunito, system-ui, sans-serif';
+        ctx.fillText(d.name.toUpperCase(), x, y + 28);
+        ctx.fillStyle = !disponible ? '#ff9f8b' : sur ? '#5a401a' : '#ffe08a';
+        ctx.font = '900 9px Nunito, system-ui, sans-serif';
+        ctx.fillText(d.cost + ' POINTS', x, y + 39);
+      }
+
+      if (survole) {
+        const bw = 300;
+        ctx.font = '700 9px Nunito, system-ui, sans-serif';
+        const mots = survole.tip.split(' '), lignes = [];
+        let ligne = '';
+        for (const mot of mots) {
+          const essai = (ligne + ' ' + mot).trim();
+          if (ligne && ctx.measureText(essai).width > bw - 20) { lignes.push(ligne); ligne = mot; }
+          else ligne = essai;
+        }
+        if (ligne) lignes.push(ligne);
+        const bh = 25 + lignes.length * 12;
+        const bx = bclamp(mx - bw / 2, 8, map.w - bw - 8);
+        const by = bclamp(my + BUILD_MENU_RADIUS + 52, 8, map.h - bh - 8);
+        ctx.fillStyle = 'rgba(12,19,23,.96)';
+        ctx.strokeStyle = 'rgba(239,212,127,.72)'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 7); else ctx.rect(bx, by, bw, bh);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ffe08a'; ctx.font = '900 10px Nunito, system-ui, sans-serif';
+        ctx.textAlign = 'left'; ctx.fillText(survole.name.toUpperCase(), bx + 10, by + 12);
+        ctx.fillStyle = '#e8e8e0'; ctx.font = '700 9px Nunito, system-ui, sans-serif';
+        for (let i = 0; i < lignes.length; i++) ctx.fillText(lignes[i], bx + 10, by + 27 + i * 12);
       }
       ctx.restore();
     }
@@ -3733,7 +3880,7 @@
       ctx.font = '600 10px Nunito, system-ui, sans-serif';
       // découpe grossière du tip en lignes de ~34 caractères
       const tip = hn.kind === 'controle'
-        ? 'Majorité de drapeaux = 1 pt/s. Premier à ' + ctrlWin + ' pts gagne.'
+        ? 'Drapeau fixe : il produit des points. Victoire à ' + ctrlWin + ' points, 60 % des drapeaux et 10 s de tenue.'
         : info.tip;
       const words = tip.split(' ');
       const lines = [];
@@ -4152,58 +4299,83 @@
       drawBuildMenu(t);
       drawTooltip();
 
-      // §B (DESIGN13) : SCORE DE CONTRÔLE — jauge cats vs birds en haut du canvas,
-      // dessin flat (deux barres + chiffres). Visible SEULEMENT si la carte a des
-      // nœuds 'controle'. Premier à ctrlWin : la victoire aux points existante.
+      // Objectif de domination : les trois conditions sont affichées séparément
+      // pour qu'un joueur sache immédiatement ce qui manque encore.
       if (ctrlTotal > 0 && objective.id === 'domination') {
-        const bw = 120, bh = 7, gap = 30, gy = 12, cx = map.w / 2;
+        const bw = 150, bh = 10, gap = 42, gy = 23, cx = map.w / 2;
         const kc = bclamp(ctrlPts.cats / ctrlWin, 0, 1);
         const kb = bclamp(ctrlPts.birds / ctrlWin, 0, 1);
-        // fonds
-        ctx.fillStyle = 'rgba(22,26,24,0.55)';
+        ctx.fillStyle = 'rgba(12,19,23,.78)';
+        ctx.fillRect(cx - gap - bw - 8, gy - 18, bw * 2 + gap * 2 + 16, 59);
+        ctx.font = '900 9px Nunito, system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#f3ead1';
+        ctx.fillText('VICTOIRE : POINTS + DRAPEAUX + 10 S DE TENUE', cx, gy - 11);
+
+        ctx.fillStyle = 'rgba(255,255,255,.13)';
         ctx.fillRect(cx - gap - bw, gy, bw, bh);
         ctx.fillRect(cx + gap, gy, bw, bh);
-        // barres : chats vers la gauche depuis le centre, oiseaux vers la droite
         ctx.fillStyle = FACTION_COL.cats;
         ctx.fillRect(cx - gap - bw * kc, gy, bw * kc, bh);
         ctx.fillStyle = FACTION_COL.birds;
         ctx.fillRect(cx + gap, gy, bw * kb, bh);
-        // liserés
         ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
         ctx.strokeRect(cx - gap - bw, gy, bw, bh);
         ctx.strokeRect(cx + gap, gy, bw, bh);
-        // chiffres + drapeau central
-        ctx.font = '800 11px Nunito, system-ui, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(25,25,35,0.85)';
+        ctx.font = '900 12px Nunito, system-ui, sans-serif';
+        ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(25,25,35,.9)';
         const yTxt = gy + bh / 2 + 0.5;
-        ctx.strokeText(String(Math.floor(ctrlPts.cats)), cx - gap - bw - 14, yTxt);
-        ctx.fillStyle = FACTION_COL.cats;
-        ctx.fillText(String(Math.floor(ctrlPts.cats)), cx - gap - bw - 14, yTxt);
-        ctx.strokeText(String(Math.floor(ctrlPts.birds)), cx + gap + bw + 14, yTxt);
-        ctx.fillStyle = FACTION_COL.birds;
-        ctx.fillText(String(Math.floor(ctrlPts.birds)), cx + gap + bw + 14, yTxt);
-        ctx.font = '11px system-ui, sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeText('' + ctrlWin, cx, yTxt);
-        ctx.fillText('' + ctrlWin, cx, yTxt);
+        ctx.strokeText('BOURG  ' + Math.floor(ctrlPts.cats) + ' / ' + ctrlWin, cx - gap - bw / 2, yTxt);
+        ctx.fillStyle = '#ffffff'; ctx.fillText('BOURG  ' + Math.floor(ctrlPts.cats) + ' / ' + ctrlWin, cx - gap - bw / 2, yTxt);
+        ctx.strokeText('NUÉE  ' + Math.floor(ctrlPts.birds) + ' / ' + ctrlWin, cx + gap + bw / 2, yTxt);
+        ctx.fillStyle = '#ffffff'; ctx.fillText('NUÉE  ' + Math.floor(ctrlPts.birds) + ' / ' + ctrlWin, cx + gap + bw / 2, yTxt);
+
         const requis = Math.max(1, Math.ceil(ctrlTotal * .6));
         let tenues = 0;
         for (const n of ctrlNodes) if (n.owner === pf && n.secured !== false) tenues++;
-        ctx.font = '700 7px Nunito, system-ui, sans-serif';
-        ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(25,25,35,.82)';
-        const condition = tenues + '/' + requis + ' positions · tenir ' + dominanceHold[pf] + '/' + DOMINANCE_SECONDS + ' s';
-        ctx.strokeText(condition, cx, gy + 18);
-        ctx.fillStyle = '#f2eee5'; ctx.fillText(condition, cx, gy + 18);
+        const etapes = [
+          { ok:ctrlPts[pf] >= ctrlWin, txt:'POINTS ' + Math.floor(ctrlPts[pf]) + '/' + ctrlWin },
+          { ok:tenues >= requis, txt:'DRAPEAUX ' + tenues + '/' + requis },
+          { ok:dominanceHold[pf] >= DOMINANCE_SECONDS, txt:'TENUE ' + dominanceHold[pf] + '/' + DOMINANCE_SECONDS + ' s' },
+        ];
+        const ew = 112, egap = 7, ex = cx - (ew * 3 + egap * 2) / 2;
+        ctx.font = '900 9px Nunito, system-ui, sans-serif';
+        for (let i = 0; i < etapes.length; i++) {
+          const e = etapes[i], x = ex + i * (ew + egap), y = gy + 18;
+          ctx.fillStyle = e.ok ? 'rgba(79,139,91,.92)' : 'rgba(37,47,50,.96)';
+          ctx.strokeStyle = e.ok ? '#b8e5b5' : 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(x, y, ew, 18, 5); else ctx.rect(x, y, ew, 18);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = e.ok ? '#ffffff' : '#e5dfd0';
+          ctx.fillText((e.ok ? '✓ ' : '') + e.txt, x + ew / 2, y + 9.5);
+        }
         ctx.textBaseline = 'middle';
       }
       if (objective.id === 'tenir' && !ended) {
         const cx = map.w / 2, sec = Math.ceil(objectiveLeft);
-        ctx.font = '900 13px Nunito, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(12,19,23,.82)';
+        ctx.fillRect(cx - 135, 7, 270, 30);
+        ctx.font = '900 14px Nunito, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,25,28,.8)';
-        ctx.strokeText('TENIR  ' + sec + ' s', cx, 18);
-        ctx.fillStyle = '#ffe9a8'; ctx.fillText('TENIR  ' + sec + ' s', cx, 18);
+        ctx.strokeText('TENIR LA TÊTE DE PONT · ' + sec + ' s', cx, 22);
+        ctx.fillStyle = '#ffe9a8'; ctx.fillText('TENIR LA TÊTE DE PONT · ' + sec + ' s', cx, 22);
+      } else if (objective.id === 'decapitation' && !ended) {
+        const cx = map.w / 2;
+        ctx.fillStyle = 'rgba(12,19,23,.82)'; ctx.fillRect(cx - 165, 7, 330, 30);
+        ctx.font = '900 13px Nunito, system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffe9a8'; ctx.fillText('OBJECTIF · CAPTURER LE QG DE LA NUÉE', cx, 22);
+      } else if (objective.id === 'elimination' && !ended) {
+        const cx = map.w / 2;
+        const posE = ns.filter(n => n.owner === ef).length;
+        const unitE = agents.filter(a => a.f === ef && !a.dead).length;
+        ctx.fillStyle = 'rgba(12,19,23,.82)'; ctx.fillRect(cx - 178, 7, 356, 30);
+        ctx.font = '900 12px Nunito, system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffe9a8';
+        ctx.fillText('ÉLIMINER LA NUÉE · ' + posE + ' POSITIONS · ' + unitE + ' UNITÉS', cx, 22);
       }
 
       // mini nombres de dégâts
@@ -4280,13 +4452,13 @@
     // ---- API publique -----------------------------------------------------
     function getControl() {
       let c = 0, b = 0;
-      for (const n of ns) {
+      for (const n of ctrlNodes) {
         if (n.secured === false) continue;
         if (n.owner === 'cats') c++;
         else if (n.owner === 'birds') b++;
       }
-      const tot = ns.length || 1;
-      return { cats: c / tot, birds: b / tot };
+      const tot = ctrlTotal || 1;
+      return { cats: c / tot, birds: b / tot, heldCats:c, heldBirds:b, total:ctrlTotal };
     }
 
     function getBattleStatus() {
@@ -4298,13 +4470,16 @@
       }
       return {
         objective:{ id:objective.id, nom:objective.nom || objective.id,
-          left:objectiveLeft, total:objectiveTotal },
+          desc:objective.desc || '', left:objectiveLeft, total:objectiveTotal },
         sites:{ cats:heldC, birds:heldB, neutral:Math.max(0, ctrlTotal - heldC - heldB - unsecured), securing:unsecured, total:ctrlTotal },
         score:{ cats:Math.floor(ctrlPts.cats), birds:Math.floor(ctrlPts.birds), target:ctrlWin,
           holdCats:dominanceHold.cats, holdBirds:dominanceHold.birds,
           holdTarget:DOMINANCE_SECONDS, requiredSites:Math.max(1, Math.ceil(ctrlTotal * .6)) },
         wave:eReinf && eReinfLeft > 0 ? { left:eReinfLeft, next:Math.max(0, eReinfT) } : null,
         retreat:retreat ? { left:retreat.left, total:retreat.total, nodeId:retreat.node.id } : null,
+        enemy:{ positions:ns.filter(n => n.owner === ef).length,
+          units:agents.filter(a => a.f === ef && !a.dead).length,
+          hq:!!ns.find(n => n.kind === 'hq' && n.owner === ef) },
         losses:playerLosses, fog:fogEnabled,
       };
     }

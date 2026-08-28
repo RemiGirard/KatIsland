@@ -114,7 +114,7 @@
       bat: {},                       // idInstance -> { type, niv, xp, outil, postes[] , enChantier }
       seqBat: 0,
 
-      habitants: [],                 // { id, nom, aff:{k:'poste'|'chantier'|'garnison', bat, i} }
+      habitants: [],                 // { id, nom, aff:{k:'poste'|'garnison', bat, i} }
       seqHab: 0,
 
       chantier: { file: [], prog: 0, ouvriers: [] },
@@ -656,12 +656,11 @@
     return true;
   }
   function affecterChantier(hid) {
-    const h = habitant(hid); if (!h) return false;
-    libererHabitant(hid);
-    E.chantier.ouvriers.push(hid);
-    h.aff = { k: 'chantier' };
-    prevenir('affectation', h);
-    return true;
+    /* Conservé dans l'API pour les anciennes extensions, mais la construction
+       est désormais autonome et ne réquisitionne plus personne. */
+    const h = habitant(hid);
+    if(h&&h.aff&&h.aff.k==='chantier')libererHabitant(hid);
+    return false;
   }
 
   /* =================================================================
@@ -773,6 +772,9 @@
           if (!window.BAT[d.bat[bid].type]) delete d.bat[bid];
       }
       if (!d.aventure) d.aventure = { profondeur: 0, record: 0, encours: null, sacoche: {} };
+      if(!d.chantier)d.chantier={file:[],prog:0,ouvriers:[]};
+      for(const h of(d.habitants||[]))if(h.aff&&h.aff.k==='chantier')h.aff=null;
+      d.chantier.ouvriers=[];
       if (!d.armee) d.armee = { unites: 0, xp: 0, palierArme: 0, palierArmure: 0, garnison: 0 };
       if (!d.territoires) d.territoires = [];
       /* Les anciennes parties gagnent le conseiller sans être interrompues

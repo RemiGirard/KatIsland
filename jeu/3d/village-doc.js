@@ -9974,11 +9974,16 @@ function architectureSpecialeV19(c,L,sp,part,dRet,y){
              (le large est toujours en -a, cf. la règle bordEau). Le jeu n'a
              donc rien à deviner : l'orientation découle de la contrainte de
              pose. Pieux battus, planches inégales, bollards, tonneaux de
-             poissons, filets, et un voilier amarré au bout. */
+             poissons et filets. Le navire amarré est fourni par Port3D :
+             il peut ainsi réellement appareiller avec l'expédition. */
           {
             const bDeb=-.02, bFin=.02;          // axe du ponton, centré
-            const aDeb=-.30, aFin=-.92;         // du nez du quai vers le large
-            const NP=9;
+            /* La rive visuelle (plage comprise) dépasse largement la
+               cellule constructible. L'ancien bout à -.92 restait sur
+               l'herbe ; -2.10 rejoint le point d'amarrage calculé par
+               Village.pontonDe (face d'eau + 1.60 unité). */
+            const aDeb=-.30, aFin=-2.10;        // du nez du quai jusque dans la mer
+            const NP=18;
             // pieux battus, par paires, de plus en plus longs vers le large
             for(let k=0;k<=NP;k++){
               const t=k/NP, aa=aDeb+(aFin-aDeb)*t;
@@ -9995,7 +10000,7 @@ function architectureSpecialeV19(c,L,sp,part,dRet,y){
             // longerons et platelage : planches de largeurs et teintes inégales
             for(const sg of[-1,1])
               poutre(P(aDeb,bDeb+sg*.066,y+.034),P(aFin,bDeb+sg*.066,y+.034),.014,usure('#5f4a32',sg*7,.16));
-            const NL=22;
+            const NL=42;
             for(let k=0;k<NL;k++){
               const aa=aDeb+(aFin-aDeb)*(k+.5)/NL, q=P(aa,bDeb,y);
               boiteOr(q[0],q[2],f[0],f[1],(aFin-aDeb)/(-2*NL)-.002,.082,y+.040,y+.056,
@@ -10033,61 +10038,9 @@ function architectureSpecialeV19(c,L,sp,part,dRet,y){
               for(let k=0;k<3;k++)
                 ellV19(q[0]+Math.cos(k*2.1)*.062,y+.070,q[2]+Math.sin(k*2.1)*.062,.014,.014,.014,usure('#a05a3f',k*9,.16),6,3);
             }
-            /* le VOILIER qui attend au bout du ponton : coque galbée, mât,
-               vergue et voile carguée, amarré par deux aussières */
-            {
-              const ba=aFin+.06, bb=bDeb+.20;
-              const dx=f[0], dz=f[1], px=-dz, pz=dx;
-              const q=P(ba,bb,y);
-              const L=.30, W=.078, yq=y-.050, yp=y+.075;
-              const prof=(t)=>Math.sin(Math.PI*(.10+.80*t));
-              for(let k=0;k<8;k++){
-                const t0=k/8, t1=(k+1)/8;
-                const u0=-L+2*L*t0, u1=-L+2*L*t1;
-                const w0=W*prof(t0), w1=W*prof(t1);
-                for(const sg of[-1,1]){
-                  const A=[q[0]+dx*u0,yq,q[2]+dz*u0], B=[q[0]+dx*u1,yq,q[2]+dz*u1];
-                  const C=[q[0]+dx*u1+px*sg*w1,yp,q[2]+dz*u1+pz*sg*w1];
-                  const D=[q[0]+dx*u0+px*sg*w0,yp,q[2]+dz*u0+pz*sg*w0];
-                  const M0=[q[0]+dx*u0+px*sg*w0*.70,(yq+yp)/2-.008,q[2]+dz*u0+pz*sg*w0*.70];
-                  const M1=[q[0]+dx*u1+px*sg*w1*.70,(yq+yp)/2-.008,q[2]+dz*u1+pz*sg*w1*.70];
-                  pousserQuad(A,B,M1,M0,usure(['#7a5c3f','#6d5136','#83643f'][k%3],k*7,.18),[px*sg,.2,pz*sg],false);
-                  pousserQuad(M0,M1,C,D,usure(['#8a6a47','#7d5f40','#6d5136'][(k+1)%3],k*9,.18),[px*sg,.3,pz*sg],false);
-                  poutre(D,C,.008,usure('#6a5340',k*11,.14));
-                }
-                if(k===4) poutre([q[0]+dx*u0-px*W*prof(t0)*.9,yp-.016,q[2]+dz*u0-pz*W*prof(t0)*.9],
-                                 [q[0]+dx*u0+px*W*prof(t0)*.9,yp-.016,q[2]+dz*u0+pz*W*prof(t0)*.9],.010,usure('#6a5340',13,.16));
-              }
-              // étrave et étambot
-              poutre([q[0]-dx*L,yq,q[2]-dz*L],[q[0]-dx*(L+.030),yp+.040,q[2]-dz*(L+.030)],.014,usure('#5a4229',3,.14));
-              poutre([q[0]+dx*L,yq,q[2]+dz*L],[q[0]+dx*(L+.036),yp+.056,q[2]+dz*(L+.036)],.014,usure('#5a4229',5,.14));
-              // pont, écoutille et gouvernail
-              boiteOr(q[0],q[2],dx,dz,L*.72,W*.62,yp-.012,yp,usure('#6d5136',7,.16));
-              boiteOr(q[0]-dx*.10,q[2]-dz*.10,dx,dz,.036,.030,yp,yp+.026,usure('#5a4229',9,.16));
-              poutre([q[0]+dx*(L+.010),yp-.010,q[2]+dz*(L+.010)],[q[0]+dx*(L+.030),yq+.020,q[2]+dz*(L+.030)],.012,usure('#6a5340',11,.14));
-              // mât, hauban et vergue avec la voile carguée
-              const mx=q[0]+dx*L*.10, mz=q[2]+dz*L*.10;
-              poutre([mx,yp-.010,mz],[mx,yp+.62,mz],.013,usure('#6a5340',13,.14));
-              for(const sg of[-1,1])
-                poutre([mx,yp+.58,mz],[q[0]+dx*L*.10+px*sg*W*.9,yp+.006,q[2]+dz*L*.10+pz*sg*W*.9],.003,teinte('#a8956e',1));
-              poutre([mx,yp+.58,mz],[q[0]-dx*L*.92,yp+.010,q[2]-dz*L*.92],.003,teinte('#a8956e',1));
-              const my=yp+.44;
-              poutre([mx-px*.115,my,mz-pz*.115],[mx+px*.115,my,mz+pz*.115],.009,usure('#6a5340',15,.12));
-              for(let k=0;k<5;k++)
-                ellV19(mx+px*(-.088+k*.044),my-.022,mz+pz*(-.088+k*.044),.030,.016,.016,usure('#cfc6ad',k*7,.14),8,3);
-              // pavillon en tête de mât
-              etendards.push({x:mx,y:yp+.54,z:mz,angle:Math.atan2(pz,px),
-                              coul:'#9c4534',forme:'pennon',cle:cle+711});
-              // aussières du bateau vers deux bollards du ponton
-              for(let k=0;k<2;k++){
-                const A=[q[0]-dx*(L*(k?0.8:-0.8)),yp,q[2]-dz*(L*(k?0.8:-0.8))];
-                const B=P(aDeb-.10-(k?0:3)*.18,bDeb+.082,y+.110);
-                poutre(A,B,.004,teinte('#b3a179',1));
-              }
-            }
             // deux mouettes posées sur les bollards du bout
             for(let k=0;k<2;k++){
-              const q=P(aDeb-.10-k*.54,bDeb-.082,y);
+              const q=P(aFin+.12+k*.32,bDeb-.082,y);
               ellV19(q[0],y+.150,q[2],.024,.018,.016,usure('#e2ddd4',k*7,.12),8,4);
               ellV19(q[0]+f[0]*.020,y+.166,q[2]+f[1]*.020,.011,.011,.011,usure('#efe8de',k*9,.10),7,3);
               pousserTri([q[0]+f[0]*.030,y+.166,q[2]+f[1]*.030],
