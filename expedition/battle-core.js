@@ -45,22 +45,30 @@
   const UNIT_ORDER = BGD.UNIT_ORDER;
 
   // badges de lisibilité au-dessus des bâtiments + tooltips FR
-  const BADGES = { production: '', defense: '', reinforce: '', controle: '', banner: '', avantposte: '' };
+  const BADGES = { site: '', production: '', defense: '', reinforce: '', controle: '', banner: '', avantposte: '' };
   const CTRL_WIN_DEFAULT = (BGD.BALANCE && BGD.BALANCE.controlWinPoints) || 120;
   // §B (DESIGN13) : portée UNIFIÉE des tours de garde (riposte des nœuds 'defense')
   const TOWER_RANGE = (BGD.BALANCE && BGD.BALANCE.towerRange) || 185;
   const AOE_MAX = (BGD.BALANCE && BGD.BALANCE.aoeMaxTargets) || 4;
   const AOE_DECAY = [1, 0.7, 0.4, 0.2];
   const NODE_INFO = {
+    site:       { name: 'Position tactique',   tip: 'Sécurisez-la, puis dépensez vos points tactiques pour choisir son aménagement.' },
     hq:         { name: 'Quartier général',    tip: 'Produit des recrues. S’il tombe, tout tombe.' },
     production: { name: 'Caserne',             tip: 'Produit des unités en continu. À protéger, évidemment.' },
     defense:    { name: 'Tour de garde',       tip: 'Tire sur tout ennemi qui approche. Zéro sommation.' },
     reinforce:  { name: 'Totem de ralliement', tip: '+25% PV et dégâts aux unités alliées qui sortent à proximité.' },
-    controle:   { name: 'Point de contrôle',   tip: 'Majorité de drapeaux = 1 pt/s. Gardez-les jusqu’au score de victoire.' },
+    controle:   { name: 'Point de contrôle',   tip: 'Les positions sécurisées rapportent des points tactiques tant qu’elles restent sous contrôle.' },
     banner:     { name: 'Étendard',            tip: '+10% dégâts ET PV à toutes les troupes du propriétaire. Cumulable. Convoité, forcément.' },
     neutral:    { name: 'Borne neutre',        tip: 'Un caillou stratégiquement décoratif. Capturez-le quand même.' },
     avantposte: { name: 'Avant-poste',         tip: 'Capturé : vos renforts y débarquent + aura de soin (2 PV/s) pour les alliés proches.' },
   };
+  const SITE_BUILDS = [
+    { kind:'production', name:'Caserne',     sigle:'C', cost:34, tip:'Produit régulièrement des lanciers. Puissante, mais très chère.' },
+    { kind:'defense',    name:'Tour',        sigle:'T', cost:22, tip:'Tire sur les ennemis qui approchent.' },
+    { kind:'reinforce',  name:'Totem',       sigle:'R', cost:18, tip:'Renforce les troupes qui en sortent.' },
+    { kind:'banner',     name:'Étendard',    sigle:'E', cost:28, tip:'Améliore les PV et dégâts de toute l’armée.' },
+    { kind:'avantposte', name:'Avant-poste', sigle:'A', cost:14, tip:'Soigne et devient un point de débarquement.' },
+  ];
 
   const COMBAT_SCALE = (BGD.BALANCE && BGD.BALANCE.combatScale) || 1;
   const NODE_R = 26 * COMBAT_SCALE;          // rayon logique d'un nœud
@@ -94,7 +102,11 @@
     const pf = cfg.playerFaction || 'cats';
     const ef = BGD.other(pf);
     const difficulty = cfg.difficulty || 1;
-    const ctrlWin = Math.max(1, Math.round(cfg.controlWinPoints || CTRL_WIN_DEFAULT));
+    const ctrlWinBase = Math.max(1, Math.round(cfg.controlWinPoints || CTRL_WIN_DEFAULT));
+    const ctrlWin = map.tacticalSites ? Math.max(70, ctrlWinBase) : ctrlWinBase;
+    const objective = cfg.objective || { id: 'domination', nom: 'Domination' };
+    let objectiveLeft = objective.id === 'tenir' ? Math.max(20, +objective.duree || 75) : 0;
+    const objectiveTotal = objectiveLeft;
     const enemyLook = cfg.enemyLook || { weapon: 0, armor: 0, evo: 0 };
     const AGENT_CAP = (BGD.BALANCE && BGD.BALANCE.agentCap) || 400;
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -102,6 +114,8 @@
     let destroyed = false, ended = false;
     let sendRatio = 0.5;
     let selectedId = -1;
+    let buildMenuId = -1;
+    let retreat = null;
     let simT = 0; // horloge interne (secondes)
     let autoPilot = false; // IA aux commandes du camp joueur (mode farm)
     let deathFxBudget = 6; // throttle des morts en chaîne (fx/sons)
@@ -345,6 +359,7 @@
     // ---- état runtime des nœuds ---------------------------------
     const ns = map.nodes.map(src => ({
       id: src.id, x: src.x, y: src.y, kind: src.kind,
+      plannedKind: src.plannedKind || null,
       owner: src.owner || null,
       g: Object.assign({}, src.garrison),
       cap: src.cap, prodRate: src.prodRate || 0, prodType: src.prodType || 'lancier',
@@ -356,6 +371,9 @@
       logiT: 0, espionHit: null, // §7 : aura porteur + participation espion à la capture
       prodBlockT: 0, // §boss corbeau (blockprod) : prod gelée tant que > 0
       healT: 0, // §B avant-poste : tick de l'aura de soin
+      secured: src.kind === 'hq' || !map.tacticalSites,
+      claimLeft: 0, claimTotal: 0, claimFrom: null,
+      built: src.kind !== 'site',
     }));
     const nById = {};
     for (const n of ns) nById[n.id] = n;
@@ -371,10 +389,19 @@
     }
 
     // état de la victoire par points de contrôle
-    const ctrlNodes = ns.filter(n => n.kind === 'controle');
+    /* Sur les nouvelles cartes, chaque position est un point de contrôle :
+       le bâtiment choisi ensuite en modifie la fonction, jamais sa valeur
+       territoriale. Les anciennes cartes conservent leurs drapeaux dédiés. */
+    const ctrlNodes = map.tacticalSites ? ns.filter(n => n.kind !== 'hq')
+                                       : ns.filter(n => n.kind === 'controle');
     const ctrlTotal = ctrlNodes.length;
-    const ctrlPts = { cats: 0, birds: 0 };
+    /* Une seule monnaie tactique : les éliminations et les positions en
+       rapportent, les implantations la dépensent, et la victoire exige
+       d'en conserver assez tout en dominant réellement la carte. */
+    const ctrlPts = { cats: 24, birds: 24 };
     let ctrlAcc = 0;
+    const dominanceHold = { cats:0, birds:0 };
+    const DOMINANCE_SECONDS = 10;
     // §6 (D15) Drapeaux : le camp du JOUEUR accumule ses points ×(1+eff).
     // Fraction portée dans ctrlFrac pour que ctrlPts reste un ENTIER (affichage).
     const ctrlFrac = { cats: 0, birds: 0 };
@@ -442,6 +469,7 @@
     const environment = cfg.environment || null;
     let envT = 0;
     const envRocks = [];
+    const envWarnings = [];
     let agentSeq = 1;
     let regSeq = 0;   // §régiment : compteur de vagues (concept RUNTIME, jamais sérialisé)
     const projectiles = [];
@@ -456,6 +484,84 @@
        ce chiffre qui décide de ce qui remonte à bord. */
     let playerLosses = 0;
     let espionLoot = 0; // §7 : butin de food ramassé sur les captures avec espion
+    function donnerPoints(faction, montant, source) {
+      if ((faction !== 'cats' && faction !== 'birds') || !(montant > 0)) return;
+      ctrlPts[faction] = Math.max(0, ctrlPts[faction] + montant);
+      emit({ type:'tacticalPoints', faction, amount:montant, source,
+        cats:ctrlPts.cats, birds:ctrlPts.birds });
+    }
+    function valeurElimination(a) {
+      if (!a) return 1;
+      if (a.boss) return 8;
+      const rang = Math.max(0, UNIT_ORDER.indexOf(a.type));
+      return 1 + Math.min(3, Math.floor(rang / 7));
+    }
+    const fogEnabled = !!cfg.fogOfWar;
+    const fogCv = document.createElement('canvas');
+    fogCv.width = map.w; fogCv.height = map.h;
+    const fogCtx = fogCv.getContext('2d');
+    const visionStamp = document.createElement('canvas');
+    visionStamp.width = visionStamp.height = 256;
+    {
+      const vg = visionStamp.getContext('2d');
+      const gr = vg.createRadialGradient(128, 128, 20, 128, 128, 126);
+      gr.addColorStop(0, 'rgba(255,255,255,1)');
+      gr.addColorStop(0.62, 'rgba(255,255,255,.96)');
+      gr.addColorStop(1, 'rgba(255,255,255,0)');
+      vg.fillStyle = gr; vg.fillRect(0, 0, 256, 256);
+    }
+    function visionAgent(a) {
+      if (!a) return 0;
+      if (a.type === 'eclaireur') return 190;
+      if (a.type === 'espion' || a.type === 'traqueur') return 165;
+      if (a.st && a.st.range > 0) return 112;
+      return 88;
+    }
+    function visionNoeud(n) {
+      if (!n || n.owner !== pf || n.secured === false) return 0;
+      if (n.kind === 'hq') return 235;
+      if (n.kind === 'avantposte') return 210;
+      if (n.kind === 'defense') return 190;
+      if (n.kind === 'banner') return 178;
+      if (n.kind === 'reinforce') return 172;
+      if (n.kind === 'production') return 166;
+      return 158;
+    }
+    function visibleJoueur(x, y) {
+      if (!fogEnabled) return true;
+      for (const n of ns) {
+        const r = visionNoeud(n);
+        if (r && bdist(x, y, n.x, n.y) <= r) return true;
+      }
+      for (const a of agents) {
+        if (a.dead || a.f !== pf) continue;
+        if (bdist(x, y, a.x, a.y) <= visionAgent(a)) return true;
+      }
+      return false;
+    }
+    function drawFog() {
+      if (!fogEnabled) return;
+      fogCtx.setTransform(1, 0, 0, 1, 0, 0);
+      fogCtx.globalCompositeOperation = 'source-over';
+      fogCtx.globalAlpha = 1;
+      fogCtx.clearRect(0, 0, map.w, map.h);
+      fogCtx.fillStyle = 'rgba(70,77,75,.68)';
+      fogCtx.fillRect(0, 0, map.w, map.h);
+      fogCtx.globalCompositeOperation = 'destination-out';
+      for (const n of ns) {
+        const r = visionNoeud(n); if (!r) continue;
+        fogCtx.drawImage(visionStamp, n.x - r, n.y - r, r * 2, r * 2);
+      }
+      for (const a of agents) {
+        if (a.dead || a.f !== pf) continue;
+        const r = visionAgent(a);
+        fogCtx.globalAlpha = 0.96;
+        fogCtx.drawImage(visionStamp, a.x - r, a.y - r, r * 2, r * 2);
+      }
+      fogCtx.globalAlpha = 1;
+      fogCtx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(fogCv, 0, 0, map.w, map.h);
+    }
 
     // ---- BOSS DE CARTE (DESIGN9 §Bataille) v2 : présences NEUTRES, INVULNÉRABLES,
     // PERMANENTES. Plus de PV, plus de mort, plus de badge. Elles n'encaissent RIEN :
@@ -1029,6 +1135,11 @@
         spawnSoul(a.f, a.x, a.y, Math.max(12, 40 * a.scale)); // §B5 : âme au champ
         if (spellFx.length) spellDeathHook(a); // §D4 ames : moisson d'âmes
         if (byFaction === pf) playerKills++;
+        if ((byFaction === 'cats' || byFaction === 'birds') && byFaction !== a.f) {
+          const gainPts = valeurElimination(a);
+          donnerPoints(byFaction, gainPts, 'elimination');
+          if (byFaction === pf) addDmgText(a.x, a.y - 10, '+' + gainPts + ' PT', '#ffe9a8');
+        }
         if (a.f === pf) playerLosses++;
         // throttle des morts en chaîne : au-delà du budget, on meurt discrètement
         if (deathFxBudget > 0) {
@@ -1611,15 +1722,43 @@
       // Personne ne commande la garnison d'en face, même par accident.
       if (n.id === selectedId && faction !== pf) {
         selectedId = -1;
+        if (buildMenuId === n.id) buildMenuId = -1;
         emit({ type: 'nodeSelected', node: null });
       }
-      if (n.kind === 'banner') refreshBanners();
-      // §B avant-poste : on retient le DERNIER capturé — les renforts y débarqueront
-      if (n.kind === 'avantposte') lastOutpost[faction] = n;
       if (byAgent && !byAgent.dead) { // le conquérant plante le drapeau
         n.g[byAgent.type] = 1;
         byAgent.dead = true;
       }
+      /* Une position n'est plus acquise au premier chat qui en franchit
+         le seuil. Elle devient occupée, puis doit être tenue quelques
+         secondes. Une contre-attaque interrompt cette sécurisation. */
+      if (map.tacticalSites && n.kind !== 'hq') {
+        /* Le bâtiment précédent tombe avec la garnison : ce qui change de
+           main est le point stratégique, pas une Caserne ennemie intacte.
+           Le nouveau propriétaire choisira donc sa propre implantation. */
+        const ancienType = n.kind;
+        n.kind = 'site'; n.built = false; n.cap = 45;
+        n.prodRate = 0; n.defBonus = 0; n.prodAcc = 0;
+        if (ancienType === 'banner') refreshBanners();
+        n.secured = false;
+        n.claimTotal = Math.max(2, cfg.captureSeconds || 4.5);
+        n.claimLeft = n.claimTotal;
+        n.claimFrom = wasOwner;
+        n.bump = 1;
+        addDmgText(n.x, n.y - 25, 'SÉCURISATION', FACTION_COL[faction]);
+        emit({ type:'captureStarted', node:n, by:faction, from:wasOwner,
+          duration:n.claimTotal });
+        return;
+      }
+      finaliserCapture(n, faction, wasOwner);
+    }
+
+    function finaliserCapture(n, faction, wasOwner) {
+      n.secured = true;
+      n.claimLeft = 0;
+      if (n.kind === 'banner') refreshBanners();
+      // §B avant-poste : on retient le DERNIER capturé — les renforts y débarqueront
+      if (n.kind === 'avantposte') lastOutpost[faction] = n;
       const col = FACTION_COL[faction];
       puff(n.x, n.y, col, 16, 60, 3);
       puff(n.x, n.y, '#ffffff', 8, 40, 2);
@@ -1633,6 +1772,18 @@
       sfx('capture', 280);
       emit({ type: 'capture', node: n, by: faction, from: wasOwner });
       emit(Object.assign({ type: 'controlChange' }, getControl()));
+      if (map.tacticalSites && n.kind === 'site') {
+        if (faction === pf) {
+          selectedId = n.id;
+          buildMenuId = n.id;
+          emit({ type:'buildMenu', node:n, choices:SITE_BUILDS.slice() });
+          emit({ type:'nodeSelected', node:n });
+        } else {
+          const voulu = SITE_BUILDS.some(x => x.kind === n.plannedKind)
+            ? n.plannedKind : SITE_BUILDS[(n.id + Math.floor(simT)) % SITE_BUILDS.length].kind;
+          construirePosition(n, voulu, faction);
+        }
+      }
       // §B (DESIGN13) : DÉCAPITATION — prendre un QG finit la bataille SUR-LE-CHAMP
       // (victory si le joueur décapite, defeat si c'est son QG qui tombe).
       // checkEnd garde ses conditions d'annihilation en secours.
@@ -1641,6 +1792,58 @@
         sfx(faction === pf ? 'win' : 'lose');
         emit({ type: faction === pf ? 'victory' : 'defeat', reason: 'hq' });
       }
+    }
+
+    function reglerTypeNoeud(n, kind) {
+      n.kind = kind;
+      n.built = true;
+      n.prodRate = 0;
+      n.defBonus = 0;
+      n.cap = 45;
+      if (kind === 'production') { n.cap = 70; n.prodRate = 0.58; n.prodType = n.owner === pf ? 'lancier' : ((map.epool && map.epool[0]) || 'lancier'); }
+      else if (kind === 'defense') { n.cap = 50; n.defBonus = 0.5; }
+      else if (kind === 'reinforce') n.cap = 45;
+      else if (kind === 'banner') n.cap = 40;
+      else if (kind === 'avantposte') n.cap = 45;
+      n.bump = 1;
+      if (kind === 'banner') refreshBanners();
+      if (kind === 'avantposte' && n.owner) lastOutpost[n.owner] = n;
+    }
+
+    function construirePosition(n, kind, faction) {
+      if (!n || n.owner !== faction || !n.secured || n.kind !== 'site') return false;
+      const def = SITE_BUILDS.find(x => x.kind === kind);
+      if (!def) return false;
+      if ((ctrlPts[faction] || 0) < def.cost) {
+        if (faction === pf) {
+          addDmgText(n.x, n.y - 25, 'IL MANQUE ' + Math.ceil(def.cost - (ctrlPts[faction] || 0)) + ' PT', '#ffb7a8');
+          emit({ type:'buildDenied', node:n, kind, cost:def.cost, points:ctrlPts[faction] || 0 });
+        }
+        return false;
+      }
+      ctrlPts[faction] -= def.cost;
+      reglerTypeNoeud(n, kind);
+      buildMenuId = -1;
+      puff(n.x, n.y, FACTION_COL[faction], 18, 55, 3);
+      addDmgText(n.x, n.y - 25, (NODE_INFO[kind] || { name:kind }).name.toUpperCase(), '#ffe9a8');
+      emit({ type:'nodeBuilt', node:n, by:faction, kind, cost:def.cost,
+        cats:ctrlPts.cats, birds:ctrlPts.birds });
+      sfx('deploy', 100);
+      return true;
+    }
+
+    function updateSecurisation(n, dt) {
+      if (n.secured || !n.owner || !(n.claimLeft > 0)) return;
+      let conteste = false;
+      eachNear(n.x, n.y, NODE_R + 24, a => {
+        if (!a.dead && a.f !== n.owner) conteste = true;
+      });
+      if (conteste || nodeGTot(n) <= 0) {
+        n.claimLeft = Math.min(n.claimTotal, n.claimLeft + dt * 0.35);
+        return;
+      }
+      n.claimLeft -= dt;
+      if (n.claimLeft <= 0) finaliserCapture(n, n.owner, n.claimFrom);
     }
 
     // §B4 : dégâts d'UN type de défenseur (pour les duels 1v1 dans le bâtiment).
@@ -2496,6 +2699,7 @@
 
     // ---- tours + riposte de garnison ------------------------------
     function updateNodeCombat(n, dt) {
+      if (n.secured === false) return;
       // tour de défense : flèches. MAJ §3 : dégâts de base ×2 (5 → 10) et 3 pistes
       // d'ingénierie distinctes — 'tower' (dégâts), 'towerCount' (flèches par
       // volée), 'towerRate' (cadence). Scaling IA via cfg.enemyBuilding.
@@ -2717,6 +2921,20 @@
       const mine = ns.filter(n => n.owner === f);
       if (!mine.length) return;
       const foeF = BGD.other(f);
+      /* L'IA paie les mêmes implantations. Si son choix prévu est encore
+         trop cher, elle attend au lieu de recevoir une Caserne gratuite. */
+      const chantier = mine.find(n => n.kind === 'site' && n.secured);
+      if (chantier) {
+        const voulu = SITE_BUILDS.some(x => x.kind === chantier.plannedKind)
+          ? chantier.plannedKind : 'avantposte';
+        if (construirePosition(chantier, voulu, f)) return;
+        const alternatives = ['defense', 'reinforce', 'avantposte', 'banner', 'production'];
+        const abordable = alternatives.find(k => {
+          const d = SITE_BUILDS.find(x => x.kind === k);
+          return d && d.cost <= (ctrlPts[f] || 0);
+        });
+        if (abordable && construirePosition(chantier, abordable, f)) return;
+      }
       const ctrl = getControl();
       // rubber-band en collectif : le camp minoritaire défend plus
       let aggro = difficulty;
@@ -2747,7 +2965,9 @@
       // renforts partaient toujours un combat trop tard. On regarde maintenant
       // les unités du joueur EN VOL : si ce qui arrive dépasse ce qui tient la
       // porte, le nœud appelle à l'aide AVANT le premier coup.
-      const defPrio = { hq: 4, banner: 3, controle: conserve || panique ? 4.2 : 2.5, production: 2, defense: 1, reinforce: 1, avantposte: 0.5 };
+      const defPrio = { hq: 4, banner: 3, site: conserve || panique ? 4.4 : 3,
+        controle: conserve || panique ? 4.2 : 2.5, production: 2, defense: 1,
+        reinforce: 1, avantposte: 0.5 };
       let hurt = null, hurtScore = -1;
       for (const n of mine) {
         const entrant = fieldNear(f, n, 90);           // les unités ADVERSES proches ou en route
@@ -2774,8 +2994,8 @@
       // points de contrôle, QG. Minoritaire aux points de contrôle (condition
       // de victoire !) → ils passent en tête.
       let myCtrl = 0, foeCtrl = 0;
-      for (const cn of ns) {
-        if (cn.kind !== 'controle') continue;
+      for (const cn of ctrlNodes) {
+        if (cn.secured === false) continue;
         if (cn.owner === f) myCtrl++; else if (cn.owner === foeF) foeCtrl++;
       }
       const ctrlHungry = myCtrl <= foeCtrl;
@@ -2791,7 +3011,7 @@
       // EN MODE CONSERVATION, on n'attaque plus que l'opportun : les neutres
       // faciles, et les points de contrôle si l'adversaire en reprend. Le temps
       // joue pour nous — chaque assaut risqué est un cadeau fait au joueur.
-      const targets = ns.filter(n => n.owner !== f && !(conserve && n.owner === foeF && n.kind !== 'controle'));
+      const targets = ns.filter(n => n.owner !== f && !(conserve && n.owner === foeF && n.kind !== 'controle' && n.kind !== 'site'));
       if (!targets.length) return;
       let tgt = null, bs = 1e18;
       for (const t of targets) {
@@ -2801,6 +3021,7 @@
         // EN PANIQUE (l'adversaire va gagner aux points), un point de contrôle
         // vaut plus que tout — y compris le QG : décapiter prend des minutes,
         // l'horloge n'en laisse plus.
+        else if (t.kind === 'site') prio = panique ? 4.7 : ctrlHungry ? 3.4 : 2.2;
         else if (t.kind === 'controle') prio = panique ? 4.5 : ctrlHungry ? 3 : 1.6;
         else if (t.kind === 'hq') prio = panique ? 0.4 : aiLevel >= 2 ? 2.2 : 0.8;
         else if (t.kind === 'defense' || t.kind === 'reinforce') prio = 0.7;
@@ -2877,6 +3098,7 @@
 
     // ---- production -------------------------------------------------
     function updateProduction(n, dt) {
+      if (n.secured === false) return;
       if (!n.owner || !n.prodRate) { n.prodAcc = 0; return; }
       // §boss corbeau (blockprod) : la file de prod est GELÉE — on garde l'acc en l'état
       if (n.prodBlockT > 0) { n.fxPulse = Math.max(n.fxPulse || 0, 0.2); return; }
@@ -2932,6 +3154,33 @@
       const tier = Math.max(1, environment.tier | 0);
       const force = Math.max(1, environment.force | 0);
 
+      /* Les dangers sont annoncés avant de frapper. La lisibilité fait partie
+         de la difficulté : le joueur doit pouvoir sauver une escouade, pas
+         apprendre après coup qu'un cercle orange était censé être du feu. */
+      for (let i = envWarnings.length - 1; i >= 0; i--) {
+        const w = envWarnings[i]; w.left -= dt;
+        if (w.left > 0) continue;
+        envWarnings.splice(i, 1);
+        if (w.kind === 'volcan') {
+          eachNear(w.x, w.y, w.r, a => { if (!a.dead) hurtAgent(a, w.dmg, 'neutral', w.x, w.y); });
+          if (zones.length < 90) zones.push({ x:w.x, y:w.y, f:'neutral', life:5 + tier * .25,
+            r:22 + tier, dmg:1.8 + tier * .42, col:'#ff6a2a', lava:true });
+          if (envRocks.length < 7) {
+            const obs = { x:w.x, y:w.y, r:11 + Math.min(8, tier), type:'rock', temp:true };
+            obstacles.push(obs); obsVer++;
+            envRocks.push({ obs, life:7 + tier * .5 });
+          }
+          puff(w.x, w.y, '#ff8a36', 18, 78, 3.2);
+          fxRings.push({ x:w.x, y:w.y, r:w.r + 12, life:.48, tot:.48, col:'#ffd257' });
+          sfx('boom', 220);
+        } else {
+          eachNear(w.x, w.y, w.r, a => { if (!a.dead) hurtAgent(a, w.dmg, 'neutral', w.x, w.y); });
+          bossBeams.push({ x0:w.x, y0:0, x1:w.x, y1:w.y, life:.34, tot:.34, col:'#aa8cff', bolt:true });
+          puff(w.x, w.y, '#9b83ff', 14, 68, 2.8);
+          fxRings.push({ x:w.x, y:w.y, r:w.r, life:.42, tot:.42, col:'#c7b8ff' });
+        }
+      }
+
       if (environment.type === 'marecageuse') {
         const dps = 0.32 + tier * 0.11 + force * 0.025;
         for (const a of agents)
@@ -2957,25 +3206,58 @@
         const x = bclamp(cible.x + (Math.random() - .5) * 70, 28, map.w - 28);
         const y = bclamp(cible.y + (Math.random() - .5) * 70, 28, map.h - 28);
         const rayon = 24 + tier;
-        eachNear(x, y, rayon, a => { if (!a.dead) hurtAgent(a, 7 + tier * 1.4, 'neutral', x, y); });
-        if (zones.length < 90) zones.push({ x, y, f: 'neutral', life: 5 + tier * .25,
-          r: 22 + tier, dmg: 1.8 + tier * .42, col: '#ff6a2a', lava: true });
-        if (envRocks.length < 7) {
-          const obs = { x, y, r: 11 + Math.min(8, tier), type: 'rock', temp: true };
-          obstacles.push(obs); obsVer++;
-          envRocks.push({ obs, life: 7 + tier * .5 });
-        }
-        puff(x, y, '#ff8a36', 12, 65, 3);
+        envWarnings.push({ kind:'volcan', x, y, r:rayon, dmg:7 + tier * 1.4,
+          left:1.15, total:1.15 });
       } else if (environment.type === 'arcanique') {
         envT = Math.max(3.2, 8.2 - tier * .30 - force * .10);
         const rayon = 30 + tier * 2;
-        eachNear(cible.x, cible.y, rayon, a => {
-          if (!a.dead) hurtAgent(a, 5 + tier * 1.15, 'neutral', cible.x, cible.y);
-        });
-        bossBeams.push({ x0: cible.x, y0: 0, x1: cible.x, y1: cible.y,
-          life: .28, tot: .28, col: '#aa8cff', bolt: true });
-        puff(cible.x, cible.y, '#9b83ff', 10, 58, 2.5);
+        envWarnings.push({ kind:'arcane', x:cible.x, y:cible.y, r:rayon,
+          dmg:5 + tier * 1.15, left:.9, total:.9 });
       } else envT = 9999;
+    }
+
+    function beginRetreat(nodeId) {
+      if (destroyed || ended || retreat) return false;
+      let point = nById[nodeId];
+      if (!point || point.owner !== pf || point.secured === false)
+        point = ns.find(n => n.kind === 'hq' && n.owner === pf)
+          || ns.find(n => n.owner === pf && n.secured !== false);
+      if (!point) return false;
+      retreat = { node:point, left:10, total:10 };
+      buildMenuId = -1; selectedId = point.id; autoPilot = false;
+      for (const n of ns)
+        if (n !== point && n.owner === pf && nodeGTot(n) > 0) sendUnits(n, point, 1);
+      for (const a of agents)
+        if (!a.dead && a.f === pf) { dropFoe(a); a.target = point; }
+      emit({ type:'retreatStarted', node:point, duration:retreat.total });
+      addDmgText(point.x, point.y - 28, 'EXTRACTION', '#ffe9a8');
+      return true;
+    }
+
+    function updateRetreat(dt) {
+      if (!retreat || ended) return;
+      const point = retreat.node;
+      if (!point || point.owner !== pf || point.secured === false) {
+        retreat = null; ended = true; sfx('lose');
+        emit({ type:'defeat', reason:'retreat_lost' });
+        return;
+      }
+      retreat.left = Math.max(0, retreat.left - dt);
+      if (retreat.left > 0) return;
+      /* Seuls les soldats qui ont réellement rejoint le point montent à
+         bord. Les autres positions sont abandonnées : le bilan peut donc
+         compter une retraite organisée sans la confondre avec un bouton
+         de défaite gratuit. */
+      for (const n of ns) if (n.owner === pf && n !== point) n.g = {};
+      for (const a of agents) {
+        if (a.dead || a.f !== pf) continue;
+        if (bdist(a.x, a.y, point.x, point.y) <= 105) {
+          point.g[a.type] = (point.g[a.type] || 0) + 1;
+          a.dead = true;
+        }
+      }
+      ended = true; sfx('win');
+      emit({ type:'retreat', reason:'extracted' });
     }
 
     // ---- update principal ---------------------------------------------
@@ -3049,6 +3331,7 @@
         for (const a of agents) if (!a.dead) updateAgent(a, dt);
         for (const n of ns) updateNodeCombat(n, dt);
         updateMapBosses(dt); // boss de carte : ils frappent/encaissent tant que ça se bat
+        updateRetreat(dt);
       }
       updateProjectiles(dt);
 
@@ -3066,6 +3349,7 @@
         n.bump = Math.max(0, n.bump - dt * 2.2);
         n.logiT = Math.max(0, n.logiT - dt); // §7 : l'aura logistique s'estompe si le porteur s'éloigne
         n.prodBlockT = Math.max(0, (n.prodBlockT || 0) - dt); // §boss corbeau : le gel de prod se dissipe
+        updateSecurisation(n, dt);
         // §B avant-poste capturé : aura de soin 2 PV/s (rayon 90) pour les alliés
         if (!ended && n.kind === 'avantposte' && n.owner) {
           n.healT = (n.healT || 0) - dt;
@@ -3083,34 +3367,49 @@
         }
       }
 
-      // victoire aux points de contrôle : majorité de drapeaux = 1 pt/s,
-      // premier à ctrlWin. MAJ majeure §1 : la majorité se joue CONTRE l'autre
-      // camp, neutres exclus — tenir 1 point contre 0 (et 2 neutres) marque bien.
+      /* ÉCONOMIE ET VICTOIRE DE DOMINATION.
+         Chaque position sécurisée rapporte 0,45 point/s à son propriétaire.
+         Les éliminations alimentent la même réserve et les bâtiments la
+         dépensent. Atteindre le seuil ne suffit plus : il faut simultanément
+         tenir 60 % des positions pendant dix secondes. */
       if (!ended && ctrlTotal > 0) {
         ctrlAcc += dt;
         while (ctrlAcc >= 1) {
           ctrlAcc -= 1;
           let heldC = 0, heldB = 0;
           for (const cn of ctrlNodes) {
+            if (cn.secured === false) continue;
             if (cn.owner === 'cats') heldC++;
             else if (cn.owner === 'birds') heldB++;
           }
-          const f = heldC > heldB ? 'cats' : heldB > heldC ? 'birds' : null;
-          if (f) {
-            // §6 (D15) Drapeaux : ×(1+eff) pour le camp du joueur UNIQUEMENT
-            ctrlFrac[f] += (f === pf ? flagMul : flagMulE);
-            while (ctrlFrac[f] >= 1) {
-              ctrlFrac[f] -= 1;
-              ctrlPts[f]++;
-              emit({ type: 'controlTick', cats: ctrlPts.cats, birds: ctrlPts.birds });
-              if (ctrlPts[f] >= ctrlWin && mode === 'personal' && !ended) {
+          for (const f of ['cats', 'birds']) {
+            const held = f === 'cats' ? heldC : heldB;
+            const mul = f === pf ? flagMul : flagMulE;
+            ctrlFrac[f] += held * .45 * mul;
+            const gain = Math.floor(ctrlFrac[f]);
+            if (gain > 0) { ctrlFrac[f] -= gain; donnerPoints(f, gain, 'controle'); }
+          }
+          if (objective.id === 'domination') {
+            const requis = Math.max(1, Math.ceil(ctrlTotal * .6));
+            for (const f of ['cats', 'birds']) {
+              const held = f === 'cats' ? heldC : heldB;
+              if (ctrlPts[f] >= ctrlWin && held >= requis) dominanceHold[f]++;
+              else dominanceHold[f] = 0;
+              if (dominanceHold[f] >= DOMINANCE_SECONDS && mode === 'personal' && !ended) {
                 ended = true;
                 sfx(f === pf ? 'win' : 'lose');
-                emit({ type: f === pf ? 'victory' : 'defeat', reason: 'control' });
+                emit({ type:f === pf ? 'victory' : 'defeat', reason:'domination' });
                 break;
               }
             }
           }
+        }
+      }
+
+      if (!ended && objective.id === 'tenir') {
+        objectiveLeft = Math.max(0, objectiveLeft - dt);
+        if (objectiveLeft <= 0) {
+          ended = true; sfx('win'); emit({ type:'victory', reason:'hold' });
         }
       }
 
@@ -3213,6 +3512,7 @@
       pX = w.x; pY = w.y; downX = w.x; downY = w.y;
       pDown = true; pDrag = false;
       const n = nodeAt(w.x, w.y);
+      if (buildMenuId >= 0) { dragFrom = -1; return; }
       if (mode === 'personal') {
         if (n && n.owner === pf) { dragFrom = n.id; }
         else dragFrom = -1;
@@ -3233,6 +3533,28 @@
       const wasDrag = pDrag, from = dragFrom;
       pDown = false; pDrag = false; dragFrom = -1;
       const n = nodeAt(w.x, w.y);
+
+      /* Menu radial d'aménagement. Il vit dans le moteur afin de rester
+         exactement aligné avec la carte, quel que soit le zoom du canvas. */
+      if (buildMenuId >= 0) {
+        const site = nById[buildMenuId];
+        if (site && site.owner === pf && site.secured && site.kind === 'site') {
+          const rayon = 62;
+          for (let i = 0; i < SITE_BUILDS.length; i++) {
+            const a = -Math.PI / 2 + i * Math.PI * 2 / SITE_BUILDS.length;
+            const bx = site.x + Math.cos(a) * rayon;
+            const by = site.y + Math.sin(a) * rayon;
+            if (bdist(w.x, w.y, bx, by) <= 21) {
+              construirePosition(site, SITE_BUILDS[i].kind, pf);
+              emit({ type:'nodeSelected', node:site });
+              return;
+            }
+          }
+        }
+        buildMenuId = -1;
+        emit({ type:'buildMenu', node:null, choices:[] });
+        if (!n) return;
+      }
 
       if (mode === 'collective') {
         // pas d'envoi manuel : on signale juste la sélection à l'UI
@@ -3260,6 +3582,10 @@
       if (n.owner === pf) {
         // clic nœud ami = sélection (le renfort ami se fait par drag)
         selectedId = n.id;
+        if (n.kind === 'site' && n.secured) {
+          buildMenuId = n.id;
+          emit({ type:'buildMenu', node:n, choices:SITE_BUILDS.slice() });
+        }
         sfx('click', 120);
         emit({ type: 'nodeSelected', node: n });
       } else if (selectedId >= 0) {
@@ -3274,6 +3600,7 @@
     // ---- rendu -----------------------------------------------------------
     function drawNode(n, t) {
       const col = n.owner ? FACTION_COL[n.owner] : NEUTRAL_COL;
+      const dessinKind = n.kind === 'site' ? 'controle' : n.kind;
       // halo faction
       const haloR = 38 * COMBAT_SCALE;
       const halo = ctx.createRadialGradient(n.x, n.y + 4, 4, n.x, n.y + 4, haloR);
@@ -3293,16 +3620,16 @@
       // §skins : skin lab dessiné EN DIRECT (boucle d'anim 3.2 s, déphasée par
       // nœud pour éviter l'effet chorale) ; sans skin, sprite cuit historique
       // (l'Étendard et l'Avant-poste passent par leur helper dédié)
-      const lv = window.LabSkins ? LabSkins.building(n.kind, n.owner) : null;
+      const lv = window.LabSkins ? LabSkins.building(dessinKind, n.owner) : null;
       let drawn = false;
       if (lv) {
         ctx.lineJoin = 'round'; ctx.lineCap = 'round';
         try { lv.draw(ctx, t + n.id * 0.53); drawn = true; } catch (e) { drawn = false; }
       }
       if (!drawn) {
-        const spr = n.kind === 'banner' ? getBannerSprite(n.owner)
-          : n.kind === 'avantposte' ? getOutpostSprite(n.owner)
-            : Sprites.getNodeCanvas(n.kind, n.owner, 112);
+        const spr = dessinKind === 'banner' ? getBannerSprite(n.owner)
+          : dessinKind === 'avantposte' ? getOutpostSprite(n.owner)
+            : Sprites.getNodeCanvas(dessinKind, n.owner, 112);
         ctx.drawImage(spr, 0, 0);
       }
       ctx.restore();
@@ -3319,6 +3646,18 @@
       ctx.strokeText(String(tot), n.x, ty);
       ctx.fillStyle = n.owner ? '#ffffff' : '#e8e8e0';
       ctx.fillText(String(tot), n.x, ty);
+
+      if (n.secured === false && n.claimTotal > 0) {
+        const k = bclamp(1 - n.claimLeft / n.claimTotal, 0, 1);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(20,25,28,.72)';
+        ctx.beginPath(); ctx.arc(n.x, n.y + 2, 34, -Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+        ctx.strokeStyle = n.owner ? FACTION_COL[n.owner] : '#d8d5cb';
+        ctx.beginPath(); ctx.arc(n.x, n.y + 2, 34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke();
+        ctx.font = '900 9px Nunito, system-ui, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(Math.ceil(n.claimLeft) + ' s', n.x, n.y - 39);
+      }
 
       // jauge de production
       if (n.owner && n.prodRate > 0) {
@@ -3345,10 +3684,50 @@
       }
     }
 
+    function drawBuildMenu(t) {
+      if (buildMenuId < 0) return;
+      const n = nById[buildMenuId];
+      if (!n || n.owner !== pf || !n.secured || n.kind !== 'site') return;
+      const rayon = 62;
+      ctx.save();
+      ctx.fillStyle = 'rgba(13,20,24,.82)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 47, 0, Math.PI * 2); ctx.fill();
+      ctx.font = '900 8px Nunito, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffe9a8';
+      ctx.fillText('' + Math.floor(ctrlPts[pf]) + ' PT', n.x, n.y - 4);
+      ctx.font = '700 6px Nunito, system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.72)';
+      ctx.fillText('À DÉPENSER', n.x, n.y + 6);
+      for (let i = 0; i < SITE_BUILDS.length; i++) {
+        const d = SITE_BUILDS[i];
+        const a = -Math.PI / 2 + i * Math.PI * 2 / SITE_BUILDS.length;
+        const x = n.x + Math.cos(a) * rayon, y = n.y + Math.sin(a) * rayon;
+        const sur = bdist(pX, pY, x, y) <= 21;
+        const disponible = ctrlPts[pf] >= d.cost;
+        ctx.fillStyle = !disponible ? 'rgba(35,40,43,.94)' : sur ? '#efd47f' : 'rgba(25,36,43,.96)';
+        ctx.strokeStyle = !disponible ? 'rgba(255,255,255,.18)' : sur ? '#ffffff' : 'rgba(239,212,127,.72)';
+        ctx.lineWidth = sur ? 2.5 : 1.5;
+        ctx.beginPath(); ctx.arc(x, y, sur ? 20 : 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = !disponible ? '#727a79' : sur ? '#182128' : '#efd47f';
+        ctx.font = '900 12px Nunito, system-ui, sans-serif';
+        ctx.fillText(d.sigle, x, y - 5);
+        ctx.font = '800 6px Nunito, system-ui, sans-serif';
+        ctx.fillText(d.cost + ' pt', x, y + 7);
+        if (sur) {
+          ctx.font = '800 7px Nunito, system-ui, sans-serif';
+          ctx.fillStyle = disponible ? '#ffffff' : '#ffb7a8';
+          ctx.fillText(d.name.toUpperCase() + ' · ' + d.cost + ' PT', x, y + 27);
+        }
+      }
+      ctx.restore();
+    }
+
     // tooltip au survol (NODE_INFO) : nom + explication, en coordonnées monde
     function drawTooltip() {
       if (hoverId < 0 || pDown) return;
       const hn = nById[hoverId];
+      if (hn && hn.owner !== pf && !visibleJoueur(hn.x, hn.y)) return;
       const info = hn && NODE_INFO[hn.kind];
       if (!info) return;
       ctx.font = '600 10px Nunito, system-ui, sans-serif';
@@ -3571,8 +3950,51 @@
 
       // traînées au sol, avant les unités pour une lecture immédiate
       for (const z of zones) {
-        ctx.globalAlpha = Math.min(.46, z.life * .22); ctx.fillStyle = z.col;
-        ctx.beginPath(); ctx.arc(z.x, z.y, z.r * (1.15 - z.life * .05), 0, Math.PI * 2); ctx.fill();
+        if (z.lava) {
+          const rr = z.r * (1.06 + Math.sin(t * 3 + z.x) * .025);
+          const g = ctx.createRadialGradient(z.x, z.y, 2, z.x, z.y, rr);
+          g.addColorStop(0, 'rgba(255,232,105,.72)');
+          g.addColorStop(.34, 'rgba(255,116,35,.66)');
+          g.addColorStop(.72, 'rgba(154,41,23,.42)');
+          g.addColorStop(1, 'rgba(70,28,20,0)');
+          ctx.fillStyle = g; ctx.globalAlpha = Math.min(1, z.life * .5);
+          ctx.beginPath(); ctx.arc(z.x, z.y, rr, 0, Math.PI * 2); ctx.fill();
+          ctx.globalCompositeOperation = 'lighter';
+          for (let i = 0; i < 8; i++) {
+            const a = i * 2.399 + z.x * .013;
+            const d = rr * (.18 + (i % 4) * .13);
+            const x = z.x + Math.cos(a) * d, y = z.y + Math.sin(a) * d;
+            const fl = .5 + .5 * Math.sin(t * (7 + i * .3) + i * 1.7);
+            ctx.globalAlpha = (.35 + fl * .5) * Math.min(1, z.life);
+            ctx.fillStyle = i % 3 ? '#ff7a28' : '#ffe46e';
+            ctx.beginPath(); ctx.ellipse(x, y - 3 * fl, 2.3 + fl, 4 + fl * 5, a, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.globalCompositeOperation = 'source-over';
+        } else {
+          ctx.globalAlpha = Math.min(.46, z.life * .22); ctx.fillStyle = z.col;
+          ctx.beginPath(); ctx.arc(z.x, z.y, z.r * (1.15 - z.life * .05), 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // télégraphes de biome : remplissage, minuterie circulaire et point d'impact
+      for (const w of envWarnings) {
+        const k = bclamp(1 - w.left / w.total, 0, 1);
+        const col = w.kind === 'volcan' ? '#ff7a2e' : '#aa8cff';
+        ctx.globalAlpha = .1 + k * .16; ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = .58 + .35 * Math.sin(t * 15);
+        ctx.strokeStyle = col; ctx.lineWidth = 2.3;
+        ctx.beginPath(); ctx.arc(w.x, w.y, w.r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w.x - 7, w.y); ctx.lineTo(w.x + 7, w.y);
+        ctx.moveTo(w.x, w.y - 7); ctx.lineTo(w.x, w.y + 7); ctx.stroke();
+      }
+      if (retreat) {
+        const k = bclamp(1 - retreat.left / retreat.total, 0, 1), n = retreat.node;
+        ctx.globalAlpha = .16; ctx.fillStyle = '#ffe9a8';
+        ctx.beginPath(); ctx.arc(n.x, n.y, 105, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = .9; ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(n.x, n.y, 44, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke();
       }
       ctx.globalAlpha = 1;
 
@@ -3647,13 +4069,21 @@
         ctx.beginPath(); ctx.arc(sel.x, sel.y + 3, r, 0, Math.PI * 2); ctx.stroke();
         ctx.strokeStyle = hexA(FACTION_COL[pf], 0.3);
         ctx.beginPath(); ctx.arc(sel.x, sel.y + 3, r + 4, 0, Math.PI * 2); ctx.stroke();
+        if (fogEnabled) {
+          ctx.setLineDash([4, 7]);
+          ctx.strokeStyle = 'rgba(225,235,218,.24)'; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(sel.x, sel.y, visionNoeud(sel), 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+        }
       }
 
       // nœuds + agents triés par y (lisibilité des chevauchements)
       const drawables = [];
       for (const n of ns) drawables.push(n);
-      for (const a of agents) if (!a.dead) drawables.push(a);
-      for (const B of mapBosses) if (!B.dead) drawables.push(B); // boss de carte, triés par y
+      for (const a of agents)
+        if (!a.dead && (a.f === pf || visibleJoueur(a.x, a.y))) drawables.push(a);
+      for (const B of mapBosses)
+        if (!B.dead && visibleJoueur(B.x, B.y)) drawables.push(B); // boss de carte, triés par y
       drawables.sort((A, B) => A.y - B.y);
       for (const d of drawables) {
         if (d.mapBoss) drawMapBoss(d, t);
@@ -3711,14 +4141,21 @@
       }
       ctx.globalAlpha = 1;
 
+      /* Le voile vient après le monde et avant l'interface tactique : les
+         mouvements ennemis disparaissent, tandis que les ordres et les
+         compteurs alliés restent parfaitement lisibles. */
+      drawFog();
+
       // UI des nœuds (compteurs par-dessus tout, pour la lisibilité)
-      for (const n of ns) drawNodeUI(n);
+      for (const n of ns)
+        if (n.owner === pf || visibleJoueur(n.x, n.y)) drawNodeUI(n);
+      drawBuildMenu(t);
       drawTooltip();
 
       // §B (DESIGN13) : SCORE DE CONTRÔLE — jauge cats vs birds en haut du canvas,
       // dessin flat (deux barres + chiffres). Visible SEULEMENT si la carte a des
       // nœuds 'controle'. Premier à ctrlWin : la victoire aux points existante.
-      if (ctrlTotal > 0) {
+      if (ctrlTotal > 0 && objective.id === 'domination') {
         const bw = 120, bh = 7, gap = 30, gy = 12, cx = map.w / 2;
         const kc = bclamp(ctrlPts.cats / ctrlWin, 0, 1);
         const kb = bclamp(ctrlPts.birds / ctrlWin, 0, 1);
@@ -3740,17 +4177,33 @@
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(25,25,35,0.85)';
         const yTxt = gy + bh / 2 + 0.5;
-        ctx.strokeText(String(ctrlPts.cats), cx - gap - bw - 14, yTxt);
+        ctx.strokeText(String(Math.floor(ctrlPts.cats)), cx - gap - bw - 14, yTxt);
         ctx.fillStyle = FACTION_COL.cats;
-        ctx.fillText(String(ctrlPts.cats), cx - gap - bw - 14, yTxt);
-        ctx.strokeText(String(ctrlPts.birds), cx + gap + bw + 14, yTxt);
+        ctx.fillText(String(Math.floor(ctrlPts.cats)), cx - gap - bw - 14, yTxt);
+        ctx.strokeText(String(Math.floor(ctrlPts.birds)), cx + gap + bw + 14, yTxt);
         ctx.fillStyle = FACTION_COL.birds;
-        ctx.fillText(String(ctrlPts.birds), cx + gap + bw + 14, yTxt);
+        ctx.fillText(String(Math.floor(ctrlPts.birds)), cx + gap + bw + 14, yTxt);
         ctx.font = '11px system-ui, sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.strokeText('' + ctrlWin, cx, yTxt);
         ctx.fillText('' + ctrlWin, cx, yTxt);
+        const requis = Math.max(1, Math.ceil(ctrlTotal * .6));
+        let tenues = 0;
+        for (const n of ctrlNodes) if (n.owner === pf && n.secured !== false) tenues++;
+        ctx.font = '700 7px Nunito, system-ui, sans-serif';
+        ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(25,25,35,.82)';
+        const condition = tenues + '/' + requis + ' positions · tenir ' + dominanceHold[pf] + '/' + DOMINANCE_SECONDS + ' s';
+        ctx.strokeText(condition, cx, gy + 18);
+        ctx.fillStyle = '#f2eee5'; ctx.fillText(condition, cx, gy + 18);
         ctx.textBaseline = 'middle';
+      }
+      if (objective.id === 'tenir' && !ended) {
+        const cx = map.w / 2, sec = Math.ceil(objectiveLeft);
+        ctx.font = '900 13px Nunito, system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,25,28,.8)';
+        ctx.strokeText('TENIR  ' + sec + ' s', cx, 18);
+        ctx.fillStyle = '#ffe9a8'; ctx.fillText('TENIR  ' + sec + ' s', cx, 18);
       }
 
       // mini nombres de dégâts
@@ -3828,11 +4281,32 @@
     function getControl() {
       let c = 0, b = 0;
       for (const n of ns) {
+        if (n.secured === false) continue;
         if (n.owner === 'cats') c++;
         else if (n.owner === 'birds') b++;
       }
       const tot = ns.length || 1;
       return { cats: c / tot, birds: b / tot };
+    }
+
+    function getBattleStatus() {
+      let heldC = 0, heldB = 0, unsecured = 0;
+      for (const n of ctrlNodes) {
+        if (n.secured === false) { unsecured++; continue; }
+        if (n.owner === 'cats') heldC++;
+        else if (n.owner === 'birds') heldB++;
+      }
+      return {
+        objective:{ id:objective.id, nom:objective.nom || objective.id,
+          left:objectiveLeft, total:objectiveTotal },
+        sites:{ cats:heldC, birds:heldB, neutral:Math.max(0, ctrlTotal - heldC - heldB - unsecured), securing:unsecured, total:ctrlTotal },
+        score:{ cats:Math.floor(ctrlPts.cats), birds:Math.floor(ctrlPts.birds), target:ctrlWin,
+          holdCats:dominanceHold.cats, holdBirds:dominanceHold.birds,
+          holdTarget:DOMINANCE_SECONDS, requiredSites:Math.max(1, Math.ceil(ctrlTotal * .6)) },
+        wave:eReinf && eReinfLeft > 0 ? { left:eReinfLeft, next:Math.max(0, eReinfT) } : null,
+        retreat:retreat ? { left:retreat.left, total:retreat.total, nodeId:retreat.node.id } : null,
+        losses:playerLosses, fog:fogEnabled,
+      };
     }
 
     function serialize() {
@@ -5177,7 +5651,9 @@
       screenToWorld: toWorld,
       setAutoPilot: v => { autoPilot = !!v; if (autoPilot && aiTimers[pf] == null) aiTimers[pf] = 0.5; },
       getControl,
+      getBattleStatus,
       getControlWinPoints: () => ctrlWin,
+      beginRetreat,
       serialize,
       takePlayerKills: () => { const k = playerKills; playerKills = 0; return k; },
       getPlayerLosses: () => playerLosses,

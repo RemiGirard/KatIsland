@@ -422,6 +422,21 @@
       }
 
       const map = { w, h, seed, theme: opts.theme || null, nodes, edges, obstacles: obs, epool, sym: central ? 'central' : 'axial' };
+      /* Les expéditions du Bourg ne livrent plus une ville déjà bâtie.
+         Hors des deux camps de départ, la carte ne contient que des
+         positions fortifiables. Leur ancien `kind` reste un conseil de
+         construction pour l'IA ; le joueur, lui, choisira après capture. */
+      if (opts.tacticalSites) {
+        map.tacticalSites = true;
+        for (const n of nodes) {
+          if (n.kind === 'hq') continue;
+          n.plannedKind = n.kind;
+          n.kind = 'site';
+          n.cap = 45;
+          n.prodRate = 0;
+          n.defBonus = 0;
+        }
+      }
       if (bossList.length) map.bosses = bossList;
       return map;
     } else {

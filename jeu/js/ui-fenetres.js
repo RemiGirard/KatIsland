@@ -490,8 +490,49 @@
     economie:'bac-chutes.png', oeil:'marquage-forestier.png',
     etabli:'chariot-grumes.png', chaine:'chaine-bois.png', maitrise:'maitrise-scierie.png',
   };
+  const PECHERIE_IMG = 'img/interface/pecherie/';
+  const PECHERIE_ART = {
+    peche_filet:'filet.png', peche_nasse:'nasses.png', peche_fond:'ligne-fond.png',
+    peche_glace:'harpon.png', vivier_garder:'vivier.png', banc:'banc-poissons.png',
+    calme:'eau-calme.png', rare:'eau-rare.png', ponton:'ponton.png', filets:'repare-filets.png',
+    appats:'appats.png', abri:'abri-equipage.png', maree:'maree.png', durable:'peche-durable.png',
+    equipage:'equipage.png', maitrise:'maitrise.png',
+  };
+  const CHAMP_IMG = 'img/interface/champ/';
+  const CHAMP_ART = {
+    semer_ble:'ble.png', racines:'racines.png', lin_champ:'lin.png', jachere:'jachere.png',
+    battre_ble:'battage.png', fertile:'sol-fertile.png', epuise:'sol-epuise.png',
+    semences:'semences.png', rotation:'rotation.png', irrigation:'irrigation.png',
+    compost:'compost.png', epouvantail:'epouvantail.png', coffre:'coffre-semences.png',
+    abri:'abri.png', durable:'recolte-durable.png', maitrise:'maitrise.png',
+  };
+  const TOURNESOL_IMG='img/interface/tournesol/';
+  const TOURNESOL_ART={
+    semer_tournesol:'recolte.png',recolter_graines:'graines.png',floraison:'floraison.png',
+    abeille:'abeille.png',soleil:'soleil.png',nuage:'nuage.png',ruche:'ruche.png',pollen:'pollen.png',
+    semences:'sac-graines.png',presse:'presse.png',eau:'eau.png',abri:'abri.png',
+    pollinisation:'pollinisation.png',longue:'floraison-longue.png',durable:'recolte-durable.png',maitrise:'maitrise.png',
+  };
+  const PEPINIERE_IMG='img/interface/pepiniere/';
+  const PEPINIERE_ART={cueillir:'fruits.png',greffer:'greffe.png',verger_greffe:'plant-greffe.png',presser_cidre:'pressoir.png',plants:'jeunes-plants.png',racines:'porte-greffe.png',ratee:'greffe-ratee.png',reussie:'greffe-reussie.png',plateau:'plateau.png',eau:'arrosage.png',brise:'brise-vent.png',abri:'abri.png',lignee:'lignee.png',productive:'productive.png',robuste:'robuste.png',maitrise:'maitrise.png'};
+  const POTAGER_IMG='img/interface/potager/';
+  const POTAGER_ART={biner:'biner.png',simples_potager:'simples.png',potager_greffe:'greffe.png',forcer:'cloche.png',association:'association.png',humide:'humide.png',sec:'sec.png',arrosoir:'arrosoir.png',planches:'planches.png',semis:'semis.png',compost:'compost.png',abri:'abri.png',melange:'harmonie.png',primeurs:'primeurs.png',simples:'herbes.png',maitrise:'maitrise.png'};
+  const FLEURS_IMG='img/interface/fleurs/';
+  const FLEURS_ART={couper_fleurs:'couper.png',graines_fleurs:'graines.png',floraison:'floraison.png',nectar:'nectar.png',fanee:'fanee.png',bouquet:'bouquet.png',ruche:'ruche.png',alchimie:'alchimie.png',semences:'semences.png',rosee:'rosee.png',sechoir:'sechoir.png',abri:'abri.png',bouquets:'bouquets.png',butinage:'butinage.png',grainier:'grainier.png',maitrise:'maitrise.png'};
+  const PUITS_IMG='img/interface/puits/';
+  const PUITS_ART={tirer_eau:'tirer.png',pleine:'nappe-pleine.png',basse:'nappe-basse.png',treuil:'treuil.png',bourg:'bourg.png',cultures:'irrigation.png',ateliers:'ateliers.png',equilibre:'equilibre.png',profond:'profond.png',pluie:'pluie.png',reservoir:'reservoir.png',repos:'repos.png',priorite_bourg:'priorite-bourg.png',priorite_cultures:'priorite-cultures.png',priorite_ateliers:'priorite-ateliers.png',maitrise:'maitrise.png'};
+  const BERGERIE_IMG='img/interface/bergerie/';
+  const BERGERIE_ART={tondre:'tondre.png',paitre:'paitre.png',abattre_mouton:'abattre.png',abattre_complet:'abattoir.png',fondre_suif:'suif.png',chandelles:'chandelles.png',troupeau:'troupeau.png',paturage:'paturage.png',sec:'paturage-sec.png',agneau:'agneau.png',berger:'berger.png',abri:'abri.png',laine:'laine.png',renouvellement:'renouvellement.png',viande:'viande.png',maitrise:'maitrise.png'};
   let affectationScierie = null;
   function artScierie(id) { return SCIERIE_IMG + (SCIERIE_ART[id] || SCIERIE_ART.chaine); }
+  function artPecherie(id) { return PECHERIE_IMG + (PECHERIE_ART[id] || PECHERIE_ART.banc); }
+  function artChamp(id) { return CHAMP_IMG + (CHAMP_ART[id] || CHAMP_ART.fertile); }
+  function artTournesol(id){return TOURNESOL_IMG+(TOURNESOL_ART[id]||TOURNESOL_ART.floraison);}
+  function artPepiniere(id){return PEPINIERE_IMG+(PEPINIERE_ART[id]||PEPINIERE_ART.plants);}
+  function artPotager(id){return POTAGER_IMG+(POTAGER_ART[id]||POTAGER_ART.association);}
+  function artFleurs(id){return FLEURS_IMG+(FLEURS_ART[id]||FLEURS_ART.floraison);}
+  function artPuits(id){return PUITS_IMG+(PUITS_ART[id]||PUITS_ART.treuil);}
+  function artBergerie(id){return BERGERIE_IMG+(BERGERIE_ART[id]||BERGERIE_ART.troupeau);}
 
   function posteLibreScierie(b, rid) {
     let i = b.postes.findIndex(p => !p.hab && p.rec === rid);
@@ -533,6 +574,7 @@
     const metier = window.METIERS[rec.metier] || { nom:rec.metier };
     const pratique = progressionIndividu(h, rec.metier);
     const facteur = window.Jeu.facteurHabitant(h, rec, b);
+    const vigueur = window.VieVillage ? window.VieVillage.assurerHabitant(h).vigueur : 100;
     const R = window.HAB.RARETES[h.rarete] || window.HAB.RARETES.commun;
     const av = avatarHab(h, 100, 'affectation-portrait');
     delete av.dataset.bulle;
@@ -543,7 +585,7 @@
       disabled:dejaIci,
       onclick:dejaIci ? null : () => {
         const libre = posteLibreScierie(b, rec.id);
-        if (libre < 0) { U.dire('Tous les postes de la scierie sont déjà tenus.', 'alerte'); return; }
+        if (libre < 0) { U.dire('Tous les postes de ' + window.BAT[b.type].nom.toLowerCase() + ' sont déjà tenus.', 'alerte'); return; }
         window.Jeu.definirRecette(b.id, libre, rec.id, null);
         window.Jeu.assigner(b.id, libre, h.id);
         U.dire(h.nom + ' rejoint « ' + rec.nom + ' ».', 'bien');
@@ -557,6 +599,7 @@
         el('strong', { text:h.nom }),
         el('b', { text:metier.nom + ' · niveau ' + pratique.niveau }),
         el('span', { class:'affectation-rendement', text:'Rendement ×' + facteur.toFixed(2).replace('.', ',') }),
+        el('span', { class:'affectation-rendement', text:'Vigueur ' + Math.round(vigueur) + ' %' }),
         traits,
         h.aff ? el('small', { text:occupationHabitant(h) }) : null));
   }
@@ -576,13 +619,15 @@
     const meta = window.METIERS[rec.metier] || { nom:rec.metier };
     const libres = E().habitants.filter(h => !h.aff).length;
     const occupes = E().habitants.filter(h => h.aff && (h.aff.k === 'poste' || h.aff.k === 'chantier')).length;
+    const artPrincipal = b.type === 'pecherie' ? artPecherie('maitrise') : artScierie('maitrise');
+    const artTravail = b.type === 'pecherie' ? artPecherie('equipage') : artScierie('chaine');
     c.appendChild(el('div', { class:'affectation-languettes', role:'tablist' },
       el('button', { class:'batiment-languette bleu' + (!travailleurs ? ' on' : ''), title:'Habitants disponibles (' + libres + ')', onclick:() => {
         affectationScierie.mode = 'libres'; ouvrirAffectationScierie(cible.bid, cible.rid);
-      } }, el('img', { src:artScierie('maitrise'), alt:'' })),
+      } }, el('img', { src:artPrincipal, alt:'' })),
       el('button', { class:'batiment-languette vert' + (travailleurs ? ' on' : ''), title:'Ouvriers au travail (' + occupes + ')', onclick:() => {
         affectationScierie.mode = 'travail'; ouvrirAffectationScierie(cible.bid, cible.rid);
-      } }, el('img', { src:artScierie('chaine'), alt:'' }))));
+      } }, el('img', { src:artTravail, alt:'' }))));
     c.appendChild(el('div', { class:'affectation-resume' },
       el('div', {}, el('b', { text:travailleurs ? 'Changer d’affectation' : 'Habitants disponibles' }),
         el('span', { text:meta.nom + ' mis en avant · ' + habitants.length + ' choix' })),
@@ -599,23 +644,23 @@
   function ouvrirAffectationScierie(bid, rid) {
     const b = E().bat[bid], rec = window.REC[rid];
     if (!b || !rec) return;
-    if (posteLibreScierie(b, rid) < 0) { U.dire('Tous les postes de la scierie sont déjà tenus.', 'alerte'); return; }
+    if (posteLibreScierie(b, rid) < 0) { U.dire('Tous les postes de ' + window.BAT[b.type].nom.toLowerCase() + ' sont déjà tenus.', 'alerte'); return; }
     if (!affectationScierie || affectationScierie.bid !== bid || affectationScierie.rid !== rid)
       affectationScierie = { bid, rid, mode:'libres' };
     const panneau = document.getElementById('productions');
     const r = panneau ? panneau.getBoundingClientRect() : { left:innerWidth - 420, top:80 };
     U.ouvrir('affectation-scierie', {
-      titre:'Affecter à la scierie', sous:rec.nom, classe:'affectation-fen',
+      titre:'Affecter à ' + (window.BAT[b.type].nom || 'l’atelier').toLowerCase(), sous:rec.nom, classe:'affectation-fen',
       ancre:{ cx:r.left - 180, cy:Math.min(innerHeight - 40, r.top + 480), sol:r.top + 70 },
       onglet:'liste', onglets:[{ id:'liste', nom:'Habitants', rendu:rendreAffectationScierie }],
       surFermeture:() => { affectationScierie = null; },
     });
   }
 
-  function fluxScierie(rec) {
+  function fluxScierie(rec, source) {
     const l = el('div', { class:'scierie-flux' });
     const entrees = Object.keys(rec.in || {}), sorties = Object.keys(rec.out || {});
-    if (!entrees.length) l.appendChild(el('span', { class:'scierie-source', text:'forêt' }));
+    if (!entrees.length) l.appendChild(el('span', { class:'scierie-source', text:source || 'forêt' }));
     for (const k of entrees) l.appendChild(U.puce(k, rec.in[k], { mini:true, insuffisant:window.Etat.qte(k) < rec.in[k] }));
     l.appendChild(el('span', { class:'scierie-fleche', text:'→' }));
     for (const k of sorties) l.appendChild(U.puce(k, rec.out[k], { mini:true, gain:true }));
@@ -693,8 +738,9 @@
     opts = opts || {};
     const b = E().bat[bid], rec = window.REC[rid];
     const postes = b.postes.filter(p => p.rec === rid && p.hab);
-    const actifs = postes.filter(p => !p.bloque);
-    const bloques = postes.length - actifs.length;
+    const actifs = postes.filter(p => !p.bloque && !p.pause);
+    const bloques = postes.filter(p => p.bloque).length;
+    const pauses = postes.filter(p => p.pause).length;
     let debit = 0, progression = 0;
     for (const p of actifs) {
       const h = window.Etat.habitant(p.hab);
@@ -708,7 +754,7 @@
     const qualiteProduite = (window.OUTILS_QUALITES || []).find(q => rec.out && (rec.out[q.res] || (q.legacy && rec.out[q.legacy])));
     const imageLigne = opts.outillage && window.OutilUtil && window.OutilUtil.imageQualite && qualiteProduite
       ? window.OutilUtil.imageQualite('bois', qualiteProduite.id)
-      : (opts.outillage && rec.image ? rec.image : artScierie(rid));
+      : (opts.outillage && rec.image ? rec.image : (opts.art ? opts.art(rid) : artScierie(rid)));
     const ligne = el('article', { class:'scierie-ligne' + (ouverte ? '' : ' verrouillee') },
       el('div', { class:'scierie-illustration' },
         el('img', { src:imageLigne, alt:'' }),
@@ -718,12 +764,13 @@
           el('div', {}, el('b', { text:rec.nom }), el('small', { text:ouverte ? (debit ? '+' + (Math.round(debit * 10) / 10).toString().replace('.', ',') + '/min' : 'au repos') : raison })),
           el('div', { class:'scierie-ligne-actions' },
             bloques ? el('span', { class:'scierie-attente', text:bloques + ' en attente' }) : null,
+            pauses ? el('span', { class:'scierie-attente repos', text:pauses + ' au repos' }) : null,
             ouverte && !opts.sansOutil ? boutonOutilActivite(b, rec) : null)),
-        fluxScierie(rec),
+        fluxScierie(rec, opts.source),
         ouverte ? el('div', { class:'scierie-progression' }, el('i', { style:'width:' + Math.round(progression * 100) + '%' })) : null,
         ouverte ? el('div', { class:'scierie-commandes' },
           el('button', { class:'moins', text:'−', title:'Retirer un ouvrier de cette activité', disabled:postes.length === 0, onclick:() => retirerScierie(bid, rid) }),
-          el('strong', { text:postes.length + ' / ' + b.postes.length, title:'Affectés à cette étape / postes de la scierie' }),
+          el('strong', { text:postes.length + ' / ' + b.postes.length, title:'Affectés à cette étape / postes du bâtiment' }),
           el('button', { class:'plus', text:'+', title:'Choisir précisément un habitant', disabled:posteLibreScierie(b, rid) < 0, onclick:() => ouvrirAffectationScierie(bid, rid) })) : null));
     return ligne;
   }
@@ -751,6 +798,21 @@
       el('b', { text:'+' }),
       el('span', {}, el('img', { src:SCIERIE_IMG + 'corde.png', alt:'' }), el('i', { text:'CORDAGES' }))));
 
+    /* Les mêmes sorties peuvent repartir dans la scierie ou quitter la
+       cour pour construire le reste du bourg. Ce choix reste visible
+       sans ajouter un nouveau tableau de gestion. */
+    const annexes = Object.keys(b.raff || {}).filter(k => b.raff[k]).length;
+    c.appendChild(el('div', { class:'scierie-arbitrages' },
+      el('button', { onclick:() => window.UIDock.choisirOngletBatiment('niveau') },
+        el('img', { src:SCIERIE_PROGRESSION + 'banc-scie.png', alt:'' }),
+        el('span', {}, el('b', { text:'Réinvestir' }), el('i', { text:'niveau ' + b.niv + ' · agrandir le cœur' }))),
+      el('button', { disabled:b.niv < 3, onclick:() => window.UIDock.choisirOngletBatiment('annexe') },
+        el('img', { src:SCIERIE_PROGRESSION + 'sechoir-couvert.png', alt:'' }),
+        el('span', {}, el('b', { text:'Spécialiser' }), el('i', { text:annexes + '/4 annexes bâties' }))),
+      el('button', { onclick:() => window.UIFen.ouvrirChantier() },
+        el('img', { src:SCIERIE_PROGRESSION + 'chariot-rails.png', alt:'' }),
+        el('span', {}, el('b', { text:'Fournir le bourg' }), el('i', { text:'logements · port · caserne · ateliers' })))));
+
     c.appendChild(el('div', { class:'scierie-consigne',
       text:'Composez la chaîne habitant par habitant. Le + ouvre les portraits classés selon leur efficacité réelle en bûcheronnage ; le − libère un poste.' }));
     const disponibles = window.BatUtil.recettesDe(b.type, b.niv, b);
@@ -761,6 +823,346 @@
     const liste = el('div', { class:'scierie-chaines' });
     for (const rid of ouvertes) liste.appendChild(rendreLigneScierie(bid, rid, true));
     for (const rid of prochaines) liste.appendChild(rendreLigneScierie(bid, rid, false));
+    c.appendChild(liste);
+  }
+
+  /* =================================================================
+     LA PÊCHERIE — PREMIÈRE MIGRATION DU SOCLE
+
+     La scierie récompense la régularité de la chaîne. La pêcherie pose
+     une question différente : combien peut-on prendre sans vider l'eau ?
+     ================================================================= */
+  function rendrePecherieChaine(c, bid) {
+    const b = E().bat[bid]; if (!b || !window.EcosystemesBatiments) return;
+    const m = window.Jeu.maitriseAtelier(b), cfg = window.EcosystemesBatiments.personnel(b);
+    const s = cfg.signature, pct = s.banc / Math.max(1,s.maximum), tenus = b.postes.filter(p => p.hab).length;
+    const etat = pct >= .75 ? 'Abondant' : (pct >= .45 ? 'Stable' : (pct >= .20 ? 'Fragile' : 'Épuisé'));
+    const couleur = pct < .2 ? 'rouge' : (pct < .45 ? 'or' : 'verte');
+
+    c.appendChild(el('section', { class:'scierie-maitrise pecherie-maitrise' },
+      el('img', { src:artPecherie('maitrise'), alt:'' }),
+      el('div', { class:'scierie-maitrise-corps' },
+        el('div', { class:'rangee entre' },
+          el('span', {}, el('i', { text:'MAÎTRISE DE PÊCHE' }), el('b', { text:'Rang ' + m.niveau })),
+          el('strong', { text:'+' + Math.round(m.bonus * 100) + ' %' })),
+        el('div', { class:'scierie-maitrise-jauge' }, el('i', { style:'width:' + Math.round(m.pct * 100) + '%' })),
+        el('small', { text:U.fmt(m.dans) + ' / ' + U.fmt(m.pour) + ' xp avant le rang suivant' })),
+      el('div', { class:'scierie-effectif' }, el('b', { text:tenus + ' / ' + b.postes.length }), el('span', { text:'au ponton' }))));
+
+    c.appendChild(el('section', { class:'pecherie-banc' },
+      el('img', { src:pct < .25 ? artPecherie('rare') : (pct > .72 ? artPecherie('banc') : artPecherie('calme')), alt:'' }),
+      el('div', {},
+        el('div', { class:'rangee entre' }, el('span', {}, el('i', { text:'BANC SAUVAGE' }), el('b', { text:etat })),
+          el('strong', { text:Math.round(s.banc) + ' %' })),
+        U.barre(pct, couleur, 'Poissons présents', pct < .2 ? 'rendement fortement réduit' : (pct < .45 ? 'la rivière récupère' : 'pêche productive')),
+        el('p', { text:'Le banc se renouvelle seul. Filets et harpons le fatiguent ; le vivier le repeuple en échange de poisson déjà pêché.' }))));
+
+    const politiques = [
+      {id:'durable', nom:'Mailles larges', art:'durable', effet:'−12 % de prises · −45 % de pression'},
+      {id:'equilibre', nom:'Prélèvement mesuré', art:'maree', effet:'Rendement et renouvellement équilibrés'},
+      {id:'intensive', nom:'Tout remonter', art:'filet', effet:'+18 % de prises · +50 % de pression', niv:4},
+    ];
+    const choix = el('div', { class:'scierie-organisations pecherie-politiques' });
+    for (const p of politiques) {
+      const verrou = b.niv < (p.niv || 1);
+      choix.appendChild(el('button', { class:'scierie-organisation' + (s.politique === p.id ? ' active' : ''), disabled:verrou,
+        onclick:() => { s.politique = p.id; window.Etat.prevenir('poste',{bat:bid}); rafraichirVillage(); } },
+        el('img', { src:artPecherie(p.art), alt:'' }),
+        el('span', {}, el('b', { text:p.nom }), el('i', { text:verrou ? 'Pêcherie niveau ' + p.niv : p.effet })),
+        el('strong', { text:s.politique === p.id ? 'ACTIVE' : (verrou ? 'VERROUILLÉE' : 'CHOISIR') })));
+    }
+    c.appendChild(choix);
+
+    c.appendChild(el('div', { class:'scierie-consigne',
+      text:'Le + ouvre les portraits classés selon leur efficacité réelle en pêche. Le − libère un habitant. Aucun choix collectif ne remplace leurs compétences individuelles.' }));
+    const disponibles = window.BatUtil.recettesDe(b.type, b.niv, b);
+    const toutes = (window.BAT[b.type].recettes || []).filter(rid => !estRecetteOutil(window.REC[rid]));
+    const ouvertes = toutes.filter(rid => disponibles.includes(rid));
+    const prochaines = toutes.filter(rid => !disponibles.includes(rid))
+      .sort((a,z) => (window.REC[a].niv || 1) - (window.REC[z].niv || 1)).slice(0,2);
+    const liste = el('div', { class:'scierie-chaines' });
+    for (const rid of ouvertes) liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artPecherie,source:'rivière'}));
+    for (const rid of prochaines) liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artPecherie,source:'rivière'}));
+    c.appendChild(liste);
+  }
+
+  function rendreChampChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature;
+    const pct=s.fertilite/Math.max(1,s.maximum),spct=s.semences/Math.max(1,s.semencesMax),tenus=b.postes.filter(p=>p.hab).length;
+    const etat=pct>=.75?'Terre riche':(pct>=.4?'Terre stable':(pct>=.15?'Terre fatiguée':'Terre épuisée'));
+    c.appendChild(el('section',{class:'scierie-maitrise champ-maitrise'},
+      el('img',{src:artChamp('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},
+        el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DU DOMAINE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),
+        el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),
+        el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:tenus+' / '+b.postes.length}),el('span',{text:'aux champs'}))));
+    c.appendChild(el('section',{class:'champ-sol'},
+      el('img',{src:pct<.32?artChamp('epuise'):artChamp('fertile'),alt:''}),
+      el('div',{},el('div',{class:'rangee entre'},el('b',{text:etat}),el('strong',{text:Math.round(s.fertilite)+' %'})),
+        U.barre(pct,pct<.2?'rouge':(pct<.45?'or':'verte'),'Fertilité',pct<.4?'rotation ou jachère conseillée':'rendement préservé'),
+        el('div',{class:'rangee entre champ-semences-titre'},el('b',{text:'Réserve de semences'}),el('strong',{text:Math.round(s.semences)+' / '+s.semencesMax})),
+        U.barre(spct,spct<.18?'rouge':'','Semences',spct<.18?'récoltes affaiblies':'prochaine saison assurée'))));
+    const strategies=[
+      {id:'rotation',nom:'Rotation trois soles',art:'rotation',effet:'Le sol récupère mieux et s’épuise 18 % moins vite'},
+      {id:'semences',nom:'Garder les plus beaux grains',art:'semences',effet:'−10 % de récolte, réserve de semences en hausse'},
+      {id:'cereales',nom:'Tout au blé',art:'ble',effet:'+16 % de blé, épuisement du sol +20 %',niv:4},
+    ],choix=el('div',{class:'scierie-organisations champ-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,
+      onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artChamp(p.art),alt:''}),
+      el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Champ niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Chaque parcelle garde son propre sol et ses propres semences. La jachère sacrifie du débit maintenant pour restaurer durablement les cycles suivants.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=(window.BAT[b.type].recettes||[]).filter(rid=>!estRecetteOutil(window.REC[rid]));
+    const ouvertes=toutes.filter(rid=>disponibles.includes(rid)),prochaines=toutes.filter(rid=>!disponibles.includes(rid)).sort((a,z)=>(window.REC[a].niv||1)-(window.REC[z].niv||1)).slice(0,2);
+    const liste=el('div',{class:'scierie-chaines'});
+    for(const rid of ouvertes)liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artChamp,source:'terre'}));
+    for(const rid of prochaines)liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artChamp,source:'terre'}));
+    c.appendChild(liste);
+  }
+
+  function rendreTournesolChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,pct=s.pollinisation/Math.max(1,s.maximum);
+    const cible=G.pollinisationCible(),ruchers=window.Etat.batsDeType('rucher').length,fleurs=window.Etat.batsDeType('fleurs').length;
+    const etat=pct>=.78?'Bourdonnant':(pct>=.48?'Bien visité':(pct>=.22?'Peu visité':'Floraison déserte'));
+    c.appendChild(el('section',{class:'scierie-maitrise tournesol-maitrise'},
+      el('img',{src:artTournesol('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},
+        el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DU TOURNESOL'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),
+        el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),
+        el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'dans les rangs'}))));
+    c.appendChild(el('section',{class:'tournesol-pollinisation'},
+      el('img',{src:pct<.25?artTournesol('nuage'):(pct>.7?artTournesol('abeille'):artTournesol('floraison')),alt:''}),
+      el('div',{},el('div',{class:'rangee entre'},el('b',{text:etat}),el('strong',{text:Math.round(s.pollinisation)+' %'})),
+        U.barre(pct,pct<.22?'rouge':(pct<.48?'or':'verte'),'Pollinisation','cible naturelle '+Math.round(cible)+' %'),
+        el('div',{class:'tournesol-reseau'},
+          el('span',{},el('img',{src:artTournesol('ruche'),alt:''}),el('b',{text:ruchers}),el('i',{text:'ruchers'})),
+          el('span',{},el('img',{src:window.Img?window.Img.bat('fleurs'):artTournesol('floraison'),alt:''}),el('b',{text:fleurs}),el('i',{text:'champs fleuris'})),
+          el('span',{},el('img',{src:artTournesol('pollen'),alt:''}),el('b',{text:Math.round(s.nectar)}),el('i',{text:'nectar réservé'}))))));
+    const strategies=[
+      {id:'floraison',nom:'Floraison longue',art:'longue',effet:'−12 % de graines · pollinisation préservée'},
+      {id:'equilibre',nom:'Cycle naturel',art:'pollinisation',effet:'Le meilleur équilibre entre fleurs et graines'},
+      {id:'graines',nom:'Couper à maturité',art:'semences',effet:'+15 % de graines · visite des abeilles plus fragile',niv:4},
+    ],choix=el('div',{class:'scierie-organisations tournesol-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,
+      onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artTournesol(p.art),alt:''}),
+      el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Champ niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'La pollinisation ne s’achète pas dans ce panneau : elle vient du réseau agricole réel du village. Les ruchers seront les meilleurs alliés de ces parcelles.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[];
+    const ouvertes=toutes.filter(rid=>disponibles.includes(rid)),prochaines=toutes.filter(rid=>!disponibles.includes(rid)).slice(0,2),liste=el('div',{class:'scierie-chaines'});
+    for(const rid of ouvertes)liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artTournesol,source:'soleil'}));
+    for(const rid of prochaines)liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artTournesol,source:'soleil'}));
+    c.appendChild(liste);
+  }
+
+  function rendrePepiniereChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,pct=s.reprise/100,plants=s.plants/s.plantsMax;
+    c.appendChild(el('section',{class:'scierie-maitrise pepiniere-maitrise'},el('img',{src:artPepiniere('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DE PÉPINIÈRE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),
+        el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'aux plants'}))));
+    c.appendChild(el('section',{class:'pepiniere-lignee'},el('img',{src:pct<.5?artPepiniere('ratee'):artPepiniere('reussie'),alt:''}),el('div',{},
+      el('div',{class:'rangee entre'},el('b',{text:'Taux de reprise'}),el('strong',{text:Math.round(s.reprise)+' %'})),U.barre(pct,pct<.45?'rouge':'verte','Greffes qui prennent','lignée '+Math.floor(s.lignee)),
+      el('div',{class:'rangee entre pepiniere-plants-titre'},el('b',{text:'Jeunes plants prêts'}),el('strong',{text:Math.floor(s.plants)+' / '+s.plantsMax})),U.barre(plants,plants<.15?'rouge':'','Plateaux','repousse automatiquement'))));
+    const strategies=[{id:'diversite',nom:'Verger mêlé',art:'lignee',effet:'Progression équilibrée de la lignée'},{id:'robuste',nom:'Porte-greffes robustes',art:'robuste',effet:'Meilleure reprise et davantage de jeunes plants'},{id:'productive',nom:'Sélection productive',art:'productive',effet:'+16 % de fruits, croissance des plants normale',niv:4}],choix=el('div',{class:'scierie-organisations pepiniere-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artPepiniere(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Pépinière niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Chaque greffe réussie fait progresser cette pépinière. La lignée est locale : plusieurs pépinières peuvent devenir productives ou robustes de façons différentes.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});
+    for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artPepiniere,source:'verger'}));
+    for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artPepiniere,source:'verger'}));
+    c.appendChild(liste);
+  }
+
+  function rendrePotagerChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,h=s.humidite/100,a=s.association/100;
+    const puits=Object.values(E().bat).filter(x=>x.type==='puits').length,cible=G.humiditeCible();
+    c.appendChild(el('section',{class:'scierie-maitrise potager-maitrise'},el('img',{src:artPotager('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE MARAÎCHÈRE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),
+        el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'aux planches'}))));
+    c.appendChild(el('section',{class:'potager-etat'},
+      el('div',{class:'potager-etat-icone'},el('img',{src:artPotager(h<.35?'sec':'humide'),alt:''})),
+      el('div',{class:'potager-etat-jauges'},
+        el('div',{class:'rangee entre'},el('b',{text:'Humidité des planches'}),el('strong',{text:Math.round(s.humidite)+' %'})),
+        U.barre(h,h<.3?'rouge':'verte','Humidité','cible naturelle '+Math.round(cible)+' %'),
+        el('div',{class:'rangee entre potager-association-titre'},el('b',{text:'Associations de cultures'}),el('strong',{text:Math.round(s.association)+' %'})),
+        U.barre(a,a<.3?'rouge':'or','Compagnonnage','légumes, racines et simples'),
+        el('small',{text:puits?puits+' puits soutient'+(puits>1?'nent':'')+' naturellement l’arrosage':'Construire un puits augmentera la cible d’humidité'}))));
+    const strategies=[
+      {id:'melange',nom:'Planches compagnes',art:'melange',effet:'Les associations se reforment et l’eau est mieux préservée'},
+      {id:'primeurs',nom:'Primeurs sous cloche',art:'primeurs',effet:'+15 % de légumes · sol plus exigeant',niv:4},
+      {id:'simples',nom:'Carrés de simples',art:'simples',effet:'+18 % d’herbes et racines · moins de légumes',niv:3},
+    ],choix=el('div',{class:'scierie-organisations potager-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artPotager(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Potager niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Le potager ne dépense jamais d’eau en secret. Les puits améliorent sa cible d’humidité ; les recettes avancées consomment explicitement l’eau indiquée sur leur ligne.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});
+    for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artPotager,source:'planches'}));
+    for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artPotager,source:'planches'}));
+    c.appendChild(liste);
+  }
+
+  function rendreFleursChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,f=s.floraison/100,n=s.nectar/100;
+    const ruchers=Object.values(E().bat).filter(x=>x.type==='rucher').length,tournesols=Object.values(E().bat).filter(x=>x.type==='tournesol').length;
+    c.appendChild(el('section',{class:'scierie-maitrise fleurs-maitrise'},el('img',{src:artFleurs('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE FLORALE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),
+        el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'au jardin'}))));
+    c.appendChild(el('section',{class:'fleurs-etat'},el('img',{src:artFleurs(f<.32?'fanee':'floraison'),alt:''}),el('div',{},
+      el('div',{class:'rangee entre'},el('b',{text:'Floraison disponible'}),el('strong',{text:Math.round(s.floraison)+' %'})),U.barre(f,f<.3?'rouge':'verte','Floraison','repousse naturellement'),
+      el('div',{class:'rangee entre fleurs-nectar-titre'},el('b',{text:'Réserve de nectar'}),el('strong',{text:Math.round(s.nectar)+' %'})),U.barre(n,n>.7?'or':'','Nectar','cible réseau '+Math.round(G.nectarCible())+' %'),
+      el('div',{class:'fleurs-reseau'},el('span',{},el('img',{src:artFleurs('ruche'),alt:''}),el('b',{text:ruchers+' rucher'+(ruchers>1?'s':'')})),el('span',{},el('img',{src:artTournesol('floraison'),alt:''}),el('b',{text:tournesols+' tournesol'+(tournesols>1?'s':'')})),el('span',{},el('img',{src:artFleurs('alchimie'),alt:''}),el('b',{text:'Alchimie'}))))));
+    const strategies=[
+      {id:'bouquets',nom:'Jardin de bouquets',art:'bouquets',effet:'+15 % sur la coupe · floraison plus sollicitée'},
+      {id:'butinage',nom:'Prairie de butinage',art:'butinage',effet:'Moins de fleurs coupées · réserve de nectar privilégiée',niv:2},
+      {id:'grainier',nom:'Carré grainier',art:'grainier',effet:'+18 % sur les graines · floraison plus résiliente',niv:3},
+    ],choix=el('div',{class:'scierie-organisations fleurs-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artFleurs(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Champ niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Ce champ est un carrefour : les bouquets servent au bourg et à l’alchimie, tandis que laisser fleurir renforce le réseau des abeilles. Le rucher reprendra directement cette réserve lors de sa propre refonte.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});
+    for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artFleurs,source:'floraison'}));
+    for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artFleurs,source:'floraison'}));
+    c.appendChild(liste);
+  }
+
+  function rendrePuitsChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,pct=s.nappe/100;
+    c.appendChild(el('section',{class:'scierie-maitrise puits-maitrise'},el('img',{src:artPuits('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DES PORTEURS'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'au treuil'}))));
+    c.appendChild(el('section',{class:'puits-nappe'},el('img',{src:artPuits(pct<.3?'basse':'pleine'),alt:''}),el('div',{},el('div',{class:'rangee entre'},el('b',{text:'Niveau de la nappe'}),el('strong',{text:Math.round(s.nappe)+' %'})),U.barre(pct,pct<.25?'rouge':'verte','Nappe phréatique',pct<.25?'débit fortement réduit':'recharge naturelle'),el('p',{text:'Chaque seau fait baisser cette nappe locale. Une pause ou une cadence plus douce laisse l’eau revenir sans intervention.'}))));
+    const strategies=[
+      {id:'equilibre',nom:'Répartition équilibrée',art:'equilibre',effet:'Débit et pression de la nappe équilibrés'},
+      {id:'bourg',nom:'Habitants d’abord',art:'priorite_bourg',effet:'−8 % d’eau en stock · repos du village accéléré',niv:2},
+      {id:'cultures',nom:'Irrigation prioritaire',art:'priorite_cultures',effet:'−10 % d’eau en stock · humidité des potagers renforcée',niv:3},
+      {id:'ateliers',nom:'Grand débit',art:'priorite_ateliers',effet:'+20 % d’eau · nappe davantage sollicitée',niv:4},
+    ],choix=el('div',{class:'scierie-organisations puits-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artPuits(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Puits niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'La distribution remplace les anciennes améliorations abstraites : le même puits peut soutenir le repos, les cultures ou la production. Le choix reste actif et n’exige aucune tournée manuelle.'}));
+    const liste=el('div',{class:'scierie-chaines'});liste.appendChild(rendreLigneScierie(bid,'tirer_eau',true,{art:artPuits,source:'nappe'}));c.appendChild(liste);
+  }
+
+  function rendreBergerieChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,tr=s.troupeau/Math.max(1,s.maximum),pa=s.paturage/100,reserve=G.reproducteurs(b);
+    c.appendChild(el('section',{class:'scierie-maitrise bergerie-maitrise'},el('img',{src:artBergerie('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DE BERGERIE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:b.postes.filter(p=>p.hab).length+' / '+b.postes.length}),el('span',{text:'au troupeau'}))));
+    c.appendChild(el('section',{class:'bergerie-troupeau'},el('img',{src:artBergerie(s.troupeau<=reserve+.5?'agneau':'troupeau'),alt:''}),el('div',{},
+      el('div',{class:'rangee entre'},el('b',{text:'Troupeau vivant'}),el('strong',{text:s.troupeau.toFixed(1)+' / '+s.maximum})),U.barre(tr,tr<.35?'rouge':'verte','Cheptel',reserve+' reproducteurs protégés'),
+      el('div',{class:'rangee entre bergerie-paturage-titre'},el('b',{text:'Pâturage disponible'}),el('strong',{text:Math.round(s.paturage)+' %'})),U.barre(pa,pa<.25?'rouge':'','Pâture',pa<.25?'repousse nécessaire':'herbe disponible'),
+      el('p',{text:'Les naissances sont automatiques. Les tâches d’abattage attendent si elles feraient passer le troupeau sous la réserve protégée.'}))));
+    const strategies=[
+      {id:'laine',nom:'Belles toisons',art:'laine',effet:'+15 % de laine · 4 reproducteurs conservés'},
+      {id:'renouvellement',nom:'Agnelage protégé',art:'renouvellement',effet:'Naissances accélérées · 6 reproducteurs · −10 % de sorties',niv:2},
+      {id:'viande',nom:'Troupeau de boucherie',art:'viande',effet:'+18 % de viande et peaux · croissance plus lente',niv:3},
+    ],choix=el('div',{class:'scierie-organisations bergerie-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artBergerie(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Bergerie niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Le cheptel est propre à cette bergerie. Agrandir augmente sa capacité ; préserver davantage de reproducteurs ralentit le rendement immédiat mais évite les longues périodes sans bêtes.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});
+    for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artBergerie,source:'troupeau'}));
+    for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artBergerie,source:'troupeau'}));
+    c.appendChild(liste);
+  }
+
+  function rendrePersonnelEcosysteme(c, bid) {
+    const b = E().bat[bid], G = window.EcosystemesBatiments; if (!b || !G) return;
+    const cfg = G.personnel(b), ouv = (b.postes || []).filter(p => p.hab)
+      .map(p => ({p,h:window.Etat.habitant(p.hab)})).filter(x => x.h);
+    const etats = ouv.map(x => G.disponibilite(x.h,b));
+    const actifs = etats.filter(x => x.actif).length;
+    const vigueur = ouv.length ? ouv.reduce((n,x) => n + window.VieVillage.assurerHabitant(x.h).vigueur,0) / ouv.length : 0;
+    const rythme = Math.round(b.rythmeAtelier || 0), maxEquipes = b.niv >= 7 ? 4 : (b.niv >= 5 ? 3 : 2);
+    c.appendChild(el('section', { class:'scierie-personnel-resume' },
+      el('div', { class:'scierie-personnel-score' }, el('strong',{text:Math.round(vigueur)}), el('span',{text:'VIGUEUR'})),
+      el('div', { class:'scierie-personnel-jauges' },
+        el('div',{class:'rangee entre'},el('b',{text:actifs+' actifs · '+(ouv.length-actifs)+' en repos'}),el('i',{text:ouv.length+' affectés'})),
+        U.barre(vigueur/100,vigueur<30?'rouge':'verte','Vigueur moyenne',Math.round(vigueur)+' %'),
+        el('div',{class:'rangee entre rythme-lame'},el('b',{text:(G.definition(b)||{}).rythme||'Régularité'}),el('strong',{text:rythme+' %'})),
+        U.barre(rythme/100,rythme>70?'or':'','Régularité',rythme<25?'relèves désaccordées':'équipage coordonné')),
+      el('p',{text:'Les horaires concentrent le travail sans effacer les individus. Les volants restent disponibles toute la journée et prennent seulement leurs pauses.'})));
+
+    c.appendChild(U.section('Construire le planning',cfg.equipes.length+' / '+maxEquipes+' équipes'));
+    c.appendChild(rendreCouvertureScierie(cfg));
+    const gestion = el('div',{class:'scierie-equipes-gestion'});
+    for (const eq of cfg.equipes) {
+      const membres=ouv.filter(x=>cfg.affectations[x.h.id]===eq.id);
+      const moy=membres.length?membres.reduce((n,x)=>n+window.VieVillage.assurerHabitant(x.h).vigueur,0)/membres.length:0;
+      gestion.appendChild(el('article',{style:'--equipe:'+eq.couleur},
+        el('div',{class:'scierie-equipe-tete'},el('span',{style:'background:'+eq.couleur}),
+          el('div',{},el('input',{class:'scierie-equipe-nom',value:eq.nom,maxlength:18,onchange:e=>{eq.nom=e.target.value.trim()||'Équipe';}}),
+            el('i',{class:'scierie-equipe-plage',text:heureCourte(eq.debut)+' → '+heureCourte(eq.debut+eq.duree)+' · '+eq.duree+' h'})),
+          el('strong',{text:membres.length+' chats'})),
+        el('div',{class:'scierie-equipe-vigueur'},el('div',{},el('i',{style:'width:'+Math.round(moy)+'%'})),el('b',{text:Math.round(moy)+' % vigueur'})),
+        el('label',{class:'scierie-horaire-reglage'},el('span',{text:'Début'}),
+          el('input',{type:'range',min:0,max:23,step:1,value:eq.debut,oninput:e=>{eq.debut=+e.target.value;e.target.nextSibling.textContent=heureCourte(eq.debut);majCarteHoraire(e.target.closest('article'),eq);majCouvertureScierie(c,cfg);}}),el('b',{text:heureCourte(eq.debut)})),
+        el('label',{class:'scierie-horaire-reglage'},el('span',{text:'Durée'}),
+          el('input',{type:'range',min:1,max:24,step:1,value:eq.duree,oninput:e=>{eq.duree=+e.target.value;e.target.nextSibling.textContent=eq.duree+' h';majCarteHoraire(e.target.closest('article'),eq);majCouvertureScierie(c,cfg);}}),el('b',{text:eq.duree+' h'}))));
+    }
+    c.appendChild(gestion);
+    c.appendChild(el('div',{class:'scierie-equipes-actions'},
+      cfg.equipes.length?el('button',{class:'b mini primaire',text:'Répartir automatiquement',onclick:()=>{G.repartirEquipes(b);rafraichirVillage();}}):null,
+      cfg.equipes.length<maxEquipes?el('button',{class:'b mini',text:'+ Créer une équipe',onclick:()=>{G.ajouterEquipe(b);rafraichirVillage();}}):null,
+      cfg.equipes.length?el('button',{class:'b mini',text:'− Supprimer la dernière',onclick:()=>{G.retirerEquipe(b);rafraichirVillage();}}):null));
+
+    c.appendChild(U.section('Cadence et autonomie'));
+    const cadences=el('div',{class:'scierie-choix-cartes'}), niveaux={menagee:3,normale:1,soutenue:5,forcage:7};
+    for (const id in G.CADENCES) {
+      const d=G.CADENCES[id], verrou=b.niv<(niveaux[id]||1);
+      cadences.appendChild(el('button',{class:'scierie-choix'+(cfg.cadence===id?' active':'')+(id==='forcage'?' danger':''),disabled:verrou,
+        onclick:()=>{cfg.cadence=id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},
+        el('b',{text:d.nom}),el('span',{text:verrou?window.BAT[b.type].nom+' niveau '+niveaux[id]:d.desc}),el('i',{text:cfg.cadence===id?'ACTIVE':(verrou?'VERROUILLÉ':'CHOISIR')})));
+    }
+    c.appendChild(cadences);
+    const policies=el('div',{class:'scierie-repos-policies'}), actuelle=politiqueActuelle(cfg);
+    for(const p of POLITIQUES_REPOS_SCIERIE) policies.appendChild(el('button',{class:actuelle.id===p.id?'active':'',onclick:()=>{cfg.autoRepos=true;cfg.seuilRepos=p.bas;cfg.seuilRetour=p.haut;rafraichirVillage();}},
+      el('b',{text:p.nom}),el('span',{text:p.desc}),el('i',{text:'pause '+p.bas+' % · retour '+p.haut+' %'})));
+    c.appendChild(policies);
+
+    c.appendChild(U.section('Affectation aux équipes'));
+    const equipe=el('div',{class:'scierie-equipe-compacte'});
+    for(const x of ouv){
+      const vie=window.VieVillage.assurerHabitant(x.h), etat=G.disponibilite(x.h,b), rec=x.p.rec&&window.REC[x.p.rec], eq=G.equipeHabitant(x.h,b);
+      const choix=el('div',{class:'scierie-affectation-equipe'},el('button',{class:!eq?'active':'',title:'Ouvrier volant',onclick:()=>{G.affecterEquipe(b,x.h.id,null);rafraichirVillage();},text:'V'}));
+      for(const e of cfg.equipes) choix.appendChild(el('button',{class:eq&&eq.id===e.id?'active':'',style:'--equipe:'+e.couleur,title:e.nom,onclick:()=>{G.affecterEquipe(b,x.h.id,e.id);rafraichirVillage();},text:e.nom.charAt(0)}));
+      equipe.appendChild(el('article',{},avatarHab(x.h,52,'affectation-portrait'),
+        el('div',{},el('b',{text:x.h.nom}),el('span',{text:(rec?rec.nom:'Sans tâche')+' · '+(etat.actif?'au travail':etat.raison)}),el('div',{class:'mini-vigueur'},el('i',{style:'width:'+Math.round(vie.vigueur)+'%'}))),choix,el('strong',{text:Math.round(vie.vigueur)+'%'})));
+    }
+    if(!ouv.length)equipe.appendChild(el('div',{class:'vide',text:'Aucun habitant affecté. Le + de la chaîne permet de composer l’équipage.'}));
+    c.appendChild(equipe);
+  }
+
+  function coutConfortPecherie(a,n){const o={};for(const k in a.base)o[k]=Math.ceil(a.base[k]*(1+n*1.35));return o;}
+  function rendreConfortEcosysteme(c,bid,options){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const cfg=G.personnel(b),bonus=G.confort(b),def=G.definition(b);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Le confort ralentit réellement la fatigue, accélère les pauses et protège le moral. Il ne crée pas un bonus de production sorti de nulle part.'}));
+    c.appendChild(el('div',{class:'scierie-confort-bilan'},
+      el('span',{},el('b',{text:'Niveau '+bonus.niveau}),el('i',{text:'confort total'})),
+      el('span',{},el('b',{text:'×'+bonus.recuperation.toFixed(2).replace('.',',')}),el('i',{text:'récupération'})),
+      el('span',{},el('b',{text:'−'+Math.round((1-bonus.fatigue)*100)+' %'}),el('i',{text:'fatigue'})),
+      el('span',{},el('b',{text:'+'+bonus.moral.toFixed(1).replace('.',',')}),el('i',{text:'moral'}))));
+    options=options||{};const arts=options.arts||{},art=options.art||artPecherie,liste=el('div',{class:'scierie-confort-liste'});
+    for(const a of def.confort){
+      const n=cfg.confort[a.id]||0,fini=n>=3,cout=fini?{}:coutConfortPecherie(a,n);
+      const action=fini?el('span',{class:'scierie-termine',text:'AMÉNAGEMENT COMPLET'}):el('div',{class:'scierie-achat'},U.listeRes(cout,{verifier:true}),
+        el('button',{class:'b mini primaire',text:'Aménager',disabled:!window.Etat.assez(cout),onclick:()=>{if(!window.Etat.assez(cout))return;window.Etat.depenser(cout);cfg.confort[a.id]=n+1;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}}));
+      liste.appendChild(el('article',{},el('div',{class:'scierie-confort-icone'},el('img',{src:art(arts[a.id]||'abri'),alt:''})),
+        el('div',{class:'scierie-confort-corps'},el('div',{class:'rangee entre'},el('b',{text:a.nom}),el('strong',{text:n+'/3'})),el('p',{text:a.desc}),
+          el('div',{class:'scierie-crans'},...Array.from({length:3},(_,i)=>el('i',{class:i<n?'on':''}))),action)));
+    }
     c.appendChild(liste);
   }
 
@@ -809,9 +1211,9 @@
     null,
     { nom:'La lisière', image:'parc-grumes.png', ouvre:'Chaîne · abattage · 1 poste' },
     { nom:'Le banc de sciage', image:'banc-scie.png', ouvre:'Onglet Outillage · planches · 2 postes' },
-    { nom:'L’atelier de valorisation', image:'atelier-osier.png', ouvre:'Onglet Atelier · osier et écorce · 3 postes' },
-    { nom:'Les corps d’annexes', image:'sechoir-couvert.png', ouvre:'Onglet Annexes · 5 postes' },
-    { nom:'Le contremaître', image:'bureau-contremaitre.png', ouvre:'Onglet Organisation · poutres · 8 postes' },
+    { nom:'L’atelier de valorisation', image:'atelier-osier.png', ouvre:'Personnel et Annexes · premières politiques de repos · 3 postes' },
+    { nom:'La grande halle', image:'sechoir-couvert.png', ouvre:'Confort des équipes · deuxième corps · 5 postes' },
+    { nom:'Le contremaître', image:'bureau-contremaitre.png', ouvre:'Organisation et relèves avancées · poutres · 8 postes' },
     { nom:'La roue motrice', image:'roue-hydraulique.png', ouvre:'Transmission renforcée · 12 postes' },
     { nom:'Le chariot sur rails', image:'chariot-rails.png', ouvre:'Manutention lourde · 18 postes' },
     { nom:'Le grand parc à grumes', image:'parc-grumes.png', ouvre:'Stockage de flux · 26 postes' },
@@ -896,6 +1298,175 @@
     c.appendChild(grille);
   }
 
+  const POLITIQUES_REPOS_SCIERIE = [
+    { id:'prudente', nom:'Préserver les équipes', bas:36, haut:78,
+      desc:'Pause tôt, retour seulement quand les pattes sont vraiment reposées.' },
+    { id:'equilibre', nom:'Repos automatique', bas:24, haut:68,
+      desc:'Le contremaître remplace les manipulations : pause et reprise sont individuelles.' },
+    { id:'tenace', nom:'Tenir la commande', bas:12, haut:52,
+      desc:'On reste plus longtemps à la lame, au prix d’une efficacité et d’un moral fragiles.' },
+  ];
+
+  function politiqueActuelle(cfg) {
+    return POLITIQUES_REPOS_SCIERIE.find(p => p.bas === cfg.seuilRepos && p.haut === cfg.seuilRetour)
+      || POLITIQUES_REPOS_SCIERIE[1];
+  }
+  function heureCourte(h){h=((Math.round(h)%24)+24)%24;return String(h).padStart(2,'0')+' h';}
+  function equipeCouvre(eq,heure){return ((heure-eq.debut+24)%24)<eq.duree;}
+  function rendreCouvertureScierie(cfg){
+    const ligne=el('div',{class:'scierie-couverture'});
+    for(let h=0;h<24;h++){
+      const n=cfg.equipes.filter(eq=>equipeCouvre(eq,h+.5)).length;
+      ligne.appendChild(el('i',{class:'c'+Math.min(4,n),title:heureCourte(h)+' · '+n+' équipe'+(n>1?'s':'')}));
+    }
+    return el('div',{class:'scierie-couverture-bloc'},
+      el('div',{class:'rangee entre'},el('b',{text:'Couverture des 24 heures'}),el('span',{text:'0 h · 6 h · 12 h · 18 h · 24 h'})),ligne);
+  }
+  function majCouvertureScierie(racine,cfg){
+    const cases=racine.querySelectorAll('.scierie-couverture i');
+    cases.forEach((caseHeure,h)=>{
+      const n=cfg.equipes.filter(eq=>equipeCouvre(eq,h+.5)).length;
+      caseHeure.className='c'+Math.min(4,n);
+      caseHeure.title=heureCourte(h)+' · '+n+' équipe'+(n>1?'s':'');
+    });
+  }
+  function majCarteHoraire(carte,eq){
+    const plage=carte.querySelector('.scierie-equipe-plage');
+    if(plage)plage.textContent=heureCourte(eq.debut)+' → '+heureCourte(eq.debut+eq.duree)+' · '+eq.duree+' h';
+  }
+  function rendrePersonnelScierie(c, bid) {
+    const b=E().bat[bid]; if(!b || !window.VieVillage) return;
+    const cfg=window.VieVillage.personnelScierie(b);
+    const ouv=(b.postes||[]).filter(p=>p.hab).map(p=>({p,h:window.Etat.habitant(p.hab)})).filter(x=>x.h);
+    const etats=ouv.map(x=>window.VieVillage.disponibiliteTravail(x.h,b));
+    const actifs=etats.filter(x=>x.actif).length;
+    const vigueur=ouv.length?ouv.reduce((n,x)=>n+window.VieVillage.assurerHabitant(x.h).vigueur,0)/ouv.length:0;
+    const rythme=Math.round(b.rythmeScierie||0);
+
+    c.appendChild(el('section',{class:'scierie-personnel-resume'},
+      el('div',{class:'scierie-personnel-score'},el('strong',{text:Math.round(vigueur)}),el('span',{text:'VIGUEUR'})),
+      el('div',{class:'scierie-personnel-jauges'},
+        el('div',{class:'rangee entre'},el('b',{text:actifs+' actifs · '+(ouv.length-actifs)+' en repos'}),el('i',{text:ouv.length+' affectés'})),
+        U.barre(vigueur/100,vigueur<30?'rouge':'verte','Vigueur moyenne',Math.round(vigueur)+' %'),
+        el('div',{class:'rangee entre rythme-lame'},el('b',{text:'Rythme de la lame'}),el('strong',{text:rythme+' %'})),
+        U.barre(rythme/100,rythme>70?'or':'','Synchronisation',rythme>75?'cadence + trouvailles':(rythme<25?'atelier désaccordé':'en construction'))),
+      el('p',{text:'Le rythme monte quand les équipes travaillent régulièrement sans s’épuiser. Le forçage produit davantage immédiatement, mais le brise.'})));
+
+    /* Plus de modèle 2×12 ou 3×8 : le joueur bâtit le planning. Les
+       anciennes sauvegardes conservent leurs équipes comme point de départ,
+       mais leur roulement devient immédiatement personnalisable. */
+    cfg.roulement='personnalise';cfg.horaire='personnalise';
+    const maxEquipes=b.niv>=7?4:(b.niv>=5?3:2);
+    c.appendChild(U.section('Construire le planning',cfg.equipes.length+' / '+maxEquipes+' équipes'));
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Créez vos équipes, choisissez leur début et leur durée, puis affectez chaque ouvrier. Les volants restent hors roulement et bouchent librement les trous.'}));
+    c.appendChild(rendreCouvertureScierie(cfg));
+    if(cfg.equipes.length){
+      const gestion=el('div',{class:'scierie-equipes-gestion'});
+      for(const eq of cfg.equipes){
+        const membres=ouv.filter(x=>cfg.affectations[x.h.id]===eq.id);
+        const moy=membres.length?membres.reduce((n,x)=>n+window.VieVillage.assurerHabitant(x.h).vigueur,0)/membres.length:0;
+        gestion.appendChild(el('article',{style:'--equipe:'+eq.couleur},
+          el('div',{class:'scierie-equipe-tete'},el('span',{style:'background:'+eq.couleur}),
+            el('div',{},el('input',{class:'scierie-equipe-nom',value:eq.nom,maxlength:18,onchange:e=>{eq.nom=e.target.value.trim()||'Équipe';}}),
+              el('i',{class:'scierie-equipe-plage',text:heureCourte(eq.debut)+' → '+heureCourte(eq.debut+eq.duree)+' · '+eq.duree+' h'})),
+            el('strong',{text:membres.length+' chats'})),
+          el('div',{class:'scierie-equipe-vigueur'},el('div',{},el('i',{style:'width:'+Math.round(moy)+'%'})),el('b',{text:Math.round(moy)+' % vigueur'})),
+          el('label',{class:'scierie-horaire-reglage'},el('span',{text:'Début'}),
+            el('input',{type:'range',min:0,max:23,step:1,value:eq.debut,oninput:e=>{
+              eq.debut=+e.target.value;e.target.nextSibling.textContent=heureCourte(eq.debut);
+              majCarteHoraire(e.target.closest('article'),eq);majCouvertureScierie(c,cfg);
+            }}),el('b',{text:heureCourte(eq.debut)})),
+          el('label',{class:'scierie-horaire-reglage'},el('span',{text:'Durée'}),
+            el('input',{type:'range',min:1,max:24,step:1,value:eq.duree,oninput:e=>{
+              eq.duree=+e.target.value;e.target.nextSibling.textContent=eq.duree+' h';
+              majCarteHoraire(e.target.closest('article'),eq);majCouvertureScierie(c,cfg);
+            }}),el('b',{text:eq.duree+' h'}))));
+      }
+      c.appendChild(gestion);
+    }
+    c.appendChild(el('div',{class:'scierie-equipes-actions'},
+      cfg.equipes.length?el('button',{class:'b mini primaire',text:'Répartir automatiquement',onclick:()=>{window.VieVillage.repartirEquipes(b);rafraichirVillage();}}):null,
+      cfg.equipes.length<maxEquipes?el('button',{class:'b mini',text:'+ Créer une équipe',onclick:()=>{
+        const i=cfg.equipes.length;cfg.equipes.push({id:'e'+(Date.now()%100000),nom:'Équipe '+(i+1),debut:(6+i*8)%24,duree:8,couleur:['#82a866','#d0a64f','#6f9db4','#b47a70'][i]});rafraichirVillage();
+      }}):el('span',{class:'eti',text:b.niv>=7?'Maximum de quatre équipes atteint':'Nouvelle équipe au niveau '+(b.niv<5?5:7)}),
+      cfg.equipes.length?el('button',{class:'b mini',text:'− Supprimer la dernière',onclick:()=>{
+        const retiree=cfg.equipes.pop();for(const hid in cfg.affectations)if(cfg.affectations[hid]===retiree.id)delete cfg.affectations[hid];rafraichirVillage();
+      }}):null));
+
+    c.appendChild(U.section('Cadence et autonomie'));
+    const cadences=el('div',{class:'scierie-choix-cartes'});
+    const niveauxCad={menagee:3,normale:1,soutenue:5,forcage:7};
+    for(const id in window.VieVillage.CADENCES_SCIERIE){
+      const d=window.VieVillage.CADENCES_SCIERIE[id], verrou=b.niv<(niveauxCad[id]||1);
+      cadences.appendChild(el('button',{class:'scierie-choix'+(cfg.cadence===id?' active':'')+(id==='forcage'?' danger':''),disabled:verrou,onclick:()=>{
+        cfg.cadence=id; window.Etat.prevenir('poste',{bat:bid}); rafraichirVillage();
+      }},el('b',{text:d.nom}),el('span',{text:verrou?'Scierie niveau '+niveauxCad[id]:d.desc}),
+        el('i',{text:cfg.cadence===id?'ACTIVE':(verrou?'VERROUILLÉ':'CHOISIR')})));
+    }
+    c.appendChild(cadences);
+
+    const policies=el('div',{class:'scierie-repos-policies'}), actuelle=politiqueActuelle(cfg);
+    for(const p of POLITIQUES_REPOS_SCIERIE) policies.appendChild(el('button',{
+      class:actuelle.id===p.id?'active':'',onclick:()=>{cfg.autoRepos=true;cfg.seuilRepos=p.bas;cfg.seuilRetour=p.haut;rafraichirVillage();}
+    },el('b',{text:p.nom}),el('span',{text:p.desc}),el('i',{text:'pause '+p.bas+' % · retour '+p.haut+' %'})));
+    c.appendChild(policies);
+
+    c.appendChild(U.section('Affectation aux équipes'));
+    if(!ouv.length)c.appendChild(el('div',{class:'vide',text:'Aucun habitant affecté. Le + de la chaîne permet de composer l’équipe.'}));
+    const equipe=el('div',{class:'scierie-equipe-compacte'});
+    for(const x of ouv){
+      const vie=window.VieVillage.assurerHabitant(x.h), etat=window.VieVillage.disponibiliteTravail(x.h,b);
+      const rec=x.p.rec&&window.REC[x.p.rec];
+      const eq=window.VieVillage.equipeHabitant(x.h,b);
+      const volant=el('button',{class:!eq?'active':'',title:'Ouvrier volant',
+        onclick:()=>{window.VieVillage.affecterEquipe(b,x.h.id,null);rafraichirVillage();},text:'V'});
+      const choix=el('div',{class:'scierie-affectation-equipe'},volant);
+      for(const e of cfg.equipes)choix.appendChild(el('button',{class:eq&&eq.id===e.id?'active':'',style:'--equipe:'+e.couleur,title:e.nom,onclick:()=>{window.VieVillage.affecterEquipe(b,x.h.id,e.id);rafraichirVillage();},text:e.nom.charAt(0)}));
+      equipe.appendChild(el('article',{},avatarHab(x.h,52,'affectation-portrait'),
+        el('div',{},el('b',{text:x.h.nom}),el('span',{text:(rec?rec.nom:'Sans tâche')+' · '+(etat.actif?'à la lame':etat.raison)}),
+          el('div',{class:'mini-vigueur'},el('i',{style:'width:'+Math.round(vie.vigueur)+'%'}))),choix,
+        el('strong',{text:Math.round(vie.vigueur)+'%'})));
+    }
+    c.appendChild(equipe);
+  }
+
+  const CONFORT_SCIERIE = [
+    {id:'banc',nom:'Coin de repos',res:'planche',desc:'Bancs, eau fraîche et endroit où poser enfin ses pattes.',base:{planche:10,corde:3}},
+    {id:'cantine',nom:'Cantine de quart',res:'pain',desc:'Un repas chaud raccourcit les pauses et protège l’humeur des longues journées.',base:{planche:14,pain:8,poissonfume:5}},
+    {id:'poele',nom:'Poêle à sciure',res:'charbonbois',desc:'Les chutes chauffent l’atelier humide et rendent la récupération plus efficace.',base:{brique:12,charbonbois:5,lingotfer:2}},
+    {id:'vestiaire',nom:'Vestiaire sec',res:'toile',desc:'Tabliers, casiers et change propre : moins d’usure, davantage de régularité.',base:{planche:18,toile:6,huile:3}},
+  ];
+  function coutConfortScierie(a,n){const o={};for(const k in a.base)o[k]=Math.ceil(a.base[k]*(1+n*1.35));return o;}
+  function rendreConfortScierie(c,bid){
+    const b=E().bat[bid];if(!b||!window.VieVillage)return;
+    const cfg=window.VieVillage.personnelScierie(b), bonus=window.VieVillage.confortScierie(b);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Le confort n’ajoute pas un multiplicateur abstrait : il ralentit la fatigue, accélère réellement les pauses et protège le moral des équipes.'}));
+    c.appendChild(el('div',{class:'scierie-confort-bilan'},
+      el('span',{},el('b',{text:'Niveau '+bonus.niveau}),el('i',{text:'confort total'})),
+      el('span',{},el('b',{text:'×'+bonus.recuperation.toFixed(2).replace('.',',')}),el('i',{text:'récupération'})),
+      el('span',{},el('b',{text:'−'+Math.round((1-bonus.fatigue)*100)+' %'}),el('i',{text:'fatigue'})),
+      el('span',{},el('b',{text:'+'+bonus.moral.toFixed(1).replace('.',',')}),el('i',{text:'moral'}))));
+    const liste=el('div',{class:'scierie-confort-liste'});
+    for(const a of CONFORT_SCIERIE){
+      const n=cfg.confort[a.id]||0,fini=n>=3,cout=fini?{}:coutConfortScierie(a,n);
+      const action=fini?el('span',{class:'scierie-termine',text:'AMÉNAGEMENT COMPLET'}):
+        el('div',{class:'scierie-achat'},U.listeRes(cout,{verifier:true}),
+          el('button',{class:'b mini primaire',text:'Aménager',disabled:!window.Etat.assez(cout),onclick:()=>{
+            if(!window.Etat.assez(cout)){U.dire('Ressources insuffisantes.','alerte');return;}
+            window.Etat.depenser(cout);cfg.confort[a.id]=n+1;window.Etat.prevenir('poste',{bat:bid});
+            U.dire(a.nom+' amélioré : les équipes le sentiront dès leur prochaine pause.','bien');rafraichirVillage();
+          }}));
+      const corps=el('div',{class:'scierie-confort-corps'},
+        el('div',{class:'rangee entre'},el('b',{text:a.nom}),el('strong',{text:n+'/3'})),
+        el('p',{text:a.desc}),
+        el('div',{class:'scierie-crans'},...Array.from({length:3},(_,i)=>el('i',{class:i<n?'on':''}))),action);
+      liste.appendChild(el('article',{},
+        el('div',{class:'scierie-confort-icone'},el('img',{src:window.Img?window.Img.res(a.res,true):artScierie('chaine'),alt:''})),corps));
+    }
+    liste.appendChild(el('div',{class:'note',text:'Ces aménagements restent propres à cette scierie : une seconde scierie peut adopter une autre culture de travail.'}));
+    c.appendChild(liste);
+  }
+
   /* Une seule grammaire pour tous les bâtiments. Le volet droit utilise
      ces métadonnées pour afficher des languettes illustrées et ne révèle
      les fonctions avancées qu'au niveau où elles deviennent pertinentes. */
@@ -917,9 +1488,73 @@
       ajouter('outil', 'Outillage', c => rendreOutillageScierie(c, bid), 2, 'vert',
         window.OutilUtil ? window.OutilUtil.imageQualite('bois', 'bois') : imageRes('outil'));
       ajouter('amelio', 'Atelier', c => rendreScierieAtelier(c, bid), 3, 'violet', artScierie('cadence'));
+      ajouter('personnel', 'Personnel', c => rendrePersonnelScierie(c, bid), 3, 'bleu', SCIERIE_PROGRESSION + 'bureau-contremaitre.png');
+      ajouter('confort', 'Confort', c => rendreConfortScierie(c, bid), 4, 'vert', SCIERIE_PROGRESSION + 'salle-outils.png');
       if (window.RaffUtil && window.RaffUtil.pourBat(bb.type).length)
-        ajouter('annexe', 'Annexes', c => rendreAnnexes(c, bid), 4, 'orange', SCIERIE_PROGRESSION + 'sechoir-couvert.png');
+        ajouter('annexe', 'Annexes', c => rendreAnnexes(c, bid), 3, 'orange', SCIERIE_PROGRESSION + 'sechoir-couvert.png');
       ajouter('organisation', 'Organisation', c => rendreOrganisationScierie(c, bid), 5, 'bleu', SCIERIE_PROGRESSION + 'bureau-contremaitre.png');
+      return ong;
+    } else if (bb.type === 'pecherie') {
+      ajouter('chaine', 'Pêche', c => rendrePecherieChaine(c,bid), 1, 'bleu', artPecherie('banc'));
+      ajouter('niveau', 'Agrandir', c => rendreNiveau(c,bid), 1, 'jaune', artPecherie('ponton'));
+      ajouter('outil', 'Outillage', c => rendreOutil(c,bid), 2, 'vert',
+        window.OutilUtil ? window.OutilUtil.imageMetier('peche') : imageRes('outil'));
+      ajouter('personnel', 'Équipage', c => rendrePersonnelEcosysteme(c,bid), 3, 'bleu', artPecherie('equipage'));
+      if (window.RaffUtil && window.RaffUtil.pourBat(bb.type).length)
+        ajouter('annexe', 'Vivier', c => rendreAnnexes(c,bid), 3, 'orange', artPecherie('vivier'));
+      ajouter('confort', 'Confort', c => rendreConfortEcosysteme(c,bid,{art:artPecherie,arts:{banc:'ponton',soupe:'banc',abri:'abri',casier:'appats'}}), 4, 'vert', artPecherie('abri'));
+      return ong;
+    } else if (bb.type === 'champ') {
+      ajouter('chaine','Cultures',c=>rendreChampChaine(c,bid),1,'bleu',artChamp('ble'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artChamp('abri'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('champs'):imageRes('outil'));
+      ajouter('personnel','Équipes',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artChamp('maitrise'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Annexes',c=>rendreAnnexes(c,bid),3,'orange',artChamp('compost'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artChamp,arts:{abri:'abri',eau:'irrigation',repas:'racines',vestiaire:'coffre'}}),4,'vert',artChamp('abri'));
+      return ong;
+    } else if(bb.type==='tournesol'){
+      ajouter('chaine','Floraison',c=>rendreTournesolChaine(c,bid),1,'bleu',artTournesol('floraison'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artTournesol('soleil'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('champs'):imageRes('outil'));
+      ajouter('personnel','Équipes',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artTournesol('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artTournesol,arts:{abri:'abri',eau:'eau',voile:'nuage',banc:'longue'}}),4,'vert',artTournesol('abri'));
+      return ong;
+    } else if(bb.type==='pepiniere'){
+      ajouter('chaine','Lignées',c=>rendrePepiniereChaine(c,bid),1,'bleu',artPepiniere('plants'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artPepiniere('abri'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('champs'):imageRes('outil'));
+      ajouter('personnel','Équipes',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artPepiniere('maitrise'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Pressoir',c=>rendreAnnexes(c,bid),3,'orange',artPepiniere('pressoir'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artPepiniere,arts:{abri:'abri',eau:'eau',brise:'brise',banc:'plateau'}}),4,'vert',artPepiniere('abri'));
+      return ong;
+    } else if(bb.type==='potager'){
+      ajouter('chaine','Cultures',c=>rendrePotagerChaine(c,bid),1,'bleu',artPotager('association'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artPotager('planches'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('champs'):imageRes('outil'));
+      ajouter('personnel','Équipes',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artPotager('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artPotager,arts:{abri:'abri',eau:'arrosoir',panier:'association',gants:'semis'}}),4,'vert',artPotager('abri'));
+      return ong;
+    } else if(bb.type==='fleurs'){
+      ajouter('chaine','Floraison',c=>rendreFleursChaine(c,bid),1,'bleu',artFleurs('floraison'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artFleurs('bouquet'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('champs'):imageRes('outil'));
+      ajouter('personnel','Équipes',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artFleurs('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artFleurs,arts:{abri:'abri',eau:'rosee',sechoir:'sechoir',infusion:'alchimie'}}),4,'vert',artFleurs('abri'));
+      return ong;
+    } else if(bb.type==='puits'){
+      ajouter('chaine','Distribution',c=>rendrePuitsChaine(c,bid),1,'bleu',artPuits('treuil'));
+      ajouter('niveau','Creuser',c=>rendreNiveau(c,bid),1,'jaune',artPuits('profond'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('batisse'):imageRes('outil'));
+      ajouter('personnel','Relèves',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artPuits('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artPuits,arts:{abri:'treuil',banc:'repos',poulie:'profond',cruches:'bourg'}}),4,'vert',artPuits('repos'));
+      return ong;
+    } else if(bb.type==='bergerie'){
+      ajouter('chaine','Troupeau',c=>rendreBergerieChaine(c,bid),1,'bleu',artBergerie('troupeau'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artBergerie('abri'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('elevage'):imageRes('outil'));
+      ajouter('personnel','Bergers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artBergerie('berger'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Abattoir',c=>rendreAnnexes(c,bid),3,'orange',artBergerie('abattoir'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artBergerie,arts:{abri:'abri',banc:'tondre',eau:'paturage',manteau:'laine'}}),4,'vert',artBergerie('abri'));
       return ong;
     } else if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
       c => rendrePostes(c, bid), 1, 'bleu', imageBat());
@@ -966,6 +1601,10 @@
        chaque appelant : le clic dans le village, la vignette du dock et
        le raccourci du bilan passent tous par cette porte. */
     const bp = window.Etat.E.bat[bid];
+    /* Le conseiller observe la même porte d'entrée que tous les clics du
+       jeu. Il peut ainsi présenter les onglets une seule fois, y compris
+       pour le port et la Tour qui possèdent leur propre grand écran. */
+    if (bp && !bp.chantier && window.Tutoriel) window.Tutoriel.batimentOuvert(bid);
     if (bp && bp.type === 'port' && !bp.chantier) {
       if (window.UIDock) window.UIDock.fermerBatiment();
       ouvrirCarteMarine(null, null); return;
@@ -1081,10 +1720,9 @@
 
   /* ------------------------------------------------------------------
      LES ANNEXES
-     Une annexe ne fait pas grandir l'atelier : elle lui ajoute un corps
-     de bâtiment, et avec lui des gestes qui n'existaient nulle part. On
-     la paie en matériaux et on la bâtit au chantier, comme un édifice —
-     mais elle ne coûte pas de parcelle.
+     Une annexe remplit une partie de la concession réservée autour du
+     cœur : elle ajoute un corps visible et un geste qui n'existait nulle
+     part. Elle ne réclame donc pas une quatrième parcelle indépendante.
      ------------------------------------------------------------------ */
   function rendreAnnexes(c, bid) {
     const b = E().bat[bid];
@@ -1094,8 +1732,13 @@
     c.appendChild(el('div', { class: 'note',
       text: "Ce qu'on greffe sur l'atelier plutôt qu'à côté. Une annexe ouvre des tâches nouvelles — et se voit depuis la falaise." }));
 
+    const imagesAnnexe = {
+      parc_grumes:'parc-grumes.png', sechoir:'sechoir-couvert.png',
+      recuperateur:'salle-outils.png', roue_hydraulique:'roue-hydraulique.png',
+    };
     for (const r of liste) {
       const bati = !!b.raff[r.id];
+      const niveauOk = b.niv >= (r.niv || 1);
       const enFile = E().chantier.file.some(j => j.k === 'raffiner' && j.bat === bid && j.raff === r.id);
       const cout = window.RaffUtil.coutDe(b.type, r.id, b.niv);
       const temps = window.RaffUtil.tempsDe(b.type, r.id, b.niv);
@@ -1105,10 +1748,14 @@
         .filter(rid => window.REC[rid] && window.REC[rid].raff === r.id)
         .map(rid => window.REC[rid].nom);
 
+      const imageAnnexe = b.type === 'pecherie' && r.id === 'vivier'
+        ? artPecherie('vivier') : (imagesAnnexe[r.id] ? SCIERIE_PROGRESSION + imagesAnnexe[r.id] : null);
       const corps = [
+        imageAnnexe ? el('img', { class:'annexe-scierie-art', src:imageAnnexe, alt:'' }) : null,
         el('div', { class: 'rangee entre' },
           el('span', { class: 'tt', text: r.nom }),
-          el('span', { class: bati ? 'eti-or' : 'eti', text: bati ? 'bâtie' : U.duree(temps) })),
+          el('span', { class: bati ? 'eti-or' : 'eti',
+            text: bati ? 'bâtie' : (niveauOk ? U.duree(temps) : 'niveau ' + r.niv) })),
         el('div', { class: 'note', style: 'margin-top:4px', text: r.desc }),
       ];
       if (ouvre.length)
@@ -1125,14 +1772,14 @@
           el('span', { class: 'eti', text: 'chantier : ' + U.duree(temps) }),
           el('button', {
             class: 'b primaire', text: enFile ? 'déjà en file' : 'Mettre au chantier',
-            disabled: enFile || !window.Etat.assez(cout),
+            disabled: !niveauOk || enFile || !window.Etat.assez(cout),
             onclick: () => {
               const rr = window.Jeu.raffiner(bid, r.id);
               U.dire(rr.ok ? r.nom + ' : chantier ouvert.' : rr.raison, rr.ok ? 'bien' : 'alerte');
             },
           })));
       }
-      c.appendChild(el('div', { class: 'cadre' + (bati ? ' actif' : '') }, ...corps));
+      c.appendChild(el('div', { class: 'cadre annexe-scierie' + (bati ? ' actif' : '') }, ...corps));
     }
     c.appendChild(el('div', { class: 'note faible',
       text: "Le coût d'une annexe monte avec le niveau de l'atelier : on ne greffe pas une cave sur un édifice de maître au prix d'une cabane." }));
@@ -1434,11 +2081,14 @@
     else if (n.etat === 'quai')
       box.appendChild(el('div', { class: 'note', style: 'margin-top:4px', text: 'Cale vide.' }));
 
-    if (n.etat === 'mer' || n.etat === 'retour')
-      box.appendChild(el('div', { style: 'margin-top:8px' },
-        U.barre(1 - n.reste / Math.max(1, n.total), 'grande bleu',
-          n.etat === 'mer' ? 'vers ' + (ile ? ile.nom : '—') : 'retour au bourg',
-          U.duree(n.reste))));
+    if (n.etat === 'mer' || n.etat === 'retour') {
+      const trajet = U.barre(1 - n.reste / Math.max(1, n.total), 'grande bleu',
+        n.etat === 'mer' ? 'vers ' + (ile ? ile.nom : '—') : 'retour au bourg',
+        U.duree(n.reste));
+      trajet.classList.add('port-trajet-vivant');
+      trajet.setAttribute('data-navire', n.id);
+      box.appendChild(el('div', { style:'margin-top:8px' }, trajet));
+    }
 
     const actions = el('div', { class: 'rangee', style: 'margin-top:12px;gap:6px' });
     if (n.etat === 'quai') {
@@ -1919,6 +2569,58 @@
     return planIles(theatre).find(p => p.ile.id === id) || null;
   }
 
+  /* UN NAVIRE N'EST PAS UN SIMPLE COMPTE À REBOURS. On conserve ici
+     la géométrie de sa traversée pour que la carte montre où il se
+     trouve, y compris après avoir fermé puis rouvert la carte. */
+  function theatreDeIle(id) {
+    return (window.LARGE || []).some(i => i.id === id) ? 'large' : 'local';
+  }
+  function pointEcarte(a, b, marge) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    return { x: a.x + dx / d * marge, y: a.y + dy / d * marge };
+  }
+  function trajetsNavires(theatre, C) {
+    const P = window.Port;
+    if (!P || !P.navires) return [];
+    const centre = { x: C.cx, y: C.cy, taille: 58, centre: true };
+    const out = [];
+    for (const n of P.navires()) {
+      if (n.etat !== 'mer' && n.etat !== 'retour') continue;
+      const repere = n.origine || n.ile;
+      if (!repere || theatreDeIle(repere) !== theatre) continue;
+      let a, b;
+      if (n.etat === 'retour') {
+        a = planDe(n.origine || n.ile, theatre);
+        b = centre;
+      } else {
+        a = n.origine ? planDe(n.origine, theatre) : centre;
+        b = planDe(n.ile, theatre);
+      }
+      /* Une continuation entre deux théâtres repart visuellement du
+         bord du bourg : mieux vaut une route lisible qu'un navire hors
+         de la feuille. */
+      if (!a) a = centre;
+      if (!b) continue;
+      const depart = pointEcarte(a, b, a.centre ? 62 : Math.max(18, a.taille * .55));
+      const arrivee = pointEcarte(b, a, b.centre ? 62 : Math.max(18, b.taille * .55));
+      const total = Math.max(.001, Number(n.total) || 0);
+      const progression = Math.max(0, Math.min(1, 1 - (Number(n.reste) || 0) / total));
+      const courant = {
+        x: depart.x + (arrivee.x - depart.x) * progression,
+        y: depart.y + (arrivee.y - depart.y) * progression,
+      };
+      out.push({ navire: n, depart, arrivee, courant,
+        reste: Math.max(.2, Number(n.reste) || .2) });
+    }
+    return out;
+  }
+  function imageNavire(palier) {
+    if ((palier | 0) <= 1) return 'img/iles/bateau-palier-01.png';
+    if ((palier | 0) <= 3) return 'img/iles/bateau-palier-02.png';
+    return 'img/iles/bateau-palier-03.png';
+  }
+
   /* LA CÔTE D'UN CONTINENT. On la trace comme une bande de terre qui
      barre le fond de la carte derrière ses villes : un arc côtier
      dentelé côté mer, un arc franc côté large. Sans elle, trois villes
@@ -2001,6 +2703,7 @@
     const C = CARTE, rMax = t === 'local' ? bordTier(10) : rayonLieues(C.lieuesMax);
     const vb = vue || { x: 0, y: 0, demi: Math.max(C.L, C.H) / 2 };
     const P = window.Port;
+    const voyages = trajetsNavires(t, C);
     const portee = P && P.portee ? P.portee() : 9999;
     const porteeCarte = t === 'local'
       ? Math.max(1, Math.min(10, P && P.rayon ? P.rayon() : 1))
@@ -2115,28 +2818,20 @@
     if (cap) routes.appendChild(sv('line', { class: 'mer-route',
       x1: ar(C.cx + Math.cos(cap.a) * 27), y1: ar(C.cy + Math.sin(cap.a) * 27),
       x2: ar(cap.x), y2: ar(cap.y) }));
+    for (const v of voyages)
+      routes.appendChild(sv('line', { class: 'mer-route mer-route-voyage',
+        x1: ar(v.depart.x), y1: ar(v.depart.y),
+        x2: ar(v.arrivee.x), y2: ar(v.arrivee.y) }));
     carte.appendChild(routes);
 
-    /* LE BOURG, au centre. La Tour reste reconnaissable, mais sous la
-       forme d'un symbole d'encre vu du dessus : une carte ne contient
-       jamais la maquette 3D de ce qu'elle représente. */
+    /* LE BOURG, au centre : la même illustration riche que les terres
+       de la carte, mais plus accueillante et immédiatement identifiable. */
     carte.appendChild(sv('g', { class: 'mer-bourg',
       transform: 'translate(' + C.cx + ',' + C.cy + ')',
       title: 'Le bourg\nToutes les distances se comptent d\'ici.' },
-      sv('path', { class:'mer-bourg-cote',
-        d:'M-72,-19 C-65,-47 -33,-62 -7,-53 C16,-66 52,-50 61,-25 C82,-4 67,30 43,39 C25,63 -14,61 -31,47 C-61,46 -82,14 -72,-19 Z' }),
-      sv('path', { class:'mer-bourg-hachures',
-        d:'M-57,-28 l12,5 M-64,-8 l14,4 M42,-37 l10,8 M49,26 l10,-4 M-32,42 l8,-9 M17,48 l5,-10' }),
-      sv('path', { class:'mer-bourg-sentier', d:'M0,16 C11,25 21,35 34,47' }),
-      sv('g', { class:'mer-bourg-tour-carte' },
-        sv('circle', { r:15 }), sv('circle', { r:8 }),
-        sv('rect', { x:-4,y:-21,width:8,height:7 }),
-        sv('rect', { x:-4,y:14,width:8,height:7 }),
-        sv('rect', { x:-21,y:-4,width:7,height:8 }),
-        sv('rect', { x:14,y:-4,width:7,height:8 }),
-        sv('circle', { class:'mer-bourg-feu', r:2.4 })),
-      sv('path', { class:'mer-bourg-quai', d:'M33,46 l16,10 M37,40 l17,11 M48,56 l7,-9' }),
-      sv('text', { class: 'mer-bourg-nom', x: 0, y: 75, text: 'VOTRE ÎLE' })));
+      sv('image', { class: 'mer-bourg-image', href: 'img/iles/ile-bourg-joueur.png',
+        x: -82, y: -82, width: 164, height: 164, preserveAspectRatio: 'xMidYMid meet' }),
+      sv('text', { class: 'mer-bourg-nom', x: 0, y: 91, text: 'VOTRE ÎLE' })));
 
     const iles = sv('g', { class: 'mer-iles' });
     for (const p of planIles(t)) {
@@ -2192,6 +2887,27 @@
     }
     carte.appendChild(iles);
 
+    /* LE BATEAU AVANCE POUR DE VRAI. L'animation commence à la position
+       calculée depuis `reste / total`, puis parcourt seulement le temps
+       qu'il lui reste : rouvrir la carte ne le renvoie jamais au port. */
+    const flotte = sv('g', { class: 'mer-flotte' });
+    for (const v of voyages) {
+      const n = v.navire;
+      const taille = t === 'large' ? 48 : 66;
+      const mouvement = sv('animateMotion', {
+        path: 'M' + ar(v.courant.x) + ',' + ar(v.courant.y)
+            + ' L' + ar(v.arrivee.x) + ',' + ar(v.arrivee.y),
+        dur: v.reste + 's', begin: '0s', fill: 'freeze', calcMode: 'linear', rotate: 'auto' });
+      const g = sv('g', { class: 'mer-navire', 'data-navire': n.id,
+        title: n.nom + ' — ' + (n.etat === 'retour' ? 'retour au bourg' : 'en route')
+          + '\n' + U.duree(n.reste) + ' restantes' },
+        sv('image', { href: imageNavire(n.palier), x: -taille / 2, y: -taille / 2,
+          width: taille, height: taille, preserveAspectRatio: 'xMidYMid meet' }),
+        mouvement);
+      flotte.appendChild(g);
+    }
+    carte.appendChild(flotte);
+
     /* LA ROSE, dans l'angle laissé vide par le dernier anneau. Huit
        aires, la fleur de lys au nord : c'est le seul ornement de la
        carte, et il sert — on y lit l'orientation d'un coup. */
@@ -2237,7 +2953,7 @@
     if (!choisi) {
       boite.appendChild(el('div', { class: 'mer-fiche-carte mer-fiche-accueil' },
         el('div', { class: 'mer-fiche-accueil-visuel' },
-          el('img', { src: 'img/iles/ile-bourg-tour-sombre.png', alt: 'Votre île et la Tour sombre' })),
+          el('img', { src: 'img/iles/ile-bourg-joueur.png', alt: 'Votre île et son port' })),
         el('div', { class: 'mer-fiche-accueil-corps' },
           el('div', { class: 'mer-fiche-sur', text: 'VOTRE PORT D’ATTACHE' }),
           el('div', { class: 'mer-fiche-grand-titre', text: 'Choisissez une destination' }),
@@ -2320,7 +3036,15 @@
       box.appendChild(el('button', { class: 'b primaire pleine mer-appareiller', style: 'margin-top:6px',
         text: 'Appareiller', disabled: !v.ok,
         onclick: () => { const r = P.appareiller(nav.id, choisi.id);
-          if (r.ok) { if (o.apresDepart) o.apresDepart(); U.dire('Le navire appareille.', 'bien'); }
+          if (r.ok) {
+            choixIle[o.cle] = null;
+            /* La carte plein écran ne fait pas partie du rafraîchissement
+               du village : on met donc à jour les deux explicitement. */
+            if (window.App && window.App.rafraichirUI) window.App.rafraichirUI();
+            if (o.rafraichir) o.rafraichir();
+            if (o.apresDepart) o.apresDepart();
+            U.dire('Le navire appareille.', 'bien');
+          }
           else U.dire(r.pourquoi, 'alerte'); } }));
     } else {
       box.appendChild(el('div', { class: 'note', style: 'margin-top:12px',
@@ -2545,7 +3269,50 @@
      table entière. On l'ouvre par-dessus tout — feuille à gauche, fiche
      à droite — et on la ferme d'une croix ou d'Échap. */
   let pleineNoeud = null, pleineCorps = null, pleineTitre = null, pleineSous = null;
-  let pleineOuvert = false, pleineOpts = null;
+  let pleineOuvert = false, pleineOpts = null, pleineSuivi = 0, pleineRaf = 0, pleineEtat = '';
+  function signatureCartePleine() {
+    if (!window.Port || !window.Port.navires) return '';
+    const p = window.Port.assure();
+    const expedition = E().expedition;
+    return [
+      p.greement | 0,
+      p.rayon | 0,
+      (p.prises || []).join(','),
+      expedition ? (expedition.zone || 'en-cours') : '',
+      window.Port.navires().map(n => [
+        n.id, n.etat, n.ile || '', n.origine || '', n.palier | 0,
+        n.combattu ? 1 : 0, n.gagne ? 1 : 0,
+        (n.cargo || []).map(x => x.type + '=' + x.n).join(','),
+      ].join(':')).join('|'),
+    ].join('||');
+  }
+  function actualiserTempsPort() {
+    if (!window.Port || !window.Port.navires) return;
+    const parId = Object.create(null);
+    for (const n of window.Port.navires()) parId[n.id] = n;
+    for (const barre of document.querySelectorAll('.port-trajet-vivant[data-navire]')) {
+      const n = parId[barre.getAttribute('data-navire')];
+      if (!n || (n.etat !== 'mer' && n.etat !== 'retour')) continue;
+      const i = barre.querySelector(':scope > i');
+      const d = barre.querySelector('.dedans .d');
+      if (i) i.style.width = (Math.max(0, Math.min(1, 1 - n.reste / Math.max(1, n.total))) * 100).toFixed(2) + '%';
+      if (d) d.textContent = U.duree(n.reste);
+    }
+  }
+  function demarrerSuiviPleine() {
+    if (pleineSuivi) clearInterval(pleineSuivi);
+    pleineEtat = signatureCartePleine();
+    /* Le SVG anime le déplacement tout seul. Ce suivi léger ne redessine
+       la carte qu'à un vrai changement d'état : arrivée ou retour. */
+    pleineSuivi = setInterval(() => {
+      if (!pleineOuvert) return;
+      const etat = signatureCartePleine();
+      if (etat !== pleineEtat) {
+        pleineEtat = etat;
+        rafraichirPleine();
+      }
+    }, 250);
+  }
   function rafraichirPleine() {
     if (!pleineCorps || !pleineOpts) return;
     U.vide(pleineCorps);
@@ -2553,9 +3320,22 @@
       cle: pleineOpts.cle, navId: pleineOpts.navId, avecFlanc: true,
       rafraichir: rafraichirPleine, apresDepart: pleineOpts.apresDepart,
     });
+    /* Un rafraîchissement demandé par un bouton ne doit pas être rejoué
+       250 ms plus tard par le suivi : ce doublon donnait l'impression
+       que la page sautait ou hésitait. */
+    pleineEtat = signatureCartePleine();
+  }
+  function demanderRafraichissementPleine() {
+    if (!pleineOuvert || pleineRaf) return;
+    pleineRaf = requestAnimationFrame(() => {
+      pleineRaf = 0;
+      if (pleineOuvert) rafraichirPleine();
+    });
   }
   function fermerCarteMarine() {
     pleineOuvert = false;
+    if (pleineSuivi) { clearInterval(pleineSuivi); pleineSuivi = 0; }
+    if (pleineRaf) { cancelAnimationFrame(pleineRaf); pleineRaf = 0; }
     if (pleineNoeud) pleineNoeud.classList.remove('vu');
   }
   function ouvrirCarteMarine(navId, apresDepart) {
@@ -2587,6 +3367,18 @@
     pleineOuvert = true;
     pleineNoeud.classList.add('vu');
     rafraichirPleine();
+    demarrerSuiviPleine();
+  }
+
+  /* Tous les gestes du port publient le même événement : chargement,
+     départ, arrivée, bataille, retour et chantier naval. La carte plein
+     écran n'appartient pas au rafraîchissement ordinaire du dock ; elle
+     s'abonne donc directement à cette source de vérité. */
+  if (window.Etat && window.Etat.abonner) {
+    window.Etat.abonner((quoi) => {
+      if (quoi === 'port') demanderRafraichissementPleine();
+      else if (quoi === 'portTemps') actualiserTempsPort();
+    });
   }
 
   /* LE CHOIX DE L'ÎLE, quand un navire attend un cap : le même plein
@@ -3138,7 +3930,9 @@
       c.appendChild(el('div',{class:'moral-habitant'},
         el('div',{class:'moral-score'},el('strong',{text:Math.round(vie.moral)}),el('span',{text:'/ 100'})),
         el('div',{style:'flex:1'},el('div',{class:'tt',text:vie.plainte}),
-          el('div',{class:'eti',text:'Cible actuelle : ' + Math.round(vie.cible) + ' · harmonie du bourg : ' + ville.harmonie}))));
+          el('div',{class:'eti',text:'Cible actuelle : ' + Math.round(vie.cible) + ' · harmonie du bourg : ' + ville.harmonie}),
+          el('div',{class:'fiche-vigueur'},el('span',{text:'Vigueur'}),
+            el('div',{},el('i',{style:'width:'+Math.round(vie.vigueur)+'%'})),el('b',{text:Math.round(vie.vigueur)+' %'})))));
       c.appendChild(el('div',{class:'indices-village'},
         [['Propreté',ville.proprete],['Sécurité',ville.securite],['Loisirs',ville.loisir],['Logement',ville.logement],['Repas',ville.repas]].map(x =>
           el('div',{class:'indice-village'},el('span',{text:x[0]}),el('b',{text:x[1]})) )));
@@ -4145,6 +4939,7 @@
 
   window.UIFen = {
     ouvrirBatiment, ouvrirChantier, ouvrirReserves, ouvrirHabitants, ouvrirBourg, ouvrirRecherches, ouvrirReglages,
+    fermerCarteMarine,
     ongletsBatiment,
     entrerConstruction, quitterConstruction, poserIci,
     get typeAPoser() { return typeAPoser; },

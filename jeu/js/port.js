@@ -46,6 +46,10 @@
     /* Une sauvegarde d'avant le Grand Large n'a pas de gréement. */
     if (s.port.greement == null) s.port.greement = 0;
     if (s.port.rayon == null) s.port.rayon = 1;
+    /* Les anciennes sauvegardes ne connaissent pas le point de départ
+       d'une traversée. Il sert uniquement à dessiner la route animée. */
+    for (const n of s.port.navires)
+      if (n.origine === undefined) n.origine = null;
     /* Le PREMIER navire est offert avec le port : sans lui le bâtiment
        ne servirait à rien, et l'on ferait payer deux fois la même
        chose. Une barque de vingt places — assez pour aller voir, pas
@@ -67,7 +71,7 @@
       nom: C.nom,
       palier, places: C.places,
       etat: 'quai',          // quai | mer | mouillage | retour
-      ile: null, reste: 0, total: 0,
+      ile: null, origine: null, reste: 0, total: 0,
       cargo: [],             // [{ type, n }]
       butin: null,
     };
@@ -152,6 +156,7 @@
     s.greement = (s.greement | 0) + 1;
     window.Etat.journal('Le chantier livre : ' + v.palier.nom + '. La flotte porte à ' +
       portee() + ' lieues.', 'guerre');
+    window.Etat.prevenir('port', { action: 'greement', palier: s.greement });
     return { ok: true, palier: v.palier };
   }
 
@@ -172,6 +177,7 @@
     const n = nouveauNavire(0);
     assure().navires.push(n);
     window.Etat.journal('Un navire de plus est armé : ' + n.nom + '.', 'guerre');
+    window.Etat.prevenir('port', n);
     return { ok: true, navire: n };
   }
 
@@ -194,6 +200,7 @@
     window.Etat.depenser(v.cout);
     n.palier++; n.places = v.vers.places; n.nom = v.vers.nom;
     window.Etat.journal(n.nom + ' : la cale passe à ' + n.places + ' places.', 'guerre');
+    window.Etat.prevenir('port', n);
     return { ok: true };
   }
 
@@ -324,7 +331,7 @@
     /* Les vivres sont recalculés à l'instant du départ : la cale a pu
        changer depuis que la fiche a été affichée. */
     if (v.vivres) window.Etat.depenser(v.vivres);
-    nav.etat = 'mer'; nav.ile = ile.id;
+    nav.etat = 'mer'; nav.origine = null; nav.ile = ile.id;
     nav.total = window.IleUtil.traversee(ile.lieues, nav.palier);
     nav.reste = nav.total;
     window.Etat.journal(nav.nom + ' appareille pour ' + ile.nom + ' — ' +
@@ -336,11 +343,14 @@
   /* ==================================================================
      LE TEMPS DE MER
      ================================================================== */
+  let suiviTempsUI = 0;
   function tick(dt) {
     if (!aLePort()) return;
     const p = assure();
+    let enRoute = false;
     for (const n of p.navires) {
       if (n.etat !== 'mer' && n.etat !== 'retour') continue;
+      enRoute = true;
       n.reste -= dt;
       if (n.reste > 0) continue;
       n.reste = 0;
@@ -355,10 +365,20 @@
         rentrer(n);
       }
     }
+    /* `reste` change à chaque image mais l'interface ne doit pas être
+       entièrement reconstruite à ce rythme. Un événement léger met à jour
+       uniquement le texte et la largeur des minuteries visibles. */
+    if (enRoute) {
+      suiviTempsUI += dt;
+      if (suiviTempsUI >= .25) {
+        suiviTempsUI %= .25;
+        window.Etat.prevenir('portTemps', null);
+      }
+    } else suiviTempsUI = 0;
   }
 
   function rentrer(n) {
-    n.etat = 'quai'; n.ile = null; n.reste = 0; n.total = 0;
+    n.etat = 'quai'; n.ile = null; n.origine = null; n.reste = 0; n.total = 0;
     if (n.butin) {
       const recu = window.Etat.gagnerLot(n.butin);
       const l = Object.keys(recu).map(k => recu[k] + ' ' + window.RES[k].nom.toLowerCase());
@@ -450,6 +470,7 @@
   /* METTRE LE CAP SUR LE BOURG. */
   function repartir(nav) {
     const ile = window.IleUtil.parId(nav.ile);
+    nav.origine = nav.ile;
     nav.etat = 'retour';
     nav.combattu = false;
     nav.total = window.IleUtil.traversee(ile ? ile.lieues : 4, nav.palier);
@@ -493,6 +514,7 @@
     if (!v.ok) return v;
     const nav = navire(id);
     window.Etat.depenser(v.dest.cout);
+    nav.origine = nav.ile;
     nav.ile = v.dest.id;
     nav.etat = 'mer';
     nav.combattu = false;

@@ -48,6 +48,10 @@
      première sortie de sa première recette — la scierie paie en planches,
      la fonderie en lingots, la pêcherie en poissons. */
   function matiereDe(type) {
+    /* Le bois brut est le flux d'entrée de la scierie. Son véritable
+       produit d'investissement est la planche : ses perfectionnements
+       doivent donc concurrencer maisons, port, caserne et autres chantiers. */
+    if (type === 'scierie') return 'planche';
     const def = window.BAT[type];
     if (!def) return null;
     for (const rid of (def.recettes || [])) {

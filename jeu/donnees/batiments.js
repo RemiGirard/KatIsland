@@ -104,7 +104,8 @@
        ait un sens. Deux scieries de maître peuvent absorber plus de cent
        habitants sans produire cent cartes de poste dans l'interface. */
     cout:{poisson:15}, temps:40, postes:P(1,2,3,5,8,12,18,26,38,55),
-    recettes:['coupe_bois','sciage','tresser_osier','poutres','ecorce','secher_bois'],
+    recettes:['coupe_bois','sciage','trier_grumes','tresser_osier','poutres','ecorce',
+      'secher_bois','valoriser_chutes'],
   });
   x('coupe_bois', { bat:'scierie', nom:'Abattre en lisière', metier:'bois', duree:8,
     out:{bois:2}, loot:[{res:'champignon',p:0.08,n:[1,1]},{res:'herbe',p:0.05,n:[1,1]}],
@@ -112,6 +113,10 @@
   x('sciage', { bat:'scierie', nom:'Débiter en planches', metier:'bois', duree:16, niv:2,
     in:{bois:3}, out:{planche:2},
     desc:"La grume passe sous la lame. Rien de plus utile, rien de plus bruyant." });
+  x('trier_grumes', { bat:'scierie', nom:'Trier les grumes', metier:'bois', duree:34, niv:3,
+    raff:'parc_grumes', in:{bois:7}, out:{planche:5},
+    loot:[{res:'resine',p:0.18,n:[1,2]}],
+    desc:"Droit au sciage, noueux à la charpente, tordu au feu : le tri transforme le même bois en davantage de matière utile." });
   x('poutres', { bat:'scierie', nom:'Équarrir des poutres', metier:'bois', duree:44, niv:5,
     in:{planche:4,clou:1}, out:{poutre:1},
     desc:"Assemblage à tenon et cheville. C'est ce qui permet de bâtir haut." });
@@ -125,6 +130,9 @@
   x('secher_bois', { bat:'scierie', nom:'Sécher sur tasseaux', metier:'bois', duree:56,
     raff:'sechoir', in:{planche:4}, out:{planche:7}, loot:[{res:'resine',p:0.3,n:[1,2]}],
     desc:"Le bois vert travaille et fend ; le bois sec tient. Sept planches sèches valent mieux que dix vertes." });
+  x('valoriser_chutes', { bat:'scierie', nom:'Presser les chutes', metier:'bois', duree:48, niv:6,
+    raff:'recuperateur', in:{bois:4,resine:1}, out:{charbonbois:4},
+    desc:"Sciure, écorce et petits éclats sont pressés en briquettes. La forge, le fumoir et les fours brûlent ce que la scierie jetait." });
 
   b('champ', {
     nom:'Champ', metier:'Laboureur', cat:'recolte', rangees:[0,1],
@@ -141,9 +149,9 @@
   x('lin_champ', { bat:'champ', nom:'Rouir le lin', metier:'champs', duree:30, niv:3,
     in:{eau:2}, out:{lin:3},
     desc:"On noie les tiges, on attend qu'elles pourrissent juste ce qu'il faut." });
-  x('jachere', { bat:'champ', nom:'Fumer la jachère', metier:'champs', duree:70, niv:6,
-    in:{legume:4}, out:{ble:24}, loot:[{res:'herbe',p:0.4,n:[1,3]}],
-    desc:"Une saison de perdue, trois de gagnées. Le meilleur rendement du bourg au blé." });
+  x('jachere', { bat:'champ', nom:'Reposer et amender', metier:'champs', duree:70, niv:4,
+    in:{paille:3,eau:2}, out:{herbe:2}, loot:[{res:'champignon',p:0.18,n:[1,2]}],
+    desc:"Une récolte modeste, mais la terre et la réserve de semences récupèrent pour les cycles suivants." });
 
   /* Le document du bourg distingue quatre cultures ; le jeu n'en avait
      qu'une. Chacune a désormais sa parcelle, son rythme et son usage —
@@ -882,7 +890,10 @@
   b('port', {
     nom:'Le Port', metier:'Capitaine', cat:'porte', rangees:[0,1], nivMax:6,
     desc:"Un môle de pierre, deux ducs-d'Albe et une grue à chèvre. Tant que le bourg n'a pas de port, la Nuée choisit seule le moment de venir.",
-    cout:{bois:34,poisson:26}, temps:150, postes:P(1,1,1,2,2,2),
+    /* Le port ferme le parcours d'accueil. À ce stade, le joueur vient déjà
+       de payer une maison, une caserne et une recrue : cette dernière marche
+       reste courte pour garantir la première traversée avant 20 minutes. */
+    cout:{bois:28,poisson:20}, temps:90, postes:P(1,1,1,2,2,2),
     recettes:['carener','cordages'],
   });
   x('carener', { bat:'port', nom:'Caréner la coque', metier:'bois', duree:70,
@@ -1044,11 +1055,11 @@
     /* PREMIÈRE BOUCLE : poisson -> bois -> caserne -> Tour / expédition.
        Elle tient en quelques minutes et ne demande aucune transformation. */
     caserne:       { bat:{scierie:1} },
-    /* LE PORT s'ouvre TÔT — dès qu'on sait pêcher et scier. C'est par
-       lui que passe toute la guerre, et rien ne fait retomber la Nuée
-       tant qu'il n'est pas debout : le retarder, c'est condamner le
-       joueur à subir la jauge pendant tout le début de partie. */
-    port:          { bat:{scierie:1} },
+    /* Le port conclut la boucle d'apprentissage : le joueur sait produire,
+       loger et lever une première troupe avant de prendre la mer. Ces deux
+       ouvrages impliquent déjà la scierie et restent atteignables bien avant
+       la vingtième minute d'une partie neuve. */
+    port:          { bat:{maison:1,caserne:1} },
     champ:         { bat:{caserne:1} },
     grange:        { bat:{champ:1} },
 
@@ -1106,6 +1117,25 @@
      chaque niveau creuse nettement l'écart. */
   function coutNiveau(bid, niv) {
     if (!BAT[bid]) return {};
+    /* La scierie est le prototype incrémental du bourg. Sa croissance
+       alterne ce qu'elle produit elle-même et ce que les autres métiers
+       doivent lui apporter : le joueur choisit donc entre réinvestir ici
+       ou bâtir ailleurs, sans pouvoir enfermer toute la progression dans
+       une seule boucle autonome. */
+    if (bid === 'scierie') {
+      const progression = {
+        2:{ bois:28, poisson:18 },
+        3:{ planche:34, corde:8 },
+        4:{ planche:62, pierre:20 },
+        5:{ poutre:7, clou:16, planche:54 },
+        6:{ poutre:14, lingotfer:10, corde:20 },
+        7:{ planche:190, huile:10, lingotfer:16 },
+        8:{ poutre:28, acier:7, pierretaille:28 },
+        9:{ planche:420, resine:45, ecu:2600 },
+        10:{ poutre:58, acier:18, essence:6, ecu:6200 },
+      };
+      if (progression[niv]) return Object.assign({}, progression[niv]);
+    }
     const base = BAT[bid].cout || {};
     const k = Math.pow(1.85, Math.max(0, niv - 1));
     const out = {};
@@ -1113,6 +1143,12 @@
     return out;
   }
   function tempsNiveau(bid, niv) {
+    /* Le premier agrandissement de la scierie arrive vite ; les derniers
+       sont de vrais projets idle que l'on prépare avant de quitter le jeu. */
+    if (bid === 'scierie') {
+      const t = {1:40,2:75,3:150,4:300,5:600,6:1200,7:2400,8:4200,9:5400,10:7200};
+      if (t[niv]) return t[niv];
+    }
     const rapides = ['pecherie','scierie','maison','caserne','port'];
     const transition = ['champ','grange'];
     const intermediaires = ['carriere','potager','puits','entrepot','bergerie',

@@ -303,6 +303,11 @@
       v *= q ? q.mult : ((outil.type === 'outilacier') ? 1.9 : 1.4);
     }
     if (b.endommage > 0) v *= 0.4;
+    /* Dans la scierie pilote, la présence, la vigueur, les relèves et la
+       cadence choisie sont un seul facteur. Zéro signifie une vraie pause :
+       le cycle conserve sa progression et ne consomme aucune matière. */
+    if (window.VieVillage && window.VieVillage.disponibiliteTravail)
+      v *= window.VieVillage.disponibiliteTravail(hab, b).facteur;
     /* LE TERRITOIRE. C'est le seul multiplicateur qui ne s'achète pas :
        il se prend par le portail d'expédition. */
     if (window.Expedition) v *= window.Expedition.bonusMetier(rec.metier);
@@ -398,6 +403,23 @@
            le poste reste au repos et le dit — un poste bloqué qui ne
            s'annonce pas est la première cause d'abandon d'un jeu idle. */
         const hab = window.Etat.habitant(p.hab);
+        if (window.VieVillage && window.VieVillage.disponibiliteTravail) {
+          const presence = window.VieVillage.disponibiliteTravail(hab, b);
+          if (!presence.actif) {
+            p.pause = presence.raison;
+            p.bloque = false;
+            continue;
+          }
+        }
+        if (window.EcosystemesBatiments && window.EcosystemesBatiments.peutDemarrer) {
+          const local = window.EcosystemesBatiments.peutDemarrer(b, rec);
+          if (!local.ok) {
+            p.pause = local.raison || 'cycle naturel';
+            p.bloque = false;
+            continue;
+          }
+        }
+        p.pause = null;
         if (p.prog <= 0) {
           /* L'ÉCONOME : un cycle sur huit, la matière ne part pas. On le
              décide à l'entrée du cycle, jamais à la sortie. */
@@ -487,14 +509,22 @@
       if (rend > 0) for (let z = 0; z < rec.out[k]; z++) if (Math.random() < rend) n++;
       sorties[k] = n;
     }
+    if (window.EcosystemesBatiments && window.EcosystemesBatiments.modifierSorties)
+      Object.assign(sorties, window.EcosystemesBatiments.modifierSorties(b, rec, sorties));
     const recu = window.Etat.gagnerLot(sorties);
 
     /* Table de butin : ce qui tombe EN PLUS, avec sa probabilité. C'est
        ce qui fait qu'on regarde encore une activité au bout d'une heure.
        Un Chanceux au poste la fait grimper de quarante pour cent. */
+    /* Une lame synchronisée laisse aussi le temps de voir les beaux nœuds,
+       la résine et les champignons avant qu'ils ne partent aux déchets.
+       C'est un petit bonus de trouvailles, jamais une seconde production. */
+    const rythmeButin = b.type === 'scierie'
+      ? 1 + Math.max(0, (b.rythmeScierie || 0) - 65) * 0.006 : 1;
     const chance = window.HAB.produit(hab, 'butin')
                  * (1 + amelioDe(b, 'oeil') + A.butin)
                  * organisation.butin
+                 * rythmeButin
                  * (1 + (window.Expedition ? window.Expedition.bonusButin() : 0) * 0.5);
     /* Deux sources qui se cumulent : le butin PROPRE à la recette — ce
        qu'on trouve en faisant précisément ce geste-là — et les
@@ -526,6 +556,7 @@
       window.Etat.gagnerXpHabitant(hab, Math.max(1, Math.round(rec.xp * 0.35)), rec.metier);
     }
     if (window.VieVillage) window.VieVillage.finirRecette(rec, hab);
+    if (window.EcosystemesBatiments) window.EcosystemesBatiments.finirRecette(b, rec, hab);
 
     /* Effets particuliers : certaines recettes ne produisent pas une
        ressource mais un ÉTAT du bourg. */
@@ -661,9 +692,11 @@
         const r = window.RaffUtil && window.RaffUtil.trouver(b.type, job.raff);
         window.Etat.journal(window.BAT[b.type].nom + ' : ' +
           ((r && r.nom) || job.raff) + ' — l\'atelier a changé de forme.', 'bien');
-        /* le village doit reposer l'édifice : il porte une annexe de
-           plus, et cela se voit depuis la falaise. */
-        if (window.Village && window.Village.rafraichir) window.Village.rafraichir(b.id);
+        /* La scierie transmet immédiatement ses corps d'annexe au décor.
+           Les autres bâtiments gardent leur signal visuel historique en
+           attendant leur propre passe d'écosystème. */
+        if (window.Village && b.type === 'scierie' && window.Village.configurerScierie)
+          window.Village.configurerScierie(b.id, b.niv, b.raff);
         else if (window.Village) window.Village.ping(b.id, '#e8c88a');
         window.Etat.prevenir('raffine', b);
       }
@@ -1009,6 +1042,7 @@
     if (!window.RaffUtil) return { ok: false, raison: 'Aucune annexe connue.' };
     const r = window.RaffUtil.trouver(b.type, rid);
     if (!r) return { ok: false, raison: 'Annexe inconnue ici.' };
+    if (b.niv < (r.niv || 1)) return { ok:false, raison:'Niveau ' + r.niv + ' requis.' };
     if (b.raff && b.raff[rid]) return { ok: false, raison: 'Déjà bâtie.' };
     if (E.chantier.file.some(j => j.k === 'raffiner' && j.bat === bid && j.raff === rid))
       return { ok: false, raison: 'Déjà dans la file du chantier.' };

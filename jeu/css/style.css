@@ -55,10 +55,14 @@
   --ui:12px;
   --dock:300px;
   --bandeau:44px;
+  --curseur-patte:url('../../img/ui/curseur-patte-griffe.png') 6 4;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:var(--fond2)}
+html,body{
+  height:100%;overflow:hidden;background:var(--fond2);
+  cursor:var(--curseur-patte),default;
+}
 body{
   color:var(--texte);
   font-family:system-ui,'Segoe UI Variable Text','Segoe UI',Roboto,-apple-system,
@@ -69,10 +73,57 @@ body{
   text-rendering:optimizeLegibility;
 }
 
+/* La patte reste le langage de pointage de toute l'interface. Les nombreuses
+   règles locales `pointer`, `help`, `grab` ou les styles en ligne ne doivent
+   plus faire réapparaître la main système au passage dans un panneau. Le
+   canvas reste exclu : le mode construction peut donc encore y imposer son
+   viseur. */
+body *:not(#c):not(input):not(textarea):not([contenteditable="true"]){
+  cursor:var(--curseur-patte),default !important;
+}
+input{cursor:var(--curseur-patte),default !important}
+input:not([type]),input[type="text"],input[type="search"],input[type="number"],
+input[type="password"],input[type="email"],input[type="url"],textarea,
+[contenteditable="true"]{cursor:text !important}
+
 #scene{position:fixed;inset:0;display:grid;place-items:center;line-height:0;background:var(--fond2)}
 #c{
   image-rendering:pixelated;image-rendering:crisp-edges;
-  display:block;background:#000;cursor:default;touch-action:manipulation;
+  display:block;background:#000;
+  cursor:var(--curseur-patte),pointer;
+  touch-action:manipulation;
+}
+
+/* ---------------------------------------------------------------
+   PLAN ARCHITECTURAL — projection verticale volontairement plate
+   --------------------------------------------------------------- */
+#plan-village{
+  position:absolute;inset:0;width:100%;height:100%;display:none;
+  background:#ded8c8;image-rendering:auto;touch-action:none;
+  cursor:var(--curseur-patte),pointer;z-index:2;
+}
+body.vue-plan-active #plan-village{display:block}
+body.vue-plan-active #c{visibility:hidden}
+/* Le plan remplace uniquement la scène. Le bandeau, les panneaux de production,
+   la construction et les fenêtres restent utilisables au-dessus. */
+#bouton-plan-village{
+  position:fixed;left:12px;bottom:12px;z-index:45;
+  width:30px;height:30px;display:grid;place-items:center;
+  border:1px solid rgba(235,225,198,.28);border-radius:5px;
+  color:rgba(239,231,211,.78);background:rgba(18,15,26,.72);
+  box-shadow:0 2px 9px rgba(0,0,0,.24);backdrop-filter:blur(5px);
+  font:700 16px/1 'Condense',sans-serif;letter-spacing:0;
+  transition:background .14s,border-color .14s,color .14s,transform .14s;
+}
+#bouton-plan-village:hover{
+  color:#fff5da;border-color:rgba(230,192,105,.68);background:rgba(29,23,40,.92);
+  transform:translateY(-1px);
+}
+#bouton-plan-village[aria-pressed="true"]{
+  width:36px;color:#271f18;background:#e6c069;border-color:#f4d88c;
+}
+@media(max-width:700px){
+  #bouton-plan-village{left:8px;bottom:8px;width:28px;height:28px}
 }
 
 #couche{position:fixed;inset:0;pointer-events:none;z-index:5}
@@ -750,6 +801,10 @@ body.plateau-fenetres #scene{visibility:hidden}
 #plateau-tete{display:flex;align-items:center;gap:14px;padding:11px 16px;
   background:var(--panneau);border-bottom:1px solid var(--bord)}
 #plateau-tete .ti{flex:1}
+#plateau-boutons{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap}
+#plateau-boutons .b{min-height:30px;padding:6px 9px}
+#plateau-boutons .b.mini{min-width:38px;padding-inline:7px}
+#plateau-boutons .b.actif{color:#182128;background:#efd47f;border-color:#ffe9a8;box-shadow:0 0 0 1px rgba(239,212,127,.18)}
 #plateau-corps{flex:1;min-height:0;display:grid;grid-template-columns:minmax(210px,280px) minmax(520px,1fr) minmax(230px,300px);gap:0}
 #plateau-scene{flex:1;position:relative;display:grid;place-items:center;overflow:hidden}
 /* L'ANCIEN JEU FORÇAIT `width:100%;height:100%` sur ce canevas — nous
@@ -785,6 +840,20 @@ body.plateau-fenetres #scene{visibility:hidden}
 .plateau-portrait{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--panneau3);color:var(--or);font-weight:800;flex:none}
 .plateau-mini-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:8px}
 .plateau-mini-stats span{padding:5px 6px;border-radius:5px;background:rgba(255,255,255,.035);font-size:9px;color:var(--doux)}
+.plateau-objectif{padding:10px;border:1px solid rgba(214,177,73,.26);border-radius:7px;background:linear-gradient(145deg,rgba(214,177,73,.08),rgba(255,255,255,.018));box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.prep-exp-intro{padding:14px;margin-bottom:15px;border-left:3px solid var(--or);background:rgba(214,177,73,.08)}
+.prep-exp-intro .tt{margin:4px 0 6px;font-size:15px}.prep-exp-cale{margin:8px 0 14px}
+.prep-exp-rapport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.prep-exp-rapport>div{min-height:58px;padding:9px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.09);border-radius:6px;background:rgba(255,255,255,.025);text-align:center}
+.prep-exp-rapport b{font:800 17px 'Condense','Inter',sans-serif;color:#e7d394}.prep-exp-rapport span{margin-top:3px;color:var(--doux);font-size:8px;text-transform:uppercase;letter-spacing:.06em}
+.prep-exp-rapport .dangereux b{color:#e58b7d}.prep-exp-forces{margin:0 0 15px}.prep-exp-butin{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+.prep-exp-conseil{padding:12px;border:1px solid rgba(74,125,129,.25);border-radius:6px;background:rgba(74,125,129,.08);color:var(--doux);font-size:11px;line-height:1.55}
+.prep-exp-conseil b{color:var(--texte)}
+.bilan-combat-resume{margin:14px 0;padding:12px;border:1px solid rgba(214,177,73,.22);border-radius:7px;background:linear-gradient(145deg,rgba(214,177,73,.07),rgba(255,255,255,.02))}
+.bilan-combat-chiffres{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:9px}.bilan-combat-chiffres>div{padding:8px 5px;display:flex;flex-direction:column;align-items:center;border-radius:5px;background:rgba(255,255,255,.04)}
+.bilan-combat-chiffres b{font:800 18px 'Condense','Inter',sans-serif;color:#c8dc9e}.bilan-combat-chiffres span{font-size:7px;color:var(--doux);letter-spacing:.09em;text-transform:uppercase}.bilan-combat-chiffres .pertes b{color:#e58b7d}
+.bilan-combat-unites{margin-top:10px;border-top:1px solid rgba(255,255,255,.08)}.bilan-combat-unite{display:grid;grid-template-columns:minmax(100px,1.4fr) repeat(3,minmax(58px,1fr));gap:8px;align-items:center;padding:7px 2px;border-bottom:1px solid rgba(255,255,255,.055);font-size:9px}.bilan-combat-unite>:not(:first-child){text-align:right}
+.bilan-combat-actions{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}.bilan-combat-actions span{padding:5px 7px;border-radius:99px;background:rgba(74,125,129,.1);border:1px solid rgba(74,125,129,.2);color:var(--doux);font-size:8px}
 .plateau-equipement{display:flex;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)}
 .plateau-equipement-piece{position:relative;width:52px;height:42px;border-radius:5px;background:rgba(6,15,21,.5);border:1px solid rgba(214,177,73,.2);overflow:hidden}
 .plateau-equipement-piece img{display:block;width:100%;height:100%;object-fit:contain}
@@ -795,6 +864,11 @@ body.plateau-fenetres #scene{visibility:hidden}
 .plateau-vie i{display:block;height:100%;background:var(--vert)}
 #plateau-pied{padding:11px 16px;background:var(--panneau);border-top:1px solid var(--bord);
   display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+@media (max-width:1180px){
+  #plateau-corps{grid-template-columns:minmax(170px,220px) minmax(460px,1fr) minmax(190px,240px)}
+  #plateau-tete{align-items:flex-start}#plateau-boutons{max-width:65%}
+}
 
 /* ---------------------------------------------------------------
    DÉFILEMENT
@@ -1682,6 +1756,148 @@ button[title],.b[title],a[title]{cursor:pointer}
   .choix-portes-actions{position:sticky;bottom:0;background:#101b24;padding:10px 0}
 }
 
+/* ===============================================================
+   PILOTAGE DU VILLAGE — stocks, bâtiments, production, construction
+   Le vieux carnet inférieur et le journal latéral cèdent leur place à
+   une navigation unique, persistante et entièrement visuelle à gauche.
+   =============================================================== */
+:root{--prod:330px}
+#bulles{display:none!important}
+
+#productions{
+  right:14px;left:auto;top:calc(var(--bandeau) + var(--menace-ui) + 12px);
+  bottom:14px;width:var(--prod);background:rgba(28,46,56,.95);
+  border-color:rgba(255,255,255,.16);backdrop-filter:blur(12px);
+}
+#productions.replie{transform:translateX(calc(var(--prod) + 32px));opacity:0}
+#productions.batiment-ouvert{width:min(410px,calc(100vw - 72px))}
+#productions.batiment-ouvert.replie{transform:translateX(calc(100% + 34px))}
+#productions-poignee{
+  right:344px;left:auto;top:calc(var(--bandeau) + var(--menace-ui) + 22px);
+  background:rgba(28,46,56,.97);border:1px solid rgba(255,255,255,.16);
+  border-right:0;border-left:1px solid rgba(255,255,255,.16);
+  border-radius:4px 0 0 4px;transition:right .2s cubic-bezier(.4,0,.2,1),background .12s;
+}
+#productions.batiment-ouvert + #productions-poignee{right:min(424px,calc(100vw - 58px));left:auto}
+#productions-tete{padding:11px 12px 10px;min-height:56px;background:#152731}
+#productions-corps{padding:10px 11px 14px;background:#152731}
+
+#pilotage-nav{
+  position:absolute;right:100%;top:70px;width:44px;z-index:-1;
+  display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+  background:transparent;border:0;
+}
+.pilotage-tab{
+  width:38px;height:46px;min-width:0;padding:5px 6px 5px 3px;display:grid;place-items:center;
+  color:#fff;border:1px solid rgba(255,255,255,.16);border-right:0;
+  border-radius:5px 0 0 5px;font:inherit;cursor:pointer;opacity:.82;
+  transform:translateX(1px);transition:width .12s,opacity .12s,filter .12s,box-shadow .12s;
+}
+.pilotage-tab:hover,.pilotage-tab.on{width:44px;opacity:1;filter:brightness(1.13)}
+.pilotage-tab.on{box-shadow:-3px 0 0 rgba(255,255,255,.68),0 3px 8px rgba(0,0,0,.18)}
+.pilotage-tab.pilotage-stocks{background:#316a78}
+.pilotage-tab.pilotage-batiments{background:#c49b05}
+.pilotage-tab.pilotage-production{background:#5d8d2a}
+.pilotage-tab.pilotage-construction{background:#bf6815}
+.pilotage-tab canvas,.pilotage-tab img{display:block;flex:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.28))}
+.pilotage-tab img.pilotage-art{width:34px!important;height:34px!important;object-fit:contain}
+.pilotage-tab span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.pilote-intro{padding:2px 2px 10px;color:#9caaa7;font-size:10px;line-height:1.45}
+.pilote-section-titre{margin:12px 1px 6px;color:#c6d0cd;font-size:8.5px;font-weight:750;
+  letter-spacing:.12em;text-transform:uppercase}
+
+.stock-categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-bottom:4px}
+.stock-categorie{min-width:0;padding:6px 5px;color:#98a5a2;background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);border-radius:3px;font-family:inherit;font-size:7.5px;
+  font-weight:650;letter-spacing:.01em;text-transform:uppercase;cursor:pointer}
+.stock-categorie:hover{color:#fff;background:rgba(255,255,255,.07)}
+.stock-categorie.on{color:#fff;background:rgba(108,139,82,.24);border-color:rgba(142,175,101,.5)}
+.stocks-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.stock-carte{
+  min-width:0;min-height:69px;padding:7px;display:flex;align-items:center;gap:7px;
+  color:var(--texte);text-align:left;font:inherit;background:rgba(255,255,255,.032);
+  border:1px solid rgba(255,255,255,.08);border-radius:4px;cursor:pointer;
+}
+.stock-carte:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.18)}
+.stock-carte.pleine{border-color:rgba(226,186,87,.52);background:rgba(226,186,87,.08)}
+.stock-carte-image{width:40px;height:40px;display:grid;place-items:center;flex:none}
+.stock-carte-texte{display:block;min-width:0;flex:1}
+.stock-carte-texte b,.stock-carte-texte strong,.stock-carte-texte i{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stock-carte-texte b{font-size:9px;color:#aebbb8;font-weight:600}
+.stock-carte-texte strong{margin-top:2px;font-size:12px;color:#f0f2ed;font-variant-numeric:tabular-nums}
+.stock-carte-texte i{margin-top:2px;font-style:normal;font-size:8px;color:#8fb477}
+.stock-carte-texte i.mauvais{color:#e58b7e}
+
+.batiments-grille,.construction-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.batiment-carte{
+  min-width:0;min-height:122px;padding:7px;display:flex;flex-direction:column;align-items:center;
+  color:var(--texte);font:inherit;text-align:center;background:rgba(255,255,255,.028);
+  border:1px solid rgba(255,255,255,.08);border-radius:4px;cursor:pointer;overflow:hidden;
+}
+.batiment-carte:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.2)}
+.batiment-carte.endommage{border-color:rgba(224,98,92,.58)}
+.batiment-carte-art{width:100%;height:78px;display:grid;place-items:center;background:radial-gradient(ellipse at center,rgba(255,255,255,.075),transparent 68%)}
+.batiment-carte-art img{max-width:112px;width:100%;height:76px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.3))}
+.batiment-carte-texte{display:block;width:100%;min-width:0;margin-top:4px}
+.batiment-carte-texte b,.batiment-carte-texte i{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.batiment-carte-texte b{font-size:10.5px}.batiment-carte-texte i{margin-top:2px;color:#8f9c99;font-size:8px;font-style:normal}
+.construction-appel{
+  width:100%;margin-top:10px;padding:9px 11px;display:flex;align-items:center;gap:9px;
+  color:#e9eee9;background:rgba(226,186,87,.08);border:1px solid rgba(226,186,87,.28);
+  border-radius:4px;text-align:left;font:inherit;cursor:pointer;
+}
+.construction-appel:hover{background:rgba(226,186,87,.14);border-color:rgba(226,186,87,.48)}
+.construction-appel span{display:block;min-width:0}.construction-appel b,.construction-appel i{display:block}
+.construction-appel b{font-size:10.5px}.construction-appel i{margin-top:2px;color:#a8b2af;font-size:8.5px;font-style:normal}
+
+.chantier-statut{
+  width:100%;margin-bottom:9px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  color:#dce3df;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+  border-radius:4px;text-align:left;font:inherit;cursor:pointer;
+}
+.chantier-statut:hover{background:rgba(255,255,255,.07)}
+.chantier-statut span,.chantier-statut b,.chantier-statut i{display:block}
+.chantier-statut b{font-size:10px}.chantier-statut i{margin-top:2px;color:#8f9c99;font-size:8px;font-style:normal}
+.chantier-statut strong{color:#e2ba57;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase}
+.construction-categories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin-bottom:4px}
+.construction-categorie{min-width:0;padding:7px 3px;color:#98a5a2;background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);border-radius:3px;font-family:inherit;font-size:7.5px;
+  font-weight:650;letter-spacing:.01em;text-transform:uppercase;cursor:pointer}
+.construction-categorie:hover{color:#fff;background:rgba(255,255,255,.07)}
+.construction-categorie.on{color:#fff;background:rgba(108,139,82,.24);border-color:rgba(142,175,101,.5)}
+.plan-carte{
+  min-width:0;min-height:168px;padding:0;display:flex;flex-direction:column;color:var(--texte);
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);
+  border-radius:4px;overflow:hidden;text-align:left;font:inherit;cursor:pointer;
+}
+.plan-carte:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.21)}
+.plan-carte.pauvre{opacity:.48}.plan-carte.pauvre:hover{opacity:.72}
+.plan-carte-art{height:96px;width:100%;display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.008))}
+.plan-carte-art img{width:100%;height:94px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.32))}
+.plan-carte-corps{display:block;width:100%;min-width:0;padding:7px 8px 8px}
+.plan-carte-corps > b,.plan-carte-corps > i{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-carte-corps > b{font-size:10.5px}.plan-carte-corps > i{margin-top:2px;color:#8d9997;font-size:8px;font-style:normal}
+.plan-couts{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin-top:6px}
+.maison-couleurs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px;padding:7px;background:rgba(255,255,255,.035);border-radius:4px}
+.maison-couleurs button{width:18px;height:18px;padding:0;border:2px solid transparent;border-radius:50%;cursor:pointer}
+.maison-couleurs button.on{border-color:#fff;box-shadow:0 0 0 1px #172630}
+
+/* Les languettes métier s'ouvrent vers le village, à gauche du panneau. */
+#batiment-languettes{right:100%;left:auto;top:178px;align-items:flex-end}
+.batiment-languette{padding:5px 6px 5px 3px;border-left:1px solid rgba(255,255,255,.13);border-right:0;
+  border-radius:5px 0 0 5px;transform:translateX(1px)}
+
+@media (max-width:780px){
+  :root{--prod:min(330px,calc(100vw - 42px))}
+  #productions{right:8px;left:auto;top:calc(var(--bandeau) + var(--menace-ui) + 8px);bottom:8px;width:var(--prod)}
+  #productions-poignee{right:calc(var(--prod) + 8px);left:auto;top:calc(var(--bandeau) + var(--menace-ui) + 18px)}
+  #productions.batiment-ouvert + #productions-poignee{right:min(418px,calc(100vw - 34px));left:auto}
+  #pilotage-nav{right:auto;left:8px;top:-43px;width:auto;z-index:1;flex-direction:row;align-items:flex-end}
+  .pilotage-tab,.pilotage-tab:hover,.pilotage-tab.on{width:44px;height:38px;padding:4px;border-right:1px solid rgba(255,255,255,.16);border-radius:5px 5px 0 0;transform:none}
+  #batiment-languettes{top:154px}
+}
+
 /* Construction : une palette basse nette, dont les icônes restent le héros. */
 #bulles{bottom:16px;gap:6px}
 #bulles-rail{
@@ -1949,11 +2165,20 @@ button[title],.b[title],a[title]{cursor:pointer}
 .mer-lieues{fill:var(--faible);font-size:8.5px;letter-spacing:.14em;text-anchor:middle}
 
 .mer-route{stroke:var(--or2);stroke-width:1.2;stroke-dasharray:4 4}
+.mer-route-voyage{stroke:#8a4f2d;stroke-width:2.2;stroke-dasharray:7 5;opacity:.78;
+  animation:mer-route-marche 1.1s linear infinite}
+@keyframes mer-route-marche{to{stroke-dashoffset:-12}}
 
 .mer-bourg-terre{fill:var(--panneau3);stroke:var(--or2);stroke-width:1.2}
 .mer-bourg-tour{fill:var(--panneau2);stroke:var(--or);stroke-width:1.2}
 .mer-bourg-fanion{fill:var(--or)}
 .mer-bourg-nom{fill:var(--or);font-size:9.5px;letter-spacing:.18em;text-anchor:middle}
+.mer-bourg-image{pointer-events:none;filter:none}
+
+/* La flotte reste au-dessus des terres : c'est une information de jeu,
+   pas une décoration du parchemin. */
+.mer-flotte{pointer-events:none}
+.mer-navire image{filter:none}
 
 .mer-ile{cursor:pointer}
 .mer-zone{fill:none;pointer-events:all}
@@ -2161,6 +2386,7 @@ button[title],.b[title],a[title]{cursor:pointer}
 .moral-habitant{display:flex;align-items:center;gap:13px;padding:12px 13px;margin:8px 0 11px;border:1px solid var(--bord);border-radius:6px;background:linear-gradient(135deg,rgba(111,139,90,.12),rgba(213,181,93,.06))}
 .moral-score{width:62px;height:62px;flex:none;display:flex;align-items:baseline;justify-content:center;padding-top:15px;box-sizing:border-box;border-radius:50%;background:#33473d;color:#f0e8d3;box-shadow:inset 0 0 0 4px rgba(255,255,255,.08)}
 .moral-score strong{font:800 24px 'Condense',sans-serif}.moral-score span{font-size:9px;opacity:.68}
+.fiche-vigueur{display:grid;grid-template-columns:50px minmax(80px,1fr) 34px;align-items:center;gap:7px;margin-top:8px}.fiche-vigueur>span{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--faible)}.fiche-vigueur>div{height:7px;overflow:hidden;border-radius:5px;background:rgba(5,15,19,.45)}.fiche-vigueur>div i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b96c51,#d5b659 45%,#83aa67)}.fiche-vigueur>b{font-size:8px;color:var(--or2)}
 .indices-village{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .indice-village{padding:7px 6px;text-align:center;border:1px solid var(--bord);border-radius:4px;background:rgba(255,255,255,.035)}
 .indice-village span{display:block;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--faible)}
@@ -2208,6 +2434,7 @@ button[title],.b[title],a[title]{cursor:pointer}
 .scierie-maitrise-jauge{height:5px;margin-top:7px;border-radius:4px;overflow:hidden;background:#0d1b21}.scierie-maitrise-jauge i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8aa85b,#dec15f);box-shadow:0 0 9px rgba(222,193,95,.3);transition:width .25s ease}
 .scierie-effectif{min-width:53px;padding-left:9px;border-left:1px solid rgba(255,255,255,.09);text-align:center}.scierie-effectif b{display:block;font-size:15px;color:#dbe4dc}.scierie-effectif span{display:block;font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;color:#81908f}
 .scierie-schema{display:grid;grid-template-columns:1fr 10px 1fr 10px 1fr 10px 1fr;align-items:center;gap:2px;padding:5px 8px;border:1px solid rgba(255,255,255,.065);border-radius:5px;background:#14252b}.scierie-schema>span{display:flex;align-items:center;justify-content:center;gap:3px;min-width:0}.scierie-schema img{width:27px;height:27px;object-fit:contain}.scierie-schema i{overflow:hidden;text-overflow:ellipsis;font-style:normal;font-size:6.5px;letter-spacing:.08em;color:#899895}.scierie-schema>b{text-align:center;color:#b99b4f;font-size:13px}
+.scierie-arbitrages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.scierie-arbitrages button{display:flex;align-items:center;gap:5px;min-width:0;padding:5px;border:1px solid rgba(255,255,255,.08);border-radius:4px;background:rgba(255,255,255,.025);color:inherit;text-align:left;cursor:pointer}.scierie-arbitrages button:hover:not(:disabled){border-color:rgba(210,177,83,.38);background:rgba(210,177,83,.08)}.scierie-arbitrages button:disabled{opacity:.35}.scierie-arbitrages img{width:34px;height:34px;flex:none;object-fit:contain}.scierie-arbitrages span{display:flex;flex-direction:column;min-width:0}.scierie-arbitrages b{font-size:8px;color:#e0e5df}.scierie-arbitrages i{margin-top:2px;overflow:hidden;text-overflow:ellipsis;color:#82908d;font-style:normal;font-size:6.5px;line-height:1.2}
 .scierie-consigne{padding:8px 10px;border-left:2px solid #719c65;background:rgba(113,156,101,.07);font-size:9.5px;line-height:1.45;color:#aab6b4}
 .scierie-chaines{display:flex;flex-direction:column;gap:7px}
 .scierie-ligne{display:grid;grid-template-columns:66px minmax(0,1fr);gap:9px;padding:8px;border:1px solid rgba(255,255,255,.09);border-radius:5px;background:rgba(255,255,255,.032);transition:border-color .15s,background .15s}.scierie-ligne:hover{border-color:rgba(151,185,119,.34);background:rgba(255,255,255,.045)}
@@ -2226,6 +2453,17 @@ button[title],.b[title],a[title]{cursor:pointer}
 .scierie-prochaine-extension{display:grid;grid-template-columns:94px minmax(0,1fr);gap:10px;padding:9px;border:1px solid rgba(255,255,255,.1);border-radius:5px;background:rgba(255,255,255,.035)}.scierie-extension-visuel{position:relative;display:grid;place-items:center;min-height:102px}.scierie-extension-visuel img{width:94px;height:94px;object-fit:contain}.scierie-extension-visuel span{position:absolute;left:1px;top:1px;padding:2px 5px;border-radius:7px;background:#c3981c;color:#fff;font-size:7px;font-weight:800}.scierie-extension-corps{min-width:0}.scierie-extension-corps h3{margin:2px 0 3px;color:#e5e8e1;font-size:13px}.scierie-extension-corps p{margin:0 0 7px;color:#91a09d;font-size:8.5px;line-height:1.35}.scierie-extension-capacite{display:flex;align-items:center;gap:5px;margin-bottom:7px;font-size:8px;color:#9eaaa7}.scierie-extension-capacite b{color:#d5b454}.scierie-maitre{padding:12px;border:1px solid rgba(210,177,82,.28);background:rgba(210,177,82,.08);color:#d9c277;font-size:9px;text-align:center}
 .scierie-feuille-route{display:flex;flex-direction:column;gap:3px}.scierie-palier{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:7px;min-height:46px;padding:4px 7px;border-left:2px solid #3f5053;background:rgba(255,255,255,.025);opacity:.48}.scierie-palier.acquis{border-left-color:#78995c;opacity:.72}.scierie-palier.courant{border-left-color:#d0aa43;background:rgba(208,170,67,.09);opacity:1}.scierie-palier img{width:40px;height:40px;object-fit:contain}.scierie-palier>div{display:flex;flex-direction:column;min-width:0}.scierie-palier b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:#d9dfda}.scierie-palier span{margin-top:2px;font-size:7px;color:#84918f}.scierie-palier>i{font-style:normal;font-size:6.5px;letter-spacing:.08em;color:#788582}.scierie-palier.courant>i{color:#d4b34f}
 .scierie-organisations{display:flex;flex-direction:column;gap:6px}.scierie-organisation{display:grid;grid-template-columns:66px minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;padding:7px;border:1px solid rgba(255,255,255,.09);border-radius:5px;background:rgba(255,255,255,.025);color:inherit;text-align:left;cursor:pointer}.scierie-organisation:hover{border-color:rgba(145,177,113,.45);background:rgba(145,177,113,.08)}.scierie-organisation.active{border-color:#8dad6e;background:rgba(129,166,97,.13)}.scierie-organisation img{width:64px;height:64px;object-fit:contain}.scierie-organisation>span{display:flex;flex-direction:column;min-width:0}.scierie-organisation b{font-size:10.5px;color:#e2e7e1}.scierie-organisation i{margin-top:3px;color:#909d9a;font-style:normal;font-size:8px;line-height:1.35}.scierie-organisation>strong{font-size:6.5px;letter-spacing:.09em;color:#90ad78}.scierie-organisation:not(.active)>strong{color:#788481}
+/* SCIERIE — gestion humaine. Les contrôles restent compacts : le joueur
+   choisit une politique, le contremaître gère ensuite chaque individu. */
+.scierie-personnel-resume{display:grid;grid-template-columns:66px minmax(0,1fr);gap:10px;padding:10px;margin-bottom:9px;border:1px solid rgba(136,177,104,.28);border-radius:6px;background:linear-gradient(120deg,rgba(119,159,88,.12),rgba(207,168,66,.06))}.scierie-personnel-score{grid-row:1/3;width:64px;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:#263c37;box-shadow:inset 0 0 0 4px rgba(255,255,255,.055)}.scierie-personnel-score strong{font:800 23px 'Condense',sans-serif;color:#c8dc9e}.scierie-personnel-score span{font-size:6px;letter-spacing:.13em;color:#91a09b}.scierie-personnel-jauges{min-width:0}.scierie-personnel-jauges .barre{margin:4px 0 7px}.scierie-personnel-jauges .rangee b,.scierie-personnel-jauges .rangee i{font-size:8px}.scierie-personnel-jauges .rangee i{font-style:normal;color:#84918e}.scierie-personnel-resume>p{grid-column:1/-1;margin:2px 0 0;font-size:8.5px;line-height:1.4;color:#91a09d}.rythme-lame strong{color:#d4b453;font-size:9px}
+.scierie-choix-cartes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.scierie-choix{position:relative;min-height:78px;padding:8px 8px 22px;border:1px solid rgba(255,255,255,.09);border-radius:5px;background:rgba(255,255,255,.025);color:inherit;text-align:left;cursor:pointer}.scierie-choix:hover:not(:disabled){border-color:rgba(139,177,107,.42);background:rgba(139,177,107,.08)}.scierie-choix.active{border-color:#8eae70;background:rgba(126,166,94,.13);box-shadow:inset 3px 0 #8eae70}.scierie-choix.danger:not(:disabled){border-color:rgba(203,91,69,.24)}.scierie-choix:disabled{opacity:.38;cursor:default}.scierie-choix>b{display:block;font-size:9.5px;color:#e2e8e2}.scierie-choix>span{display:block;margin-top:4px;font-size:7.7px;line-height:1.35;color:#8e9b98}.scierie-choix>i{position:absolute;left:8px;bottom:6px;font-style:normal;font-size:6px;letter-spacing:.1em;color:#8fab74}
+.scierie-repos-policies{display:flex;flex-direction:column;gap:4px;margin-top:8px}.scierie-repos-policies button{display:grid;grid-template-columns:minmax(115px,.7fr) minmax(0,1.3fr) auto;align-items:center;gap:7px;padding:7px;border:1px solid rgba(255,255,255,.08);border-radius:4px;background:rgba(255,255,255,.022);color:inherit;text-align:left;cursor:pointer}.scierie-repos-policies button.active{border-color:#82a765;background:rgba(117,157,86,.11)}.scierie-repos-policies b{font-size:8.5px}.scierie-repos-policies span{font-size:7.4px;color:#899693}.scierie-repos-policies i{font-style:normal;font-size:6.5px;color:#bba255;white-space:nowrap}
+.scierie-couverture-bloc{margin:9px 0;padding:8px;border:1px solid rgba(255,255,255,.08);border-radius:5px;background:rgba(255,255,255,.022)}.scierie-couverture-bloc .rangee b{font-size:8.5px}.scierie-couverture-bloc .rangee span{font-size:6.5px;color:#7f8e8a}.scierie-couverture{display:grid;grid-template-columns:repeat(24,1fr);gap:1px;height:18px;margin-top:6px}.scierie-couverture i{display:block;border-radius:1px;background:#14252b}.scierie-couverture i.c1{background:#658451}.scierie-couverture i.c2{background:#b29145}.scierie-couverture i.c3,.scierie-couverture i.c4{background:#bb6552;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.scierie-equipes-gestion{display:flex;flex-direction:column;gap:5px}.scierie-equipes-gestion>article{padding:7px;border-left:3px solid var(--equipe);border-radius:4px;background:rgba(255,255,255,.028)}.scierie-equipe-tete{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:6px}.scierie-equipe-tete>span{width:8px;height:28px;border-radius:3px}.scierie-equipe-tete>div{display:flex;flex-direction:column}.scierie-equipe-tete b{font-size:9px}.scierie-equipe-tete i{margin-top:1px;font-style:normal;font-size:7px;color:#899693}.scierie-equipe-tete>strong{font-size:7.5px;color:#a9bf8e}.scierie-equipe-vigueur{display:grid;grid-template-columns:minmax(0,1fr) 64px;align-items:center;gap:7px;margin:6px 0}.scierie-equipe-vigueur>div{height:5px;overflow:hidden;border-radius:3px;background:#14252b}.scierie-equipe-vigueur i{display:block;height:100%;background:var(--equipe)}.scierie-equipe-vigueur>b{text-align:right;font-size:7px;color:#93a09d}.scierie-horaire-reglage{display:grid;grid-template-columns:38px minmax(0,1fr) 34px;align-items:center;gap:5px;margin-top:4px}.scierie-horaire-reglage span,.scierie-horaire-reglage b{font-size:7px}.scierie-horaire-reglage b{text-align:right;color:#c8b05e}.scierie-horaire-reglage input{width:100%;height:14px;accent-color:var(--equipe)}.scierie-equipes-gestion small{display:block;margin-top:4px;font-size:6.5px;color:#7f8c89}.scierie-equipes-actions{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0 10px}.scierie-equipes-actions .b:first-child{flex:1}
+.scierie-equipe-nom{min-width:0;width:100%;padding:1px 3px;border:1px solid transparent;border-radius:2px;background:transparent;color:#e1e7e1;font-family:inherit;font-size:9px;font-weight:700}.scierie-equipe-nom:hover,.scierie-equipe-nom:focus{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.035);outline:0}.scierie-horaire-reglage input,.scierie-horaire-reglage input:active{cursor:ew-resize}.scierie-equipes-actions{align-items:center}.scierie-equipes-actions>.eti{padding:0 5px;font-size:7px}
+.scierie-equipe-compacte{display:flex;flex-direction:column;gap:3px}.scierie-equipe-compacte article{display:grid;grid-template-columns:42px minmax(0,1fr) auto 34px;align-items:center;gap:7px;min-height:48px;padding:4px 6px;border-left:2px solid #6f9460;background:rgba(255,255,255,.025)}.scierie-equipe-compacte .affectation-portrait{position:relative!important;inset:auto!important;width:42px!important;height:42px!important;border-radius:3px!important;overflow:hidden}.scierie-equipe-compacte article>div:nth-child(2){display:flex;flex-direction:column;min-width:0}.scierie-equipe-compacte b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8.5px}.scierie-equipe-compacte span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:7px;color:#899693}.scierie-equipe-compacte article>strong{text-align:right;font-size:8px;color:#adc58f}.mini-vigueur{height:4px;margin-top:5px;overflow:hidden;border-radius:3px;background:#14242a}.mini-vigueur i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#bd684e,#cfae50,#83a966)}.scierie-affectation-equipe{display:flex!important;flex-direction:row!important;gap:2px}.scierie-affectation-equipe button{width:22px;height:22px;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:3px;background:#21343a;color:#81908c;font-size:7px;font-weight:800;cursor:pointer}.scierie-affectation-equipe button:hover,.scierie-affectation-equipe button.active{border-color:var(--equipe,#d0b25a);background:var(--equipe,#596e50);color:#fff}
+.scierie-confort-bilan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:9px 0}.scierie-confort-bilan>span{display:flex;flex-direction:column;align-items:center;padding:7px 3px;border-radius:4px;background:rgba(255,255,255,.035)}.scierie-confort-bilan b{font:800 13px 'Condense',sans-serif;color:#b9cf98}.scierie-confort-bilan i{margin-top:2px;font-style:normal;font-size:6.5px;color:#899693}.scierie-confort-liste{display:flex;flex-direction:column;gap:6px}.scierie-confort-liste>article{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;padding:8px;border:1px solid rgba(255,255,255,.085);border-radius:5px;background:rgba(255,255,255,.026)}.scierie-confort-icone{display:grid;place-items:center;min-height:64px;border-radius:4px;background:radial-gradient(circle,rgba(134,170,100,.14),transparent 70%)}.scierie-confort-icone img{width:60px;height:60px;object-fit:contain}.scierie-confort-corps{min-width:0}.scierie-confort-corps b{font-size:10px}.scierie-confort-corps strong{font-size:8px;color:#aac78c}.scierie-confort-corps p{margin:3px 0 6px;font-size:8px;line-height:1.35;color:#8f9c99}
+.annexe-scierie{position:relative;min-height:98px;padding-left:88px!important;overflow:hidden}.annexe-scierie-art{position:absolute;left:7px;top:50%;width:72px;height:72px;object-fit:contain;transform:translateY(-50%);filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}.annexe-scierie.actif .annexe-scierie-art{filter:drop-shadow(0 3px 5px rgba(116,151,82,.3))}
 @media(max-width:420px){.scierie-maitrise{grid-template-columns:48px minmax(0,1fr)}.scierie-maitrise>img{width:48px;height:48px}.scierie-effectif{display:none}.scierie-ligne{grid-template-columns:54px minmax(0,1fr)}.scierie-illustration img{width:52px;height:52px}.scierie-commandes{width:105px}}
 
 /* Palette d'affectation : une collection miniature, compacte et contextuelle.
@@ -2258,3 +2496,67 @@ button[title],.b[title],a[title]{cursor:pointer}
 .equipe-tour-edition-tete{display:grid;grid-template-columns:auto minmax(180px,1fr) auto;gap:10px;align-items:center;margin-bottom:12px;padding:10px;border:1px solid var(--bord);background:rgba(255,255,255,.45)}.equipe-tour-edition-tete .champ{width:100%}
 .equipe-tour-selection .equipe-tour-portrait{width:100%!important;height:100%!important;border:0;border-radius:0}.equipe-tour-selection .carte-habitant.equipe-choisie{outline:3px solid #9cac58;outline-offset:-3px}.equipe-tour-selection .carte-habitant.equipe-choisie::after{content:'✓';position:absolute;right:8px;top:8px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#789552;color:white;font-weight:900}.equipe-tour-selection .carte-habitant.equipe-indisponible{filter:grayscale(1);opacity:.48}
 @media(max-width:800px){.equipe-tour-ligne{grid-template-columns:1fr}.equipe-tour-actions{justify-content:flex-start}.equipe-tour-portraits{order:2}.equipe-tour-actions{order:3}}
+
+/* Pêcherie : même grammaire que la scierie, identité plus claire et
+   réserve vivante immédiatement lisible. */
+.pecherie-maitrise{border-color:rgba(91,168,181,.35);background:linear-gradient(125deg,rgba(61,137,155,.15),rgba(255,255,255,.025))}
+.pecherie-maitrise .scierie-maitrise-corps span i{color:#76b6c0}.pecherie-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#4d9cac,#91c9b3)}
+.pecherie-banc{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(82,158,174,.28);border-radius:6px;background:linear-gradient(110deg,rgba(51,130,151,.13),rgba(255,255,255,.025))}
+.pecherie-banc>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.pecherie-banc>div{min-width:0}.pecherie-banc span{display:flex;flex-direction:column}.pecherie-banc span i{font-style:normal;font-size:7px;letter-spacing:.13em;color:#78afb8}.pecherie-banc span b{font-size:14px;color:#e2ece9}.pecherie-banc strong{font-size:13px;color:#8ac4b5}.pecherie-banc .barre{margin:5px 0}.pecherie-banc p{margin:4px 0 0;font-size:8px;line-height:1.38;color:#8fa09d}
+.pecherie-politiques{margin-bottom:7px}.pecherie-politiques .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.pecherie-politiques .scierie-organisation img{width:52px;height:52px}.pecherie-politiques .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.pecherie-banc{grid-template-columns:62px minmax(0,1fr)}.pecherie-banc>img{width:60px;height:60px}}
+
+.champ-maitrise{border-color:rgba(183,150,68,.34);background:linear-gradient(125deg,rgba(148,112,45,.14),rgba(93,125,64,.07))}.champ-maitrise .scierie-maitrise-corps span i{color:#c4a957}
+.champ-sol{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(157,132,70,.28);border-radius:6px;background:linear-gradient(110deg,rgba(112,82,43,.14),rgba(86,119,61,.07))}.champ-sol>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.champ-sol>div{min-width:0}.champ-sol .rangee b{font-size:10px;color:#e6dfc9}.champ-sol .rangee strong{font-size:10px;color:#c8ad5b}.champ-sol .barre{margin:4px 0 7px}.champ-semences-titre{margin-top:5px}.champ-strategies{margin-bottom:7px}.champ-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.champ-strategies .scierie-organisation img{width:52px;height:52px}.champ-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.champ-sol{grid-template-columns:62px minmax(0,1fr)}.champ-sol>img{width:60px;height:60px}}
+
+.tournesol-maitrise{border-color:rgba(220,174,52,.38);background:linear-gradient(125deg,rgba(196,139,31,.17),rgba(88,116,55,.06))}.tournesol-maitrise .scierie-maitrise-corps span i{color:#dfb84c}.tournesol-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#c79428,#e2c84d)}
+.tournesol-pollinisation{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(213,171,54,.30);border-radius:6px;background:linear-gradient(110deg,rgba(179,127,27,.14),rgba(89,123,54,.07))}.tournesol-pollinisation>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.tournesol-pollinisation>div{min-width:0}.tournesol-pollinisation .rangee b{font-size:10px;color:#e9e0bf}.tournesol-pollinisation .rangee strong{font-size:10px;color:#e0b947}.tournesol-pollinisation .barre{margin:4px 0 7px}.tournesol-reseau{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}.tournesol-reseau span{display:grid;grid-template-columns:25px auto;grid-template-rows:auto auto;align-items:center;column-gap:4px;padding:3px;border-radius:3px;background:rgba(255,255,255,.035)}.tournesol-reseau img{grid-row:1/3;width:24px;height:24px;object-fit:contain}.tournesol-reseau b{font-size:9px!important}.tournesol-reseau i{font-style:normal;font-size:6px;color:#8f9d97}.tournesol-strategies{margin-bottom:7px}.tournesol-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.tournesol-strategies .scierie-organisation img{width:52px;height:52px}.tournesol-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.tournesol-pollinisation{grid-template-columns:62px minmax(0,1fr)}.tournesol-pollinisation>img{width:60px;height:60px}}
+
+.pepiniere-maitrise{border-color:rgba(104,159,76,.36);background:linear-gradient(125deg,rgba(73,133,61,.16),rgba(155,102,49,.06))}.pepiniere-maitrise .scierie-maitrise-corps span i{color:#8ab675}.pepiniere-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#688f58,#a6c36f)}
+.pepiniere-lignee{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(102,155,75,.30);border-radius:6px;background:linear-gradient(110deg,rgba(69,128,58,.14),rgba(142,91,48,.06))}.pepiniere-lignee>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.pepiniere-lignee>div{min-width:0}.pepiniere-lignee .rangee b{font-size:10px;color:#dfe8d7}.pepiniere-lignee .rangee strong{font-size:10px;color:#a8c882}.pepiniere-lignee .barre{margin:4px 0 7px}.pepiniere-plants-titre{margin-top:5px}.pepiniere-strategies{margin-bottom:7px}.pepiniere-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.pepiniere-strategies .scierie-organisation img{width:52px;height:52px}.pepiniere-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.pepiniere-lignee{grid-template-columns:62px minmax(0,1fr)}.pepiniere-lignee>img{width:60px;height:60px}}
+
+.potager-maitrise{border-color:rgba(104,156,80,.36);background:linear-gradient(125deg,rgba(77,133,64,.16),rgba(156,112,46,.07))}.potager-maitrise .scierie-maitrise-corps span i{color:#93be7b}.potager-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#68965b,#b4ca70)}
+.potager-etat{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(102,155,75,.30);border-radius:6px;background:linear-gradient(110deg,rgba(68,126,57,.14),rgba(73,121,129,.07))}.potager-etat-icone img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.potager-etat-jauges{min-width:0}.potager-etat .rangee b{font-size:10px;color:#dfe8d7}.potager-etat .rangee strong{font-size:10px;color:#a8c882}.potager-etat .barre{margin:4px 0 7px}.potager-etat small{display:block;margin-top:4px;font-size:7px;color:#8fa69d}.potager-association-titre{margin-top:5px}.potager-strategies{margin-bottom:7px}.potager-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.potager-strategies .scierie-organisation img{width:52px;height:52px}.potager-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.potager-etat{grid-template-columns:62px minmax(0,1fr)}.potager-etat-icone img{width:60px;height:60px}}
+
+.fleurs-maitrise{border-color:rgba(176,112,153,.36);background:linear-gradient(125deg,rgba(144,75,119,.16),rgba(103,144,70,.07))}.fleurs-maitrise .scierie-maitrise-corps span i{color:#d28dbc}.fleurs-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#a85e92,#d7a564)}
+.fleurs-etat{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(171,105,149,.30);border-radius:6px;background:linear-gradient(110deg,rgba(129,70,112,.14),rgba(112,139,61,.07))}.fleurs-etat>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.fleurs-etat>div{min-width:0}.fleurs-etat .rangee b{font-size:10px;color:#eadce5}.fleurs-etat .rangee strong{font-size:10px;color:#dda2c5}.fleurs-etat .barre{margin:4px 0 7px}.fleurs-nectar-titre{margin-top:5px}.fleurs-reseau{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin-top:5px}.fleurs-reseau span{display:flex;align-items:center;gap:4px;padding:3px;border-radius:3px;background:rgba(255,255,255,.035)}.fleurs-reseau img{width:23px;height:23px;object-fit:contain}.fleurs-reseau b{font-size:7px!important;color:#b7c2ba!important}.fleurs-strategies{margin-bottom:7px}.fleurs-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.fleurs-strategies .scierie-organisation img{width:52px;height:52px}.fleurs-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.fleurs-etat{grid-template-columns:62px minmax(0,1fr)}.fleurs-etat>img{width:60px;height:60px}}
+
+.puits-maitrise{border-color:rgba(79,147,170,.38);background:linear-gradient(125deg,rgba(48,117,147,.17),rgba(115,101,64,.06))}.puits-maitrise .scierie-maitrise-corps span i{color:#78b9cf}.puits-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#4f98b4,#77c5ce)}
+.puits-nappe{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(74,145,169,.32);border-radius:6px;background:linear-gradient(110deg,rgba(43,107,137,.15),rgba(87,105,83,.06))}.puits-nappe>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.puits-nappe>div{min-width:0}.puits-nappe .rangee b{font-size:10px;color:#d9e6e8}.puits-nappe .rangee strong{font-size:10px;color:#83c1d2}.puits-nappe .barre{margin:4px 0 7px}.puits-nappe p{margin:4px 0 0;font-size:7px;line-height:1.35;color:#91a6a8}.puits-strategies{margin-bottom:7px}.puits-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.puits-strategies .scierie-organisation img{width:52px;height:52px}.puits-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.puits-nappe{grid-template-columns:62px minmax(0,1fr)}.puits-nappe>img{width:60px;height:60px}}
+
+.bergerie-maitrise{border-color:rgba(176,151,105,.38);background:linear-gradient(125deg,rgba(151,125,78,.17),rgba(91,126,66,.06))}.bergerie-maitrise .scierie-maitrise-corps span i{color:#d5bb88}.bergerie-maitrise .scierie-maitrise-jauge i{background:linear-gradient(90deg,#9b8055,#d4bd83)}
+.bergerie-troupeau{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:10px;margin:7px 0;padding:9px;border:1px solid rgba(174,147,100,.32);border-radius:6px;background:linear-gradient(110deg,rgba(144,116,69,.15),rgba(86,125,65,.07))}.bergerie-troupeau>img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.32))}.bergerie-troupeau>div{min-width:0}.bergerie-troupeau .rangee b{font-size:10px;color:#e8e1d5}.bergerie-troupeau .rangee strong{font-size:10px;color:#d9bd89}.bergerie-troupeau .barre{margin:4px 0 7px}.bergerie-paturage-titre{margin-top:5px}.bergerie-troupeau p{margin:4px 0 0;font-size:7px;line-height:1.35;color:#99a699}.bergerie-strategies{margin-bottom:7px}.bergerie-strategies .scierie-organisation{grid-template-columns:54px minmax(0,1fr) auto}.bergerie-strategies .scierie-organisation img{width:52px;height:52px}.bergerie-strategies .scierie-organisation:disabled{opacity:.38;cursor:default}
+@media(max-width:420px){.bergerie-troupeau{grid-template-columns:62px minmax(0,1fr)}.bergerie-troupeau>img{width:60px;height:60px}}
+
+/* ============================================================
+   BISCOTTE — conseiller animé, toujours dans le même coin du jeu.
+   La bulle s'ouvre vers la gauche afin de ne jamais pousser le volet droit.
+   ============================================================ */
+#conseiller{position:fixed;right:16px;bottom:14px;z-index:190;display:flex;align-items:flex-end;gap:9px;max-width:min(470px,calc(100vw - 24px));pointer-events:none;font-family:inherit}
+.conseiller-portrait{position:relative;flex:none;width:82px;height:98px;padding:0;border:0;background:transparent;filter:drop-shadow(0 7px 5px rgba(7,16,19,.34));cursor:pointer;pointer-events:auto;transform-origin:50% 100%;animation:conseiller-flotte 2.4s ease-in-out infinite}
+.conseiller-portrait img{position:absolute;left:50%;bottom:0;width:auto;height:92px;max-width:82px;object-fit:contain;image-rendering:pixelated;transform:translateX(-50%)}
+.conseiller-signal{position:absolute;right:0;top:2px;display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:2px solid #f1e7ca;border-radius:14px;background:#c36b46;box-shadow:0 2px 5px rgba(0,0,0,.3);color:#fff8e7;font:900 10px 'Condense',sans-serif}
+.conseiller-bulle{position:relative;width:355px;padding:15px 16px 14px;border:2px solid rgba(225,207,162,.74);border-radius:10px;background:linear-gradient(155deg,rgba(25,43,49,.98),rgba(15,30,36,.98));box-shadow:0 12px 32px rgba(5,14,18,.42),inset 0 1px rgba(255,255,255,.06);color:#e9ecdf;pointer-events:auto;transform-origin:100% 100%;animation:conseiller-ouvre .22s cubic-bezier(.2,.9,.25,1.08)}
+.conseiller-bulle::after{content:'';position:absolute;right:-8px;bottom:24px;width:13px;height:13px;border-top:2px solid rgba(225,207,162,.74);border-right:2px solid rgba(225,207,162,.74);background:#11232a;transform:rotate(45deg)}
+.conseiller-tete{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid rgba(230,218,184,.12)}
+.conseiller-tete>div{display:flex;flex-direction:column}.conseiller-tete b{color:#efd99b;font:800 15px 'Condense',sans-serif;letter-spacing:.04em}.conseiller-tete span{margin-top:2px;color:#9aaba7;font-size:9px;letter-spacing:.10em;text-transform:uppercase}
+.conseiller-replier{width:24px;height:22px;padding:0;border:1px solid rgba(255,255,255,.09);border-radius:4px;background:rgba(255,255,255,.035);color:#93a39f;font-size:13px;cursor:pointer}.conseiller-replier:hover{background:rgba(255,255,255,.09);color:#fff}
+.conseiller-surtitre{color:#b8cd83;font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+.conseiller-bulle h2{margin:4px 0 7px;color:#f4ecd8;font:800 18px/1.15 'Condense',sans-serif;letter-spacing:.015em}
+.conseiller-texte{margin:0;color:#ced7d4;font-size:12px;line-height:1.52}
+.conseiller-objectif{margin-top:11px;padding:9px 10px;border-left:3px solid #91ad69;border-radius:3px;background:rgba(127,158,92,.10);color:#e3edd3;font-size:11px;font-weight:700;line-height:1.42}
+.conseiller-progression{margin-top:9px}.conseiller-progression>div{display:flex;justify-content:space-between;margin-bottom:4px;color:#9cada8;font-size:10px}.conseiller-progression b{color:#d4e0ab}.conseiller-progression>i{display:block;height:6px;overflow:hidden;border-radius:5px;background:#0c1d23}.conseiller-progression>i span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#6f965c,#b1c878);transition:width .25s}
+.conseiller-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}.conseiller-actions button{min-height:32px;padding:7px 11px;border:1px solid rgba(233,218,177,.18);border-radius:4px;background:#243a40;color:#e4e9e2;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}.conseiller-actions button:hover{border-color:rgba(233,218,177,.44);background:#304950}.conseiller-actions .conseiller-suite{border-color:#809b5d;background:#617e4d;color:#fff}.conseiller-actions .conseiller-suite:hover{background:#75945d}
+#conseiller.replie .conseiller-bulle{display:none}#conseiller.replie .conseiller-portrait{width:68px;height:78px}#conseiller.replie .conseiller-portrait img{height:72px;max-width:66px}
+#conseiller.contexte .conseiller-bulle{border-color:rgba(221,178,92,.72)}#conseiller.contexte .conseiller-surtitre{color:#e0b85c}#conseiller.contexte .conseiller-signal{background:#d59a3d}
+#conseiller.remarque .conseiller-bulle{width:310px;border-color:rgba(147,183,122,.58)}#conseiller.remarque .conseiller-surtitre{color:#9fc480}#conseiller.remarque .conseiller-tete{margin-bottom:8px;padding-bottom:7px}#conseiller.remarque .conseiller-texte{font-style:italic;color:#e0e7df}
+@keyframes conseiller-flotte{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-3px) rotate(1deg)}}
+@keyframes conseiller-ouvre{from{opacity:0;transform:scale(.88) translate(12px,8px)}to{opacity:1;transform:none}}
+@media(max-width:650px){#conseiller{right:8px;bottom:8px;max-width:calc(100vw - 16px)}.conseiller-bulle,#conseiller.remarque .conseiller-bulle{width:min(330px,calc(100vw - 88px));padding:12px}.conseiller-portrait{width:66px;height:80px}.conseiller-portrait img{height:76px;max-width:64px}.conseiller-bulle h2{font-size:16px}.conseiller-texte{font-size:11px}.conseiller-objectif{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.conseiller-portrait,.conseiller-bulle{animation:none}.conseiller-progression>i span{transition:none}}

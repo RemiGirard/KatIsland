@@ -30,11 +30,19 @@
      vaut une maison juste qu'un modèle inventé.
      --------------------------------------------------------------- */
   const VERS_DOC = {
-    forge:'Forge', cuisine:'Boulangerie', moulin:'Moulin', bergerie:'Bergerie',
-    pecherie:'Pêcherie', mine:'Mine', scierie:'Scierie', laiterie:'Laiterie',
-    champ:'Blé', herboristerie:'Légumes', rucher:'Fleurs',
-    alchimie:'Alchimie', taverne:'Auberge', pepiniere:'Pépinière',
-    descente:'Tour sombre', caserne:'Caserne', port:'Port',
+    pecherie:'Pêcherie', scierie:'Scierie', champ:'Champ', tournesol:'Champ de tournesols',
+    pepiniere:'Pépinière', potager:'Potager', fleurs:'Champ de fleurs', puits:'Puits',
+    maison:'Maison', grange:'Grange', entrepot:'Entrepôt', carriere:'Carrière',
+    mine:'Mine', charbonniere:'Charbonnière', fonderie:'Fonderie', forge:'Forge',
+    armurerie:'Armurerie', tuilerie:'Tuilerie', poterie:'Poterie', verrerie:'Verrerie',
+    moulin:'Moulin à vent', moulinEau:'Moulin à eau', cuisine:'Four banal', fumoir:'Fumoir',
+    bergerie:'Bergerie', etable:'Étable', laiterie:'Laiterie', rucher:'Rucher',
+    filature:'Filature', tisserand:'Atelier de tissage', tannerie:'Tannerie',
+    herboristerie:'Herboristerie', alchimie:'Laboratoire d’alchimie', scriptorium:'Scriptorium',
+    orfevre:'Orfèvre', taverne:'Taverne', port:'Le Port', halle:'Halle',
+    nurserie:'Nurserie', entrainement:'Terrain d’entraînement', caserne:'Caserne',
+    rempart:'Rempart', tour:'Tour de guet', eglise:'Chapelle', chateau:'Donjon',
+    arbrechat:'Arbre à chat', descente:'Tour sombre',
   };
   /* la teinte d'une maison ordinaire, par catégorie du jeu — pour que
      le bourg se lise même là où le document n'a pas de modèle */
@@ -147,7 +155,9 @@
       if(pour && t >= 0 && doc.meilleureRotation(c, L, t) < 0) continue;
       if(doc.poser({c, L})){ pose = c; break; }
     }
-    doc.typeCourant = -1;
+    /* En mode construction, conserver le type choisi après la tentative : le
+       fantôme montre ainsi l'emprise réelle du port sur la bande littorale. */
+    doc.typeCourant = modeCons ? indexDoc(modeCons) : -1;
     if(!pose) return null;
 
     /* Toutes les cellules que le document vient d'occuper appartiennent
@@ -175,6 +185,10 @@
     }
     bat.xr = bat.cell / doc.cellules.length;
     bats.set(bat.id, bat);
+    if(type === 'scierie' && !pour){
+      const eco = window.Etat && window.Etat.E && window.Etat.E.bat[bat.id];
+      appliquerEtatScierie(bat, (eco && eco.niv) || bat.niv || 1, (eco && eco.raff) || {});
+    }
     return bat;
   }
 
@@ -224,6 +238,15 @@
     return true;
   }
 
+  /* Le modèle V44 ne change jamais après sa pose. Les niveaux et annexes
+     restent des données économiques, sans modifier sa géométrie. */
+  function appliquerEtatScierie(bat, niv, raff){
+    if(!bat || bat.type !== 'scierie' || bat.pour) return false;
+    bat.niv = Math.max(1, niv | 0);
+    bat.raff = Object.assign({}, raff || {});
+    return false;
+  }
+
   /* ================================================================
      LE PONTON — le contrat avec les navires
 
@@ -271,7 +294,10 @@
       if(!sp) continue;
       const T = TY[sp.t];
       const part = T && T.parts[sp.p];
-      if(!part || !part.ponton) continue;
+      /* En V44 les trois cellules ne portent plus le décor historique
+         `ponton:true` : le quai est dessiné par l'architecture spéciale du
+         type. Sa cellule d'ancrage (partie 0) reste la même. */
+      if(!T || (!part || !part.ponton) && !(T.bordEau && sp.p === 0)) continue;
       const i = sp.r % 4;
       const A = doc.P[c.q[i]], B = doc.P[c.q[(i+1)%4]];
       const mx = (A[0]+B[0])/2, mz = (A[1]+B[1])/2;
@@ -317,6 +343,8 @@
     D().surSurvol = (t) => {
       const cible = t && (t.sup || t.pose);
       const bat = cible ? batDeCellule(cible.c, cible.L) : null;
+      if(modeCons) D().surlignerBatiment(null);
+      else D().surlignerBatiment(bat ? bat.slots : null);
       if(bat === dernier) return;
       dernier = bat;
       if(listeners.survol) listeners.survol(bat || null);
@@ -335,6 +363,8 @@
       bats.clear(); parCell.clear(); SEQ = 0;
       D().regenererIle(graine);
       brancher();
+      D().constructionActive = false;
+      D().canvas.style.cursor = 'url("img/ui/curseur-patte-griffe.png") 6 4, pointer';
       return this;
     },
     demarrer(){ if(lancé) return; lancé = true; D().demarrer(); },
@@ -355,25 +385,18 @@
       if(b) D().demanderRebati();
       return b;
     },
-    /* Une annexe bâtie change l'édifice. On note ce qu'il porte —
-       l'appentis, la cave, la roue — et l'on redemande la bâtisse : le
-       document relit `annexes` en montant les corps du bâtiment. */
+    /* Annexes et niveaux n'altèrent jamais la maquette V44. */
     rafraichir(id){
       const b = bats.get(id);
       if(!b) return false;
       const e = window.Etat && window.Etat.E && window.Etat.E.bat[id];
-      const liste = [];
-      if(e && e.raff && window.RaffUtil){
-        for(const rid in e.raff){
-          if(!e.raff[rid]) continue;
-          const r = window.RaffUtil.trouver(e.type, rid);
-          if(r && r.annexe) liste.push(r.annexe);
-        }
-      }
-      b.annexes = liste;
-      D().demanderRebati();
-      this.ping(id, '#e8c88a');
+      b.niv = (e && e.niv) || b.niv || 1;
+      b.raff = Object.assign({}, (e && e.raff) || b.raff || {});
       return true;
+    },
+    configurerScierie(id, niv, raff){
+      const b = bats.get(id);
+      return appliquerEtatScierie(b, niv, raff);
     },
     retirer(id){
       const ok = retirerInterne(id);
@@ -386,9 +409,8 @@
     rehausser(id, niv){
       const b = bats.get(id);
       if(!b) return false;
-      const avant = palierDe(b.niv || 1);
       b.niv = niv;
-      return palierDe(niv) !== avant;
+      return false;
     },
     palier(niv){ return palierDe(niv); },
     nomPalier(niv){ return NOMS_PALIER[palierDe(niv)]; },
@@ -411,6 +433,46 @@
         xr: b.cell / D().cellules.length,
       }));
     },
+    /* Projection indépendante de la caméra 3D. Les coordonnées restent celles
+       du document : la couche 2D peut donc dessiner un vrai plan vertical et
+       retrouver les bâtiments empilés sans lire la sauvegarde économique. */
+    planArchitecture(){
+      const doc = D();
+      if(!doc) return { cellules:[], batiments:[] };
+      const cellules = doc.cellules.map(c => ({
+        i:c.i, cx:c.cx, cz:c.cz,
+        q:c.q.map(i => ({x:doc.P[i][0], z:doc.P[i][1]}))
+      }));
+      const batiments = [...bats.values()].map(b => ({
+        id:b.id, type:b.type, pour:b.pour || null, L:b.L || 0,
+        niv:b.niv || 1, r:b.r || 0,
+        slots:(b.slots || []).map(s => {
+          const c=doc.cellules[s.cell];
+          return c ? {cell:c.i,L:s.L,cx:c.cx,cz:c.cz,
+            q:c.q.map(i => ({x:doc.P[i][0],z:doc.P[i][1]}))} : null;
+        }).filter(Boolean)
+      }));
+      return {cellules,batiments};
+    },
+    selectionnerPlan(id){
+      const b=bats.get(id);
+      if(!b) return false;
+      if(listeners.selection) listeners.selection(b);
+      return true;
+    },
+    poserSurPlan(cell){
+      if(!modeCons) return false;
+      const doc=D(), c=doc && doc.cellules[Math.max(0,cell|0)];
+      const t=indexDoc(modeCons);
+      const libre=!!c && !parCell.has(cle(c,0)) && !((c.b||[])[0]>=0);
+      const tient=libre && (t<0 || doc.meilleureRotation(c,0,t)>=0);
+      if(tient){
+        if(listeners.pose) listeners.pose(modeCons,{x:c.i,y:0,r:null});
+        return true;
+      }
+      if(listeners.poseRefus) listeners.poseRefus(modeCons);
+      return false;
+    },
     chargerPlan(p){
       bats.clear(); parCell.clear(); SEQ = 0;
       D().vider();
@@ -431,8 +493,14 @@
     /* ---- le mode construction ---- */
     modeConstruction(type){
       modeCons = type || null;
+      D().constructionActive = !!modeCons;
+      if(modeCons) D().surlignerBatiment(null);
+      D().typeCourant = modeCons ? indexDoc(modeCons) : -1;
       if(D().grille) D().grille.visible = !!modeCons;
       if(!modeCons && D().survol) D().survol.visible = false;
+      if(D().canvas) D().canvas.style.cursor = modeCons
+        ? 'crosshair'
+        : 'url("img/ui/curseur-patte-griffe.png") 6 4, pointer';
     },
     enConstruction(){ return !!modeCons; },
 

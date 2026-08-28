@@ -17,10 +17,27 @@
   const E = () => window.Etat.E;
 
   let dock, liste, pied, tete, bandeau, menaceLigne, poignee, survol;
-  let prod, prodCorps, prodPoignee, prodEntete, prodRetour, prodTabs;
+  let prod, prodCorps, prodPoignee, prodEntete, prodRetour, prodTabs, prodNav;
   let replie = false, prodReplie = false, prodChoisie = null;
   let batimentChoisi = null, ongletBatiment = null;
   let sousPanneauBatiment = null;
+  let vuePilote = 'production', categorieStock = 'vivres', familleConstruction = 'recolte', couleurMaison = 3;
+
+  const FAMILLES_CONSTRUCTION = [
+    { id:'recolte', nom:'Récolte', cats:['recolte'] },
+    { id:'atelier', nom:'Ateliers', cats:['atelier'] },
+    { id:'vie', nom:'Vie', cats:['vie', 'stock', 'commerce'] },
+    { id:'guerre', nom:'Défense', cats:['guerre', 'porte'] },
+  ];
+  const GROUPES_STOCK = [
+    ['vivres','Vivres'], ['matiere','Matières'], ['mineral','Minéraux'],
+    ['textile','Textiles'], ['ouvrage','Ouvrages'], ['monnaie','Monnaies'],
+    ['savoir','Savoirs'], ['profond','Rares']
+  ];
+  const COULEURS_MAISON = [
+    '#f4ead4','#f6cd72','#e8a03c','#dd6f3f','#c33c33','#e58f9b',
+    '#9a5b8e','#4d6fa3','#57a19c','#7ba05b','#f2f1e9','#93918a','#5d4a3c'
+  ];
 
   function construire() {
     const couche = document.getElementById('couche');
@@ -45,15 +62,17 @@
     /* ---------------- productions, à droite ---------------- */
     prodCorps = el('div', { id: 'productions-corps' });
     prodEntete = el('div', { id: 'productions-identite' });
-    prodRetour = el('button', { class: 'b mini prod-retour', text: 'Ressources',
+    prodRetour = el('button', { class: 'b mini prod-retour', text: 'Retour',
       title: 'Revenir aux ressources productibles', onclick: fermerBatiment });
+    prodNav = el('div', { id:'pilotage-nav', role:'tablist',
+      'aria-label':'Menu du village' });
     prodTabs = el('div', { id: 'batiment-languettes', role: 'tablist' });
     prod = el('div', { id: 'productions' },
       el('div', { id: 'productions-tete' },
         prodEntete,
         el('div', { class: 'productions-actions' }, prodRetour,
           el('button', { class: 'b mini', text: 'Replier', onclick: basculerProductions }))),
-      prodTabs, prodCorps);
+      prodNav, prodTabs, prodCorps);
     prodPoignee = el('div', { id: 'productions-poignee', title: 'Replier / déplier les productions' },
       el('span', { text: '›' }));
     prodPoignee.addEventListener('click', basculerProductions);
@@ -68,6 +87,7 @@
 
     majTete();
     majEnteteProductions();
+    rendreNavigationPilote();
   }
 
   function basculer() {
@@ -100,9 +120,16 @@
     prodRetour.hidden = !b;
     U.rendreDans(prodEntete, h => {
       if (!b) {
+        const titres = {
+          stocks:['Stocks', 'Toutes les réserves du bourg'],
+          batiments:['Bâtiments', 'Le village et ses ateliers'],
+          production:['Production', 'Ce que le bourg sait fabriquer'],
+          construction:['Construction', 'Choisir un plan à poser'],
+        };
+        const titre = titres[vuePilote] || titres.stocks;
         h.appendChild(el('div', {},
-          el('div', { class:'tt', text:'Productions' }),
-          el('div', { class:'eti', text:'Ce que le bourg sait faire' })));
+          el('div', { class:'tt', text:titre[0] }),
+          el('div', { class:'eti', text:titre[1] })));
         return;
       }
       const def = window.BAT[b.type];
@@ -122,6 +149,7 @@
     batimentChoisi = bid;
     if (!meme || onglet) ongletBatiment = onglet || null;
     if (!meme || onglet) sousPanneauBatiment = null;
+    vuePilote = 'production';
     prodChoisie = null;
     if (window.Village) window.Village.selection(bid);
     deplierProductions();
@@ -134,6 +162,35 @@
     sousPanneauBatiment = null;
     if (window.Village) window.Village.selection(null);
     majProductions();
+  }
+
+  function choisirVuePilote(id) {
+    if (!['production','construction'].includes(id)) return;
+    if (id !== 'construction' && window.UIFen) window.UIFen.quitterConstruction();
+    batimentChoisi = null;
+    ongletBatiment = null;
+    sousPanneauBatiment = null;
+    prodChoisie = null;
+    vuePilote = id;
+    if (window.Village) window.Village.selection(null);
+    deplierProductions();
+    majProductions();
+  }
+
+  function rendreNavigationPilote() {
+    if (!prodNav) return;
+    const onglets = [
+      ['production', 'Production', window.Img && window.Img.res('planche'), { f:'roue', c:['#93af83','#506b45'] }],
+      ['construction', 'Construire', window.Img && window.Img.res('outil'), { f:'marteau', c:['#e2ba57','#8f6d2d'] }],
+    ];
+    U.rendreDans(prodNav, h => {
+      for (const [id, nom, src, ico] of onglets) h.appendChild(el('button', {
+        class:'pilotage-tab pilotage-' + id + (vuePilote === id ? ' on' : ''),
+        role:'tab', 'aria-selected':vuePilote === id ? 'true' : 'false',
+        title:nom, onclick:() => choisirVuePilote(id),
+      }, src ? window.Img.vignette(src, 32, '', 'pilotage-art') : U.ico(ico, 27),
+        el('span', { text:nom })));
+    });
   }
 
   function choisirOngletBatiment(id) {
@@ -205,6 +262,16 @@
 
   function majProductions() {
     if (!prodCorps) return;
+    /* Le panneau est normalement rafraîchi cinq fois par seconde. Pendant
+       le glissement d'un curseur, le reconstruire remplaçait le contrôle
+       sous la souris : le pointeur changeait et la prise semblait lâcher.
+       On laisse donc le contrôle vivant jusqu'au relâchement. */
+    const controleActif = document.activeElement;
+    if (controleActif && prodCorps.contains(controleActif)) {
+      if (controleActif.matches('input[type="range"]:active')) return;
+      if (controleActif.matches('input.scierie-equipe-nom')) return;
+    }
+    rendreNavigationPilote();
     if (batimentChoisi && E().bat[batimentChoisi]) {
       majBatiment();
       return;
@@ -212,6 +279,7 @@
     if (batimentChoisi) batimentChoisi = null;
     majEnteteProductions();
     U.vide(prodTabs);
+    if (vuePilote === 'construction') { majConstruction(); return; }
     const items = productionsDisponibles();
     if (prodChoisie && !items.some(x => x.id === prodChoisie)) prodChoisie = null;
     U.rendreDans(prodCorps, hote => {
@@ -243,10 +311,139 @@
     });
   }
 
+  function majStocks() {
+    const caps = window.Etat.plafonds();
+    const productibles = new Set(productionsDisponibles().map(x => x.id));
+    const suivies = new Set(ressourcesSuivies());
+    const lots = new Map();
+    for (const [cat] of GROUPES_STOCK) lots.set(cat, Object.keys(window.RES).filter(id =>
+      window.RES[id].cat === cat && (window.Etat.qte(id) > 0 || productibles.has(id) || suivies.has(id))));
+    const presentes = GROUPES_STOCK.filter(([cat]) => lots.get(cat).length);
+    if (!presentes.some(([cat]) => cat === categorieStock) && presentes.length) categorieStock = presentes[0][0];
+    const groupe = presentes.find(([cat]) => cat === categorieStock);
+    const lot = groupe ? lots.get(groupe[0]) : [];
+    U.rendreDans(prodCorps, hote => {
+      hote.appendChild(el('div', { class:'pilote-intro',
+        text:'Cliquez une réserve pour ouvrir son inventaire détaillé.' }));
+      const cats = el('div', { class:'stock-categories', role:'tablist' });
+      for (const [cat, nom] of presentes) cats.appendChild(el('button', {
+        class:'stock-categorie' + (cat === categorieStock ? ' on' : ''), text:nom,
+        role:'tab', 'aria-selected':cat === categorieStock ? 'true' : 'false',
+        onclick:() => { categorieStock = cat; majStocks(); }
+      }));
+      hote.appendChild(cats);
+      if (groupe) hote.appendChild(el('div', { class:'pilote-section-titre', text:groupe[1] }));
+      const grille = el('div', { class:'stocks-grille' });
+      for (const id of lot.sort((a,b) => window.RES[a].nom.localeCompare(window.RES[b].nom, 'fr'))) {
+        const r = window.RES[id], q = window.Etat.qte(id), cap = caps[categorieStock];
+        const debit = window.Marche ? window.Marche.debit(id) * 60 : 0;
+        const plein = cap && cap < 9000 && q >= cap;
+        grille.appendChild(el('button', { class:'stock-carte' + (plein ? ' pleine' : ''),
+          title:r.nom + ' — ouvrir les réserves', onclick:() => window.UIFen.ouvrirReserves(categorieStock) },
+          el('span', { class:'stock-carte-image' }, U.icoRes(id, 38)),
+          el('span', { class:'stock-carte-texte' },
+            el('b', { text:r.nom }),
+            el('strong', { text:U.fmt(q) + (cap && cap < 9000 ? ' / ' + U.fmt(cap) : '') }),
+            Math.abs(debit) >= .05 ? el('i', { class:debit < 0 ? ' mauvais' : '',
+              text:(debit > 0 ? '+' : '') + (Math.round(debit * 10) / 10).toString().replace('.', ',') + '/min' }) : null)));
+      }
+      hote.appendChild(grille);
+    });
+  }
+
+  function majListeBatiments() {
+    const lot = Object.keys(E().bat).map(id => ({ id, b:E().bat[id] }))
+      .filter(x => x.b && !x.b.chantier && window.BAT[x.b.type])
+      .sort((a,z) => window.BAT[a.b.type].nom.localeCompare(window.BAT[z.b.type].nom, 'fr'));
+    U.rendreDans(prodCorps, hote => {
+      hote.appendChild(el('div', { class:'pilote-intro',
+        text:lot.length ? 'Sélectionnez un bâtiment pour le piloter.' : 'Le bourg ne possède encore aucun bâtiment.' }));
+      const grille = el('div', { class:'batiments-grille' });
+      for (const x of lot) {
+        const def = window.BAT[x.b.type], src = window.Img && window.Img.bat(x.b.type);
+        const actifs = (x.b.postes || []).filter(p => p.hab && p.rec && !p.bloque).length;
+        grille.appendChild(el('button', { class:'batiment-carte' + (x.b.endommage > 0 ? ' endommage' : ''),
+          title:def.nom + ' — ouvrir', onclick:() => ouvrirBatiment(x.id) },
+          el('span', { class:'batiment-carte-art' },
+            src ? el('img', { src, alt:'Illustration de ' + def.nom }) : U.ico({ f:'maison', c:['#aaa','#666'] }, 48)),
+          el('span', { class:'batiment-carte-texte' },
+            el('b', { text:def.nom }),
+            el('i', { text:'Niveau ' + x.b.niv + (x.b.postes && x.b.postes.length ? ' · ' + actifs + '/' + x.b.postes.length + ' actifs' : '') }))));
+      }
+      hote.appendChild(grille);
+      hote.appendChild(el('button', { class:'construction-appel', onclick:() => choisirVuePilote('construction') },
+        U.ico({ f:'marteau', c:['#e2ba57','#8f6d2d'] }, 22),
+        el('span', {}, el('b', { text:'Construire un bâtiment' }), el('i', { text:'Ouvrir le catalogue des plans' }))));
+    });
+  }
+
+  function majConstruction() {
+    const types = window.Jeu.catalogue();
+    const file = E().chantier.file || [], ouvriers = E().chantier.ouvriers || [];
+    const presentes = FAMILLES_CONSTRUCTION.filter(f => types.some(t => f.cats.includes(window.BAT[t].cat)));
+    if (!presentes.some(f => f.id === familleConstruction) && presentes.length)
+      familleConstruction = presentes[0].id;
+    const fam = presentes.find(f => f.id === familleConstruction);
+    const lot = fam ? types.filter(t => fam.cats.includes(window.BAT[t].cat)) : [];
+    U.rendreDans(prodCorps, hote => {
+      const statut = el('button', { class:'chantier-statut', onclick:() => window.UIFen.ouvrirChantier('file'),
+        title:'Gérer le chantier' },
+        el('span', {}, el('b', { text:file.length ? file.length + ' ouvrage' + (file.length > 1 ? 's' : '') : 'File vide' }),
+          el('i', { text:ouvriers.length + ' ouvrier' + (ouvriers.length > 1 ? 's' : '') + ' affecté' + (ouvriers.length > 1 ? 's' : '') })),
+        el('strong', { text:'Gérer' }));
+      hote.appendChild(statut);
+      const cats = el('div', { class:'construction-categories', role:'tablist' });
+      for (const f of presentes) cats.appendChild(el('button', {
+        class:'construction-categorie' + (f.id === familleConstruction ? ' on' : ''),
+        role:'tab', 'aria-selected':f.id === familleConstruction ? 'true' : 'false', text:f.nom,
+        onclick:() => { familleConstruction = f.id; majConstruction(); }
+      }));
+      hote.appendChild(cats);
+      if (fam) hote.appendChild(el('div', { class:'pilote-section-titre', text:'Plans · ' + fam.nom }));
+      const grille = el('div', { class:'construction-grille' });
+      for (const t of lot) grille.appendChild(carteConstruction(t));
+      hote.appendChild(grille);
+      if (!lot.length) hote.appendChild(el('div', { class:'prod-vide', text:'Aucun plan dans cette catégorie.' }));
+    });
+  }
+
+  function carteConstruction(type) {
+    const def = window.BAT[type], cout = window.Jeu.coutConstruction(type);
+    const abordable = window.Etat.assez(cout), src = window.Img && window.Img.bat(type);
+    const couts = Object.keys(cout).slice(0, 3);
+    const carte = el('button', { class:'plan-carte' + (abordable ? '' : ' pauvre'),
+      title:def.nom + '\n' + def.desc, onclick:() => choisirConstruction(type) },
+      el('span', { class:'plan-carte-art' },
+        src ? el('img', { src, alt:'Illustration de ' + def.nom }) : U.ico({ f:'marteau', c:['#aaa','#666'] }, 52)),
+      el('span', { class:'plan-carte-corps' },
+        el('b', { text:def.nom }), el('i', { text:def.metier || def.desc }),
+        el('span', { class:'plan-couts' }, ...couts.map(id => U.puce(id, cout[id], {
+          mini:true, insuffisant:window.Etat.qte(id) < cout[id]
+        })) )));
+    return carte;
+  }
+
+  function choisirConstruction(type) {
+    E().vus['bulle:' + type] = true;
+    if (type === 'maison') {
+      const choix = el('div', { class:'maison-couleurs' });
+      COULEURS_MAISON.forEach((hex, i) => {
+        const b = el('button', { class:i === couleurMaison ? 'on' : '', title:'Couleur des murs',
+          onclick:() => { couleurMaison = i; choisirConstruction('maison'); } });
+        b.style.background = hex; choix.appendChild(b);
+      });
+      const ancienne = prodCorps.querySelector('.maison-couleurs');
+      if (ancienne) ancienne.replaceWith(choix); else prodCorps.prepend(choix);
+      window.UIFen.entrerConstruction('maison', { coul:couleurMaison });
+    } else window.UIFen.entrerConstruction(type);
+    if (window.Etat.sauver) window.Etat.sauver(true);
+  }
+
   function majBatiment() {
     const b = E().bat[batimentChoisi];
     if (!b) { fermerBatiment(); return; }
     majEnteteProductions();
+    rendreNavigationPilote();
     const tous = window.UIFen && window.UIFen.ongletsBatiment
       ? window.UIFen.ongletsBatiment(batimentChoisi) : [];
     const ouverts = tous.filter(t => (t.niveau || 1) <= b.niv);

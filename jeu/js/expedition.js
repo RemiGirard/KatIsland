@@ -78,6 +78,8 @@
   /* LE JEU MANUEL : ce qui reste en chaloupe, et le type qu'on tient
      au bout du doigt. `auto` dit qui commande. */
   let reserve = {}, typeChoisi = null, auto = true, barreRenforts = null;
+  let pauseBataille = false, vitesseBataille = 1, partOrdre = 0.5;
+  let statsBataille = null;
   let plateau, scene, cvB, titre, sous, boutons, pied, gauche, droite;
 
   function refs() {
@@ -241,6 +243,12 @@
   let navireEnCours = null;
 
   function zoneDeLIle(ile) {
+    const objectifs = {
+      guerriere: { id:'domination', nom:'Domination', desc:'Accumulez des points, contrôlez 60 % des positions et maintenez cette domination dix secondes.' },
+      marecageuse: { id:'tenir', nom:'Tenir la tête de pont', desc:'Résistez aux vagues jusqu’à l’arrivée des chaloupes.', duree:75 },
+      volcanique: { id:'decapitation', nom:'Décapitation', desc:'Ouvrez une route et sécurisez le camp adverse.' },
+      arcanique: { id:'elimination', nom:'Briser le foyer', desc:'Détruisez les forces de la Nuée malgré les décharges arcanes.' },
+    };
     return {
       id: 'ile:' + ile.id, ile: ile.id, nom: ile.nom, diff: ile.diff,
       noeuds: ile.noeuds, desc: ile.desc,
@@ -249,13 +257,60 @@
       gainMenace: ile.menace,
       tier: ile.tier || 1, force: ile.force || 1, biome: ile.biome || null,
       effetBiome: ile.effetBiome || '',
+      objectif: objectifs[ile.biome] || objectifs.guerriere,
     };
   }
 
   function lancerIle(ile, navire) {
     if (!ile || !navire) return;
-    navireEnCours = navire;
-    lancer(zoneDeLIle(ile), { cale: navire.cargo.map(c => ({ type: c.type, n: c.n })) });
+    /* La carte marine plein écran vit au-dessus des fenêtres ordinaires.
+       Sans la refermer, la préparation puis le bilan étaient bien créés,
+       mais invisibles derrière elle — exactement comme s'ils n'existaient pas. */
+    if (window.UIFen && window.UIFen.fermerCarteMarine) window.UIFen.fermerCarteMarine();
+    const z = zoneDeLIle(ile);
+    const cale = (navire.cargo || []).map(c => ({ type:c.type, n:c.n }));
+    const f = forces(z, cale);
+    const rapport = f.bourg / Math.max(1, f.nuee);
+    const risque = rapport >= 1.35 ? 'avantage net' : rapport >= 1.05 ? 'léger avantage'
+      : rapport >= .82 ? 'affrontement incertain' : rapport >= .62 ? 'net désavantage' : 'mission critique';
+    const total = cale.reduce((n,x) => n + x.n, 0);
+    const debarques = Math.max(1, Math.round(total * PART_DEBARQUEE));
+    U().fermer('prep-exp');
+    U().ouvrir('prep-exp', {
+      titre:'Préparer le débarquement', sous:z.nom,
+      onglets:[{ id:'ordre', nom:'Plan de bataille', rendu:c => {
+        const A = el();
+        c.appendChild(A('div', { class:'prep-exp-intro' },
+          A('div', { class:'eti-or', text:z.objectif.nom }),
+          A('div', { class:'tt', text:z.objectif.desc }),
+          A('div', { class:'note', text:z.effetBiome || 'Aucun danger naturel particulier.' })));
+        c.appendChild(A('div', { class:'prep-exp-rapport' },
+          A('div', {}, A('b', { text:String(total) }), A('span', { text:'unités engagées' })),
+          A('div', {}, A('b', { text:String(debarques) }), A('span', { text:'première vague' })),
+          A('div', {}, A('b', { text:String(z.noeuds) }), A('span', { text:'positions' })),
+          A('div', { class:rapport < .82 ? 'dangereux' : '' }, A('b', { text:risque }), A('span', { text:'rapport de forces' }))));
+        c.appendChild(A('div', { class:'prep-exp-forces' },
+          U().barre(Math.min(1, rapport / 1.7), 'grande ' + (rapport >= 1.05 ? 'vert' : rapport < .82 ? 'rouge' : ''),
+            'Bourg ≈ ' + f.bourg, 'Nuée ≈ ' + f.nuee)));
+        c.appendChild(A('div', { class:'cote-titre', text:'Troupes embarquées' }));
+        c.appendChild(A('div', { class:'rangee enroule prep-exp-cale' },
+          cale.map(x => A('span', { class:'puce gain',
+            text:(window.Armee ? window.Armee.nom(x.type) : x.type) + ' ×' + x.n }))));
+        c.appendChild(A('div', { class:'prep-exp-conseil' },
+          A('b', { text:'Renseignement tactique' }),
+          A('span', { text:' Les positions doivent être sécurisées quelques secondes. Les éliminations et le terrain tenu financent ensuite leur aménagement. La Nuée reste invisible hors du champ de vision.' })));
+        c.appendChild(A('div', { class:'prep-exp-butin' },
+          A('span', { class:'eti-or', text:'Butin prévu en cas de victoire' }),
+          U().listeRes(z.butin || {}, { gain:true, rien:'Aucun butin connu.' })));
+        c.appendChild(A('div', { class:'rangee entre enroule', style:'margin-top:16px' },
+          A('button', { class:'b', text:'Confier au capitaine', onclick:() => {
+            U().fermer('prep-exp'); navireEnCours = navire; lancer(z, { cale, auto:true });
+          }}),
+          A('button', { class:'b primaire', text:'Commander le débarquement', onclick:() => {
+            U().fermer('prep-exp'); navireEnCours = navire; lancer(z, { cale, auto:false });
+          }})));
+      }}],
+    });
   }
 
   /* LA SORTIE N'EXISTE PLUS. On ne part plus « à pied » : le bourg est
@@ -291,6 +346,9 @@
 
     refs();
     ouvert = true; zoneEnCours = z; colonneEnCours = ligne; tB = 0; tCotes = 0;
+    pauseBataille = false; vitesseBataille = 1; partOrdre = 0.5;
+    statsBataille = { eliminations:0, captures:0, constructions:0,
+      pointsGagnes:0, pointsDepenses:0, vagues:0 };
     plateau.classList.add('vu');
     dimensionner();
 
@@ -303,6 +361,7 @@
       nodeCount: z.noeuds, stage: z.diff,
       theme: z.theme || null,
       treeDepth: Math.max(0, Math.min(3, Math.floor(z.diff / 5))),
+      tacticalSites: true,
       w: cvB.width, h: cvB.height,
     });
     const compo = equilibrer(map, z, ligne);
@@ -337,6 +396,9 @@
       enemyLook: look,
       environment: z.biome ? { type: z.biome, tier: z.tier || 1,
         force: z.force || 1 } : null,
+      fogOfWar: true,
+      captureSeconds: Math.max(3.5, Math.min(6, 3.5 + (z.tier || 1) * 0.18)),
+      objective: z.objectif || { id:'domination', nom:'Domination' },
 
       /* L'IA MONTE EN GAMME. Zéro : elle se contente d'attaquer ce
          qu'elle voit. Trois : elle tient ses positions, concentre ses
@@ -364,8 +426,9 @@
     /* LE JOUEUR TIENT LA BARRE. L'ancien mode était manuel : on gardait
        une réserve et on la versait où il fallait. Le pilote automatique
        reste, d'un clic, pour les batailles qu'on ne veut pas mener. */
-    auto = false;
-    bataille.setAutoPilot(false);
+    auto = !!(options && options.auto);
+    bataille.setAutoPilot(auto);
+    bataille.setSendRatio(partOrdre);
     typeChoisi = Object.keys(reserve)[0] || null;
     construireRenforts();
     /* SANS CECI, RIEN NE RÉPOND. `brancherPointeur()` pose les écouteurs
@@ -375,6 +438,10 @@
     brancherPointeur();
     E2.expedition = { zone: z.id, zoneSpec:z, ligne:ligne, prog: 0, sortie: !!z.sortie,
                       nom: (z.sortie ? 'Sortie — ' : 'Expédition — ') + z.nom };
+    /* La carte du port reste ouverte sous le plateau de bataille. Elle
+       doit remplacer immédiatement « Lancer » par « Rejoindre », sans
+       attendre un rechargement de la page ni un changement du navire. */
+    window.Etat.prevenir('port', navireEnCours || { action:'expedition' });
     window.Etat.journal(z.sortie
       ? 'La colonne sort à la rencontre de la Nuée.'
       : 'La colonne part pour ' + z.nom + '.', 'guerre');
@@ -416,6 +483,7 @@
       }
     }
     E().expedition = null;
+    window.Etat.prevenir('port', { action:'expedition-abandonnee' });
     window.Etat.journal('L\'expédition est abandonnée avant d\'avoir été menée.', 'alerte');
   }
 
@@ -429,8 +497,9 @@
      ------------------------------------------------------------------ */
   /* Ce que chaque camp alignera. On l'affiche AVANT le départ : une
      colonne qu'on envoie à l'aveugle est une colonne qu'on regrette. */
-  function forces(z) {
-    const ligne = window.Armee ? window.Armee.colonne() : [{ type:'lancier', n:Math.max(1, E().armee.unites) }];
+  function forces(z, composition) {
+    const ligne = composition && composition.length ? composition
+      : (window.Armee ? window.Armee.colonne() : [{ type:'lancier', n:Math.max(1, E().armee.unites) }]);
     const bourg = window.Armee ? Math.round(window.Armee.puissance(ligne)) : ligne[0].n;
     return { bourg, nuee: Math.round(bourg * (0.50 + 0.075 * z.diff)) };
   }
@@ -589,9 +658,24 @@
 
   function evenement(ev) {
     if (!ev) return;
-    if (ev.type === 'victory') terminer(true);
-    else if (ev.type === 'defeat') terminer(false);
+    if (ev.type === 'victory') terminer(true, { raison:ev.reason || 'objectif' });
+    else if (ev.type === 'defeat') terminer(false, { raison:ev.reason || 'anéantissement' });
+    else if (ev.type === 'retreat') terminer(false, { retraite:true });
     else if (ev.type === 'capture') U().dire('Position prise.', 'bien', 1400);
+    else if (ev.type === 'captureStarted') U().dire('Position occupée — tenez-la jusqu’à sa sécurisation.', 'info', 2200);
+    else if (ev.type === 'buildMenu') U().dire('Choisissez maintenant la fonction de cette position.', 'bien', 1800);
+    else if (ev.type === 'buildDenied') U().dire('Pas assez de points tactiques pour cette implantation.', 'alerte', 1800);
+    else if (ev.type === 'retreatStarted') U().dire('Extraction en cours : rassemblez les troupes dans le cercle.', 'alerte', 3000);
+    if (statsBataille) {
+      if (ev.type === 'capture' && ev.by === 'cats') statsBataille.captures++;
+      else if (ev.type === 'nodeBuilt' && ev.by === 'cats') {
+        statsBataille.constructions++;
+        statsBataille.pointsDepenses += ev.cost || 0;
+      } else if (ev.type === 'tacticalPoints' && ev.faction === 'cats') {
+        statsBataille.pointsGagnes += ev.amount || 0;
+        if (ev.source === 'elimination') statsBataille.eliminations++;
+      } else if (ev.type === 'enemyReinforce') statsBataille.vagues++;
+    }
   }
 
   /* LES UNITÉS ENCORE VIVANTES, par type.
@@ -687,7 +771,7 @@
   /* Ce que le harnais de contrôle interroge après coup. */
   function pannesVues() { return Object.assign({}, pannes); }
 
-  function terminer(gagne) {
+  function terminer(gagne, options) {
     const z = zoneEnCours;
     const E2 = E();
     E2.expedition = null;
@@ -700,7 +784,27 @@
        garnison écrits en dur, alors que le chemin d'île en retire
        `ile.menace` — huit aux Basses Berges — et ne poste personne. */
     let recu = null;
-    const faits = { menace: 0 };
+    const vivantsFin = survivants();
+    const engagesParType = {};
+    for (const x of colonneEnCours) engagesParType[x.type] = (engagesParType[x.type] || 0) + x.n;
+    const unitesBilan = Object.keys(engagesParType).map(type => ({
+      type, engages:engagesParType[type], survivants:vivantsFin[type] || 0,
+      perdus:Math.max(0, engagesParType[type] - (vivantsFin[type] || 0)),
+    }));
+    let statutFinal = null;
+    try { statutFinal = bataille && bataille.getBattleStatus ? bataille.getBattleStatus() : null; }
+    catch (e) { statutFinal = null; }
+    const faits = {
+      menace:0, retraite:!!(options && options.retraite),
+      raison:(options && options.raison) || ((options && options.retraite) ? 'retraite' : ''),
+      duree:tB, unites:unitesBilan, survivants:vivantsFin,
+      engages:unitesBilan.reduce((n,x) => n + x.engages, 0),
+      rentres:unitesBilan.reduce((n,x) => n + x.survivants, 0),
+      perdus:unitesBilan.reduce((n,x) => n + x.perdus, 0),
+      combat:Object.assign({ eliminations:0, captures:0, constructions:0,
+        pointsGagnes:0, pointsDepenses:0, vagues:0 }, statsBataille || {}),
+      pointsFin:statutFinal && statutFinal.score ? statutFinal.score.cats : 0,
+    };
 
     /* UNE BATAILLE D'ÎLE APPARTIENT AU PORT. C'est lui qui fait
        retomber la Nuée, remplit la cale de butin et renvoie le navire
@@ -717,7 +821,7 @@
          bute sur zéro : on relève la baisse RÉELLE de part et d'autre
          plutôt que de la recopier depuis la table. */
       const avant = E2.menace;
-      window.Port.resultat(nav.id, gagne, survivants());
+      window.Port.resultat(nav.id, gagne, vivantsFin);
       faits.menace = Math.round(avant - E2.menace);
       if (window.Armee) window.Armee.gagnerXp(colonneEnCours, gagne ? 55 + z.diff * 16 : 18 + z.diff * 5);
       recu = gagne ? (z.butin || {}) : {};
@@ -785,7 +889,36 @@
       sous: z.nom,
       onglets: [{ id: 'b', nom: 'Bilan', rendu: c => {
         const A = el();
-        c.appendChild(A('div', { class: 'note', text: gagne ? z.desc : 'La position tient toujours. Il faudra revenir en nombre.' }));
+        c.appendChild(A('div', { class: 'note', text: gagne ? z.desc : (faits.retraite
+          ? 'La colonne a rompu le combat et rejoint le point d’extraction.'
+          : 'La position tient toujours. Il faudra revenir en nombre.') }));
+        const raisons = {
+          domination:'domination maintenue', control:'contrôle du terrain', hq:'quartier général capturé',
+          hold:'temps de résistance accompli', objectif:'objectif accompli',
+          anéantissement:'forces anéanties', retreat_lost:'point d’extraction perdu', retraite:'retraite ordonnée',
+        };
+        const resume = A('div', { class:'bilan-combat-resume' },
+          A('div', { class:'bilan-combat-chiffres' },
+            A('div', {}, A('b', { text:U().duree(faits.duree || 0) }), A('span', { text:'durée' })),
+            A('div', {}, A('b', { text:String(faits.engages || 0) }), A('span', { text:'engagés' })),
+            A('div', {}, A('b', { text:String(faits.rentres || 0) }), A('span', { text:'rentrés' })),
+            A('div', { class:(faits.perdus || 0) ? 'pertes' : '' },
+              A('b', { text:String(faits.perdus || 0) }), A('span', { text:'perdus' }))),
+          A('div', { class:'eti', text:'Issue · ' + (raisons[faits.raison] || faits.raison || (gagne ? 'victoire' : 'défaite')) }));
+        const listeUnites = A('div', { class:'bilan-combat-unites' });
+        for (const x of (faits.unites || [])) listeUnites.appendChild(A('div', { class:'bilan-combat-unite' },
+          A('span', { class:'tt', text:window.Armee ? window.Armee.nom(x.type) : x.type }),
+          A('span', { text:x.engages + ' engagés' }),
+          A('b', { class:x.perdus ? 'mauvais' : 'gain', text:x.survivants + ' rentrés' }),
+          A('span', { class:x.perdus ? 'mauvais' : 'faible', text:x.perdus ? '−' + x.perdus : 'aucune perte' })));
+        resume.appendChild(listeUnites);
+        c.appendChild(resume);
+        c.appendChild(A('div', { class:'bilan-combat-actions' },
+          A('span', { text:(faits.combat && faits.combat.eliminations || 0) + ' ennemis éliminés' }),
+          A('span', { text:(faits.combat && faits.combat.captures || 0) + ' positions prises' }),
+          A('span', { text:(faits.combat && faits.combat.constructions || 0) + ' bâtiments implantés' }),
+          A('span', { text:(faits.combat && faits.combat.pointsGagnes || 0) + ' points gagnés' }),
+          A('span', { text:(faits.combat && faits.combat.pointsDepenses || 0) + ' points dépensés' })));
         if (gagne && z.sortie) {
           c.appendChild(A('div', { class: 'eti-or', text: 'la jauge retombe' }));
           c.appendChild(A('div', { class: 'note',
@@ -817,7 +950,10 @@
             text: 'La menace retombe de ' + faits.menace + ' points' +
                   (faits.garnison ? ', et un détachement reste en garnison.' : '.') }));
         } else {
-          c.appendChild(A('div', { class: 'note mauvais', text: 'Unités perdues, menace en hausse. Formez du monde au terrain d\'entraînement avant de repartir.' }));
+          c.appendChild(A('div', { class:'note ' + (faits.retraite ? '' : 'mauvais'),
+            text:faits.retraite
+              ? 'Les soldats arrivés dans le cercle sont rentrés à bord ; ceux restés sur le terrain sont portés disparus.'
+              : 'Unités perdues, menace en hausse. Formez du monde au terrain d\'entraînement avant de repartir.' }));
         }
         /* LA PORTE DE SORTIE. Une fenêtre de fin qu'on ne peut quitter
            que par la croix du coin est un cul-de-sac : on la referme
@@ -846,12 +982,13 @@
     if (bataille) { bataille.destroy(); bataille = null; }
     zoneEnCours = null;
     colonneEnCours = [];
+    statsBataille = null;
     E().expedition = null;
   }
 
   function tick(dt) {
     if (!ouvert || !bataille) return;
-    tB += dt;
+    if (!pauseBataille) tB += dt * vitesseBataille;
     /* La bataille peut se TERMINER pendant son propre `update` — l'issue
        arrive par événement et détruit l'instance. On garde donc la
        référence et l'on vérifie qu'elle vaut encore quelque chose avant
@@ -869,7 +1006,7 @@
        chaque sorte : répéter le même message soixante fois par seconde ne
        renseigne personne, mais le perdre non plus. */
     try {
-      b.update(dt);
+      if (!pauseBataille) b.update(dt * vitesseBataille);
     } catch (e) { signalerPanne('calcul', e); }
     if (bataille === b) {
       try { b.render(); } catch (e) { signalerPanne('dessin', e); }
@@ -907,28 +1044,44 @@
            apparaître ou disparaître dans le même geste. */
         majTete();
       } }));
+    boutons.appendChild(A('button', { class:'b' + (pauseBataille ? ' primaire' : ''),
+      text:pauseBataille ? 'Reprendre' : 'Pause', title:'Pause · raccourci Espace',
+      onclick:() => { pauseBataille = !pauseBataille; majTete(); } }));
+    for (const v of [1, 2]) boutons.appendChild(A('button', {
+      class:'b mini' + (vitesseBataille === v ? ' actif' : ''), text:'×' + v,
+      title:'Vitesse de la bataille', onclick:() => { vitesseBataille = v; majTete(); } }));
     for (const r of [0.25, 0.5, 1]) {
-      boutons.appendChild(A('button', { class: 'b mini', text: Math.round(r * 100) + ' %',
+      boutons.appendChild(A('button', { class: 'b mini' + (partOrdre === r ? ' actif' : ''), text: Math.round(r * 100) + ' %',
         title: 'Proportion de garnison envoyée à chaque ordre',
-        onclick: () => { if (bataille) bataille.setSendRatio(r); } }));
+        onclick: () => { partOrdre = r; if (bataille) bataille.setSendRatio(r); majTete(); } }));
     }
     /* L'IA NE BAT JAMAIS EN RETRAITE. Quand le pilote automatique tient
        la barre, il mène la bataille à son terme, quoi qu'il arrive : le
        bouton n'a donc pas à exister. On abandonne quand on commande, pas
        quand on regarde. */
-    if (!auto) boutons.appendChild(A('button', { class: 'b danger', text: 'Battre en retraite',
-      onclick: () => { if (confirm('Abandonner la bataille ?')) terminer(false); } }));
+    if (!auto) boutons.appendChild(A('button', { class: 'b danger', text: 'Organiser la retraite',
+      title:'Rassemble les survivants pendant 10 secondes avant l’extraction',
+      onclick: () => {
+        if (!bataille || !bataille.beginRetreat) return;
+        const n = bataille.getSelectedNode ? bataille.getSelectedNode() : null;
+        if (!bataille.beginRetreat(n && n.id)) U().dire('Aucun point allié sécurisé pour l’extraction.', 'alerte');
+        else majTete();
+      } }));
   }
 
   function majPied() {
     if (!pied || !bataille) return;
     const c = bataille.getControl ? bataille.getControl() : null;
     U().vide(pied);
+    const st = bataille.getBattleStatus ? bataille.getBattleStatus() : null;
     if (c) {
       pied.appendChild(el()('span', { class: 'eti', text: 'contrôle' }));
-      pied.appendChild(el()('span', { class: 'puce gain', text: 'Bourg ' + (c.cats || 0) }));
-      pied.appendChild(el()('span', { class: 'puce', text: 'Nuée ' + (c.birds || 0) }));
+      pied.appendChild(el()('span', { class: 'puce gain', text: 'Bourg ' + Math.round((c.cats || 0) * 100) + '%' }));
+      pied.appendChild(el()('span', { class: 'puce', text: 'Nuée ' + Math.round((c.birds || 0) * 100) + '%' }));
     }
+    if (st && st.score) pied.appendChild(el()('span', { class:'puce gain',
+      text:'Points tactiques ' + st.score.cats + ' / ' + st.score.target }));
+    if (st && st.retreat) pied.appendChild(el()('span', { class:'puce mauvais', text:'Extraction ' + Math.ceil(st.retreat.left) + ' s' }));
     pied.appendChild(el()('span', { class: 'eti', style: 'margin-left:auto',
       text: 'clic sur une position, puis sur la cible' }));
   }
@@ -983,13 +1136,32 @@
         A('span', { text:colonneEnCours.reduce((n,x) => n+x.n,0) + ' soldats' }),
         A('span', { text:'Menace ' + Math.round(E().menace) }))));
     const c = bataille && bataille.getControl ? bataille.getControl() : null;
+    const st = bataille && bataille.getBattleStatus ? bataille.getBattleStatus() : null;
+    if (st) {
+      const o = st.objective || {};
+      const progression = o.id === 'tenir'
+        ? Math.max(0, 1 - (o.left || 0) / Math.max(1, o.total || 1))
+        : (st.score ? (st.score.cats || 0) / Math.max(1, st.score.target || 1) : 0);
+      droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Mission · ' + (o.nom || 'Objectif') }));
+      droite.appendChild(A('div', { class:'plateau-objectif' },
+        U().barre(progression, 'grande or', o.id === 'tenir'
+          ? Math.ceil(o.left || 0) + ' s à tenir'
+          : 'Points ' + (st.score ? st.score.cats : 0) + ' / ' + (st.score ? st.score.target : 0),
+          o.id === 'domination' && st.score ? 'Nuée ' + st.score.birds : ''),
+        A('div', { class:'plateau-mini-stats' },
+          A('span', { text:'positions ' + st.sites.cats + ' / ' + (st.score ? st.score.requiredSites : st.sites.total) + ' requises' }),
+          o.id === 'domination' && st.score ? A('span', { text:'domination ' + st.score.holdCats + ' / ' + st.score.holdTarget + ' s' }) : null,
+          st.sites.securing ? A('span', { text:st.sites.securing + ' en sécurisation' }) : null,
+          A('span', { text:'pertes ' + st.losses }),
+          st.wave ? A('span', { text:'prochaine vague ' + Math.ceil(st.wave.next) + ' s' }) : null)));
+    }
     if (c) {
       const den = Math.max(1, (c.cats || 0) + (c.birds || 0));
       droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Contrôle du terrain' }));
       droite.appendChild(U().barre((c.cats || 0) / den, 'grande vert', 'Bourg ' + (c.cats || 0), 'Nuée ' + (c.birds || 0)));
     }
     droite.appendChild(A('div', { class:'cote-titre', style:'margin-top:16px', text:'Ordres' }));
-    droite.appendChild(A('div', { class:'note', text:'Sélectionnez une position alliée, puis sa cible. Les boutons du haut règlent la part de garnison envoyée. L’IA peut reprendre les commandes à tout moment.' }));
+    droite.appendChild(A('div', { class:'note', text:'Les éliminations et chaque position sécurisée rapportent des points tactiques. Dépensez-les dans le menu radial : Caserne 34, Étendard 28, Tour 22, Totem 18 ou Avant-poste 14. Pour gagner, atteignez le seuil de points, contrôlez 60 % des positions et tenez dix secondes. Les unités et tous les bâtiments alliés révèlent le brouillard.' }));
     if (zoneEnCours.sortie) droite.appendChild(A('div', { class:'cadre actif', style:'margin-top:12px' },
       A('div', { class:'eti-or', text:'gain si victoire' }),
       A('div', { class:'tt', text:'−' + zoneEnCours.gainMenace + ' Menace' })));
@@ -1158,6 +1330,10 @@
   }
 
   addEventListener('resize', () => { if (ouvert && bataille) dimensionner(); });
+  addEventListener('keydown', ev => {
+    if (!ouvert || !bataille || ev.code !== 'Space' || ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+    ev.preventDefault(); pauseBataille = !pauseBataille; majTete();
+  });
 
   window.UIExpedition = { rendre, ouvrir: () => { refs(); if (E().expedition) { if (!bataille) reprendre(); else { ouvert = true; plateau.classList.add('vu'); dimensionner(); majTete(); majCotes(); brancherPointeur(); } } },
     fermer, tick, ZONES, bonusMetier, bonusButin, facteurMenace, estPrise, prises,

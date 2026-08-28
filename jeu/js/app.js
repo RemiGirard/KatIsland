@@ -24,7 +24,7 @@
     else window.Village.renommer(E().nomBourg);
 
     window.UIDock.construire();
-    if (window.UIBulles) window.UIBulles.construire();
+    if (window.Tutoriel) window.Tutoriel.init();
     /* les préférences s'appliquent avant le premier rendu : le joueur ne
        doit jamais voir un écran qui n'est pas le sien. */
     if (window.Reglages) window.Reglages.appliquer();
@@ -98,8 +98,8 @@
       selection: batimentClique,
       survol: b => window.UIDock.montrerSurvol(b),
       /* Le sol rend le village à l'image : il referme la commande du
-         bâtiment et retrouve naturellement la liste des productions.
-         Le chantier reste accessible dans son menu permanent du bas. */
+         bâtiment et retrouve naturellement le menu latéral. Le chantier
+         reste accessible par son onglet marteau. */
       sol: () => { if (!window.Village.enConstruction()) window.UIDock.fermerBatiment(); },
       pose: (type, pos) => window.UIFen.poserIci(pos),
       poseRefus: () => U().dire('Pas de place ici : essayez une autre terrasse.', 'alerte'),
@@ -107,12 +107,17 @@
     });
 
     window.Etat.abonner(function (quoi, data) {
-      if (quoi === 'construit' || quoi === 'ameliore') { window.Jeu.majDecouvertes(); synchroniserVillage(); }
+      if (quoi === 'construit' || quoi === 'ameliore' || quoi === 'raffine') {
+        window.Jeu.majDecouvertes(); synchroniserVillage();
+      }
       /* Le bâtiment vient de monter d'un niveau : si c'est un changement
          d'ÂGE, le village le rebâtit sur place — chaume en tuile, tuile
          en lauze, et l'oriflamme au faîte. */
       if (quoi === 'ameliore' && data && data.id) {
-        if (window.Village.rehausser(data.id, data.niv)) {
+        const change = data.type === 'scierie' && window.Village.configurerScierie
+          ? window.Village.configurerScierie(data.id, data.niv, data.raff)
+          : window.Village.rehausser(data.id, data.niv);
+        if (change) {
           E().plan = window.Village.plan();
           U().dire(window.BAT[data.type].nom + ' est désormais ' +
                    window.Village.nomPalier(data.niv) + '.', 'butin', 4200);
@@ -241,7 +246,7 @@
   function premiersPas() {
     window.Etat.journal('Un chat, une rivière, et rien d\'autre. Le bourg commence ici.', 'info');
     setTimeout(() => {
-      U().dire('Commencez par la pêcherie : elle est dans la bulle, en bas — et elle ne coûte rien.', 'butin', 7000);
+      U().dire('Commencez par la pêcherie : ouvrez le marteau « Construire » à droite. Elle ne coûte rien.', 'butin', 7000);
     }, 900);
   }
 
@@ -323,6 +328,14 @@
   function synchroniserVillage() {
     if (!window.Village) return;
     const E2 = E();
+    /* Le niveau et les annexes de la scierie pilotent désormais sa vraie
+       silhouette. L'appel ne fait rien tant que la signature n'a pas
+       changé, il est donc sûr dans cette synchronisation périodique. */
+    if (window.Village.configurerScierie) for (const bid in E2.bat) {
+      const b = E2.bat[bid];
+      if (b.type === 'scierie' && !b.chantier)
+        window.Village.configurerScierie(bid, b.niv, b.raff || {});
+    }
     E2.plan = window.Village.plan();
 
     /* population : les habitants du jeu, plus un fond de silhouettes qui

@@ -144,6 +144,12 @@
       memorial: [],                  // ceux qui sont partis, et comment
 
       vus: {},                       // ce que le joueur a déjà découvert (pour l'UI)
+      /* Le conseiller suit la partie, pas le navigateur. Son avancement
+         voyage donc avec la sauvegarde et reprend exactement au bon geste. */
+      tutoriel: {
+        version: 1, actif: true, replie: false, introValidee: false,
+        terminees: {}, contextesVus: {}, ongletsVus: {},
+      },
       journal: [],
       options: { vitesseJour: 1 / 260, sonsCoupes: true, dockOuvert: true },
     };
@@ -769,6 +775,15 @@
       if (!d.aventure) d.aventure = { profondeur: 0, record: 0, encours: null, sacoche: {} };
       if (!d.armee) d.armee = { unites: 0, xp: 0, palierArme: 0, palierArmure: 0, garnison: 0 };
       if (!d.territoires) d.territoires = [];
+      /* Les anciennes parties gagnent le conseiller sans être interrompues
+         par une grande bulle au chargement. Il se réveille au premier clic. */
+      if (!d.tutoriel) d.tutoriel = {
+        version: 1, actif: true, replie: true, introValidee: false,
+        terminees: {}, contextesVus: {}, ongletsVus: {},
+      };
+      if (!d.tutoriel.terminees) d.tutoriel.terminees = {};
+      if (!d.tutoriel.contextesVus) d.tutoriel.contextesVus = {};
+      if (!d.tutoriel.ongletsVus) d.tutoriel.ongletsVus = {};
       E = d;
       invaliderCap();
       return true;

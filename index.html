@@ -10,7 +10,12 @@
 
 <!-- Le village, plein écran. C'est le seul « écran » du jeu :
      tout le reste flotte au-dessus et se referme. -->
-<div id="scene"><canvas id="c" aria-label="Le bourg en trois dimensions"></canvas></div>
+<div id="scene">
+  <canvas id="c" aria-label="Le bourg en trois dimensions"></canvas>
+  <canvas id="plan-village" aria-label="Plan architectural du bourg"></canvas>
+</div>
+<button id="bouton-plan-village" type="button" aria-label="Afficher le plan du village"
+        aria-pressed="false" title="Vue du dessus — plan du village">▦</button>
 
 <!-- La couche d'interface. Transparente aux clics ; seuls les panneaux
      qu'elle contient reprennent le pointeur. -->
@@ -100,6 +105,7 @@
 <script src="jeu/donnees/equipement-evolutif.js"></script>
 <script src="jeu/js/etat.js"></script>
 <script src="jeu/js/vie-village.js"></script>
+<script src="jeu/js/ecosystemes-batiments.js"></script>
 <script src="jeu/js/armee.js"></script>
 <script src="jeu/js/port.js"></script>
 <script src="jeu/js/moteur.js"></script>
@@ -121,8 +127,10 @@
      4. LE VILLAGE ET L'INTERFACE
      ============================================================ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
 <script src="jeu/3d/village-doc.js"></script>
 <script src="jeu/3d/village3d.js"></script>
+<script src="jeu/js/vue-plan.js"></script>
 <script src="jeu/js/noms-batiments.js"></script>
 <script src="jeu/3d/port3d.js"></script>
 <script src="jeu/3d/habitants3d.js"></script>
@@ -136,6 +144,7 @@
 <script src="jeu/js/tour.js"></script>
 <script src="jeu/js/aventure.js"></script>
 <script src="jeu/js/expedition.js"></script>
+<script src="jeu/js/tutoriel.js"></script>
 <script src="jeu/js/app.js"></script>
 
 </body>

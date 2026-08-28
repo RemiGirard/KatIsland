@@ -28,9 +28,12 @@
 (function () {
 
   const R = [];
-  /* f(id, bat, nom, desc, cout, temps, annexe, effet) */
-  function f(id, bat, nom, desc, cout, temps, annexe, effet) {
-    R.push({ id, bat, nom, desc, cout, temps, annexe: annexe || null, effet: effet || {} });
+  /* f(id, bat, nom, desc, cout, temps, annexe, effet, niveau)
+     `niveau` évite qu'une annexe avancée apparaisse avant que le corps
+     principal soit capable de la porter. */
+  function f(id, bat, nom, desc, cout, temps, annexe, effet, niveau) {
+    R.push({ id, bat, nom, desc, cout, temps, annexe: annexe || null,
+      effet: effet || {}, niv: niveau || 1 });
   }
 
   /* ---------------------------------------------------------------
@@ -66,11 +69,25 @@
     { pierre: 18, planche: 12 }, 140, 'aire',
     { rendement: 0.12 });
 
-  /* LA SCIERIE — le séchoir */
+  /* LA SCIERIE — quatre choix qui construisent peu à peu une cour
+     industrielle complète. Chacun ouvre une boucle différente et chacun
+     reçoit un corps visible dans le village. */
+  f('parc_grumes', 'scierie', 'Parc à grumes',
+    "Une aire drainée, des chevalets et un chariot. Les troncs sont triés avant la lame au lieu de bloquer la cour.",
+    { planche:18, corde:6, pierre:10 }, 125, 'parc',
+    { cadence:0.05 }, 3);
   f('sechoir', 'scierie', 'Séchoir à bois',
     "Des piles espacées de tasseaux, sous un toit ouvert aux quatre vents. Deux ans d'attente en vrai ; ici, quelques minutes — et le bois ne travaille plus.",
     { planche: 26, poutre: 1 }, 160, 'sechoir',
-    { rendement: 0.14 });
+    { rendement: 0.14 }, 4);
+  f('recuperateur', 'scierie', 'Cour des chutes',
+    "Un bac couvert, une presse et beaucoup de balais. Les chutes deviennent des briquettes pour les fours du bourg.",
+    { planche:42, lingotfer:6, corde:10 }, 230, 'appentis',
+    { rendement:0.08 }, 6);
+  f('roue_hydraulique', 'scierie', 'Grande roue hydraulique',
+    "Un canal de bois et une roue haute comme le hangar entraînent la scie sans épuiser les ouvriers.",
+    { poutre:12, lingotfer:14, pierretaille:20 }, 330, 'roue',
+    { cadence:0.18 }, 7);
 
   /* LA PÊCHERIE — le vivier */
   f('vivier', 'pecherie', 'Vivier',

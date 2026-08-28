@@ -9674,82 +9674,120 @@ function genPecherie(row){
 }
 
 /* ---------- LA SCIERIE ----------
-   Un hangar ouvert dont toute la raison d'être est la SCIE À CADRE : un
-   châssis vertical qui monte et descend, entraîné par la roue à aubes.
-   Autour, la grume sur son chariot, les planches empilées à claire-voie
-   pour sécher, et la sciure jusqu'aux chevilles. */
+   Une concession de TROIS parcelles, mais pas un gros bâtiment offert
+   dès le départ. Le premier niveau n'en occupe visuellement que le cœur.
+   Les niveaux allongent et rehaussent l'atelier ; les annexes économiques
+   remplissent ensuite la cour avec de vrais corps reconnaissables. */
+let SCIERIE_GEN_ETAT={niv:1,raff:{}};
 function genScierie(row){
   const S=v=>Math.max(1,sc(row,v));
-  const w=S(38), h=S(20), toitH=S(12);
-  const SW=w+S(34), SH=h+toitH+S(12);
+  const etat=SCIERIE_GEN_ETAT||{niv:1,raff:{}}, niv=Math.max(1,etat.niv|0);
+  const raff=etat.raff||{}, SW=S(126), SH=S(66);
   const sp=sprite(SW,SH), c=sp.g;
-  const bas=SH-1, x0=S(14);
+  const bas=SH-S(3), centre=S(63);
   const B=['#7f6242','#5c452d','#9d7a52','#3b2c1c'];
   const FER='#3f434a', FERC='#71767f';
-  const cote=chance(.5)?1:-1;
+  const toit=pick(AMB.toits);
 
-  // dalle et poteaux : la halle est ouverte sur trois côtés
-  socle(c,x0-S(2),bas-S(4),w+S(4),S(4),AMB.pierre);
-  for(let k=0;k<4;k++){
-    const px=x0+Math.round(k*(w-S(4))/3);
-    fr(c,px,bas-S(4)-h,Math.max(2,S(4)),h,B[1]);
-    fr(c,px,bas-S(4)-h,1,h,B[2]);
-    fr(c,px,bas-S(4)-h,Math.max(2,S(4)),1,B[0]);
+  function halle(x,w,h,haute){
+    socle(c,x-S(2),bas-S(3),w+S(4),S(3),AMB.pierre);
+    bardage(c,x,bas-S(3)-h,w,h,B);
+    for(let k=0;k<4;k++){
+      const px=x+Math.round(k*w/3);
+      fr(c,px,bas-S(3)-h,Math.max(1,S(2)),h,B[1]);
+      fr(c,px,bas-S(3)-h,1,h,B[2]);
+    }
+    toitAsym(c,x-S(4),bas-S(3)-h-S(haute),w+S(8),S(haute),toit,'bardeau',1);
   }
-  // le mur du fond, en planches debout
-  bardage(c,x0+S(2),bas-S(4)-h,w-S(4),h,B);
-  fr(c,x0+S(2),bas-S(4)-h,w-S(4),h,'rgba(30,22,12,.22)');
-  // entrait et contrefiches : la charpente se voit
-  fr(c,x0-S(2),bas-S(4)-h,w+S(4),Math.max(2,S(3)),B[0]);
-  for(let k=0;k<3;k++){
-    const px=x0+S(2)+Math.round(k*(w-S(8))/2);
-    trait(c,px,bas-S(4)-h+S(3),px+S(6),bas-S(4)-h+S(8),B[1],1);
+  function pile(x,n){
+    for(let k=0;k<n;k++){
+      const y=bas-S(2)-k*Math.max(2,S(3)), w=S(15)+(k%2?S(2):0);
+      fr(c,x+(k%2?S(1):0),y-S(2),w,S(2),k%2?'#c8ab7c':'#b89b6c');
+      fr(c,x+(k%2?S(1):0),y-S(2),w,1,'#dbc49a');
+    }
   }
-  toitAsym(c,x0-S(6),bas-S(4)-h-toitH,w+S(12),toitH,pick(AMB.toits),'bardeau',cote);
-
-  /* --- LA SCIE À CADRE, au centre : deux montants, le châssis, la lame
-     dentée, la bielle qui descend vers l'arbre. --- */
-  const sx=x0+Math.round(w*0.44), sh2=Math.max(11,S(16));
-  fr(c,sx-S(6),bas-S(4)-sh2,Math.max(2,S(3)),sh2,B[3]);
-  fr(c,sx+S(6),bas-S(4)-sh2,Math.max(2,S(3)),sh2,B[3]);
-  { const cy=bas-S(4)-Math.round(sh2*0.55);
-    fr(c,sx-S(6),cy,S(14),Math.max(2,S(3)),FER);
-    fr(c,sx-S(6),cy,S(14),1,FERC);
-    fr(c,sx-S(6),cy+Math.max(6,S(9)),S(14),Math.max(2,S(3)),FER);
-    for(let i=0;i<S(14);i+=2) fr(c,sx-S(6)+i,cy+Math.max(6,S(9))+S(3),1,1,FERC);  // les dents
-    trait(c,sx-S(6),cy,sx-S(6),cy+Math.max(6,S(9)),FER,1);
-    trait(c,sx+S(6)+1,cy,sx+S(6)+1,cy+Math.max(6,S(9)),FER,1); }
-  // la grume sur son chariot, engagée sous la lame
-  { const gx=sx-S(16), gw=Math.max(14,S(22)), gr=Math.max(3,S(5));
-    fr(c,gx,bas-S(6)-gr,gw,gr*2,'#8a6a45');
-    fr(c,gx,bas-S(6)-gr,gw,1,'#a9855a');
-    fr(c,gx,bas-S(6)+gr-1,gw,1,'#5a412a');
-    disque(c,gx+gw,bas-S(6),gr,'#c2a67c'); disque(c,gx+gw,bas-S(6),Math.max(1,gr-2),'#8a6a45');
-    for(let k=0;k<2;k++){ const rx=gx+S(3)+k*(gw-S(7));
-      disque(c,rx,bas-S(3),Math.max(2,S(3)),FER); } }
-
-  // la roue motrice, en bout : c'est elle qui fait vivre l'atelier
-  { const rx=cote>0 ? x0+w+S(5) : x0-S(5);
-    const rr=Math.max(7,S(11));
-    disque(c,rx,bas-S(4)-rr,rr,'#4b3a26');
-    disque(c,rx,bas-S(4)-rr,Math.max(2,rr-2),'#2c2318');
-    sp.roue={x:rx,y:bas-S(4)-rr,r:rr,n:8,v:cote>0?1.1:-1.1}; }
-
-  // planches empilées à claire-voie, et la sciure
-  { const px=cote>0 ? x0-S(12) : x0+w+S(3);
-    for(let k=0,n=RI(5,8);k<n;k++){
-      const pw=Math.max(9,S(14)), ph2=Math.max(1,S(2));
-      const dec=RI(-1,1), py2=bas-S(2)-k*(ph2+1);
-      fr(c,px+dec,py2-ph2,pw,ph2,k%2?'#c8ab7c':'#b89b6c');
-      fr(c,px+dec,py2-ph2,pw,1,'#d8c39a');
-      fr(c,px+dec,py2-1,pw,1,'#9a8058');
-    } }
-  for(let k=0;k<S(30);k++){
-    const dx2=x0+RI(-S(6),w+S(6));
-    fr(c,dx2,bas-S(3)-RI(0,S(2)),1,1,chance(.5)?'#d8c8a0':'#c0ae86');
+  function grumes(x,n){
+    for(let k=0;k<n;k++){
+      const y=bas-S(3)-k*S(4), w=S(18), r=Math.max(2,S(3));
+      fr(c,x,y-r,w,r*2,'#785738'); disque(c,x+w,y,r,'#c2a67c');
+      disque(c,x+w,y,Math.max(1,r-1),'#8a6a45');
+    }
   }
-  if(chance(.7)) chatDormi(c,x0+RI(S(4),w-S(10)),bas-S(4),pick(PELAGES));
-  chatteries(sp,c,x0,bas,w,h,row);
+
+  /* NIVEAU 1 : une seule parcelle au centre, un abri et une grume. */
+  let coeurW=niv<3?S(30):(niv<6?S(38):S(44));
+  let coeurH=niv<3?S(15):(niv<5?S(20):(niv<8?S(26):S(31)));
+  const coeurX=centre-(coeurW>>1);
+  halle(coeurX,coeurW,coeurH,niv<5?9:12);
+  grumes(coeurX+S(3),niv<3?1:2);
+
+  /* Dès le niveau 2 la scie à cadre donne une identité au cœur. */
+  if(niv>=2){
+    const sx=centre+S(5), sh=Math.max(10,S(14)), cy=bas-S(5)-Math.round(sh*.58);
+    fr(c,sx-S(6),bas-S(4)-sh,S(2),sh,B[3]); fr(c,sx+S(6),bas-S(4)-sh,S(2),sh,B[3]);
+    fr(c,sx-S(6),cy,S(14),S(2),FER); fr(c,sx-S(6),cy+S(8),S(14),S(2),FER);
+    for(let i=0;i<S(14);i+=2) fr(c,sx-S(6)+i,cy+S(10),1,1,FERC);
+  }
+
+  /* Les niveaux développent les deux autres tiers même sans annexe :
+     stockage à gauche, atelier et bureau à droite, étage de maîtrise. */
+  if(niv>=4){ pile(S(17),Math.min(7,2+niv)); grumes(S(7),Math.min(4,1+(niv>>1))); }
+  if(niv>=5){
+    const bx=centre-S(10), bw=S(20), bh=S(11);
+    bardage(c,bx,bas-S(3)-coeurH-bh,bw,bh,B);
+    toitAsym(c,bx-S(3),bas-S(3)-coeurH-bh-S(7),bw+S(6),S(7),toit,'bardeau',-1);
+    fenetre(sp,c,bx+S(6),bas-S(5)-coeurH-S(3),S(6),S(6),AMB.pierre,pick(PAL.volets),{on:niv>=8});
+  }
+  if(niv>=6){
+    const ax=S(87), aw=S(27), ah=S(15);
+    appentis(c,ax,bas-S(3),aw,ah,B[1],toit,-1);
+    fr(c,ax+S(4),bas-S(7),S(15),S(3),B[0]);
+    for(let k=0;k<3;k++) disque(c,ax+S(7)+k*S(5),bas-S(8),S(2),'#b89b6c');
+  }
+  if(niv>=8){
+    const tx=centre-S(7), ty=bas-S(4)-coeurH-S(23);
+    bardage(c,tx,ty,S(14),S(13),B); toitAsym(c,tx-S(3),ty-S(8),S(20),S(8),toit,'bardeau',1);
+    fr(c,centre-1,ty-S(13),S(2),S(7),FER);
+    fr(c,centre-1,ty-S(14),S(9),1,'#d7b54e');
+  }
+
+  /* ANNEXES : chacune occupe physiquement sa place et reste lisible. */
+  if(raff.parc_grumes){
+    const x=S(4); grumes(x,4);
+    fr(c,x-S(1),bas-S(2),S(31),1,'#9b8057');
+    for(let k=0;k<4;k++) fr(c,x+k*S(9),bas-S(7),S(2),S(7),B[2]);
+  }
+  if(raff.sechoir){
+    const x=S(19), w=S(27), h=S(17);
+    appentis(c,x,bas-S(3),w,h,B[1],toit,1);
+    for(let k=0;k<5;k++){
+      const y=bas-S(5)-k*S(3); fr(c,x+S(3),y,w-S(6),S(2),k%2?'#c3a474':'#d0b384');
+    }
+  }
+  if(raff.recuperateur){
+    const x=S(91), w=S(25), h=S(18);
+    bardage(c,x,bas-S(3)-h,w,h,B); toitAsym(c,x-S(3),bas-S(3)-h-S(8),w+S(6),S(8),toit,'bardeau',-1);
+    fr(c,x+S(4),bas-S(11),S(8),S(7),'#574637'); fr(c,x+S(5),bas-S(10),S(6),1,'#97724a');
+    disque(c,x+S(18),bas-S(9),S(5),FER); disque(c,x+S(18),bas-S(9),S(2),FERC);
+  }
+  if(raff.roue_hydraulique){
+    const rx=S(118), rr=Math.max(8,S(12));
+    trait(c,S(81),bas-S(24),rx,bas-S(18),B[0],Math.max(1,S(2)));
+    disque(c,rx,bas-S(4)-rr,rr,'#4b3a26'); disque(c,rx,bas-S(4)-rr,Math.max(2,rr-2),'#2c2318');
+    sp.roue={x:rx,y:bas-S(4)-rr,r:rr,n:10,v:1.15};
+  }
+  for(let k=0;k<S(38+niv*3);k++){
+    const dx=S(3)+RI(0,S(119));
+    fr(c,dx,bas-S(2)-RI(0,S(2)),1,1,chance(.5)?'#d8c8a0':'#c0ae86');
+  }
+  /* Les habitants se répartissent sur la partie réellement bâtie, pas
+     dans les deux tiers encore transparents de la concession. */
+  let travailMin=coeurX, travailMax=coeurX+coeurW;
+  if(niv>=4||raff.parc_grumes||raff.sechoir) travailMin=S(4);
+  if(niv>=6||raff.recuperateur||raff.roue_hydraulique) travailMax=S(122);
+  sp.travail={x:travailMin,w:Math.max(S(20),travailMax-travailMin)};
+  if(chance(.7)) chatDormi(c,coeurX+S(3),bas-S(4),pick(PELAGES));
+  chatteries(sp,c,coeurX,bas,coeurW,coeurH,row);
   brume(sp,row); return sp;
 }
 
@@ -10815,15 +10853,24 @@ let selId=null;                  // édifice sélectionné par le jeu
 let pings=[];                    // petites auréoles de production terminée
 let listeners={};
 
-function modeleDe(type,r,pal){
+function signatureVisuelle(type,vis){
+  if(type!=='scierie'||!vis) return '';
+  const rr=vis.raff||{};
+  return '|n'+Math.max(1,vis.niv|0)+'|'+['parc_grumes','sechoir','recuperateur','roue_hydraulique']
+    .filter(function(k){return !!rr[k];}).join('.');
+}
+function modeleDe(type,r,pal,vis){
   pal=pal|0;
-  const k=type+'#'+r+'#'+pal;
+  const k=type+'#'+r+'#'+pal+signatureVisuelle(type,vis);
   if(!MODELES[k]){
     const garde=PAL_COUR;
+    const scierieGarde=SCIERIE_GEN_ETAT;
     PAL_COUR=pal;
+    if(type==='scierie'&&vis) SCIERIE_GEN_ETAT=vis;
     try{ MODELES[k]=parer(GEN[type](r),pal,type); }
     catch(err){ console.warn('générateur en panne :',type,err); MODELES[k]=genMaison(r); }
     PAL_COUR=garde;
+    SCIERIE_GEN_ETAT=scierieGarde;
   }
   return MODELES[k];
 }
@@ -10975,6 +11022,26 @@ function rehausserBatiment(id,niv){
   return true;
 }
 
+/* La scierie reçoit son niveau ET ses annexes depuis l'économie. Cette
+   synchronisation est idempotente : appelée chaque seconde, elle ne
+   recuit le village que lorsque la silhouette a réellement changé. */
+function configurerScierie(id,niv,raff){
+  const b=batiments.find(function(x){return x.id===id;});
+  if(!b||b.type!=='scierie'||b.pour) return false;
+  const vis={niv:Math.max(1,niv|0),raff:Object.assign({},raff||{})};
+  const sig=signatureVisuelle('scierie',vis);
+  if(b.visSig===sig) return false;
+  const pal=palierDeNiveau(vis.niv);
+  b.sp=modeleDe('scierie',b.r,pal,vis);
+  b.pal=pal; b.emprise=Math.max(b.emprise,b.sp.w); b.visSig=sig;
+  const p=PLAN.find(function(q){return q.id===id;});
+  if(p){ p.pal=pal; p.vis={niv:vis.niv,raff:Object.assign({},vis.raff)}; }
+  b.cuit=false; b.ne=tps;
+  redessinerCouches();
+  pings.push({x:b.x+b.sp.w/2,y:b.y-b.sp.h*.55,t:0,col:'#d7b868'});
+  return true;
+}
+
 function retirerBatiment(id){
   const i=batiments.findIndex(function(b){return b.id===id;});
   if(i<0) return false;
@@ -10992,8 +11059,12 @@ function retirerBatiment(id){
 function rejouerPlan(){
   const copie=PLAN.slice();
   for(const p of copie){
+    const garde=SCIERIE_GEN_ETAT;
+    if(p.type==='scierie'&&p.vis) SCIERIE_GEN_ETAT=p.vis;
     const b=poserBatiment(p.type,Math.round(p.xr*W),p.r,p.id,p.pour||null,p.pal|0);
+    SCIERIE_GEN_ETAT=garde;
     if(b){ b.cuit=false; b.ne=-99; p.xr=b.xr; p.r=b.r; }
+    if(b&&p.type==='scierie'&&p.vis) b.visSig=signatureVisuelle('scierie',p.vis);
   }
 }
 
@@ -11217,6 +11288,7 @@ window.Village = {
             if(p) p.pal=palierDeNiveau(niv); }
     return ok;
   },
+  configurerScierie:function(id,niv,raff){ return configurerScierie(id,niv,raff); },
   palier:function(niv){ return palierDeNiveau(niv); },
   nomPalier:function(niv){ return PALIER_NOMS[palierDeNiveau(niv)]; },
   /* L'ÉCHAFAUDAGE. On réserve la parcelle du bâtiment À VENIR — sa
@@ -11235,9 +11307,11 @@ window.Village = {
   },
   batiments:function(){ return batiments.filter(function(b){return !!b.id;}); },
   batiment:function(id){ return batiments.find(function(b){return b.id===id;})||null; },
-  plan:function(){ return PLAN.map(function(p){return {id:p.id,type:p.type,pour:p.pour||null,r:p.r,xr:p.xr,pal:p.pal|0};}); },
+  plan:function(){ return PLAN.map(function(p){return {id:p.id,type:p.type,pour:p.pour||null,r:p.r,xr:p.xr,pal:p.pal|0,
+    vis:p.vis?{niv:p.vis.niv|0,raff:Object.assign({},p.vis.raff||{})}:null};}); },
   chargerPlan:function(p){
-    PLAN=(p||[]).map(function(x){return {id:x.id,type:x.type,pour:x.pour||null,r:x.r,xr:x.xr,pal:x.pal|0};});
+    PLAN=(p||[]).map(function(x){return {id:x.id,type:x.type,pour:x.pour||null,r:x.r,xr:x.xr,pal:x.pal|0,
+      vis:x.vis?{niv:x.vis.niv|0,raff:Object.assign({},x.vis.raff||{})}:null};});
     let m=0; for(const q of PLAN){ const n=parseInt(String(q.id).slice(1),10); if(n>m)m=n; }
     SEQ=Math.max(SEQ,m);
     viderEdificesDuJeu();
@@ -11264,7 +11338,8 @@ window.Village = {
   affecterA:function(i,id,metier){
     const b=batiments.find(function(x){return x.id===id;});
     if(!b){ affecter(i,-1,0); return this; }
-    affecter(i,b.r,b.x+b.sp.w*(0.22+0.56*((i*0.6180339)%1)),metier);
+    const z=b.sp.travail||{x:b.sp.w*.22,w:b.sp.w*.56};
+    affecter(i,b.r,b.x+z.x+z.w*((i*.6180339)%1),metier);
     return this;
   },
   libererTous:function(){ for(let i=0;i<VMAX;i++){ vCR[i]=-1; vCX[i]=-1; vAct[i]=0; vJob[i]=0; } return this; },
