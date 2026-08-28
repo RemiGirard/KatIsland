@@ -3633,7 +3633,9 @@
     b.appendChild(el('span', { class: 'q' }, 'Désignez la parcelle pour ', el('b', { text: window.BAT[type].nom })));
     const cat = window.BAT[type].cat;
     b.appendChild(el('span', { class: 'eti', text:
-      (cat === 'recolte' || cat === 'elevage')
+      (window.Village.bordEau && window.Village.bordEau(type))
+        ? 'désignez la bande quadrillée au bord de l’eau'
+        : (cat === 'recolte' || cat === 'elevage')
         ? 'parcelle au sol uniquement'
         : 'cliquez un toit pour empiler' }));
     b.appendChild(el('button', { class: 'b', text: 'Annuler', onclick: quitterConstruction }));
@@ -4894,6 +4896,31 @@
   function rendrePartie(c) {
     c.appendChild(el('div', { class: 'note',
       text: 'La partie s\'enregistre toute seule dans ce navigateur, et le bourg continue de travailler pendant votre absence — jusqu\'à douze heures rattrapées au retour.' }));
+
+    c.appendChild(U.section('Choisir la partie'));
+    c.appendChild(el('div', { class: 'cadre' },
+      el('div', { class: 'tt', style: 'font-size:13px', text: 'Partie avancée' }),
+      el('div', { class: 'note', style: 'margin:4px 0 9px',
+        text: 'Charge un bourg complet avec le port, les bâtiments au niveau 3, quatorze habitants, les recherches et des réserves confortables.' }),
+      el('button', { class: 'b primaire', text: 'Charger la partie avancée', onclick: () => {
+        const avert='Charger la partie avancée ?\n\nLa progression actuelle sera remplacée.';
+        if(window.Reglages.lire('confirmer')&&!confirm(avert))return;
+        const r=window.App&&window.App.chargerPartieAvancee?window.App.chargerPartieAvancee():null;
+        if(!r||!r.ok){U.dire('La partie avancée n’a pas pu être préparée.','alerte');return;}
+        location.reload();
+      } })));
+    c.appendChild(el('div', { class: 'cadre alerte' },
+      el('div', { class: 'tt', style: 'font-size:13px', text: 'Nouvelle partie' }),
+      el('div', { class: 'note mauvais', style: 'margin:4px 0 9px',
+        text: 'Efface le bourg actuel, ses habitants, ses recherches et son territoire.' }),
+      el('button', { class: 'b danger', text: 'Réinitialiser la partie', onclick: () => {
+        if(window.Reglages.lire('confirmer')&&!confirm('Effacer ce bourg et repartir de zéro ?'))return;
+        if(window.Village)window.Village.chargerPlan([]);
+        window.Etat.recommencer();
+        location.reload();
+      } })));
+
+    c.appendChild(U.section('Sauvegarde'));
     c.appendChild(el('div', { class: 'rangee enroule' },
       el('button', { class: 'b primaire', text: 'Enregistrer maintenant',
         onclick: () => { window.Etat.sauver(true); U.dire('Partie enregistrée.', 'bien'); } })));
@@ -4920,21 +4947,6 @@
           location.reload();
         } })),
       el('div', { style: 'margin-top:8px' }, zone)));
-
-    c.appendChild(U.section('Repartir de zéro'));
-    c.appendChild(el('div', { class: 'cadre alerte' },
-      el('div', { class: 'note mauvais',
-        text: 'Efface ce bourg, ses habitants, ses recherches et son territoire. Rien n\'en revient.' }),
-      el('div', { style: 'margin-top:8px' },
-        el('button', { class: 'b danger', text: 'Recommencer une partie', onclick: () => {
-          if (window.Reglages.lire('confirmer') && !confirm('Effacer ce bourg et repartir de zéro ?')) return;
-          /* on ÉCRIT une partie neuve avant de recharger : effacer seul ne
-             suffit pas, la sauvegarde de fermeture de page réécrirait
-             l'ancienne juste après. */
-          if (window.Village) window.Village.chargerPlan([]);
-          window.Etat.recommencer();
-          location.reload();
-        } }))));
   }
 
   window.UIFen = {

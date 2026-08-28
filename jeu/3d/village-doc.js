@@ -20277,7 +20277,10 @@ function boite(x,z,r,y0,y1,c){
    mince bande de visée prolonge donc les cellules de bord jusqu'à la laisse de
    mer. Elle ne change ni les indices ni les sauvegardes : chaque trapèze côtier
    désigne sa cellule terrestre d'origine. */
-const LARGEUR_GRILLE_RIVE=0.82;
+/* La bande doit atteindre visuellement la zone d'eau où le joueur cherche
+   naturellement à poser un quai. Elle reste rattachée aux cellules terrestres
+   existantes : aucun indice de sauvegarde n'est ajouté ou déplacé. */
+const LARGEUR_GRILLE_RIVE=1.55;
 function celluleRiveEn(x,z){
   const dedans=(q)=>{
     let signe=0;
@@ -20504,6 +20507,26 @@ function meilleureRotation(c, L, t){
     if(s + (d === 0 ? 1.5 : 0) > score){ score = s + (d === 0 ? 1.5 : 0); best = r; }
   }
   return best;
+}
+
+/* Un port occupe trois cellules et ne peut donc pas prendre n'importe quel
+   angle de côte. Quand le joueur désigne bien la rive mais tombe sur un angle
+   trop étroit, on accroche le fantôme à la parcelle côtière compatible la plus
+   proche. Sans cet aimantation, la grille paraissait accessible mais presque
+   tous les clics visibles étaient rouges. Une cellule intérieure ne déclenche
+   jamais cet ajustement : la règle « au bord de l'eau » reste stricte. */
+function ancreConstruction(c, L, t){
+  if(!c || t < 0 || !TYPES[t] || !TYPES[t].bordEau) return c;
+  if(meilleureRotation(c,L,t) >= 0) return c;
+  if(!c.nb.some(nb=>!nb)) return c;
+  let meilleur=null, distance=Infinity;
+  for(const cc of cellules){
+    if(!cc.nb.some(nb=>!nb)) continue;
+    if(meilleureRotation(cc,L,t) < 0) continue;
+    const d=(cc.cx-c.cx)*(cc.cx-c.cx)+(cc.cz-c.cz)*(cc.cz-c.cz);
+    if(d<distance){distance=d;meilleur=cc;}
+  }
+  return meilleur||c;
 }
 
 /* Retrouve la part d'ancrage d'un bâtiment à partir de n'importe laquelle. */
@@ -21125,8 +21148,12 @@ function majBoutonsHist(){
 let rotManuelle = 0;
 let cleFantome = '';
 function majSurvol(t){
-  const p = t && t.pose;
+  let p = t && t.pose;
   if(!p){ survol.visible = false; cleFantome = ''; return; }
+  if(typeCourant >= 0){
+    const c=ancreConstruction(p.c,p.L,typeCourant);
+    if(c!==p.c)p={c,L:p.L};
+  }
   const ok = posable(p);
   const fa = t.face;
   let cases;
@@ -21765,7 +21792,7 @@ window.__VDOC = {
   get P(){ return P; },
   get cellules(){ return cellules; },
   celluleEn, TYPES, PAL, H, H_MAX,
-  poser, retirer, vider, posable, placementOk, meilleureRotation, protege,
+  poser, retirer, vider, posable, placementOk, meilleureRotation, ancreConstruction, protege,
   set typeCourant(v){ typeCourant = v; },
   get typeCourant(){ return typeCourant; },
   set constructionActive(v){

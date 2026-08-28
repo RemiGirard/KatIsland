@@ -206,6 +206,8 @@
     "Un carré de couleurs qu'on ne mange pas. L'abeille y va, l'alchimiste aussi, et le bourg respire mieux.");
   r('paille',    'Paille',             'matiere', 0, 2,  'tas',     ['#d8bd6f','#a89044'],
     "Ce qui reste du blé quand on lui a pris son grain. Litière, chaume, torchis : rien ne se perd.");
+  r('fumier',    'Fumier',             'matiere', 0, 2,  'tas',     ['#76543a','#b58a55'],
+    "Sorti de l’étable, mûri avec la paille puis rendu aux champs. Peu prestigieux, très fertile.");
   r('farineclaire','Farine de tournesol','vivres', 1, 8,  'sac',     ['#e8d8a0','#b8a468'],
     "Grasse et dorée, elle fait des tourtes qui tiennent au corps deux fois plus longtemps.");
   r('suif',      'Suif',               'matiere', 1, 12, 'pot',     ['#e8e2cc','#b0a888'],

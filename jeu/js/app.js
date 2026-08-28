@@ -40,16 +40,6 @@
       window.Village.retirer(b.id);
     }
 
-    /* KIT DE TEST, À USAGE UNIQUE.
-
-       Cette petite migration ne s'active que dans le navigateur qui possède
-       déjà une sauvegarde. Elle permet de transformer LA partie de travail en
-       île-laboratoire sans modifier l'équilibrage des nouvelles parties : une
-       marque séparée de la sauvegarde la rend définitivement inerte après son
-       premier passage. La copie brute permet de revenir à l'état précédent
-       depuis la console ou un futur bouton de restauration. */
-    if (reprise) appliquerKitTestUneFois();
-
     /* La Tour sombre est un morceau de l'île. Elle existe sur une partie
        neuve comme sur une ancienne sauvegarde : cliquer sa silhouette
        suffit pour préparer l'équipée et lancer le mode aventure. */
@@ -102,7 +92,10 @@
          reste accessible par son onglet marteau. */
       sol: () => { if (!window.Village.enConstruction()) window.UIDock.fermerBatiment(); },
       pose: (type, pos) => window.UIFen.poserIci(pos),
-      poseRefus: () => U().dire('Pas de place ici : essayez une autre terrasse.', 'alerte'),
+      poseRefus: type => U().dire(
+        type && window.Village.bordEau(type)
+          ? 'Le quai doit toucher l’eau. Désignez la bande quadrillée de la rive.'
+          : 'Pas de place ici : essayez une autre terrasse.', 'alerte'),
       redim: () => { synchroniserVillage(); },
     });
 
@@ -162,19 +155,24 @@
     addEventListener('visibilitychange', () => { if (document.hidden) enregistrer(); });
   }
 
-  function appliquerKitTestUneFois() {
-    const MARQUE = 'bourg.kit-test-batiments.2026-08-19';
-    const BACKUP = 'bourg.sauvegarde.avant-kit-test.2026-08-19';
-    let deja = false;
-    try { deja = localStorage.getItem(MARQUE) === '1'; }
-    catch (e) { return; }
-    if (deja) return;
-
-    const e = E();
+  function chargerPartieAvancee() {
+    const BACKUP = 'bourg.sauvegarde.avant-partie-avancee';
     try {
+      E().plan = window.Village.plan();
+      window.Etat.sauver(true);
       const brut = localStorage.getItem('bourg.sauvegarde.v1');
-      if (brut && !localStorage.getItem(BACKUP)) localStorage.setItem(BACKUP, brut);
+      if (brut) localStorage.setItem(BACKUP, brut);
     } catch (err) { /* le jeu saura signaler lui-même un stockage interdit */ }
+
+    /* Une partie avancée est un état propre et reproductible, pas une couche
+       ajoutée par-dessus la progression courante. La graine fixe garantit que
+       le port dispose toujours de la même côte testée. */
+    const options = Object.assign({}, E().options || {});
+    if(window.Village)window.Village.chargerPlan([]);
+    window.Etat.recommencer(280826);
+    const e = E();Object.assign(e.options,options);
+    window.Village.init({graine:e.graine,nom:'Valgriffe'});
+    window.Village.renommer('Valgriffe');e.nomBourg='Valgriffe';
 
     /* Aucun chantier ni amélioration en attente : le laboratoire commence
        dans un état stable. Les habitants qui y travaillaient redeviennent
@@ -200,8 +198,11 @@
        ensuite monter sur plusieurs terrasses si l'île est déjà dense. */
     const types = window.BAT_ORDRE.slice().sort((a, b) => {
       const da = window.BAT[a], db = window.BAT[b];
-      const pa = window.Village.bordEau(a) ? 0 : ((da.cat === 'recolte' || da.cat === 'elevage' || a === 'descente') ? 1 : 2);
-      const pb = window.Village.bordEau(b) ? 0 : ((db.cat === 'recolte' || db.cat === 'elevage' || b === 'descente') ? 1 : 2);
+      /* Le port réserve le meilleur front de mer avant la pêcherie et le
+         moulin à eau. C'est précisément la construction que cette sauvegarde
+         avancée doit permettre d'essayer immédiatement. */
+      const pa = a==='port' ? 0 : (window.Village.bordEau(a) ? 1 : ((da.cat === 'recolte' || da.cat === 'elevage' || a === 'descente') ? 2 : 3));
+      const pb = b==='port' ? 0 : (window.Village.bordEau(b) ? 1 : ((db.cat === 'recolte' || db.cat === 'elevage' || b === 'descente') ? 2 : 3));
       return pa - pb;
     });
     const manquants = [];
@@ -216,27 +217,41 @@
         for (let niveau = 1; niveau <= 12 && !pose; niveau++)
           pose = window.Village.poser(type, null, null, null, 1, null, niveau);
       if (!pose) { manquants.push(type); continue; }
-      window.Etat.creerBatiment(type, pose.id);
+      const construit=window.Etat.creerBatiment(type, pose.id);
+      construit.niv=3;window.Etat.majPostes(construit);window.Village.rehausser(pose.id,3);
     }
+
+    /* Quelques logements supplémentaires et une population suffisante pour
+       essayer immédiatement les chaînes, l'expédition et le port. */
+    for(let i=0;i<8;i++){
+      const pose=window.Village.poser('maison',null,null,null,1,(i%12)+1,0);
+      if(pose){const maison=window.Etat.creerBatiment('maison',pose.id);maison.niv=3;window.Etat.majPostes(maison);}
+    }
+    while(e.habitants.length<14)window.Etat.ajouterHabitant(1.5);
+    for(let i=0;i<e.habitants.length;i++){
+      const h=e.habitants[i];h.niv=6+(i%5);h.xp=0;
+      window.Etat.assurerProgression(h);
+    }
+    for(const r of (window.RECHERCHES||[]))e.recherches[r.id]=true;
+    e.jours=45;e.tJeu=45*260;e.moral=82;e.menace=18;
+    e.aventure.record=12;e.aventure.profondeur=12;
+    e.armee.unites=24;e.armee.xp=480;e.armee.palierArme=3;e.armee.palierArmure=3;
+    if(e.tutoriel){e.tutoriel.actif=false;e.tutoriel.replie=true;e.tutoriel.introValidee=true;}
 
     /* Le stock de test ignore volontairement les plafonds : il doit servir à
        éprouver toutes les recettes, même avant la construction d'entrepôts. */
     for (const id in window.RES) {
-      e.res[id] = 100000;
+      e.res[id] = id==='ecu' ? 250000 : 25000;
       e.vus['res:' + id] = true;
     }
     window.Etat.invaliderCap();
     e.plan = window.Village.plan();
-    window.Etat.journal('Île de test préparée : tous les bâtiments de base et 100 000 de chaque ressource.', 'butin');
+    window.Etat.journal('Partie avancée chargée : bourg complet, recherches et réserves prêtes.', 'butin');
     if (manquants.length)
       window.Etat.journal('Parcelles introuvables pour : ' + manquants.map(id => window.BAT[id].nom).join(', ') + '.', 'alerte');
 
     window.Etat.sauver(true);
-    try { localStorage.setItem(MARQUE, '1'); } catch (err) { }
-    U().dire(manquants.length
-      ? 'Kit de test chargé, mais ' + manquants.length + ' bâtiment(s) manquent de place.'
-      : 'Kit de test chargé : île complète et 100 000 de chaque ressource.',
-      manquants.length ? 'alerte' : 'butin', 7000);
+    return {ok:true,manquants};
   }
 
   /* =================================================================
@@ -407,7 +422,7 @@
     });
   }
 
-  window.App = { demarrer, synchroniserVillage, majAffectations: synchroniserVillage, rafraichirUI };
+  window.App = { demarrer, synchroniserVillage, majAffectations: synchroniserVillage, rafraichirUI, chargerPartieAvancee };
 
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', demarrer);
   else demarrer();

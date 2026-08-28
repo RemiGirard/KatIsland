@@ -326,7 +326,12 @@
     D().surClic = (t, bouton) => {
       if(!t) return false;
       if(modeCons){
-        const p = t.pose;
+        let p = t.pose;
+        const ti=indexDoc(modeCons);
+        if(p && ti>=0 && D().ancreConstruction){
+          const c=D().ancreConstruction(p.c,p.L,ti);
+          if(c!==p.c)p={c,L:p.L};
+        }
         const bonNiveau = p && (p.L === 0 || empilable(modeCons));
         if(p && bonNiveau && !parCell.has(cle(p.c, p.L))){
           if(listeners.pose) listeners.pose(modeCons, {x: p.c.i, y: p.L, r: null});
@@ -462,8 +467,9 @@
     },
     poserSurPlan(cell){
       if(!modeCons) return false;
-      const doc=D(), c=doc && doc.cellules[Math.max(0,cell|0)];
+      const doc=D();let c=doc && doc.cellules[Math.max(0,cell|0)];
       const t=indexDoc(modeCons);
+      if(c&&t>=0&&doc.ancreConstruction)c=doc.ancreConstruction(c,0,t);
       const libre=!!c && !parCell.has(cle(c,0)) && !((c.b||[])[0]>=0);
       const tient=libre && (t<0 || doc.meilleureRotation(c,0,t)>=0);
       if(tient){

@@ -150,7 +150,7 @@
     in:{eau:2}, out:{lin:3},
     desc:"On noie les tiges, on attend qu'elles pourrissent juste ce qu'il faut." });
   x('jachere', { bat:'champ', nom:'Reposer et amender', metier:'champs', duree:70, niv:4,
-    in:{paille:3,eau:2}, out:{herbe:2}, loot:[{res:'champignon',p:0.18,n:[1,2]}],
+    in:{fumier:2,eau:2}, out:{herbe:2}, loot:[{res:'champignon',p:0.18,n:[1,2]}],
     desc:"Une récolte modeste, mais la terre et la réserve de semences récupèrent pour les cycles suivants." });
 
   /* Le document du bourg distingue quatre cultures ; le jeu n'en avait
@@ -612,7 +612,7 @@
   x('traire', { bat:'etable', nom:'Traire', metier:'elevage', duree:18,
     in:{ble:1}, out:{lait:3}, desc:"Deux fois par jour. La moitié disparaît avant la laiterie ; nul ne sait comment." });
   x('fumier', { bat:'etable', nom:'Sortir le fumier', metier:'elevage', duree:26, niv:2,
-    out:{legume:4}, desc:"Ingrat, mais c'est lui qui fait les récoltes du champ." });
+    out:{fumier:3}, desc:"Ingrat, mais c'est lui qui rend sa fertilité au champ." });
   x('abattre_vache', { bat:'etable', nom:'Abattre une bête', metier:'elevage', duree:80, niv:4,
     in:{ble:4}, out:{viande:6,peau:4}, desc:"Une seule bête nourrit le bourg une semaine et habille sa compagnie." });
 
@@ -696,8 +696,8 @@
     in:{suif:3,corde:1}, out:{cire:3}, moral:3,
     desc:"Une mèche de chanvre, trois trempes dans le suif fondu. On veille plus tard, et l'on travaille mieux le lendemain." });
   x('litiere', { bat:'etable', nom:'Refaire la litière', metier:'elevage', duree:30, niv:2,
-    in:{paille:4}, out:{lait:6}, loot:[{res:'legume',p:0.3,n:[1,3]}],
-    desc:"Une bête au sec donne un tiers de plus. Ce n'est pas de la tendresse, c'est du rendement." });
+    in:{paille:4}, out:{},
+    desc:"Une bête au sec donne plus longtemps. Le bénéfice se voit désormais sur la santé et les prochaines traites, pas dans un seau apparu par magie." });
 
   b('tannerie', {
     nom:'Tannerie', metier:'Tanneur', cat:'atelier', rangees:[2], nivMax:8,

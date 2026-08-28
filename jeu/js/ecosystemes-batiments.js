@@ -97,6 +97,15 @@
         {id:'manteau',nom:'Manteaux de berger',desc:'La laine revient à ceux qui gardent le troupeau dehors.',base:{laine:8,fil:3}},
       ],
     },
+    etable:{
+      nom:'Étable', rythme:'Régularité des soins', unite:'santé',
+      confort:[
+        {id:'abri',nom:'Coin des vachers',desc:'Une table sèche, assez proche pour surveiller les bêtes.',base:{bois:9,paille:5}},
+        {id:'eau',nom:'Abreuvoir à niveau',desc:'L’eau propre réduit les corvées et calme le troupeau.',base:{planche:9,eau:16}},
+        {id:'tabouret',nom:'Tabourets de traite',desc:'La traite répétée use moins les épaules et le dos.',base:{planche:7,corde:2}},
+        {id:'lanterne',nom:'Lanterne d’étable',desc:'Les soins de nuit deviennent plus sûrs et moins stressants.',base:{cire:5,outil:1}},
+      ],
+    },
   };
 
   function gere(b) { return !!(b && TYPES[b.type]); }
@@ -154,6 +163,12 @@
       if(typeof p.signature.maximum!=='number')p.signature.maximum=troupeauMax(b);
       if(typeof p.signature.paturage!=='number')p.signature.paturage=72;
       if(!p.signature.politique)p.signature.politique='laine';
+    } else if(b.type==='etable'){
+      if(typeof p.signature.troupeau!=='number')p.signature.troupeau=5;
+      if(typeof p.signature.maximum!=='number')p.signature.maximum=etableMax(b);
+      if(typeof p.signature.sante!=='number')p.signature.sante=76;
+      if(typeof p.signature.litiere!=='number')p.signature.litiere=72;
+      if(!p.signature.politique)p.signature.politique='lait';
     }
     return p;
   }
@@ -281,6 +296,15 @@
           s.troupeau=clamp(s.troupeau+dt*.0022*naissance,0,s.maximum);
           s.paturage=clamp(s.paturage-dt*.0008*s.troupeau,0,100);
         }
+      } else if(b.type==='etable'){
+        const s=p.signature;s.maximum=etableMax(b);
+        s.litiere=clamp(s.litiere-dt*.0013*s.troupeau,0,100);
+        const cible=clamp(34+s.litiere*.58+(s.politique==='renouvellement'?6:0),0,96),pasS=1-Math.exp(-Math.max(0,dt)/180);
+        s.sante=clamp(s.sante+(cible-s.sante)*pasS,0,100);
+        if(s.sante>52&&s.troupeau<s.maximum){
+          const naissance=(s.politique==='renouvellement'?1.7:1)*clamp(s.sante/75,.45,1.2);
+          s.troupeau=clamp(s.troupeau+dt*.0017*naissance,0,s.maximum);
+        }
       }
     }
   }
@@ -341,6 +365,13 @@
       if((rec.id==='abattre_mouton'||rec.id==='abattre_complet')&&s.politique==='viande')facteur*=1.18;
       if(s.politique==='renouvellement')facteur*=.90;
       for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='etable'){
+      const s=personnel(b).signature,ratio=s.troupeau/Math.max(1,s.maximum),v=s.sante/100;
+      let facteur=.58+ratio*.38+v*.28;
+      if(rec.id==='traire'&&s.politique==='lait')facteur*=1.16;
+      if(rec.id==='fumier'&&s.politique==='fumure')facteur*=1.22;
+      if((rec.id==='abattre_vache'||rec.id==='abattre_boeuf')&&s.politique==='renouvellement')facteur*=.88;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
     }
     return copie;
   }
@@ -391,6 +422,12 @@
       else if(rec.id==='paitre')s.paturage=clamp(s.paturage-.8,0,100);
       else if(rec.id==='abattre_mouton')s.troupeau=clamp(s.troupeau-1,0,s.maximum);
       else if(rec.id==='abattre_complet')s.troupeau=clamp(s.troupeau-1.5,0,s.maximum);
+    }else if(b.type==='etable'){
+      if(rec.id==='traire'){s.litiere=clamp(s.litiere-.55,0,100);s.sante=clamp(s.sante-.12,0,100);}
+      else if(rec.id==='fumier'){s.litiere=clamp(s.litiere+7,0,100);s.sante=clamp(s.sante+1.5,0,100);}
+      else if(rec.id==='litiere'){s.litiere=clamp(s.litiere+20,0,100);s.sante=clamp(s.sante+5,0,100);}
+      else if(rec.id==='abattre_vache')s.troupeau=clamp(s.troupeau-1,0,s.maximum);
+      else if(rec.id==='abattre_boeuf')s.troupeau=clamp(s.troupeau-1.5,0,s.maximum);
     }
   }
 
@@ -429,12 +466,19 @@
       const cout=rec.id==='abattre_complet'?1.5:(rec.id==='abattre_mouton'?1:0),s=personnel(b).signature;
       if(cout&&s.troupeau-cout<reproducteurs(b))return {ok:false,raison:'reproducteurs protégés'};
       if((rec.id==='tondre'||rec.id==='paitre')&&s.troupeau<2)return {ok:false,raison:'troupeau trop petit'};
+    }else if(b.type==='etable'){
+      const cout=rec.id==='abattre_boeuf'?1.5:(rec.id==='abattre_vache'?1:0),s=personnel(b).signature;
+      if(cout&&s.troupeau-cout<etableReserve(b))return {ok:false,raison:'reproductrices protégées'};
+      if(rec.id==='traire'&&s.troupeau<2)return {ok:false,raison:'troupeau trop petit'};
     }
     return {ok:true,raison:''};
   }
+  function etableMax(b){return 5+Math.max(1,b.niv||1)*1.5;}
+  function etableReserve(b){return personnel(b).signature.politique==='renouvellement'?4:2;}
 
   window.EcosystemesBatiments = { TYPES, CADENCES, gere, definition, personnel, confort,
     disponibilite, equipeHabitant, affecterEquipe, repartirEquipes, ajouterEquipe, retirerEquipe,
     tickHabitant, tick, modifierSorties, finirRecette, peutDemarrer,
-    pollinisationCible, humiditeCible, nectarCible, soutienRepos, troupeauMax, reproducteurs };
+    pollinisationCible, humiditeCible, nectarCible, soutienRepos, troupeauMax, reproducteurs,
+    etableMax, etableReserve };
 })();
