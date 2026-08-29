@@ -169,6 +169,87 @@
         {id:'drain',nom:'Rigole de drainage',desc:'Le front reste praticable et les équipes gardent les pattes sèches.',base:{pierre:12,planche:8}},
       ],
     },
+    mine:{
+      nom:'Mine', rythme:'Régularité des galeries', unite:'sécurité',
+      confort:[
+        {id:'repos',nom:'Salle de pause sèche',desc:'Une galerie latérale éclairée où les équipes récupèrent hors du bruit.',base:{planche:10,toile:3}},
+        {id:'lampes',nom:'Lampes de sécurité',desc:'Une flamme protégée révèle l’air mauvais avant les premiers vertiges.',base:{fer:3,verre:2,huile:4}},
+        {id:'casiers',nom:'Casiers de relève',desc:'Casques, cordes et outils restent prêts près du chevalement.',base:{planche:12,cuir:3}},
+        {id:'monte',nom:'Benne à personnel',desc:'La relève descend sans dépenser sa vigueur dans les échelles.',base:{poutre:2,corde:6,outil:2}},
+      ],
+    },
+    charbonniere:{
+      nom:'Charbonnière', rythme:'Régularité de la meule', unite:'carbonisation',
+      confort:[
+        {id:'hutte',nom:'Hutte de veille',desc:'Le charbonnier peut se reposer sans perdre la fumée de vue.',base:{bois:10,paille:6}},
+        {id:'masque',nom:'Masque à fumée',desc:'Les longues veilles usent moins les équipes.',base:{toile:4,herbe:3}},
+        {id:'eau',nom:'Tonne de sécurité',desc:'Une reprise de flamme se traite avant de dévorer la meule.',base:{planche:8,eau:14}},
+        {id:'auvent',nom:'Auvent à outils',desc:'Pelles et argile restent prêtes pour corriger les évents.',base:{planche:12,tuile:4}},
+      ],
+    },
+    tuilerie:{
+      nom:'Tuilerie', rythme:'Régularité des fournées', unite:'cuisson',
+      confort:[
+        {id:'auvent',nom:'Auvent de séchage',desc:'Les pièces crues sèchent sans reprendre chaque averse.',base:{planche:10,tuile:5}},
+        {id:'masques',nom:'Masques de four',desc:'Cendre et poussière d’argile fatiguent moins les équipes.',base:{toile:4,herbe:3}},
+        {id:'table',nom:'Table de moulage',desc:'Les moules restent à hauteur et les fournées prennent forme plus vite.',base:{planche:12,outil:1}},
+        {id:'securite',nom:'Réserve d’extinction',desc:'Une tonne d’eau et du sable gardent les surchauffes sous contrôle.',base:{poterie:4,eau:14,sable:6}},
+      ],
+    },
+    poterie:{
+      nom:'Poterie', rythme:'Régularité du tour', unite:'pièces',
+      confort:[
+        {id:'siege',nom:'Siège de tour réglable',desc:'Le dos reste droit pendant les longues séries.',base:{planche:9,toile:3}},
+        {id:'lavage',nom:'Bac de lavage',desc:'Les mains et les outils restent propres entre deux argiles.',base:{poterie:3,eau:12}},
+        {id:'claies',nom:'Claies rembourrées',desc:'Les pièces crues ne s’entrechoquent plus pendant les relèves.',base:{planche:12,paille:5}},
+        {id:'lumiere',nom:'Lumière de décor',desc:'Les motifs fins se peignent sans finir avec un œil de travers.',base:{verre:2,cire:5}},
+      ],
+    },
+    verrerie:{
+      nom:'Verrerie', rythme:'Régularité du four', unite:'bain',
+      confort:[
+        {id:'ecran',nom:'Écrans de chaleur',desc:'Le banc du souffleur reste supportable près du four blanc.',base:{brique:8,fer:2}},
+        {id:'eau',nom:'Bac de refroidissement',desc:'Canne et pinces refroidissent sans traverser tout l’atelier.',base:{poterie:4,eau:14}},
+        {id:'lunettes',nom:'Lunettes fumées',desc:'Le personnel lit le verre sans fixer la lumière aveuglante.',base:{verre:3,cuir:2}},
+        {id:'banc',nom:'Banc rembourré',desc:'Souffler assis ménage les épaules pendant les longues commandes.',base:{planche:10,toile:4}},
+      ],
+    },
+    fonderie:{
+      nom:'Fonderie', rythme:'Régularité des coulées', unite:'bain',
+      confort:[
+        {id:'ecran',nom:'Paravent réfractaire',desc:'La coulée chauffe le moule plutôt que tout le personnel.',base:{brique:10,fer:2}},
+        {id:'masques',nom:'Masques de fondeur',desc:'Fumées et étincelles coûtent moins de vigueur.',base:{cuir:4,toile:3}},
+        {id:'palan',nom:'Palan de coulée',desc:'Le creuset se déplace sans vider les bras des fondeurs.',base:{poutre:1,corde:5,outil:1}},
+        {id:'douche',nom:'Douche de sécurité',desc:'Une éclaboussure se traite avant de devenir une catastrophe.',base:{poterie:4,eau:16}},
+      ],
+    },
+    forge:{
+      nom:'Forge', rythme:'Régularité du marteau', unite:'foyer',
+      confort:[
+        {id:'tabouret',nom:'Tabouret d’enclume',desc:'Les finitions longues se font sans plier le dos.',base:{planche:9,cuir:2}},
+        {id:'eau',nom:'Bac de trempe tempéré',desc:'La vapeur reste au bac et la température se contrôle mieux.',base:{poterie:4,eau:14}},
+        {id:'rangement',nom:'Râtelier de marteaux',desc:'Chaque masse revient à sa place entre deux commandes.',base:{planche:12,clou:5}},
+        {id:'hotte',nom:'Hotte de forge',desc:'La fumée sort du bâtiment avant les forgerons.',base:{brique:9,tuile:5}},
+      ],
+    },
+    armurerie:{
+      nom:'Armurerie', rythme:'Régularité des assemblages', unite:'ajustement',
+      confort:[
+        {id:'siege',nom:'Siège de rivetage',desc:'Les milliers d’anneaux se ferment à bonne hauteur.',base:{planche:9,cuir:2}},
+        {id:'lumiere',nom:'Lampes d’établi',desc:'Un rivet mal fermé se voit avant le départ.',base:{cire:5,verre:2}},
+        {id:'mannequin',nom:'Mannequins réglables',desc:'Les tailles se contrôlent sans convoquer chaque soldat.',base:{planche:12,toile:3}},
+        {id:'rangement',nom:'Casiers de patrons',desc:'Mesures et gabarits ne se perdent plus entre les commandes.',base:{planche:10,parchemin:2}},
+      ],
+    },
+    orfevre:{
+      nom:'Orfèvre', rythme:'Régularité des gestes fins', unite:'précision',
+      confort:[
+        {id:'siege',nom:'Siège de joaillier',desc:'Le travail de loupe ne casse plus le dos.',base:{planche:8,cuir:2}},
+        {id:'lumiere',nom:'Lampe à réflecteur',desc:'Chaque griffe du sertissage reste visible.',base:{lingotcuivre:1,verre:2,cire:4}},
+        {id:'coffre',nom:'Coffre à casiers',desc:'Perles et gemmes attendent séparées et sous clé.',base:{planche:10,fer:2}},
+        {id:'aspiration',nom:'Plateau récupérateur',desc:'La poussière d’or ne disparaît plus entre les lames du plancher.',base:{toile:4,planche:8}},
+      ],
+    },
   };
 
   function gere(b) { return !!(b && TYPES[b.type]); }
@@ -272,6 +353,55 @@
       if(typeof p.signature.stabilite!=='number')p.signature.stabilite=86;
       if(!p.signature.couches||typeof p.signature.couches!=='object')p.signature.couches={pierre:62,sable:48,argile:44};
       if(!['pierre','sable','argile'].includes(p.signature.cible))p.signature.cible='pierre';
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='mine'){
+      if(typeof p.signature.ventilation!=='number')p.signature.ventilation=78;
+      if(typeof p.signature.soutenement!=='number')p.signature.soutenement=84;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='charbonniere'){
+      if(typeof p.signature.temperature!=='number')p.signature.temperature=58;
+      if(typeof p.signature.ouverture!=='number')p.signature.ouverture=44;
+      if(typeof p.signature.maturation!=='number')p.signature.maturation=28;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='tuilerie'){
+      if(typeof p.signature.temperature!=='number')p.signature.temperature=48;
+      if(typeof p.signature.sechage!=='number')p.signature.sechage=32;
+      if(typeof p.signature.charge!=='number')p.signature.charge=60;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='poterie'){
+      if(typeof p.signature.formes!=='number')p.signature.formes=18;
+      if(typeof p.signature.centrage!=='number')p.signature.centrage=64;
+      if(typeof p.signature.charge!=='number')p.signature.charge=58;
+      if(typeof p.signature.casse!=='number')p.signature.casse=4;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='verrerie'){
+      if(typeof p.signature.temperature!=='number')p.signature.temperature=68;
+      if(typeof p.signature.bain!=='number')p.signature.bain=34;
+      if(typeof p.signature.tirage!=='number')p.signature.tirage=62;
+      if(typeof p.signature.defauts!=='number')p.signature.defauts=6;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='fonderie'){
+      if(typeof p.signature.temperature!=='number')p.signature.temperature=72;
+      if(typeof p.signature.scories!=='number')p.signature.scories=8;
+      if(typeof p.signature.contamination!=='number')p.signature.contamination=4;
+      if(typeof p.signature.tirage!=='number')p.signature.tirage=62;
+      if(typeof p.signature.dernierMetal!=='string')p.signature.dernierMetal='ferreux';
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='forge'){
+      if(typeof p.signature.chaleur!=='number')p.signature.chaleur=66;
+      if(typeof p.signature.rythme!=='number')p.signature.rythme=58;
+      if(typeof p.signature.precision!=='number')p.signature.precision=54;
+      if(typeof p.signature.tirage!=='number')p.signature.tirage=62;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='armurerie'){
+      if(typeof p.signature.ajustement!=='number')p.signature.ajustement=58;
+      if(typeof p.signature.chutes!=='number')p.signature.chutes=9;
+      if(typeof p.signature.standard!=='number')p.signature.standard=52;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='orfevre'){
+      if(typeof p.signature.precision!=='number')p.signature.precision=62;
+      if(typeof p.signature.eclats!=='number')p.signature.eclats=5;
+      if(typeof p.signature.tension!=='number')p.signature.tension=48;
       if(!p.signature.politique)p.signature.politique='equilibre';
     }
     return p;
@@ -450,6 +580,42 @@
       } else if(b.type==='carriere'){
         const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&x.rec!=='soutenir_front'&&!x.bloque);
         if(!actif)s.stabilite=clamp(s.stabilite+dt*.0025*(s.politique==='prudente'?1.4:1),0,100);
+      } else if(b.type==='mine'){
+        const s=p.signature,actifs=(b.postes||[]).filter(x=>x.hab&&x.rec&&!['ventiler_mine','etayer_mine'].includes(x.rec)&&!x.bloque).length,profondeur=profondeurMine(b);
+        const cible=clamp(92-profondeur*.42-actifs*6+(s.politique==='surface'?12:(s.politique==='profonde'?-12:0)),8,92),pasV=1-Math.exp(-Math.max(0,dt)/95);
+        s.ventilation=clamp(s.ventilation+(cible-s.ventilation)*pasV,0,100);
+      } else if(b.type==='charbonniere'){
+        const s=p.signature,veille=(b.postes||[]).some(x=>x.hab&&x.rec==='cuire_charbon'),cible=clamp(22+s.ouverture*.86,18,100),pasT=1-Math.exp(-Math.max(0,dt)/32);
+        s.temperature=clamp(s.temperature+(cible-s.temperature)*pasT,0,100);
+        if(veille){const zone=s.temperature>=42&&s.temperature<=79?1:(s.temperature<42?.35:Math.max(0,.8-(s.temperature-79)*.055));s.maturation=clamp(s.maturation+dt*.020*zone,0,100);}
+      } else if(b.type==='tuilerie'){
+        const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&recetteFourTuilerie(x.rec)&&!x.bloque);
+        const cible=actif?(s.politique==='rapide'?91:(s.politique==='dense'?84:78)):28,pasT=1-Math.exp(-Math.max(0,dt)/(actif?30:115));
+        s.temperature=clamp(s.temperature+(cible-s.temperature)*pasT,0,100);
+        s.sechage=clamp(s.sechage+dt*.0015*(s.politique==='rapide'?.78:(s.politique==='dense'?1.16:1)),0,sechageMaxTuilerie(b));
+      } else if(b.type==='poterie'){
+        const s=p.signature,auTour=(b.postes||[]).filter(x=>x.hab&&['tourner_pot','grand_vaisselier'].includes(x.rec)&&!x.bloque).length;
+        if(auTour)s.centrage=clamp(s.centrage+dt*.0012*auTour*(s.politique==='prestige'?1.35:1),0,100);
+        s.casse=clamp(s.casse-dt*.0018,0,100);
+      } else if(b.type==='verrerie'){
+        const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&!x.bloque),cible=actif?clamp(35+s.tirage*.72+(s.politique==='artistique'?5:(s.politique==='continu'?-5:0)),42,98):34,pas=1-Math.exp(-Math.max(0,dt)/(actif?42:150));
+        s.temperature=clamp(s.temperature+(cible-s.temperature)*pas,0,100);
+        s.bain=clamp(s.bain-dt*(actif?.0008:.0022),0,bainMaxVerrerie(b));
+        s.defauts=clamp(s.defauts-dt*.0014,0,100);
+      } else if(b.type==='fonderie'){
+        const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&x.rec!=='purger_four'&&!x.bloque),cible=actif?clamp(38+s.tirage*.68+(s.politique==='alliage'?6:(s.politique==='recuperation'?-6:0)),45,98):36,pas=1-Math.exp(-Math.max(0,dt)/(actif?48:160));
+        s.temperature=clamp(s.temperature+(cible-s.temperature)*pas,0,100);
+        s.contamination=clamp(s.contamination-dt*.0007,0,100);
+      } else if(b.type==='forge'){
+        const s=p.signature,externe=!!(E().armee&&E().armee.forge),actifs=(b.postes||[]).filter(x=>x.hab&&x.rec&&!x.bloque).length+(externe?1:0),cible=actifs?clamp(36+s.tirage*.70+(s.politique==='arsenal'?5:(s.politique==='entretien'?-5:0)),45,98):32,pas=1-Math.exp(-Math.max(0,dt)/(actifs?34:125));
+        s.chaleur=clamp(s.chaleur+(cible-s.chaleur)*pas,0,100);
+        if(!actifs)s.rythme=clamp(s.rythme-dt*.0012,0,100);
+      } else if(b.type==='armurerie'){
+        const s=p.signature,actifs=(b.postes||[]).filter(x=>x.hab&&x.rec&&x.rec!=='recycler_chutes_armure'&&!x.bloque).length;
+        if(actifs)s.ajustement=clamp(s.ajustement+dt*.0009*actifs*(s.politique==='mobilite'?1.25:1),0,100);
+      } else if(b.type==='orfevre'){
+        const s=p.signature,actifs=(b.postes||[]).filter(x=>x.hab&&x.rec&&x.rec!=='polir_outils_orfevre'&&!x.bloque).length;
+        if(!actifs)s.eclats=clamp(s.eclats-dt*.0008,0,100);
       }
     }
   }
@@ -547,6 +713,57 @@
       if(sortie===s.cible)facteur*=1.18;
       if(s.politique==='prudente')facteur*=.90;else if(s.politique==='profonde')facteur*=1.23;
       for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='mine'){
+      const s=personnel(b).signature;if(!['ventiler_mine','etayer_mine'].includes(rec.id)){
+        let facteur=.68+s.ventilation/100*.24+s.soutenement/100*.20;
+        if(s.politique==='surface')facteur*=rec.niv>=6?.72:1.08;else if(s.politique==='profonde')facteur*=rec.niv>=4?1.24:.88;
+        for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+      }
+    } else if(b.type==='charbonniere'&&rec.id==='cuire_charbon'){
+      const s=personnel(b).signature;let facteur=.62+s.maturation/100*.74;
+      if(s.politique==='precoce')facteur*=.86;else if(s.politique==='complete')facteur*=1.18;
+      if(copie.charbonbois)copie.charbonbois=Math.max(1,arrondiVivant(copie.charbonbois*facteur));
+      if(copie.cendre)copie.cendre=Math.max(1,arrondiVivant(copie.cendre*(s.temperature>82?1.45:.85)));
+    } else if(b.type==='tuilerie'&&recetteFourTuilerie(rec.id)){
+      const s=personnel(b).signature,ideal=s.politique==='rapide'?88:(s.politique==='dense'?82:76),stable=1-Math.min(1,Math.abs(s.temperature-ideal)/54);
+      let facteur=(.70+s.charge/100*.42)*(.86+stable*.22);
+      if(s.politique==='rapide')facteur*=.91;else if(s.politique==='dense')facteur*=1.18;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='poterie'){
+      const s=personnel(b).signature,qualite=.72+s.centrage/100*.34-s.casse/100*.28;
+      let facteur=qualite;
+      if(s.politique==='serie')facteur*=rec.id==='tourner_pot'||rec.id==='cuire_pots'?1.16:.90;
+      else if(s.politique==='prestige')facteur*=rec.id==='jarres_marchandes'||rec.id==='email_cuivre'||rec.id==='etamer'?1.24:.86;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='verrerie'){
+      const s=personnel(b).signature,ideal=s.politique==='continu'?75:(s.politique==='artistique'?91:84),stable=1-Math.min(1,Math.abs(s.temperature-ideal)/48),reserve=.78+Math.min(1,s.bain/48)*.22;
+      let facteur=(.76+stable*.30)*reserve*(1-Math.min(.32,s.defauts/180));
+      if(s.politique==='continu'&&rec.id==='souffler_verre')facteur*=1.18;
+      else if(s.politique==='artistique'&&['vitrail','verre_argent'].includes(rec.id))facteur*=1.25;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='fonderie'&&rec.id!=='purger_four'){
+      const s=personnel(b).signature,propre=1-Math.min(.42,(s.scories+s.contamination)/210),ideal=rec.id==='fondre_mithril'?96:(['couler_acier','couler_bronze'].includes(rec.id)?88:78),stable=1-Math.min(1,Math.abs(s.temperature-ideal)/55);
+      let facteur=propre*(.78+stable*.28);
+      if(s.politique==='alliage'&&['couler_bronze','couler_acier','fondre_mithril'].includes(rec.id))facteur*=1.22;
+      else if(s.politique==='recuperation'&&rec.id==='refondre_limaille')facteur*=1.30;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='forge'){
+      const s=personnel(b).signature,ideal=s.politique==='entretien'?72:(s.politique==='arsenal'?90:82),stable=1-Math.min(1,Math.abs(s.chaleur-ideal)/52),geste=.78+s.precision/100*.22;
+      let facteur=(.78+stable*.25)*geste;
+      if(s.politique==='entretien'&&['clouterie','outil_fer','outil_acier','ferrures'].includes(rec.id))facteur*=1.20;
+      else if(s.politique==='arsenal'&&rec.id==='forger_arme')facteur*=1.24;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='armurerie'){
+      const s=personnel(b).signature,propre=1-Math.min(.35,s.chutes/190),geste=.78+s.ajustement/100*.24;let facteur=propre*geste;
+      if(s.politique==='serie'&&['forger_armure','forger_ecu','harnois_bronze'].includes(rec.id))facteur*=1.22;
+      else if(s.politique==='protection'&&['ecailler_harnois','maille_acier'].includes(rec.id))facteur*=1.26;
+      else if(s.politique==='mobilite'&&['forger_ecu','maille_acier'].includes(rec.id))facteur*=1.16;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='orfevre'&&rec.id!=='polir_outils_orfevre'){
+      const s=personnel(b).signature,risque=risqueOrfevre(b,rec),geste=.74+s.precision/100*.32,propre=1-Math.min(.30,s.eclats/190);let facteur=geste*propre*(1-risque*.28);
+      if(s.politique==='monnaie'&&rec.id==='monnayer')facteur*=1.20;
+      else if(s.politique==='audacieux'&&['joaillerie','sertir','collier_perles'].includes(rec.id))facteur*=1.26;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
     }
     return copie;
   }
@@ -624,6 +841,53 @@
         if(mat)s.couches[mat]=clamp(s.couches[mat]-(s.politique==='profonde'?2.1:(s.politique==='prudente'?.75:1.2)),0,100);
         if(mat||rec.id==='tailler_pierre')s.stabilite=clamp(s.stabilite-(s.politique==='profonde'?2.2:(s.politique==='prudente'?.7:1.25)),0,100);
       }
+    }else if(b.type==='mine'){
+      if(rec.id==='ventiler_mine')s.ventilation=clamp(s.ventilation+38,0,100);
+      else if(rec.id==='etayer_mine')s.soutenement=clamp(s.soutenement+44,0,100);
+      else{
+        const profond=(rec.niv||1)>=6||rec.id==='galerie_profonde';
+        s.ventilation=clamp(s.ventilation-(profond?2.4:1.1)*(s.politique==='profonde'?1.3:1),0,100);
+        s.soutenement=clamp(s.soutenement-(profond?2.1:.8)*(s.politique==='surface'?.72:(s.politique==='profonde'?1.35:1)),0,100);
+      }
+    }else if(b.type==='charbonniere'&&rec.id==='cuire_charbon'){
+      s.maturation=s.politique==='precoce'?12:4;
+      s.temperature=clamp(s.temperature-(s.politique==='complete'?18:10),0,100);
+    }else if(b.type==='tuilerie'){
+      if(rec.id==='preparer_fournee')s.sechage=clamp(s.sechage+30+s.charge*.10,0,sechageMaxTuilerie(b));
+      else if(recetteFourTuilerie(rec.id)){
+        s.sechage=clamp(s.sechage-besoinSechageTuilerie(b,rec),0,sechageMaxTuilerie(b));
+        s.temperature=clamp(s.temperature+(s.politique==='rapide'?4.5:(s.politique==='dense'?2.2:3)),0,100);
+      }
+    }else if(b.type==='poterie'){
+      if(rec.id==='tourner_pot'){s.formes=clamp(s.formes+3,0,formesMaxPoterie(b));s.centrage=clamp(s.centrage+.8,0,100);}
+      else if(rec.id==='grand_vaisselier'){s.formes=clamp(s.formes+8,0,formesMaxPoterie(b));s.centrage=clamp(s.centrage+1.8,0,100);}
+      else if(recetteFourPoterie(rec.id)){
+        s.formes=clamp(s.formes-besoinFormesPoterie(b,rec),0,formesMaxPoterie(b));
+        const risque=Math.max(0,s.charge-58)*.025+Math.max(0,62-s.centrage)*.018+(s.politique==='serie'?.6:(s.politique==='prestige'?-.3:0));
+        s.casse=clamp(s.casse+Math.max(.15,risque),0,100);
+        s.centrage=clamp(s.centrage-(s.charge>78?.7:.18),0,100);
+      }
+    }else if(b.type==='verrerie'){
+      if(rec.id==='souffler_verre')s.bain=clamp(s.bain+24,0,bainMaxVerrerie(b));
+      else s.bain=clamp(s.bain-({souffler_fiole:5,verre_argent:9,vitrail:14}[rec.id]||2),0,bainMaxVerrerie(b));
+      const ecart=Math.abs(s.temperature-(s.politique==='continu'?75:(s.politique==='artistique'?91:84))),risque=Math.max(0,ecart-9)*.025+Math.max(0,s.tirage-82)*.018;
+      s.defauts=clamp(s.defauts+.18+risque,0,100);
+    }else if(b.type==='fonderie'){
+      if(rec.id==='purger_four'){
+        s.scories=clamp(s.scories-58,0,100);s.contamination=clamp(s.contamination-64,0,100);s.dernierMetal='propre';
+      }else{
+        const famille=familleFonderie(rec.id);if(s.dernierMetal!=='propre'&&famille!==s.dernierMetal)s.contamination=clamp(s.contamination+11,0,100);
+        s.dernierMetal=famille;s.scories=clamp(s.scories+(rec.id==='refondre_limaille'?5:(rec.id==='fondre_mithril'?8:2.4)),0,100);
+        s.temperature=clamp(s.temperature+(rec.id==='fondre_mithril'?5:1.5),0,100);
+      }
+    }else if(b.type==='forge'){
+      finirCommandeForge(b,rec.id==='forger_arme');
+    }else if(b.type==='armurerie'){
+      if(rec.id==='recycler_chutes_armure')s.chutes=clamp(s.chutes-42,0,100);
+      else{s.chutes=clamp(s.chutes+({maille_acier:5,ecailler_harnois:4}[rec.id]||2.2),0,100);s.ajustement=clamp(s.ajustement+(s.politique==='mobilite'?.9:.45),0,100);}
+    }else if(b.type==='orfevre'){
+      if(rec.id==='polir_outils_orfevre'){s.eclats=clamp(s.eclats-50,0,100);s.precision=clamp(s.precision+4,0,100);}
+      else{const risque=risqueOrfevre(b,rec);s.eclats=clamp(s.eclats+1.2+risque*5,0,100);s.precision=clamp(s.precision+(1-risque)*.8-risque*.45,0,100);}
     }
   }
 
@@ -667,6 +931,34 @@
     }
     if(b.type==='carriere'){
       const s=personnel(b).signature;return clamp((.78+s.stabilite/100*.34)*(s.politique==='prudente'?.88:(s.politique==='profonde'?1.16:1)),.55,1.32);
+    }
+    if(b.type==='mine'){
+      const s=personnel(b).signature;return clamp((.62+s.ventilation/100*.28+s.soutenement/100*.22)*(s.politique==='surface'?.96:(s.politique==='profonde'?1.10:1)),.48,1.28);
+    }
+    if(b.type==='charbonniere'){
+      const s=personnel(b).signature;return clamp(.68+s.ouverture/100*.58,.62,1.28);
+    }
+    if(b.type==='tuilerie'){
+      const s=personnel(b).signature,ideal=s.politique==='rapide'?88:(s.politique==='dense'?82:76),stable=1-Math.min(1,Math.abs(s.temperature-ideal)/58);
+      return clamp((s.politique==='rapide'?1.20:(s.politique==='dense'?.86:1))*(.75+stable*.31),.58,1.30);
+    }
+    if(b.type==='poterie'){
+      const s=personnel(b).signature;return clamp((.82+s.centrage/100*.24-s.casse/100*.16)*(s.politique==='serie'?1.18:(s.politique==='prestige'?.82:1)),.58,1.28);
+    }
+    if(b.type==='verrerie'){
+      const s=personnel(b).signature,chaud=.62+s.temperature/100*.46;return clamp(chaud*(s.politique==='continu'?1.12:(s.politique==='artistique'?.84:1))*(1-Math.min(.25,s.defauts/220)),.52,1.38);
+    }
+    if(b.type==='fonderie'){
+      const s=personnel(b).signature;return clamp((.63+s.temperature/100*.48)*(1-Math.min(.28,s.scories/240))*(s.politique==='recuperation'?.90:(s.politique==='alliage'?.94:1)),.50,1.36);
+    }
+    if(b.type==='forge'){
+      const s=personnel(b).signature,ideal=s.politique==='entretien'?72:(s.politique==='arsenal'?90:82),stable=1-Math.min(1,Math.abs(s.chaleur-ideal)/60);return clamp((.70+stable*.25+s.rythme/100*.18)*(s.politique==='arsenal'?.91:(s.politique==='entretien'?1.05:1)),.55,1.35);
+    }
+    if(b.type==='armurerie'){
+      const s=personnel(b).signature;return clamp((.76+s.ajustement/100*.28)*(1-Math.min(.25,s.chutes/220))*(s.politique==='serie'?1.12:(s.politique==='protection'?.86:1)),.56,1.30);
+    }
+    if(b.type==='orfevre'){
+      const s=personnel(b).signature;return clamp((.72+s.precision/100*.32)*(1-Math.min(.24,s.eclats/220))*(s.politique==='monnaie'?1.10:(s.politique==='audacieux'?.88:1)),.54,1.26);
     }
     if(b.type==='moulinEau'){
       const s=personnel(b).signature,ouv=ouvertureMoulinEau(b)/100,force=(s.debit*.62+s.bassin*.38)/100;
@@ -715,11 +1007,77 @@
       const s=personnel(b).signature,mat={extraire_pierre:'pierre',tamiser_sable:'sable',extraire_argile:'argile'}[rec.id];
       if(rec.id!=='soutenir_front'&&s.stabilite<16)return {ok:false,raison:'front à soutenir'};
       if(mat&&s.couches[mat]<4)return {ok:false,raison:'couche à renouveler'};
+    }else if(b.type==='mine'){
+      const s=personnel(b).signature;
+      if(!['ventiler_mine','etayer_mine'].includes(rec.id)&&s.ventilation<12)return {ok:false,raison:'air irrespirable'};
+      if(!['ventiler_mine','etayer_mine'].includes(rec.id)&&s.soutenement<12)return {ok:false,raison:'galerie à étayer'};
+    }else if(b.type==='charbonniere'&&rec.id==='cuire_charbon'){
+      const s=personnel(b).signature,seuil=s.politique==='precoce'?35:(s.politique==='complete'?90:64);
+      if(s.temperature>94)return {ok:false,raison:'meule en surchauffe'};
+      if(s.maturation<seuil)return {ok:false,raison:'carbonisation '+Math.floor(s.maturation)+' / '+seuil};
+    }else if(b.type==='tuilerie'&&recetteFourTuilerie(rec.id)){
+      const s=personnel(b).signature,besoin=besoinSechageTuilerie(b,rec);
+      if(s.temperature>96)return {ok:false,raison:'four en surchauffe'};
+      if(s.sechage<besoin)return {ok:false,raison:'pièces sèches '+Math.floor(s.sechage)+' / '+besoin};
+    }else if(b.type==='poterie'&&recetteFourPoterie(rec.id)){
+      const s=personnel(b).signature,besoin=besoinFormesPoterie(b,rec);
+      if(s.formes<besoin)return {ok:false,raison:'formes sèches '+Math.floor(s.formes)+' / '+besoin};
+    }else if(b.type==='verrerie'){
+      const s=personnel(b).signature;
+      if(s.temperature>98)return {ok:false,raison:'four en surchauffe'};
+    }else if(b.type==='fonderie'){
+      const s=personnel(b).signature;
+      if(rec.id!=='purger_four'&&s.scories>=90)return {ok:false,raison:'creuset à purger'};
+      if(rec.id!=='purger_four'&&s.temperature>98)return {ok:false,raison:'four en surchauffe'};
+    }else if(b.type==='forge'){
+      const s=personnel(b).signature;if(s.chaleur>98)return {ok:false,raison:'foyer en surchauffe'};
+    }else if(b.type==='armurerie'){
+      const s=personnel(b).signature;
+      if(rec.id==='recycler_chutes_armure'&&s.chutes<9)return {ok:false,raison:'pas assez de chutes'};
+      if(rec.id!=='recycler_chutes_armure'&&s.chutes>=92)return {ok:false,raison:'atelier à débarrasser'};
+    }else if(b.type==='orfevre'){
+      const s=personnel(b).signature;
+      if(rec.id==='polir_outils_orfevre'&&s.eclats<8)return {ok:false,raison:'outils déjà propres'};
+      if(rec.id!=='polir_outils_orfevre'&&s.eclats>=90)return {ok:false,raison:'établi à nettoyer'};
     }
     return {ok:true,raison:''};
   }
   function etableMax(b){return 5+Math.max(1,b.niv||1)*1.5;}
   function etableReserve(b){return personnel(b).signature.politique==='renouvellement'?4:2;}
+  function profondeurMine(b){const s=personnel(b).signature,base=Math.max(1,b.niv||1)*9;return clamp(base+(s.politique==='surface'?-14:(s.politique==='profonde'?18:0)),4,100);}
+  function sechageMaxTuilerie(b){return 90+Math.max(1,b.niv||1)*15;}
+  function recetteFourTuilerie(id){return ['cuire_brique','cuire_tuile','poterie'].includes(id);}
+  function besoinSechageTuilerie(b,rec){
+    if(!recetteFourTuilerie(rec&&rec.id))return 0;
+    const s=personnel(b).signature,base=rec.id==='cuire_tuile'?12:(rec.id==='poterie'?10:9);
+    return Math.round(base*(.60+s.charge/100*.70));
+  }
+  function formesMaxPoterie(b){return 42+Math.max(1,b.niv||1)*10;}
+  function recetteFourPoterie(id){return ['cuire_pots','fournee_gres'].includes(id);}
+  function besoinFormesPoterie(b,rec){
+    if(!recetteFourPoterie(rec&&rec.id))return 0;
+    const s=personnel(b).signature,base=rec.id==='fournee_gres'?13:7;
+    return Math.round(base*(.62+s.charge/100*.68));
+  }
+  function bainMaxVerrerie(b){return 70+Math.max(1,b.niv||1)*12;}
+  function familleFonderie(id){
+    if(['couler_cuivre','couler_bronze'].includes(id))return 'cuivreux';
+    if(['couler_argent','couler_or'].includes(id))return 'precieux';
+    if(id==='fondre_mithril')return 'mystique';
+    return 'ferreux';
+  }
+  function finirCommandeForge(b,arsenal){
+    if(!b||b.type!=='forge')return;
+    const s=personnel(b).signature,ideal=s.politique==='entretien'?72:(s.politique==='arsenal'?90:82),ecart=Math.abs(s.chaleur-ideal);
+    s.rythme=clamp(s.rythme+Math.max(.15,1.15-ecart*.018),0,100);
+    s.precision=clamp(s.precision+(arsenal?1.15:.35)-Math.max(0,ecart-18)*.012,0,100);
+    s.chaleur=clamp(s.chaleur+1.6,0,100);
+  }
+  function risqueOrfevre(b,rec){
+    const s=personnel(b).signature,base={monnayer:.04,collier_perles:.10,joaillerie:.24,couler_cloche:.08,sertir:.38}[rec&&rec.id]||.06;
+    const tension=(s.tension-50)/100,politique=s.politique==='prudent'?-.10:(s.politique==='audacieux'?.14:0);
+    return clamp(base+tension*.22+politique-s.precision/500+s.eclats/420,.01,.72);
+  }
 
   const RECETTES_MARMITE={
     'fromage+herbe+miel':'fromage_herbes_secret',
@@ -765,5 +1123,11 @@
     disponibilite, equipeHabitant, affecterEquipe, repartirEquipes, ajouterEquipe, retirerEquipe,
     tickHabitant, tick, modifierEntrees, modifierSorties, finirRecette, peutDemarrer,
     pollinisationCible, humiditeCible, nectarCible, nectarVillage, facteurSignature, ouvertureMoulinEau, soutienRepos, troupeauMax, reproducteurs,
-    etableMax, etableReserve, RECETTES_MARMITE, ajouterIngredientCuisine, viderMarmiteCuisine, testerMarmiteCuisine };
+    etableMax, etableReserve, profondeurMine, sechageMaxTuilerie, recetteFourTuilerie, besoinSechageTuilerie,
+    formesMaxPoterie, recetteFourPoterie, besoinFormesPoterie,
+    bainMaxVerrerie,
+    familleFonderie,
+    finirCommandeForge,
+    risqueOrfevre,
+    RECETTES_MARMITE, ajouterIngredientCuisine, viderMarmiteCuisine, testerMarmiteCuisine };
 })();

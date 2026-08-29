@@ -284,7 +284,7 @@
     nom:'Mine', metier:'Mineur', cat:'recolte', rangees:[0],
     desc:"Le chevalement, la molette, la benne. Chaque niveau de la mine descend d'un cran : plus bas on va, plus les veines sont riches et plus la remontée est longue.",
     cout:{planche:26,pierretaille:10,bois:40}, temps:220, postes:P(1,1,2,2,3,3,3,4,4,5),
-    recettes:['filon_fer','veine_charbon','filon_cuivre','filon_etain','filon_argent','filon_or','galerie_profonde','laver_minerai'],
+    recettes:['filon_fer','ventiler_mine','veine_charbon','etayer_mine','filon_cuivre','filon_etain','filon_argent','filon_or','galerie_profonde','laver_minerai'],
   });
   x('filon_fer', { bat:'mine', nom:'Suivre le filon de fer', metier:'mine', duree:18,
     out:{fer:2}, loot:[{res:'pierre',p:0.35,n:[1,2]},{res:'charbon',p:0.08,n:[1,1]}],
@@ -292,6 +292,12 @@
   x('veine_charbon', { bat:'mine', nom:'Piquer le charbon', metier:'mine', duree:22, niv:2,
     out:{charbon:2}, loot:[{res:'pierre',p:0.25,n:[1,2]}],
     outil:'pioche', desc:"Un cran plus bas que le fer, et deux fois plus salissant." });
+  x('ventiler_mine', { bat:'mine', nom:'Actionner la ventilation', metier:'batisse', duree:40, niv:2,
+    image:'img/interface/mine/ventilation.png', in:{huile:1}, out:{},
+    desc:"Les soufflets renouvellent l'air des galeries. Une relève dédiée peut maintenir automatiquement les niveaux profonds." });
+  x('etayer_mine', { bat:'mine', nom:'Étayer les galeries', metier:'batisse', duree:58, niv:3,
+    image:'img/interface/mine/soutien.png', in:{poutre:1,corde:1}, out:{pierre:2},
+    desc:"Cadres, coins et traverses : on remplace ce qui gémit avant que la roche ne décide à notre place." });
   x('filon_cuivre', { bat:'mine', nom:'Suivre le cuivre', metier:'mine', duree:30, niv:3,
     out:{cuivre:2}, loot:[{res:'fer',p:0.20,n:[1,2]},{res:'gemme',p:0.012,n:[1,1]}],
     outil:'pioche', desc:"Vert en surface, rouge à cœur. On la reconnaît à l'odeur." });
@@ -327,28 +333,31 @@
     nom:'Fonderie', metier:'Fondeur', cat:'atelier', rangees:[1,2],
     desc:"Le four à cuve ne s'éteint jamais tout à fait. On coule la nuit, quand l'œil lit mieux la couleur du métal.",
     cout:{brique:25,pierretaille:10,planche:15}, temps:200, postes:P(1,1,2,2,2,3,3,3,4,4),
-    recettes:['couler_fer','couler_cuivre','couler_bronze','couler_acier','couler_argent','couler_or','fondre_mithril','refondre_limaille'],
+    recettes:['couler_fer','purger_four','couler_cuivre','refondre_limaille','couler_bronze','couler_acier','couler_argent','couler_or','fondre_mithril'],
   });
   x('couler_fer', { bat:'fonderie', nom:'Couler le fer', metier:'feu', duree:26,
-    in:{fer:3,charbon:1}, out:{lingotfer:1}, desc:"En gueuse, puis refroidissement lent. Toute la suite en dépend." });
+    image:'img/interface/fonderie/fer.png', in:{fer:3,charbon:1}, out:{lingotfer:1}, desc:"En gueuse, puis refroidissement lent. Toute la suite en dépend." });
+  x('purger_four', { bat:'fonderie', nom:'Purger le creuset', metier:'feu', duree:38, niv:2,
+    image:'img/interface/fonderie/purge.png', in:{sable:2,eau:1}, out:{limaille:1},
+    desc:"Retirer les scories et casser la contamination du bain avant de passer d’un métal à l’autre." });
   x('couler_cuivre', { bat:'fonderie', nom:'Couler le cuivre', metier:'feu', duree:32, niv:2,
-    in:{cuivre:3,charbon:1}, out:{lingotcuivre:1}, desc:"Se travaille tiède, et pardonne les erreurs." });
+    image:'img/interface/fonderie/cuivre.png', in:{cuivre:3,charbon:1}, out:{lingotcuivre:1}, desc:"Se travaille tiède, et pardonne les erreurs." });
   x('couler_bronze', { bat:'fonderie', nom:'Allier le bronze', metier:'feu', duree:52, niv:4,
-    in:{lingotcuivre:2,etain:1,charbonbois:1}, out:{bronze:1},
+    image:'img/interface/fonderie/bronze.png', in:{lingotcuivre:2,etain:1,charbonbois:1}, out:{bronze:1},
     desc:"Neuf de cuivre pour un d'étain. Le premier vrai tranchant du bourg." });
   x('couler_acier', { bat:'fonderie', nom:"Cémenter l'acier", metier:'feu', duree:80, niv:5,
-    in:{lingotfer:2,charbonbois:2}, out:{acier:1},
+    image:'img/interface/fonderie/acier.png', in:{lingotfer:2,charbonbois:2}, out:{acier:1},
     desc:"Fer et charbon de bois, scellés ensemble, chauffés au blanc pendant des heures." });
   x('couler_argent', { bat:'fonderie', nom:"Affiner l'argent", metier:'feu', duree:95, niv:6,
-    in:{argentmin:3,charbonbois:1}, out:{lingotargent:1}, desc:"Coupellation à l'os. Le plomb part, l'argent reste." });
+    image:'img/interface/fonderie/argent.png', in:{argentmin:3,charbonbois:1}, out:{lingotargent:1}, desc:"Coupellation à l'os. Le plomb part, l'argent reste." });
   x('couler_or', { bat:'fonderie', nom:"Affiner l'or", metier:'feu', duree:140, niv:8,
-    in:{ormin:3,charbonbois:2}, out:{lingotor:1}, desc:"Rien ne l'attaque, rien ne le ternit. Il suffit de savoir attendre." });
+    image:'img/interface/fonderie/or.png', in:{ormin:3,charbonbois:2}, out:{lingotor:1}, desc:"Rien ne l'attaque, rien ne le ternit. Il suffit de savoir attendre." });
   x('fondre_mithril', { bat:'fonderie', nom:'Réduire le mithril', metier:'feu', duree:320, niv:10,
-    in:{obsidienne:2,essence:8,charbonbois:6}, out:{mithril:1},
+    image:'img/interface/fonderie/mithril.png', in:{obsidienne:2,essence:8,charbonbois:6}, out:{mithril:1},
     desc:"Le métal des profondeurs ne fond pas : il consent. Il y faut de l'essence et beaucoup d'insistance." });
 
   x('refondre_limaille', { bat:'fonderie', nom:'Refondre la limaille', metier:'feu', duree:34, niv:2,
-    in:{limaille:6,charbonbois:1}, out:{lingotfer:2},
+    image:'img/interface/fonderie/limaille.png', in:{limaille:6,charbonbois:1}, out:{lingotfer:2},
     desc:"Ce que la lime a mangé n'est pas perdu : balayé, tamisé, refondu. Le forgeron récupère un lingot sur dix qu'il a usés." });
 
   b('forge', {
@@ -358,63 +367,69 @@
     recettes:['clouterie','outil_fer','outil_acier','forger_arme','ferrures','martinet_barres'],
   });
   x('clouterie', { bat:'forge', nom:'Battre la clouterie', metier:'forge', duree:22,
-    in:{lingotfer:1}, out:{clou:4}, desc:"Clous, gonds, pentures. Le pain quotidien de la forge." });
+    image:'img/interface/forge/clouterie.png', in:{lingotfer:1}, out:{clou:4}, desc:"Clous, gonds, pentures. Le pain quotidien de la forge." });
   x('outil_fer', { bat:'forge', nom:"Forger l'outillage", metier:'forge', duree:70, niv:2,
-    in:{lingotfer:2,planche:2}, out:{outil:1},
+    image:'img/interface/forge/outil-fer.png', in:{lingotfer:2,planche:2}, out:{outil:1},
     desc:"Pioche, hache, faux, marteau. Un atelier outillé va bien plus vite — et l'outil finit par casser." });
   x('outil_acier', { bat:'forge', nom:"Forger l'outillage d'acier", metier:'forge', duree:160, niv:6,
-    in:{acier:2,poutre:1,cuir:1}, out:{outilacier:1},
+    image:'img/interface/forge/outil-acier.png', in:{acier:2,poutre:1,cuir:1}, out:{outilacier:1},
     desc:"Trempé, revenu, emmanché de frêne. Deux fois la cadence, trois fois la durée." });
   x('ferrures', { bat:'forge', nom:'Ferrer et cercler', metier:'forge', duree:44, niv:3,
-    in:{lingotfer:1,clou:2}, out:{clou:6}, loot:[{res:'ecu',p:0.5,n:[2,8]}],
+    image:'img/interface/forge/ferrures.png', in:{lingotfer:1,clou:2}, out:{clou:6}, loot:[{res:'ecu',p:0.5,n:[2,8]}],
     desc:"On referre les mules du bourg contre une écuelle de lait et quelques écus." });
   x('forger_arme', { bat:'forge', nom:'Forger une arme', metier:'forge', duree:120, niv:4,
-    in:{lingotfer:3,planche:2,cuir:1}, out:{arme:1},
+    image:'img/interface/forge/arme.png', in:{lingotfer:3,planche:2,cuir:1}, out:{arme:1},
     desc:"Une lame par ordre. C'est ce qui monte le PALIER D'ARMEMENT de la compagnie." });
 
   x('martinet_barres', { bat:'forge', nom:'Étirer sous le martinet', metier:'forge', duree:52,
-    raff:'martinet', in:{lingotfer:3}, out:{lingotfer:5}, loot:[{res:'limaille',p:0.5,n:[2,5]}],
+    image:'img/interface/forge/martinet.png', raff:'martinet', in:{lingotfer:3}, out:{lingotfer:5}, loot:[{res:'limaille',p:0.5,n:[2,5]}],
     desc:"Cent livres qui retombent toutes les deux secondes. Le forgeron ne fait plus que tenir la pièce." });
 
   b('armurerie', {
     nom:'Armurerie', metier:'Armurier', cat:'atelier', rangees:[1,2],
     desc:"Cottes, écus et heaumes taillés pour des épaules étroites et des oreilles hautes. Le maître refuse toute commande qui gênerait la retombée sur les pattes.",
     cout:{pierretaille:10,lingotfer:6,planche:10}, temps:220, postes:P(1,1,1,2,2,2,3,3,3,3),
-    recettes:['forger_armure','forger_ecu','maille_acier','ecailler_harnois','harnois_bronze'],
+    recettes:['forger_armure','recycler_chutes_armure','forger_ecu','harnois_bronze','ecailler_harnois','maille_acier'],
   });
   x('forger_armure', { bat:'armurerie', nom:'Battre un harnois', metier:'forge', duree:140,
-    in:{lingotfer:4,cuir:2,drap:1}, out:{armure:1},
+    image:'img/interface/armurerie/harnois.png', in:{lingotfer:4,cuir:2,drap:1}, out:{armure:1},
     desc:"Plastron, spallières, tassettes. Ce qui décide de la profondeur dont on revient." });
+  x('recycler_chutes_armure', { bat:'armurerie', nom:'Trier les chutes', metier:'forge', duree:42, niv:2,
+    image:'img/interface/armurerie/chutes.png', in:{}, out:{limaille:1},
+    desc:"Tronçons de fil, rivets ratés et plaques découpées retournent à la fonderie au lieu d’encombrer l’atelier." });
   x('ecailler_harnois', { bat:'armurerie', nom:'Écailler un harnois', metier:'forge', duree:190, niv:4,
-    in:{armure:1,ecaille:6,silex:3}, out:{armure:2},
+    image:'img/interface/armurerie/ecailles.png', in:{armure:1,ecaille:6,silex:3}, out:{armure:2},
     loot:[{res:'limaille',p:0.35,n:[1,3]}],
     desc:"On double le plastron d'écailles cousues à recouvrement. Deux harnois pour un, et qui tiennent le feu." });
   x('forger_ecu', { bat:'armurerie', nom:'Monter un écu', metier:'forge', duree:80, niv:2,
-    in:{planche:4,cuir:2,lingotfer:1}, out:{bouclier:1},
+    image:'img/interface/armurerie/ecu.png', in:{planche:4,cuir:2,lingotfer:1}, out:{bouclier:1},
     desc:"Bois cintré, cuir bouilli, bordure de fer et blason peint." });
   x('maille_acier', { bat:'armurerie', nom:"Tresser la maille d'acier", metier:'forge', duree:260, niv:6,
-    in:{acier:3,cuir:2,fil:4}, out:{armure:3},
+    image:'img/interface/armurerie/maille.png', in:{acier:3,cuir:2,fil:4}, out:{armure:3},
     desc:"Vingt mille anneaux rivés un par un. On y perd la vue et l'on y gagne la vie." });
 
   b('tuilerie', {
     nom:'Tuilerie', metier:'Tuilier', cat:'atelier', rangees:[0,1], nivMax:8,
     desc:"La fosse d'argile et son four à dôme, les claies où les tuiles attendent en épi. Un bourg qui n'a pas de tuilerie a des toits provisoires.",
     cout:{argile:25,bois:25}, temps:80, postes:P(1,1,2,2,2,3,3,3),
-    recettes:['cuire_brique','cuire_tuile','poterie','torchis','cuire_chaux'],
+    recettes:['preparer_fournee','cuire_brique','cuire_tuile','torchis','poterie','cuire_chaux'],
   });
+  x('preparer_fournee', { bat:'tuilerie', nom:'Mouler une fournée', metier:'feu', duree:18,
+    image:'img/interface/tuilerie/melange.png', in:{argile:4,eau:2}, out:{},
+    desc:"Détremper, pétrir, mouler puis ranger sur les claies. La fournée doit sécher avant d'entrer au four." });
   x('cuire_brique', { bat:'tuilerie', nom:'Cuire les briques', metier:'feu', duree:24,
-    in:{argile:3,bois:1}, out:{brique:2}, desc:"Elles montent vite et supportent le feu : c'est tout ce qu'on leur demande." });
+    image:'img/interface/tuilerie/briques.png', in:{bois:1}, out:{brique:2}, desc:"Elles montent vite et supportent le feu : c'est tout ce qu'on leur demande." });
   x('torchis', { bat:'tuilerie', nom:'Gâcher le torchis', metier:'feu', duree:26, niv:2,
-    in:{argile:3,paille:3}, out:{brique:4},
+    image:'img/interface/tuilerie/argile.png', in:{argile:3,paille:3,eau:1}, out:{brique:4},
     desc:"Terre, paille et eau, foulées au pied. Ça ne vaut pas la brique cuite, mais ça monte trois fois plus vite." });
   x('cuire_tuile', { bat:'tuilerie', nom:'Cuire les tuiles', metier:'feu', duree:28, niv:2,
-    in:{argile:3,bois:1}, out:{tuile:2}, desc:"Moulées sur le genou, séchées de chant, cuites au rouge sombre." });
-  x('poterie', { bat:'tuilerie', nom:'Tourner la poterie', metier:'feu', duree:36, niv:3,
-    in:{argile:2,bois:1}, out:{poterie:1}, loot:[{res:'ecu',p:0.3,n:[3,9]}],
-    desc:"Jarres et cruches. Sans elles, rien ne se garde et rien ne se transporte." });
+    image:'img/interface/tuilerie/tuiles.png', in:{bois:1}, out:{tuile:2}, desc:"Moulées sur le genou, séchées de chant, cuites au rouge sombre." });
+  x('poterie', { bat:'tuilerie', nom:'Cuire les jarres communes', metier:'feu', duree:36, niv:3,
+    image:'img/interface/tuilerie/four.png', in:{bois:1}, out:{poterie:1}, loot:[{res:'ecu',p:0.3,n:[3,9]}],
+    desc:"La tuilerie ne façonne que les jarres communes ; les pièces fines restent le domaine du potier." });
 
   x('cuire_chaux', { bat:'tuilerie', nom:'Cuire la chaux', metier:'feu', duree:64,
-    raff:'chaufour', in:{pierre:5,charbonbois:2}, out:{brique:6,pierretaille:2},
+    image:'img/interface/tuilerie/cuisson.png', raff:'chaufour', in:{pierre:5,charbonbois:2}, out:{brique:6,pierretaille:2},
     loot:[{res:'cendre',p:0.6,n:[2,5]}],
     desc:"Trois jours de feu pour que la pierre devienne poudre. C'est elle qui fait le mortier — et sans mortier, rien ne tient." });
 
@@ -422,31 +437,34 @@
     nom:'Poterie', metier:'Potier', cat:'atelier', rangees:[1,2], nivMax:8,
     desc:"Le tour à bâton, les claies de séchage, et le four en ruche qui ronfle derrière. Tout le bourg mange un jour dans ce qui sort d'ici.",
     cout:{argile:18,bois:12}, temps:80, postes:P(1,1,2,2,2,3,3,3),
-    recettes:['tourner_pot','fournee_gres','jarres_marchandes','grand_vaisselier','email_cuivre','etamer'],
+    recettes:['tourner_pot','cuire_pots','fournee_gres','jarres_marchandes','grand_vaisselier','email_cuivre','etamer'],
   });
   x('tourner_pot', { bat:'poterie', nom:'Tourner au colombin', metier:'poterie', duree:20,
-    in:{argile:2,eau:1,paille:1}, out:{poterie:1},
-    desc:"L'argile monte entre les pattes. Un geste ancien, et un pot qui tient l'eau." });
+    image:'img/interface/poterie/argile-tour.png', in:{argile:2,eau:1,paille:1}, out:{poterie:1},
+    desc:"Le pot commun est fini dans le même cycle ; les formes les plus régulières rejoignent aussi la réserve des grandes fournées." });
+  x('cuire_pots', { bat:'poterie', nom:'Cuire les formes sèches', metier:'feu', duree:34, niv:2,
+    image:'img/interface/poterie/four.png', in:{bois:1}, out:{poterie:2},
+    desc:"Les formes mises de côté remplissent le petit four. Une charge raisonnable limite les pièces fendues." });
   x('fournee_gres', { bat:'poterie', nom:'Cuire une fournée de grès', metier:'feu', duree:70, niv:3,
-    in:{argile:6,charbonbois:1}, out:{poterie:4}, loot:[{res:'ecu',p:0.25,n:[4,12]}],
+    image:'img/interface/poterie/gres.png', in:{charbonbois:1}, out:{poterie:4}, loot:[{res:'ecu',p:0.25,n:[4,12]}],
     desc:"Le four en ruche monte au rouge sombre et rend quatre pièces d'un coup — quand rien n'éclate." });
   x('jarres_marchandes', { bat:'poterie', nom:'Monter des jarres', metier:'poterie', duree:120, niv:5,
-    in:{poterie:2,huile:1}, out:{ecu:210}, loot:[{res:'plan',p:0.03,n:[1,1]}],
+    image:'img/interface/poterie/amphore.png', in:{poterie:2,huile:1}, out:{ecu:210}, loot:[{res:'plan',p:0.03,n:[1,1]}],
     desc:"Des jarres à huile hautes comme un chat debout. Les colporteurs les paient sans discuter." });
 
   x('grand_vaisselier', { bat:'poterie', nom:'Monter au tour à pied', metier:'poterie', duree:44,
-    raff:'tour_pied', in:{argile:5,eau:2}, out:{poterie:5},
+    image:'img/interface/poterie/tour-pied.png', raff:'tour_pied', in:{argile:5,eau:2}, out:{poterie:5},
     loot:[{res:'ecu',p:0.3,n:[6,18]}],
     desc:"Les deux pattes libres, le plateau qui ne ralentit plus : cinq pièces là où l'on en montait deux." });
 
   x('email_cuivre', { bat:'poterie', nom:'Émailler au cuivre', metier:'poterie', duree:64, niv:3,
-    in:{poterie:3,cuivre:1,cendre:2}, out:{poterie:6}, loot:[{res:'ecu',p:0.35,n:[20,70]}],
+    image:'img/interface/poterie/email-cuivre.png', in:{poterie:3,cuivre:1,cendre:2}, out:{poterie:6}, loot:[{res:'ecu',p:0.35,n:[20,70]}],
     desc:"Une pincée de minerai vert dans la glaçure, et la jarre sort du four bleue. On la paie trois fois le prix." });
   x('etamer', { bat:'poterie', nom:'Étamer la vaisselle', metier:'poterie', duree:58, niv:4,
-    in:{poterie:4,etain:1}, out:{poterie:8},
+    image:'img/interface/poterie/etain.png', in:{poterie:4,etain:1}, out:{poterie:8},
     desc:"Une pellicule d'étain au fond du plat, et l'acide du vin ne mord plus la terre." });
   x('verre_argent', { bat:'verrerie', nom:'Miroir au tain', metier:'feu', duree:88, niv:4,
-    in:{verre:3,argentmin:1}, out:{verre:5}, loot:[{res:'ecu',p:0.4,n:[80,260]}],
+    image:'img/interface/verrerie/miroir.png', in:{verre:3,argentmin:1}, out:{verre:5}, loot:[{res:'ecu',p:0.4,n:[80,260]}],
     desc:"Le tain d'argent au dos d'une plaque bien plane. Le bourg n'avait jamais vu son propre visage." });
   x('dorure', { bat:'scriptorium', nom:"Enluminer à l'or", metier:'savoir', duree:120, niv:5,
     in:{parchemin:2,ormin:1,encre:1}, out:{sort:1},
@@ -459,11 +477,11 @@
     recettes:['souffler_verre','souffler_fiole','vitrail','verre_argent'],
   });
   x('souffler_verre', { bat:'verrerie', nom:'Fondre le verre', metier:'feu', duree:34,
-    in:{sable:4,charbonbois:1,cendre:2}, out:{verre:2}, desc:"Sable, cendre et chaleur. Rien d'autre, et pourtant presque personne ne sait le faire — la cendre est le fondant, sans elle le sable ne coule pas." });
+    image:'img/interface/verrerie/fusion.png', in:{sable:4,charbonbois:1,cendre:2}, out:{verre:2}, desc:"Sable, cendre et chaleur. La fusion remplit aussi le bain local où les souffleurs viennent cueillir leur matière." });
   x('souffler_fiole', { bat:'verrerie', nom:'Souffler des fioles', metier:'feu', duree:40, niv:2,
-    in:{verre:2}, out:{fiole:3}, desc:"Une bulle, un col, un fond. L'alchimiste en réclame sans cesse." });
+    image:'img/interface/verrerie/fioles.png', in:{verre:2}, out:{fiole:3}, desc:"Une bulle, un col, un fond. L'alchimiste en réclame sans cesse." });
   x('vitrail', { bat:'verrerie', nom:'Monter un vitrail', metier:'feu', duree:150, niv:5,
-    in:{verre:6,lingotfer:1,gemme:1}, out:{ecu:180}, loot:[{res:'chant',p:0.2,n:[1,1]}],
+    image:'img/interface/verrerie/vitrail.png', in:{verre:6,lingotfer:1,gemme:1}, out:{ecu:180}, loot:[{res:'chant',p:0.2,n:[1,1]}],
     desc:"Vendu à la chapelle, ou à une abbaye voisine. C'est la commande la mieux payée du bourg." });
 
   /* =================================================================
@@ -846,7 +864,7 @@
     desc:"Trois cents fleurs pour une fiole. Personne au bourg n'en met ; tout le monde en vend." });
 
   x('collier_perles', { bat:'orfevre', nom:'Enfiler les perles', metier:'poterie', duree:80, niv:2,
-    in:{perle:2,fil:2}, out:{bijou:2}, loot:[{res:'ecu',p:0.4,n:[60,200]}],
+    image:'img/interface/orfevre/perles.png', in:{perle:2,fil:2}, out:{bijou:2}, loot:[{res:'ecu',p:0.4,n:[60,200]}],
     desc:"Percées à l'archet, enfilées sur un fil de soie. C'est ce que le colporteur emporte en premier." });
   x('amertume', { bat:'alchimie', nom:'Décoction amère', metier:'savoir', duree:56, niv:2,
     image:'img/objets/alchimie/purification.png', in:{racine:2,eau:2,fiole:1}, out:{potion:2},
@@ -869,10 +887,10 @@
     desc:"Appris par la troupe avant de partir. Il vaut une armure de plus." });
 
   x('harnois_bronze', { bat:'armurerie', nom:'Battre un harnois de bronze', metier:'forge', duree:96, niv:2,
-    in:{bronze:2,cuir:2}, out:{armure:2}, loot:[{res:'limaille',p:0.4,n:[2,5]}],
+    image:'img/interface/armurerie/bronze.png', in:{bronze:2,cuir:2}, out:{armure:2}, loot:[{res:'limaille',p:0.4,n:[2,5]}],
     desc:"Plus tendre que l'acier, mais il ne rouille pas et se rebat à froid. L'armure des premières colonnes, celle qu'on répare au campement." });
   x('couler_cloche', { bat:'orfevre', nom:'Couler une cloche', metier:'forge', duree:150, niv:3,
-    in:{bronze:4,charbonbois:2}, out:{}, moral:9, xpBourg:40,
+    image:'img/interface/orfevre/cloche.png', in:{bronze:4,charbonbois:2}, out:{}, moral:9, xpBourg:40,
     loot:[{res:'ecu',p:0.5,n:[80,240]}],
     desc:"Une seule coulée, et l'on ne la refait pas. Le bourg entier l'entend, et le bourg entier se tient mieux." });
 
@@ -884,15 +902,18 @@
     nom:'Orfèvre', metier:'Orfèvre', cat:'atelier', rangees:[1,2], nivMax:8,
     desc:"Petit, riche, fermé : vitrine grillagée, balance de précision, four à coupelle et coffret ferré. Le seul bâtiment du bourg qui ait une serrure.",
     cout:{pierretaille:14,lingotargent:2,verre:4}, temps:280, postes:P(1,1,1,2,2,2,2,3),
-    recettes:['monnayer','joaillerie','sertir','couler_cloche','collier_perles'],
+    recettes:['monnayer','polir_outils_orfevre','collier_perles','joaillerie','couler_cloche','sertir'],
   });
   x('monnayer', { bat:'orfevre', nom:'Frapper monnaie', metier:'forge', duree:60,
-    in:{lingotargent:1}, out:{ecu:340}, desc:"Le coin, le flan, le marteau. Le comté ferme les yeux tant que le titre est bon." });
+    image:'img/interface/orfevre/monnaie.png', in:{lingotargent:1}, out:{ecu:340}, desc:"Le coin, le flan, le marteau. Le comté ferme les yeux tant que le titre est bon." });
+  x('polir_outils_orfevre', { bat:'orfevre', nom:'Polir les outils fins', metier:'forge', duree:44, niv:2,
+    image:'img/interface/orfevre/polissage.png', in:{huile:1,eau:1}, out:{},
+    desc:"Nettoyer les pinces, repolir les brunissoirs et vider les éclats avant la prochaine pierre." });
   x('joaillerie', { bat:'orfevre', nom:'Monter un bijou', metier:'forge', duree:170, niv:3,
-    in:{lingotor:1,gemme:2}, out:{bijou:1},
+    image:'img/interface/orfevre/bijou.png', in:{lingotor:1,gemme:2}, out:{bijou:1},
     desc:"Se porte, se vend, et impressionne les émissaires du comté." });
   x('sertir', { bat:'orfevre', nom:'Sertir une relique', metier:'forge', duree:400, niv:6,
-    in:{relique:1,lingotor:2,gemme:3}, out:{bijou:6}, loot:[{res:'chant',p:0.5,n:[1,2]}],
+    image:'img/interface/orfevre/relique.png', in:{relique:1,lingotor:2,gemme:3}, out:{bijou:6}, loot:[{res:'chant',p:0.5,n:[1,2]}],
     desc:"On ne sait pas ce que c'était. On sait ce que ça vaut une fois monté." });
 
   b('taverne', {

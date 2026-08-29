@@ -49,17 +49,17 @@
 ### Pierre, terre et feu
 
 - [x] **Carrière** — fronts de taille, stabilité et choix d'extraction pierre/sable/argile.
-- [ ] **Mine** — profondeur, soutènement et ventilation ; les filons riches demandent davantage de sécurité.
-- [ ] **Charbonnière** — meule, température et arrivée d'air ; récupérer tôt ou attendre une cuisson complète.
-- [ ] **Tuilerie** — mélange argile/eau puis fournées ; charger le four pour optimiser combustible ou vitesse.
-- [ ] **Poterie** — forme, glaçure et cuisson ; séries fiables ou pièces à plus forte valeur.
-- [ ] **Verrerie** — chaleur du four et additifs ; verre commun en continu ou lots spéciaux.
+- [x] **Mine** — profondeur, soutènement et ventilation ; les filons riches demandent davantage de sécurité.
+- [x] **Charbonnière** — meule, température et arrivée d'air ; récupérer tôt ou attendre une cuisson complète.
+- [x] **Tuilerie** — mélange argile/eau puis fournées ; charger le four pour optimiser combustible ou vitesse.
+- [x] **Poterie** — forme, glaçure et cuisson ; séries fiables ou pièces à plus forte valeur.
+- [x] **Verrerie** — chaleur du four et additifs ; verre commun en continu ou lots spéciaux.
 
 ### Métal et équipement
 
-- [ ] **Fonderie** — composition des alliages et température ; réutiliser les chutes crée une boucle avec forge et armurerie.
-- [ ] **Forge** — foyer et commandes ; conserver les onglets d'équipement, amélioration et trempe tout en intégrant personnel/fatigue.
-- [ ] **Armurerie** — standards d'assemblage et commandes d'escouade ; privilégier quantité, protection ou mobilité.
+- [x] **Fonderie** — composition des alliages et température ; réutiliser les chutes crée une boucle avec forge et armurerie.
+- [x] **Forge** — foyer et commandes ; conserver les onglets d'équipement, amélioration et trempe tout en intégrant personnel/fatigue.
+- [x] **Armurerie** — standards d'assemblage et commandes d'escouade ; privilégier quantité, protection ou mobilité.
 - [ ] **Orfèvre** — alliage, sertissage et patience ; commandes précises avec risque maîtrisable de perte de gemme.
 
 ### Textile, nature et savoir
@@ -234,3 +234,67 @@ Un bâtiment est terminé lorsqu'il possède une boucle compréhensible en quelq
 - **Décision** : stabilité locale, couches exposées de pierre, sable et argile, matière ciblée et conduites prudente, régulière ou profonde. Le soutènement restaure le front et renouvelle sa composition.
 - **Anti-microgestion** : les extractions attendent automatiquement lorsque leur couche ou la stabilité est insuffisante ; une relève de soutènement programmée permet au cycle de repartir seul.
 - **Visuels** : planche transparente de 16 éléments strictement découpée et utilisée pour les matières, couches, stabilité, soutènement, grue, drainage et maîtrise.
+
+### Mine
+
+- **Avant** : huit filons bien étagés par niveau, mais une profondeur purement narrative ; ni l’air, ni les boisages, ni le nombre de mineurs ne modifiaient la production.
+- **Écart avec la scierie** : pas de sécurité locale, d’équipes d’entretien ou de décision entre minerais communs et galeries riches.
+- **Décision** : profondeur effective, ventilation et soutènement propres à chaque mine, avec conduites galeries hautes, descente régulière ou profonde. Deux activités de sécurité restaurent réellement l’air et les boisages.
+- **Anti-microgestion** : les filons s’arrêtent avant l’asphyxie ou l’éboulement et repartent lorsque les relèves de ventilation et d’étayage en boucle ont restauré les jauges.
+- **Visuels** : deux générations non conformes ont été rejetées ; la planche finale possède une bordure alpha parfaitement vide et 16 découpes actives pour minerais, galeries, sécurité, profondeur, laverie et maîtrise.
+
+### Charbonnière
+
+- **Avant** : une seule conversion courte répétée à l’infini, alors que la description promettait une meule surveillée pendant trois jours.
+- **Écart avec la scierie** : aucun temps de maturation, aucun réglage d’air et aucune décision entre fréquence d’ouverture et rendement du charbon.
+- **Décision** : température pilotée par les évents, carbonisation locale et trois seuils persistants — ouverture précoce, cuisson à cœur ou complète. Le rendement du charbon et la quantité de cendre dépendent réellement de l’état de la meule.
+- **Anti-microgestion** : un veilleur affecté fait mûrir la meule même lorsque le cycle attend ; elle s’ouvre automatiquement au seuil choisi puis recommence sans clic.
+- **Visuels** : la première planche au fond brun a été rejetée ; la seconde possède un alpha réel et fournit 16 illustrations actives pour bois, charbon, meule, évents, chaleur, ouverture et maîtrise.
+
+### Tuilerie
+
+- **Avant** : cinq fabrications consommaient directement l’argile et le combustible, sans séchage, capacité de claies ni distinction entre moulage et cuisson.
+- **Écart avec la scierie** : aucune chaîne interne à équilibrer, aucun stock local et aucune décision de chargement du four malgré plusieurs postes disponibles.
+- **Décision** : préparation explicite de fournées crues avec argile et eau, réserve locale de pièces sèches, température persistante, densité de chargement réglable et conduites vive, régulière ou dense. Le torchis reste la solution rapide sans four et le chaufour conserve sa spécialisation tardive.
+- **Anti-microgestion** : un seul mouleur en boucle peut alimenter plusieurs cuissons ; celles-ci attendent automatiquement les pièces sèches, refroidissent hors activité et se suspendent en cas de surchauffe.
+- **Visuels** : la première génération au fond brun a été rejetée ; la seconde possède un alpha réel et fournit 16 illustrations actives pour argile, moulage, produits, claies, densité, four, chaleur, économie et maîtrise.
+
+### Poterie
+
+- **Avant** : six recettes utiles et plusieurs finitions de valeur, mais chaque activité transformait directement ses entrées sans mémoire du tour, des claies ou des ratés.
+- **Écart avec la scierie** : aucune réserve interne à alimenter, aucun apprentissage visible et aucune tension entre cadence de série et qualité des pièces.
+- **Décision** : réserve locale de formes sèches alimentée par le tour, charge du four réglable, régularité du geste qui progresse avec la pratique et casse récente qui pénalise les lots trop ambitieux. Trois conduites distinguent vaisselle en série, atelier équilibré et pièces de prestige.
+- **Anti-microgestion** : les tourneurs fabriquent toujours les pots communs tout en approvisionnant automatiquement les claies ; les grandes cuissons attendent leur réserve et la casse se résorbe seule entre les lots.
+- **Visuels** : une première génération au fond brun a été rejetée ; la seconde possède un alpha réel et fournit 16 illustrations actives pour tour, formes, grès, amphores, glaçures, étamage, four, casse, outils et maîtrise.
+
+### Verrerie
+
+- **Avant** : quatre débouchés bien reliés à l’alchimie, au décor et au savoir, mais un four sans température, réserve chaude ou défaut de matière.
+- **Écart avec la scierie** : aucune inertie, aucun rôle durable pour un poste de fusion et aucune différence de conduite entre verre courant et commande artistique.
+- **Décision** : bain local de verre en fusion, température persistante, tirage réglable et défauts de matière. La fusion remplit le bain ; fioles, miroirs et vitraux y puisent, avec conduites continu, régulier ou artistique.
+- **Anti-microgestion** : une relève de fusion en boucle stabilise automatiquement le bain des souffleurs ; le four chauffe et refroidit progressivement, tandis que les bulles se résorbent seules hors des poussées trop chaudes.
+- **Visuels** : la planche transparente a été conforme dès la première génération et fournit 16 illustrations actives pour sable, fusion, produits, four, canne, températures, défauts, recuit, additifs, creusets et maîtrise.
+
+### Fonderie
+
+- **Avant** : huit coulées couvrant toute la progression métallurgique, mais un haut-fourneau identique pour le fer, l’or et le mithril, sans nettoyage ni mémoire du bain.
+- **Écart avec la scierie** : aucun entretien automatisable, aucune raison de regrouper les ordres par famille et aucune boucle lisible avec les chutes de la forge.
+- **Décision** : température et tirage persistants, scories, contamination lors des changements de famille et purge productive qui rend de la limaille. Les conduites récupération, coulées régulières et maître des alliages spécialisent réellement l’atelier.
+- **Anti-microgestion** : le joueur peut dédier une relève à la purge en boucle ; elle attend sans bloquer les autres ordres puis nettoie le creuset avant que le seuil de scories ne suspende les coulées.
+- **Visuels** : une première génération au fond sombre a été rejetée ; la seconde possède un alpha réel et fournit 16 illustrations actives pour métaux, limaille, four, bain, scories, creuset, soufflet, moules, purge et maîtrise.
+
+### Forge
+
+- **Avant** : la forge du village et l’arsenal à 40 paliers cohabitaient dans des onglets séparés, mais leurs cadences ne partageaient ni foyer, ni maîtrise, ni organisation du personnel.
+- **Écart avec la scierie** : les commandes avancées ignoraient l’état du bâtiment ; agrandir ou organiser les forgerons n’avait aucun effet lisible sur l’équipement d’aventure.
+- **Décision** : foyer et tirage persistants, rythme de frappe, précision et conduites service du bourg, polyvalente ou arsenal. Le facteur de la forge accélère désormais aussi réellement les commandes d’équipement détaillées, sans supprimer renforcement ni trempe.
+- **Anti-microgestion** : chaleur, rythme et précision évoluent avec toutes les fabrications ; les onglets historiques restent accessibles depuis le même volet et le joueur choisit une conduite persistante plutôt que de régler chaque pièce.
+- **Visuels** : la planche transparente a été conforme dès la première génération et fournit 16 illustrations actives pour clouterie, outils, arme, ferrures, martinet, foyer, enclume, températures, trempe, rythme, précision, commandes et maîtrise.
+
+### Armurerie
+
+- **Avant** : cinq assemblages de protection à plusieurs paliers, mais sans patron, mesure, encombrement de l’atelier ni différence entre mobilité et blindage.
+- **Écart avec la scierie** : aucune mémoire de pratique, aucun déchet réinjecté dans la chaîne métallique et aucune conduite liée au rôle futur des unités.
+- **Décision** : ajustement des patrons, standard mobilité-protection, chutes d’atelier et quatre conduites — série, polyvalente, lourde ou mobile. Le tri des chutes rend de la limaille à la fonderie.
+- **Anti-microgestion** : le tri peut rester affecté en boucle, attend tant que les établis sont propres puis les débarrasse avant la suspension des assemblages ; les patrons progressent automatiquement avec la pratique.
+- **Visuels** : la planche transparente a été conforme dès la première génération et fournit 16 illustrations actives pour harnois, écu, mailles, écailles, bronze, patrons, mannequin, rivets, standards, mesures, commandes, heaume, chutes et maîtrise.

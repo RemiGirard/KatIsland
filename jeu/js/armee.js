@@ -188,11 +188,14 @@
   function avancerForge(dt) {
     const a = assure(), job = a.forge;
     if (!job) return null;
-    job.prog = Math.min(job.duree, (job.prog || 0) + Math.max(0, dt || 0));
+    const forge = window.Etat && window.Etat.batsDeType ? window.Etat.batsDeType('forge')[0] : null;
+    const facteur = forge && window.EcosystemesBatiments ? window.EcosystemesBatiments.facteurSignature(forge) : 1;
+    job.prog = Math.min(job.duree, (job.prog || 0) + Math.max(0, dt || 0) * facteur);
     if (job.prog < job.duree) return null;
     a.equipement[job.type][job.slot] = job.tier;
     a.palierArme = Math.max(a.palierArme || 0, ...Object.values(a.equipement).map(x => x.arme));
     a.palierArmure = Math.max(a.palierArmure || 0, ...Object.values(a.equipement).map(x => x.armure));
+    if (forge && window.EcosystemesBatiments) window.EcosystemesBatiments.finirCommandeForge(forge, true);
     const fini = Object.assign({}, job, { objet: objetEquipement(job.type, job.slot, job.tier) });
     a.forge = null;
     if (window.Etat && window.Etat.journal) window.Etat.journal('Forge achevée : ' + fini.objet.name + '.', 'plan');
