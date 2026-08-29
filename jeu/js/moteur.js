@@ -421,14 +421,16 @@
                arrondit par tirage, jamais par troncature : une recette
                qui ne demande qu'une unité doit voir la différence. */
             const kM = window.HAB.produit(hab, 'matiere');
-            let cout = rec.in;
+            const coutBase = window.EcosystemesBatiments && window.EcosystemesBatiments.modifierEntrees
+              ? window.EcosystemesBatiments.modifierEntrees(b, rec, rec.in) : rec.in;
+            let cout = coutBase;
             if (kM !== 1) {
               cout = {};
-              for (const k in rec.in) {
-                const exact = rec.in[k] * kM;
+              for (const k in coutBase) {
+                const exact = coutBase[k] * kM;
                 let q = Math.floor(exact);
                 if (Math.random() < (exact - q)) q++;
-                cout[k] = Math.max(rec.in[k] > 0 ? 1 : 0, q);
+                cout[k] = Math.max(coutBase[k] > 0 ? 1 : 0, q);
               }
             }
             if (!window.Etat.assez(cout)) { p.bloque = true; continue; }

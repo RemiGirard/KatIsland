@@ -527,6 +527,18 @@
   const ETABLE_ART={traire:'traire.png',fumier:'fumier.png',abattre_vache:'abattre.png',abattre_boeuf:'abattoir.png',litiere:'litiere.png',troupeau:'troupeau.png',sante:'sante.png',sale:'sale.png',veau:'veau.png',ration:'ration.png',abreuvoir:'abreuvoir.png',abri:'abri.png',lait:'lait.png',renouvellement:'renouvellement.png',fumure:'fumure.png',maitrise:'maitrise.png'};
   const RUCHER_IMG='img/interface/rucher/';
   const RUCHER_ART={recolter_miel:'recolter.png',fondre_cire:'fondre-cire.png',fondre_rayons:'vieux-rayons.png',miel_de_fleurs:'miel-fleurs.png',reine:'reine.png',calme:'calme.png',agite:'agite.png',colonie:'colonie.png',reserve:'reserve.png',reseau:'reseau.png',enfumoir:'enfumoir.png',abri:'abri.png',douce:'douce.png',essaimage:'essaimage.png',miel:'miel.png',maitrise:'maitrise.png'};
+  const MOULIN_IMG='img/interface/moulin/';
+  const MOULIN_ART={moudre_ble:'ble.png',moudre_gland:'glands.png',moudre_tournesol:'tournesol.png',bluter:'bluter.png',moulin:'moulin.png',calme:'calme.png',rafale:'rafale.png',girouette:'girouette.png',file:'file.png',meule:'meule.png',volant:'volant.png',abri:'abri.png',regulier:'regulier.png',chasseur:'chasseur.png',inertie:'inertie.png',maitrise:'maitrise.png'};
+  const MOULIN_EAU_IMG='img/interface/moulin-eau/';
+  const MOULIN_EAU_ART={moudre_eau:'moudre.png',fouler_drap:'fouler.png',battre_huile:'huile.png',moulin:'moulin.png',etiage:'etiage.png',courant:'courant.png',vanne:'vanne.png',bassin:'bassin.png',rouages:'rouages.png',file:'file.png',entretien:'entretien.png',abri:'abri.png',equilibre:'equilibre.png',puissance:'puissance.png',retenue:'retenue.png',maitrise:'maitrise.png'};
+  const CUISINE_IMG='img/interface/cuisine/';
+  const CUISINE_ART={marmite:'marmite.png',doux:'feu-doux.png',equilibre:'feu-regulier.png',banquet:'feu-vif.png',ingredients:'ingredients.png',poisson:'poisson.png',legume:'racines.png',champignon:'champignons.png',miel:'miel.png',fromage:'fromage.png',fruit:'fruits.png',carnet:'carnet.png',decouverte:'decouverte.png',mijoter:'mijoter.png',maitrise:'maitrise.png'};
+  const FUMOIR_IMG='img/interface/fumoir/';
+  const FUMOIR_ART={fumer_poisson:'poisson-fume.png',fumer_viande:'viande-fumee.png',terrine_fumoir:'champignons-fumes.png',nettoyer_fumoir:'cheminee-propre.png',fumoir:'fumoir.png',froide:'fumee-froide.png',douce:'fumee-douce.png',vive:'fumee-vive.png',aulne:'aulne.png',fruitier:'fruitier.png',resineux:'resineux.png',charbon:'charbon.png',propre:'cheminee-propre.png',creosote:'creosote.png',froid:'froid.png',maitrise:'maitrise.png'};
+  const LAITERIE_IMG='img/interface/laiterie/';
+  const LAITERIE_ART={baratter:'baratte.png',cultiver_ferments:'ferments.png',fromage_frais:'fromage-herbes.png',affiner_cave:'fromage-affine.png',lait:'lait.png',ferments:'ferments.png',claies:'claies.png',cave:'cave.png',sec:'sec.png',equilibre:'equilibre.png',humide:'humide.png',temperature:'temperature.png',saumure:'saumure.png',etamine:'etamine.png',degustation:'degustation.png',maitrise:'maitrise.png'};
+  const CARRIERE_IMG='img/interface/carriere/';
+  const CARRIERE_ART={extraire_pierre:'pierre.png',tamiser_sable:'sable.png',extraire_argile:'argile.png',tailler_pierre:'pierre-taillee.png',soutenir_front:'soutien.png',carriere:'carriere.png',stable:'stable.png',fissure:'fissure.png',soutien:'soutien.png',pierre:'strate-pierre.png',sable:'strate-sable.png',argile:'strate-argile.png',profonde:'profonde.png',grue:'grue.png',drainage:'drainage.png',prudente:'prudente.png',maitrise:'maitrise.png'};
   let affectationScierie = null;
   function artScierie(id) { return SCIERIE_IMG + (SCIERIE_ART[id] || SCIERIE_ART.chaine); }
   function artPecherie(id) { return PECHERIE_IMG + (PECHERIE_ART[id] || PECHERIE_ART.banc); }
@@ -539,6 +551,12 @@
   function artBergerie(id){return BERGERIE_IMG+(BERGERIE_ART[id]||BERGERIE_ART.troupeau);}
   function artEtable(id){return ETABLE_IMG+(ETABLE_ART[id]||ETABLE_ART.troupeau);}
   function artRucher(id){return RUCHER_IMG+(RUCHER_ART[id]||RUCHER_ART.colonie);}
+  function artMoulin(id){return MOULIN_IMG+(MOULIN_ART[id]||MOULIN_ART.moulin);}
+  function artMoulinEau(id){return MOULIN_EAU_IMG+(MOULIN_EAU_ART[id]||MOULIN_EAU_ART.moulin);}
+  function artCuisine(id){const r=window.REC&&window.REC[id];return r&&r.image?r.image:CUISINE_IMG+(CUISINE_ART[id]||CUISINE_ART.marmite);}
+  function artFumoir(id){const r=window.REC&&window.REC[id];return r&&r.image?r.image:FUMOIR_IMG+(FUMOIR_ART[id]||FUMOIR_ART.fumoir);}
+  function artLaiterie(id){const r=window.REC&&window.REC[id];return r&&r.image?r.image:LAITERIE_IMG+(LAITERIE_ART[id]||LAITERIE_ART.ferments);}
+  function artCarriere(id){const r=window.REC&&window.REC[id];return r&&r.image?r.image:CARRIERE_IMG+(CARRIERE_ART[id]||CARRIERE_ART.carriere);}
 
   function posteLibreScierie(b, rid) {
     let i = b.postes.findIndex(p => !p.hab && p.rec === rid);
@@ -1112,6 +1130,117 @@
     const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artRucher,source:'reserve'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artRucher,source:'reserve'}));c.appendChild(liste);
   }
 
+  function rendreMoulinChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,v=s.vent/100,ine=s.inertie/100,mult=G.facteurSignature(b);
+    const commandes={};for(const p of b.postes||[])if(p.hab&&p.rec)commandes[p.rec]=(commandes[p.rec]||0)+1;
+    c.appendChild(el('section',{class:'scierie-maitrise moulin-maitrise'},el('img',{src:artMoulin('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DU MOULIN'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:'×'+mult.toFixed(2)}),el('span',{text:'cadence vent'}))));
+    c.appendChild(el('section',{class:'moulin-vent'},el('img',{src:artMoulin(s.vent<30?'calme':'rafale'),alt:''}),el('div',{},el('div',{class:'rangee entre'},el('b',{text:'Vent sur les ailes'}),el('strong',{text:Math.round(s.vent)+' %'})),U.barre(v,v<.25?'rouge':'verte','Vent','évolution dans '+Math.ceil(s.changement)+' s'),el('div',{class:'rangee entre moulin-jauge-titre'},el('b',{text:'Volant d’inertie'}),el('strong',{text:Math.round(s.inertie)+' %'})),U.barre(ine,ine>.6?'or':'','Inertie','prolonge les creux'),el('div',{class:'moulin-file'},el('img',{src:artMoulin('file'),alt:''}),el('div',{},el('b',{text:'Ordres de mouture actifs'}),el('span',{text:Object.keys(commandes).length?Object.entries(commandes).map(([rid,n])=>n+'× '+window.REC[rid].nom).join(' · '):'Aucun sac en attente'}))))));
+    const strategies=[{id:'regulier',nom:'Ailes bien orientées',art:'regulier',effet:'Courbe stable, adaptée aux longues files'},{id:'chasseur',nom:'Chasser les rafales',art:'chasseur',effet:'Très rapide au grand vent · presque arrêté au calme',niv:3},{id:'inertie',nom:'Volant lourd',art:'inertie',effet:'Stocke mieux l’élan et lisse les creux',niv:4}],choix=el('div',{class:'scierie-organisations moulin-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artMoulin(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Moulin niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Les recettes affectées aux postes constituent la file : le moulin les répète sans ordre supplémentaire. Le vent change seul et le volant conserve une partie des bonnes rafales.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artMoulin,source:'vent'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artMoulin,source:'vent'}));c.appendChild(liste);
+  }
+
+  function rendreMoulinEauChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,d=s.debit/100,ba=s.bassin/100,mult=G.facteurSignature(b),ouv=G.ouvertureMoulinEau(b);
+    const commandes={};for(const p of b.postes||[])if(p.hab&&p.rec)commandes[p.rec]=(commandes[p.rec]||0)+1;
+    c.appendChild(el('section',{class:'scierie-maitrise moulin-eau-maitrise'},el('img',{src:artMoulinEau('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE HYDRAULIQUE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:'×'+mult.toFixed(2)}),el('span',{text:'puissance'}))));
+    const reglage=el('label',{class:'moulin-vanne'},el('span',{text:'Ouverture manuelle'}),el('input',{type:'range',min:20,max:100,step:1,value:s.ouverture,oninput:e=>{s.ouverture=+e.target.value;e.target.nextSibling.textContent=Math.round(s.ouverture)+' %';}}),el('b',{text:Math.round(s.ouverture)+' %'}));
+    c.appendChild(el('section',{class:'moulin-eau-debit'},el('img',{src:artMoulinEau(s.debit<35?'etiage':'courant'),alt:''}),el('div',{},el('div',{class:'rangee entre'},el('b',{text:'Débit de la rivière'}),el('strong',{text:Math.round(s.debit)+' %'})),U.barre(d,d<.3?'rouge':'verte','Courant','évolution dans '+Math.ceil(s.changement)+' s'),el('div',{class:'rangee entre moulin-eau-jauge-titre'},el('b',{text:'Bassin tampon'}),el('strong',{text:Math.round(s.bassin)+' %'})),U.barre(ba,ba<.2?'rouge':'or','Retenue','vanne effective '+Math.round(ouv)+' %'),reglage,el('div',{class:'moulin-eau-file'},el('img',{src:artMoulinEau('file'),alt:''}),el('span',{text:Object.keys(commandes).length?Object.entries(commandes).map(([rid,n])=>n+'× '+window.REC[rid].nom).join(' · '):'Aucun ordre actif'})))));
+    const strategies=[{id:'equilibre',nom:'Vanne équilibrée',art:'equilibre',effet:'Respecte l’ouverture choisie'},{id:'puissance',nom:'Pleine roue',art:'puissance',effet:'Ouvre davantage · puissance immédiate · bassin sollicité',niv:3},{id:'retenue',nom:'Garder la retenue',art:'retenue',effet:'Ferme partiellement et recharge plus vite le bassin',niv:4}],choix=el('div',{class:'scierie-organisations moulin-eau-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artMoulinEau(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Moulin niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉE':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'La vanne change réellement la puissance transmise aux postes. Pendant l’étiage, une ouverture prudente garde une réserve ; quand le courant monte, la roue peut fournir toute la chaîne.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artMoulinEau,source:'courant'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artMoulinEau,source:'courant'}));c.appendChild(liste);
+  }
+
+  function rendreCuisineChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,ch=s.chaleur/100,mult=G.facteurSignature(b);
+    const commandes={};for(const p of b.postes||[])if(p.hab&&p.rec)commandes[p.rec]=(commandes[p.rec]||0)+1;
+    c.appendChild(el('section',{class:'scierie-maitrise cuisine-maitrise'},el('img',{src:artCuisine('maitrise'),alt:''}),
+      el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DU FOUR'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),
+      el('div',{class:'scierie-effectif'},el('b',{text:'×'+mult.toFixed(2)}),el('span',{text:'foyer'}))));
+
+    const feu=s.chaleur<56?'doux':(s.chaleur>79?'banquet':'equilibre');
+    c.appendChild(el('section',{class:'cuisine-foyer'},el('img',{src:artCuisine(feu),alt:''}),el('div',{},
+      el('div',{class:'rangee entre'},el('span',{},el('i',{text:'FOYER PARTAGÉ'}),el('b',{text:s.chaleur<42?'Trop doux':(s.chaleur>92?'Four en colère':'Chaleur stable')})),el('strong',{text:Math.round(s.chaleur)+' %'})),
+      U.barre(ch,s.chaleur>92?'rouge':(s.chaleur>56&&s.chaleur<84?'verte':'or'),'Chaleur','agit sur toutes les fournées'))));
+    const strategies=[
+      {id:'mijoter',nom:'Feu doux',art:'mijoter',effet:'Recettes longues +14 % · cadence posée'},
+      {id:'equilibre',nom:'Four régulier',art:'equilibre',effet:'Fournées stables et polyvalentes'},
+      {id:'banquet',nom:'Grand service',art:'banquet',effet:'+17 % de portions · foyer et cadence exigeants',niv:4},
+    ],choix=el('div',{class:'scierie-organisations cuisine-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artCuisine(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Four niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉ':'CHOISIR')})))}
+    c.appendChild(choix);
+
+    const ingredients=[
+      {id:'poisson',nom:'Poisson'},{id:'legume',nom:'Racines'},{id:'champignon',nom:'Champignons'},{id:'miel',nom:'Miel'},
+      {id:'fromage',nom:'Fromage'},{id:'fruit',nom:'Fruits'},{id:'viande',nom:'Viande'},{id:'farine',nom:'Farine'},{id:'herbe',nom:'Simples'},{id:'huile',nom:'Huile'},
+    ];
+    const marmite=el('div',{class:'cuisine-marmite'},el('header',{},el('img',{src:artCuisine('marmite'),alt:''}),el('span',{},el('b',{text:'Marmite expérimentale'}),el('i',{text:s.decouvertes+' / 6 recettes secrètes dans le carnet'})),el('strong',{text:s.marmite.length+'/3'})));
+    const palette=el('div',{class:'cuisine-ingredients'});
+    for(const ing of ingredients){const choisi=s.marmite.includes(ing.id),src=CUISINE_ART[ing.id]?artCuisine(ing.id):(window.Img?window.Img.res(ing.id,true):artCuisine('ingredients'));palette.appendChild(el('button',{class:choisi?'choisi':'',title:ing.nom+' · 1 unité',onclick:()=>{G.ajouterIngredientCuisine(b,ing.id);rafraichirVillage();}},el('img',{src,alt:''}),el('span',{text:ing.nom}),el('small',{text:'×1'})))}
+    marmite.appendChild(palette);
+    const cout={};for(const id of s.marmite)cout[id]=(cout[id]||0)+1;
+    marmite.appendChild(el('div',{class:'cuisine-marmite-actions'},s.marmite.length?U.listeRes(cout,{verifier:true}):el('span',{text:'Choisissez trois ingrédients différents.'}),
+      el('button',{class:'b mini',text:'Vider',disabled:!s.marmite.length,onclick:()=>{G.viderMarmiteCuisine(b);rafraichirVillage();}}),
+      el('button',{class:'b mini primaire',text:'Goûter',disabled:s.marmite.length!==3||!window.Etat.assez(cout),onclick:()=>{const r=G.testerMarmiteCuisine(b);U.dire(r.rec?(r.raison+' '+r.rec.nom):r.raison,r.nouveau?'bien':(r.ok?'info':'alerte'));window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}})));
+    c.appendChild(marmite);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'La marmite consomme toujours les trois ingrédients affichés. Une combinaison réussie inscrit durablement une nouvelle recette dans le carnet propre à ce four.'}));
+
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[];
+    const actives=disponibles.filter(rid=>commandes[rid]),miseEnAvant=actives.length?actives:disponibles.slice(0,4),reste=disponibles.filter(rid=>!miseEnAvant.includes(rid));
+    const liste=el('div',{class:'scierie-chaines cuisine-chaines'});for(const rid of miseEnAvant)liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artCuisine,source:'marmite'}));c.appendChild(liste);
+    if(reste.length){const livre=el('details',{class:'cuisine-livre'},el('summary',{text:'Ouvrir le livre complet · '+reste.length+' autres recettes'}),el('div',{class:'scierie-chaines'}));const corps=livre.lastChild;for(const rid of reste)corps.appendChild(rendreLigneScierie(bid,rid,true,{art:artCuisine,source:'marmite'}));c.appendChild(livre)}
+    const suivantes=toutes.filter(rid=>!disponibles.includes(rid)&&!window.REC[rid].secret).sort((a,z)=>(window.REC[a].niv||1)-(window.REC[z].niv||1)).slice(0,2);
+    if(suivantes.length){const suite=el('div',{class:'scierie-chaines cuisine-prochaines'});for(const rid of suivantes)suite.appendChild(rendreLigneScierie(bid,rid,false,{art:artCuisine,source:'marmite'}));c.appendChild(suite)}
+  }
+
+  function rendreFumoirChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),cfg=G.personnel(b),s=cfg.signature,mult=G.facteurSignature(b),fumee=s.fumee/100,encrasse=s.creosote/100;
+    c.appendChild(el('section',{class:'scierie-maitrise fumoir-maitrise'},el('img',{src:artFumoir('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DU FUMOIR'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:'×'+mult.toFixed(2)}),el('span',{text:'tirage'}))));
+    const etat=s.fumee<40?'froide':(s.fumee>73?'vive':'douce');
+    const reglage=el('label',{class:'fumoir-tirage'},el('span',{text:'Ouverture du tirage'}),el('input',{type:'range',min:'20',max:'95',value:String(Math.round(s.tirage)),oninput:e=>{s.tirage=Number(e.target.value);e.target.nextSibling.textContent=Math.round(s.tirage)+' %';},onchange:()=>{window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}}),el('b',{text:Math.round(s.tirage)+' %'}));
+    c.appendChild(el('section',{class:'fumoir-etat'},el('img',{src:artFumoir(etat),alt:''}),el('div',{},el('div',{class:'rangee entre'},el('b',{text:'Densité de fumée'}),el('strong',{text:Math.round(s.fumee)+' %'})),U.barre(fumee,s.fumee>86?'rouge':(s.fumee>=36&&s.fumee<=62?'verte':'or'),'Fumée',s.fumee<45?'qualité lente':(s.fumee>75?'débit rapide':'équilibre')),el('div',{class:'rangee entre fumoir-jauge-titre'},el('b',{text:'Créosote dans le conduit'}),el('strong',{text:Math.round(s.creosote)+' %'})),U.barre(encrasse,s.creosote>78?'rouge':'','Encrassement',s.creosote>=88?'production suspendue jusqu’au ramonage':'ralentit progressivement le tirage'),reglage)));
+    const essences=[
+      {id:'aulne',nom:'Aulne',cout:'Bois normal',effet:'Neutre · propre et prévisible'},
+      {id:'fruitier',nom:'Bois fruitier',cout:'+1 greffon / lot',effet:'+10 % de portions · poisson favorisé',niv:2},
+      {id:'resineux',nom:'Résineux',cout:'+1 résine / lot',effet:'+13 % de portions · viande favorisée',niv:3},
+      {id:'charbon',nom:'Charbon',cout:'remplace le bois',effet:'+10 % de vitesse · −6 % de portions',niv:4},
+    ],choix=el('div',{class:'fumoir-essences'});
+    for(const p of essences){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:s.essence===p.id?'active':'',disabled:verrou,onclick:()=>{s.essence=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artFumoir(p.id),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Niveau '+p.niv:p.effet}),el('small',{text:p.cout})),el('strong',{text:s.essence===p.id?'ACTIVE':(verrou?'FERMÉ':'CHOISIR')})))}
+    c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Le tirage est un réglage durable, pas une minuterie à surveiller. Une fumée froide favorise la qualité ; ouvrir accélère les lots mais encrasse davantage. Le poste de ramonage reprend automatiquement quand il possède un ouvrier.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines fumoir-chaines'});
+    for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artFumoir,source:'fumée'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artFumoir,source:'fumée'}));c.appendChild(liste);
+  }
+
+  function rendreLaiterieChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),s=G.personnel(b).signature,mult=G.facteurSignature(b),fer=s.ferments/100,hum=s.humidite/100;
+    c.appendChild(el('section',{class:'scierie-maitrise laiterie-maitrise'},el('img',{src:artLaiterie('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE LAITIÈRE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:'×'+mult.toFixed(2)}),el('span',{text:'ambiance'}))));
+    const ambiance=s.humidite<45?'sec':(s.humidite>66?'humide':'equilibre');
+    c.appendChild(el('section',{class:'laiterie-cave'},el('img',{src:artLaiterie(ambiance),alt:''}),el('div',{},el('div',{class:'rangee entre'},el('b',{text:'Culture de ferments'}),el('strong',{text:Math.round(s.ferments)+' %'})),U.barre(fer,s.ferments<18?'rouge':'verte','Ferments',s.ferments<18?'les lots attendent la culture':'culture vivante'),el('div',{class:'rangee entre laiterie-jauge-titre'},el('b',{text:'Humidité des claies'}),el('strong',{text:Math.round(s.humidite)+' %'})),U.barre(hum,s.humidite<30||s.humidite>86?'rouge':'or','Cave',ambiance==='sec'?'égouttage rapide':(ambiance==='humide'?'affinage profond':'lots polyvalents')),el('div',{class:'laiterie-cave-ligne'},el('img',{src:artLaiterie(b.raff&&b.raff.cave?'cave':'claies'),alt:''}),el('span',{},el('b',{text:b.raff&&b.raff.cave?'Cave voûtée active':'Claies de la laiterie'}),el('i',{text:b.raff&&b.raff.cave?'Les lots de six mois sont disponibles.':'La cave se construit dans l’onglet dédié au niveau 3.'}))))));
+    const strategies=[{id:'frais',nom:'Vente fraîche',art:'fromage_frais',effet:'Baratte et ferments +18 % · cadence rapide'},{id:'equilibre',nom:'Claies régulières',art:'equilibre',effet:'Température stable pour tous les lots'},{id:'cave',nom:'Maison d’affinage',art:'affiner_cave',effet:'Affinages +26 % · cadence longue',niv:4}],choix=el('div',{class:'scierie-organisations laiterie-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artLaiterie(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Laiterie niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉ':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'Les ferments sont une réserve locale : chaque lot en prélève et l’activité « cultiver » la restaure. Elle peut rester en boucle, ce qui automatise la cave sans clics répétés.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines laiterie-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artLaiterie,source:'lait'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artLaiterie,source:'lait'}));c.appendChild(liste);
+  }
+
+  function rendreCarriereChaine(c,bid){
+    const b=E().bat[bid],G=window.EcosystemesBatiments;if(!b||!G)return;
+    const m=window.Jeu.maitriseAtelier(b),s=G.personnel(b).signature,mult=G.facteurSignature(b),st=s.stabilite/100;
+    c.appendChild(el('section',{class:'scierie-maitrise carriere-maitrise'},el('img',{src:artCarriere('maitrise'),alt:''}),el('div',{class:'scierie-maitrise-corps'},el('div',{class:'rangee entre'},el('span',{},el('i',{text:'MAÎTRISE DE CARRIÈRE'}),el('b',{text:'Rang '+m.niveau})),el('strong',{text:'+'+Math.round(m.bonus*100)+' %'})),el('div',{class:'scierie-maitrise-jauge'},el('i',{style:'width:'+Math.round(m.pct*100)+'%'})),el('small',{text:U.fmt(m.dans)+' / '+U.fmt(m.pour)+' xp avant le rang suivant'})),el('div',{class:'scierie-effectif'},el('b',{text:'×'+mult.toFixed(2)}),el('span',{text:'front'}))));
+    c.appendChild(el('section',{class:'carriere-front'},el('img',{src:artCarriere(s.stabilite<30?'fissure':'stable'),alt:''}),el('div',{},el('div',{class:'rangee entre'},el('b',{text:'Stabilité du front'}),el('strong',{text:Math.round(s.stabilite)+' %'})),U.barre(st,s.stabilite<25?'rouge':(s.stabilite>64?'verte':'or'),'Stabilité',s.stabilite<16?'extraction suspendue':'baisse à chaque lot'),el('div',{class:'carriere-couches'},...['pierre','sable','argile'].map(id=>el('button',{class:s.cible===id?'active':'',onclick:()=>{s.cible=id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artCarriere(id),alt:''}),el('span',{},el('b',{text:{pierre:'Pierre',sable:'Sable',argile:'Argile'}[id]}),el('i',{text:Math.round(s.couches[id])+' % exposé'}))))))));
+    const strategies=[{id:'prudente',nom:'Gradins prudents',art:'prudente',effet:'−10 % de rendement · stabilité préservée'},{id:'equilibre',nom:'Front régulier',art:'stable',effet:'Rendement et usure équilibrés'},{id:'profonde',nom:'Veine profonde',art:'profonde',effet:'+23 % de rendement · front vite fragilisé',niv:4}],choix=el('div',{class:'scierie-organisations carriere-strategies'});
+    for(const p of strategies){const verrou=b.niv<(p.niv||1);choix.appendChild(el('button',{class:'scierie-organisation'+(s.politique===p.id?' active':''),disabled:verrou,onclick:()=>{s.politique=p.id;window.Etat.prevenir('poste',{bat:bid});rafraichirVillage();}},el('img',{src:artCarriere(p.art),alt:''}),el('span',{},el('b',{text:p.nom}),el('i',{text:verrou?'Carrière niveau '+p.niv:p.effet})),el('strong',{text:s.politique===p.id?'ACTIVE':(verrou?'VERROUILLÉ':'CHOISIR')})))}c.appendChild(choix);
+    c.appendChild(el('div',{class:'scierie-consigne',text:'La matière ciblée gagne du rendement mais sa couche s’épuise. L’activité de soutènement restaure la stabilité et révèle automatiquement un nouveau mélange de couches : elle peut rester programmée dans une relève.'}));
+    const disponibles=window.BatUtil.recettesDe(b.type,b.niv,b),toutes=window.BAT[b.type].recettes||[],liste=el('div',{class:'scierie-chaines carriere-chaines'});for(const rid of toutes.filter(x=>disponibles.includes(x)))liste.appendChild(rendreLigneScierie(bid,rid,true,{art:artCarriere,source:'front'}));for(const rid of toutes.filter(x=>!disponibles.includes(x)).slice(0,2))liste.appendChild(rendreLigneScierie(bid,rid,false,{art:artCarriere,source:'front'}));c.appendChild(liste);
+  }
+
   function rendrePersonnelEcosysteme(c, bid) {
     const b = E().bat[bid], G = window.EcosystemesBatiments; if (!b || !G) return;
     const cfg = G.personnel(b), ouv = (b.postes || []).filter(p => p.hab)
@@ -1606,6 +1735,50 @@
       ajouter('personnel','Apiculteurs',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artRucher('maitrise'));
       if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Cirerie',c=>rendreAnnexes(c,bid),3,'orange',artRucher('fondre_rayons'));
       ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artRucher,arts:{abri:'abri',voile:'enfumoir',enfumoir:'calme',eau:'reseau'}}),4,'vert',artRucher('abri'));
+      return ong;
+    } else if(bb.type==='moulin'){
+      ajouter('chaine','Mouture',c=>rendreMoulinChaine(c,bid),1,'bleu',artMoulin('moulin'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artMoulin('meule'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('cuisine'):imageRes('outil'));
+      ajouter('personnel','Meuniers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artMoulin('maitrise'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Bluterie',c=>rendreAnnexes(c,bid),3,'orange',artMoulin('bluter'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artMoulin,arts:{abri:'abri',masque:'bluter',graisse:'volant',lanterne:'moulin'}}),4,'vert',artMoulin('abri'));
+      return ong;
+    } else if(bb.type==='moulinEau'){
+      ajouter('chaine','Hydraulique',c=>rendreMoulinEauChaine(c,bid),1,'bleu',artMoulinEau('moulin'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artMoulinEau('bassin'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('cuisine'):imageRes('outil'));
+      ajouter('personnel','Meuniers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artMoulinEau('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artMoulinEau,arts:{abri:'abri',passerelle:'vanne',graisse:'rouages',manteau:'entretien'}}),4,'vert',artMoulinEau('abri'));
+      return ong;
+    } else if(bb.type==='cuisine'){
+      ajouter('chaine','Cuisine',c=>rendreCuisineChaine(c,bid),1,'bleu',artCuisine('marmite'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artCuisine('banquet'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('cuisine'):imageRes('outil'));
+      ajouter('personnel','Fourniers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artCuisine('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artCuisine,arts:{repas:'banquet',hotte:'feu-regulier',table:'ingredients',reserve:'feu-doux'}}),4,'vert',artCuisine('ingredients'));
+      return ong;
+    } else if(bb.type==='fumoir'){
+      ajouter('chaine','Fumage',c=>rendreFumoirChaine(c,bid),1,'bleu',artFumoir('fumoir'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artFumoir('creosote'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('cuisine'):imageRes('outil'));
+      ajouter('personnel','Saleurs',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artFumoir('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artFumoir,arts:{abri:'fumoir',gants:'viande-fumee',table:'champignons-fumes',masque:'fumee-froide'}}),4,'vert',artFumoir('cheminee-propre'));
+      return ong;
+    } else if(bb.type==='laiterie'){
+      ajouter('chaine','Laiterie',c=>rendreLaiterieChaine(c,bid),1,'bleu',artLaiterie('baratter'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artLaiterie('claies'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('elevage'):imageRes('outil'));
+      ajouter('personnel','Laitiers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artLaiterie('maitrise'));
+      if(window.RaffUtil&&window.RaffUtil.pourBat(bb.type).length)ajouter('annexe','Cave',c=>rendreAnnexes(c,bid),3,'orange',artLaiterie('cave'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artLaiterie,arts:{banc:'baratte',etamine:'etamine',saumure:'saumure',claies:'claies'}}),4,'vert',artLaiterie('degustation'));
+      return ong;
+    } else if(bb.type==='carriere'){
+      ajouter('chaine','Front',c=>rendreCarriereChaine(c,bid),1,'bleu',artCarriere('carriere'));
+      ajouter('niveau','Agrandir',c=>rendreNiveau(c,bid),1,'jaune',artCarriere('grue'));
+      ajouter('outil','Outillage',c=>rendreOutil(c,bid),2,'vert',window.OutilUtil?window.OutilUtil.imageMetier('mine'):imageRes('outil'));
+      ajouter('personnel','Carriers',c=>rendrePersonnelEcosysteme(c,bid),3,'bleu',artCarriere('maitrise'));
+      ajouter('confort','Confort',c=>rendreConfortEcosysteme(c,bid,{art:artCarriere,arts:{abri:'carriere',casque:'prudente',treuil:'grue',drain:'drainage'}}),4,'vert',artCarriere('soutien'));
       return ong;
     } else if (bb.postes.length) ajouter('postes', bb.type === 'caserne' ? 'Recrutement' : 'Activité',
       c => rendrePostes(c, bid), 1, 'bleu', imageBat());

@@ -659,8 +659,11 @@ const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, lo
    surfaces sont très proches, particulièrement pendant les rotations. */
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
+/* Conserver la réponse lumineuse directe de `village test.html`. Le tone
+   mapping ACES ajouté ensuite comprimait les blancs, assombrissait les murs
+   et décalait aussi les couleurs déjà calculées du ciel et de l'horizon. */
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.toneMappingExposure = 1;
 renderer.shadowMap.enabled = true;
 /* Ombres nettes plutôt que douces. Le filtrage doux étalait les petits objets
    — garde-corps, potences — en taches floues qui frémissaient dès que le
@@ -729,8 +732,8 @@ scene.add(ambiance);
    élimination des faces arrière : environ trois mille pixels concernés sur
    quarante vues. En double face le phénomène disparaît par construction, sans
    un triangle de plus. */
-const matVille = new THREE.MeshStandardMaterial({
-  vertexColors:true, side:THREE.DoubleSide, roughness:0.88, metalness:0.015
+const matVille = new THREE.MeshLambertMaterial({
+  vertexColors:true, side:THREE.DoubleSide
 });
 /* v9 anti-flicker : les détails architecturaux (poutres, volets, cadres,
    ferronneries...) vivent souvent à quelques millimètres du parement. A cette
@@ -739,11 +742,9 @@ const matVille = new THREE.MeshStandardMaterial({
    Ils ont donc leur propre matériau avec un léger polygonOffset vers la caméra.
    Cela ne déplace PAS la géométrie et ne change pas les volumes : cela ne fait
    que rendre leur priorité de profondeur déterministe. */
-const matDetails = new THREE.MeshStandardMaterial({
+const matDetails = new THREE.MeshLambertMaterial({
   vertexColors:true,
   side:THREE.DoubleSide,
-  roughness:0.88,
-  metalness:0.015,
   polygonOffset:true,
   polygonOffsetFactor:-0.75,
   polygonOffsetUnits:-1.0
@@ -754,11 +755,9 @@ const matDetails = new THREE.MeshStandardMaterial({
    polygonOffset peuvent encore se battre entre elles. Cette couche reçoit un
    biais plus fort, mais conserve depthTest/depthWrite : rien ne traverse les
    murs, on impose seulement un ordre stable aux contacts quasi-coplanaires. */
-const matSurDetails = new THREE.MeshStandardMaterial({
+const matSurDetails = new THREE.MeshLambertMaterial({
   vertexColors:true,
   side:THREE.DoubleSide,
-  roughness:0.88,
-  metalness:0.015,
   polygonOffset:true,
   polygonOffsetFactor:-2.0,
   polygonOffsetUnits:-2.0
@@ -838,10 +837,9 @@ function geometrieEau(){
 const geoEau = geometrieEau();
 geoEau.computeVertexNormals();
 const tempsEau = { value:0 };
-const matEau = new THREE.MeshPhongMaterial({
-  vertexColors:true, transparent:true, opacity:0.74,
-  depthWrite:false, fog:false, side:THREE.DoubleSide,
-  shininess:72, specular:new THREE.Color(0x9fd4d8)
+const matEau = new THREE.MeshBasicMaterial({
+  vertexColors:true, transparent:true, opacity:0.82,
+  depthWrite:false, fog:false, side:THREE.DoubleSide
 });
 /* v16 : l'eau n'est plus un disque parfaitement immobile. Deux trains d'ondes
    très faibles déplacent uniquement les sommets ; l'amplitude reste inférieure

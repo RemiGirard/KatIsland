@@ -263,7 +263,7 @@
     nom:'Carrière', metier:'Carrier', cat:'recolte', rangees:[0],
     desc:"Un front de taille en gradins mordu dans le contrefort, la chèvre et son treuil, les coins de fer plantés dans la ligne de fracture.",
     cout:{bois:35,poisson:30}, temps:90, postes:P(1,1,2,2,2,3,3,3,4,4),
-    recettes:['extraire_pierre','tamiser_sable','tailler_pierre','extraire_argile'],
+    recettes:['extraire_pierre','tamiser_sable','extraire_argile','soutenir_front','tailler_pierre'],
   });
   x('extraire_pierre', { bat:'carriere', nom:'Abattre au coin', metier:'mine', duree:14,
     out:{pierre:2,silex:1}, loot:[{res:'fer',p:0.07,n:[1,1]},{res:'gemme',p:0.004,n:[1,1]}],
@@ -273,6 +273,9 @@
   x('extraire_argile', { bat:'carriere', nom:"Fouiller l'argile", metier:'mine', duree:11,
     out:{argile:3}, loot:[{res:'ossuaire',p:0.05,n:[1,1]}],
     desc:"La fosse grasse, en contrebas. On la marche au pied avant de la porter." });
+  x('soutenir_front', { bat:'carriere', nom:'Soutenir le front', metier:'batisse', duree:46, niv:2,
+    image:'img/interface/carriere/soutien.png', in:{poutre:1,corde:1}, out:{pierre:2},
+    desc:"On purge les pierres branlantes et l'on pose les cadres. Le front redevient sûr et révèle une nouvelle couche." });
   x('tailler_pierre', { bat:'carriere', nom:'Équarrir au ciseau', metier:'mine', duree:34, niv:3,
     in:{pierre:3}, out:{pierretaille:1}, outil:'pioche',
     desc:"Le bloc devient parpaing. C'est long, et il n'y a pas d'autre manière." });
@@ -507,7 +510,9 @@
               'confire','pain_fromage','chausson_champignons','galette_miel',
               'ration_marche','bouillie_miel','tarte_verger','racines_roties',
               'tourte_poisson','tourte_riche','chaudree_marin','planche_fumee',
-              'roti_miel','champignons_farcis','cidre_epice','galette_tournesol'],
+              'roti_miel','champignons_farcis','cidre_epice','galette_tournesol',
+              'fromage_herbes_secret','gratin_racines_secret','ragout_bois_secret',
+              'soupe_aventurier_secret','brioche_verger_secret','banquet_village_secret'],
   });
   x('cuire_pain', { bat:'cuisine', nom:'Cuire le pain', metier:'cuisine', duree:22,
     image:'img/objets/cuisine/pain-rustique.png', in:{farine:2,eau:1}, out:{pain:3},
@@ -555,7 +560,7 @@
     image:'img/objets/cuisine/chaudree-marin.png', in:{poisson:5,lait:2,legume:2,pain:1}, out:{tourte:4},
     desc:"Servie dans une miche évidée : rien à laver, rien à perdre." });
   x('planche_fumee', { bat:'cuisine', nom:'Planche du fumoir', metier:'cuisine', duree:64, niv:6,
-    image:'img/objets/cuisine/planche-fumee.png', in:{viande:3,poissonfume:2,fromage:2}, out:{poissonfume:7},
+    image:'img/objets/cuisine/planche-fumee.png', in:{viandefumee:3,poissonfume:2,fromage:2}, out:{tourte:5},
     desc:"Une réserve dense pour les longues traversées et les étages sans cuisine." });
   x('roti_miel', { bat:'cuisine', nom:'Rôti laqué au miel', metier:'cuisine', duree:92, niv:7,
     image:'img/objets/cuisine/roti-miel.png', in:{viande:5,miel:3,huile:1}, out:{tourte:5},
@@ -569,18 +574,43 @@
   x('galette_tournesol', { bat:'cuisine', nom:'Galette de tournesol', metier:'cuisine', duree:54, niv:8,
     image:'img/objets/cuisine/galette-tournesol.png', in:{farineclaire:4,huile:1,miel:1}, out:{pain:10},
     desc:"Une galette dorée, grasse et durable, taillée pour les réserves d'expédition." });
+  x('fromage_herbes_secret', { bat:'cuisine', nom:'Fromage aux herbes', metier:'cuisine', duree:42, niv:2, secret:true,
+    image:'img/objets/cuisine/fromage-herbes.png', in:{fromage:2,herbe:2,miel:1}, out:{pain:7},
+    desc:"Une découverte de marmite : salé, vert, puis une pointe de miel qui met tout le monde d'accord." });
+  x('gratin_racines_secret', { bat:'cuisine', nom:'Gratin de racines', metier:'cuisine', duree:58, niv:3, secret:true,
+    image:'img/objets/cuisine/gratin-racines.png', in:{legume:6,fromage:2,huile:1}, out:{tourte:4},
+    desc:"Les racines du potager sous une croûte dorée. Même les navets ont désormais leurs admirateurs." });
+  x('ragout_bois_secret', { bat:'cuisine', nom:'Ragoût du sous-bois', metier:'cuisine', duree:76, niv:4, secret:true,
+    image:'img/objets/cuisine/ragout-sous-bois.png', in:{champignon:4,viande:2,herbe:1}, out:{tourte:4},
+    desc:"Une marmite sombre et parfumée, née d'un panier oublié entre le fumoir et la forêt." });
+  x('soupe_aventurier_secret', { bat:'cuisine', nom:"Soupe de l'aventurier", metier:'cuisine', duree:66, niv:4, secret:true,
+    image:'img/objets/cuisine/soupe-aventurier.png', in:{poisson:3,legume:3,fromage:1}, out:{tourte:4},
+    desc:"Assez consistante pour tenir un étage, assez liquide pour être avalée avant que le monstre arrive." });
+  x('brioche_verger_secret', { bat:'cuisine', nom:'Brioche du verger', metier:'cuisine', duree:72, niv:5, secret:true,
+    image:'img/objets/cuisine/brioche-verger.png', in:{fruit:4,farine:3,miel:2}, out:{pain:11},
+    desc:"Une pâte levée gorgée de fruits. Elle disparaît toujours avant le registre des fournées." });
+  x('banquet_village_secret', { bat:'cuisine', nom:'Banquet du village', metier:'cuisine', duree:130, niv:6, secret:true,
+    image:'img/objets/cuisine/banquet-village.png', in:{poisson:5,viande:5,miel:3,fromage:2}, out:{tourte:10,pain:8},
+    desc:"Une table entière plutôt qu'une assiette : très lent, très gourmand, et impossible à oublier." });
 
   b('fumoir', {
     nom:'Fumoir', metier:'Saleur', cat:'atelier', rangees:[1,2], nivMax:8,
     desc:"Une tourelle aveugle à la porte de fer, la fumée froide qui traîne au sol, les enfilades sous l'auvent. Ce qui en sort passe l'hiver.",
     cout:{pierre:20,bois:20,argile:10}, temps:90, postes:P(1,1,1,2,2,2,3,3),
-    recettes:['fumer_poisson','fumer_viande'],
+    recettes:['fumer_poisson','nettoyer_fumoir','fumer_viande','terrine_fumoir'],
   });
   x('fumer_poisson', { bat:'fumoir', nom:'Fumer le poisson', metier:'cuisine', duree:30,
-    in:{poisson:4,bois:1}, out:{poissonfume:2},
+    image:'img/interface/fumoir/poisson-fume.png', in:{poisson:4,bois:1}, out:{poissonfume:2},
     desc:"Fumée froide, deux jours. C'est ce qu'on emporte dans la descente." });
   x('fumer_viande', { bat:'fumoir', nom:'Fumer la viande', metier:'cuisine', duree:44, niv:3,
-    in:{viande:3,bois:2}, out:{poissonfume:3}, desc:"Le lard du bourg. On l'appelle encore poisson fumé par habitude." });
+    image:'img/interface/fumoir/viande-fumee.png', in:{viande:3,bois:2}, out:{viandefumee:3},
+    desc:"Le lard du bourg : une réserve distincte du poisson, destinée aux tablées et aux longues traversées." });
+  x('nettoyer_fumoir', { bat:'fumoir', nom:'Ramoner le conduit', metier:'batisse', duree:36, niv:2,
+    image:'img/interface/fumoir/cheminee-propre.png', in:{eau:2}, out:{charbonbois:1},
+    desc:"On décroche la créosote avant qu'elle n'étouffe le tirage. Les résidus secs retournent au stock de combustible." });
+  x('terrine_fumoir', { bat:'fumoir', nom:'Terrine du fumoir', metier:'cuisine', duree:68, niv:4,
+    image:'img/objets/cuisine/terrine-fumoir.png', in:{viandefumee:2,champignon:2,herbe:1,poterie:1}, out:{tourte:4},
+    desc:"Une production de valeur qui relie élevage, forêt, poterie et cuisine sans remplacer les conserves de base." });
 
   b('bergerie', {
     nom:'Bergerie', metier:'Berger', cat:'elevage', rangees:[0,1,2],
@@ -624,16 +654,22 @@
     nom:'Laiterie', metier:'Laitier', cat:'atelier', rangees:[1,2], nivMax:8,
     desc:"Blanchie à la chaux, fenêtres grillagées pour tenir le frais, les barattes debout et les claies à fromages. Le chat n'est jamais loin.",
     cout:{planche:20,pierre:15,poterie:3,tuile:6}, temps:110, postes:P(1,1,2,2,2,3,3,3),
-    recettes:['baratter','affiner'],
+    recettes:['baratter','cultiver_ferments','fromage_frais','affiner_cave'],
   });
   x('baratter', { bat:'laiterie', nom:'Baratter', metier:'elevage', duree:30,
+    image:'img/interface/laiterie/baratte.png',
     in:{lait:4}, out:{fromage:1}, loot:[{res:'lait',p:0.2,n:[1,1]}],
     desc:"Le pilon monte et descend jusqu'à ce que le beurre prenne." });
-  x('affiner', { bat:'laiterie', nom:'Affiner en cave', metier:'elevage', duree:90, niv:4,
+  x('cultiver_ferments', { bat:'laiterie', nom:'Cultiver les ferments', metier:'elevage', duree:42, niv:2,
+    image:'img/interface/laiterie/ferments.png', in:{lait:2,herbe:1}, out:{fromage:1},
+    desc:"Une petite production qui maintient surtout la culture vivante pour les prochains lots." });
+  x('fromage_frais', { bat:'laiterie', nom:'Fromage frais aux herbes', metier:'elevage', duree:90, niv:3,
+    image:'img/interface/laiterie/fromage-herbes.png',
     in:{fromage:2,herbe:1}, out:{fromage:5}, loot:[{res:'ecu',p:0.4,n:[6,20]}],
     desc:"Trois mois sur planche, retourné tous les deux jours. Le bourg entier sait quand la cave s'ouvre." });
 
-  x('affiner', { bat:'laiterie', nom:'Affiner six mois', metier:'elevage', duree:150,
+  x('affiner_cave', { bat:'laiterie', nom:'Affiner six mois', metier:'elevage', duree:150, niv:4,
+    image:'img/interface/laiterie/fromage-affine.png',
     raff:'cave', in:{fromage:2,eau:2}, out:{fromage:5}, loot:[{res:'ecu',p:0.4,n:[15,45]}],
     desc:"Retourné, brossé, frotté chaque semaine. Une meule affinée vaut quatre meules fraîches." });
 
@@ -1185,6 +1221,8 @@
     return (BAT[bid].recettes || []).filter(rid => {
       const r = REC[rid];
       if (!r || r.niv > niv) return false;
+      if (r.secret && !(b && b.ecosysteme && b.ecosysteme.signature &&
+          b.ecosysteme.signature.connues && b.ecosysteme.signature.connues[rid])) return false;
       if (!r.raff) return true;
       return !!(b && b.raff && b.raff[r.raff]);
     });

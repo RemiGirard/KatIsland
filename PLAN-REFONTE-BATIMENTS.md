@@ -40,15 +40,15 @@
 - [x] **Bergerie** — taille du troupeau, pâturage, mise bas et qualité de laine ; préserver des reproducteurs ralentit la production immédiate mais développe le cheptel.
 - [x] **Étable** — alimentation, santé et cycle lait/reproduction ; ration riche contre autonomie du troupeau.
 - [x] **Rucher** — reine, humeur des ruches, réserve de miel et réseau de pollinisation des parcelles.
-- [ ] **Moulin à vent** — fenêtres de vent et files de mouture ; stockage automatique des commandes pour profiter des rafales.
-- [ ] **Moulin à eau** — débit de roue et vannes ; arbitrage entre eau disponible et cadence stable.
-- [ ] **Four banal / cuisine** — marmite visuelle : déposer quelques ingrédients, régler la chaleur, découvrir puis mémoriser les recettes.
-- [ ] **Fumoir** — essence de bois, intensité et durée de fumage ; rendement, conservation et qualité sont en tension.
-- [ ] **Laiterie** — ferments et cave d'affinage ; produits rapides ou lots longs plus rentables.
+- [x] **Moulin à vent** — fenêtres de vent et files de mouture ; stockage automatique des commandes pour profiter des rafales.
+- [x] **Moulin à eau** — débit de roue et vannes ; arbitrage entre eau disponible et cadence stable.
+- [x] **Four banal / cuisine** — marmite visuelle : déposer quelques ingrédients, régler la chaleur, découvrir puis mémoriser les recettes.
+- [x] **Fumoir** — essence de bois, intensité et durée de fumage ; rendement, conservation et qualité sont en tension.
+- [x] **Laiterie** — ferments et cave d'affinage ; produits rapides ou lots longs plus rentables.
 
 ### Pierre, terre et feu
 
-- [ ] **Carrière** — fronts de taille, stabilité et choix d'extraction pierre/sable/argile.
+- [x] **Carrière** — fronts de taille, stabilité et choix d'extraction pierre/sable/argile.
 - [ ] **Mine** — profondeur, soutènement et ventilation ; les filons riches demandent davantage de sécurité.
 - [ ] **Charbonnière** — meule, température et arrivée d'air ; récupérer tôt ou attendre une cuisson complète.
 - [ ] **Tuilerie** — mélange argile/eau puis fournées ; charger le four pour optimiser combustible ou vitesse.
@@ -186,3 +186,51 @@ Un bâtiment est terminé lorsqu'il possède une boucle compréhensible en quelq
 - **Décision** : vigueur de colonie, humeur, hausses de miel, reine sur cinq rangs et réseau de nectar calculé depuis les champs de fleurs et tournesols. Les conduites douce, essaimage ou miel changent la trajectoire du rucher.
 - **Anti-microgestion** : les hausses se remplissent seules ; une récolte vide attend puis reprend automatiquement. La sélection de reine progresse lentement lorsque les conditions restent bonnes.
 - **Visuels** : la première génération avec fond brun a été rejetée. La seconde planche possède un véritable alpha, 16 cases strictes et 16 découpes utilisées dans l’interface.
+
+### Moulin à vent
+
+- **Avant** : quatre recettes cohérentes, mais un moulin parfaitement constant dont le vent, les ailes et la calotte n’avaient aucun effet.
+- **Écart avec la scierie** : aucune lecture de cadence locale, aucune réserve mécanique et aucune raison d’organiser durablement les postes de mouture.
+- **Décision** : vent local changeant par fenêtres, vitesse réelle des postes liée aux rafales, volant d’inertie et trois conduites — régulière, chasse aux rafales ou réserve d’élan. Les postes affectés composent la file visible.
+- **Anti-microgestion** : le vent évolue seul, l’inertie se charge automatiquement et les recettes en boucle restent les ordres persistants du meunier.
+- **Visuels** : la première génération au fond brun a été rejetée ; la seconde possède un alpha réel et fournit 16 illustrations découpées sur grille stricte.
+
+### Moulin à eau
+
+- **Avant** : trois productions utiles, mais une roue à puissance constante ; rivière, retenue et vannes n’existaient que dans le décor.
+- **Écart avec la scierie** : aucune décision de cadence locale, aucun tampon et aucune conséquence des périodes de faible courant.
+- **Décision** : débit lentement variable, bassin tampon, ouverture de vanne réglable et vitesse réelle des postes calculée depuis la puissance hydraulique. Les conduites équilibrée, pleine roue et retenue corrigent automatiquement l’ouverture choisie.
+- **Anti-microgestion** : les variations sont longues, le bassin se charge seul et la politique persistante évite de reprendre le curseur à chaque changement de débit.
+- **Visuels** : planche transparente du premier coup, 16 illustrations strictement découpées et utilisées pour recettes, vannes, débit, entretien et maîtrise.
+
+### Four banal / cuisine
+
+- **Avant** : vingt recettes déjà illustrées et économiquement variées, mais présentées comme une longue liste sans foyer, découverte ni identité propre à chaque four.
+- **Écart avec la scierie** : aucune chaleur locale, aucun carnet de recettes, aucune expérimentation et aucun regroupement ergonomique des nombreuses productions.
+- **Décision** : foyer partagé à chaleur persistante, conduites feu doux, four régulier ou grand service, marmite de trois ingrédients et six recettes secrètes mémorisées par le bâtiment. Les recettes déjà actives restent immédiatement visibles, le livre complet se replie.
+- **Anti-microgestion** : la chaleur rejoint automatiquement la cible de la conduite choisie ; les postes répètent les recettes et le carnet conserve les découvertes sans nouvelle manipulation.
+- **Visuels** : les plats existants sont conservés. Une planche transparente complémentaire de 16 contrôles de cuisine a été découpée sur grille stricte et activée pour le foyer, la marmite, les ingrédients, les stratégies et les onglets.
+
+### Fumoir
+
+- **Avant** : deux recettes seulement, sans illustrations dédiées ; viande et poisson produisaient tous deux la même ressource « poisson fumé » et le conduit ne s’encrassait jamais.
+- **Écart avec la scierie** : aucun état local, aucun choix de combustible, aucune tension entre vitesse et qualité, ni entretien ou lecture de la conservation.
+- **Décision** : tirage réglable, densité de fumée, créosote progressive et quatre essences. L’aulne reste simple, le bois fruitier valorise les greffons, le résineux consomme la résine et le charbon remplace le bois pour accélérer. La viande fumée devient une ressource distincte reliée à la cuisine.
+- **Anti-microgestion** : le tirage rejoint seul le réglage choisi ; un poste de ramonage peut rester programmé en boucle et les autres lots attendent automatiquement lorsque le conduit devient dangereux.
+- **Visuels** : planche transparente de 16 éléments strictement découpée et activée ; poisson, viande, fumées, essences, conduit et maîtrise disposent chacun de leur illustration.
+
+### Laiterie
+
+- **Avant** : deux déclarations partageaient l’identifiant `affiner`; la seconde écrasait la première, si bien que la laiterie perdait son affinage normal et paraissait vide avant la cave.
+- **Écart avec la scierie** : pas de culture locale, de lecture des claies, de choix entre vente rapide et maturation, ni de personnel organisé dans le volet droit.
+- **Décision** : quatre activités distinctes, réserve de ferments, humidité locale et conduites vente fraîche, claies régulières ou maison d’affinage. La cave garde son rôle d’annexe et ouvre le lot long le plus rentable.
+- **Anti-microgestion** : les ferments se régénèrent lentement et l’activité de culture peut rester affectée en boucle ; l’humidité rejoint seule la conduite choisie et les lots attendent proprement si la culture manque.
+- **Visuels** : planche transparente de 16 éléments strictement découpée et activée pour les recettes, les ferments, l’ambiance de cave, les soins, la progression et les onglets.
+
+### Carrière
+
+- **Avant** : quatre sorties indispensables à presque toute la construction, mais un front de taille infini, sans couche, danger ou activité de soutènement.
+- **Écart avec la scierie** : aucun état local, aucune spécialisation du front et aucune conséquence à exploiter plusieurs postes en continu.
+- **Décision** : stabilité locale, couches exposées de pierre, sable et argile, matière ciblée et conduites prudente, régulière ou profonde. Le soutènement restaure le front et renouvelle sa composition.
+- **Anti-microgestion** : les extractions attendent automatiquement lorsque leur couche ou la stabilité est insuffisante ; une relève de soutènement programmée permet au cycle de repartir seul.
+- **Visuels** : planche transparente de 16 éléments strictement découpée et utilisée pour les matières, couches, stabilité, soutènement, grue, drainage et maîtrise.

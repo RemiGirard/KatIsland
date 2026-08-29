@@ -115,6 +115,60 @@
         {id:'eau',nom:'Abreuvoir à abeilles',desc:'Quelques pierres dans une eau peu profonde évitent les noyades.',base:{poterie:3,eau:10}},
       ],
     },
+    moulin:{
+      nom:'Moulin à vent', rythme:'Régularité des meules', unite:'vent',
+      confort:[
+        {id:'abri',nom:'Repos du meunier',desc:'Une banquette loin de la poussière et du grondement des meules.',base:{planche:9,toile:3}},
+        {id:'masque',nom:'Masques à farine',desc:'La poussière n’entre plus dans chaque respiration.',base:{toile:5,corde:2}},
+        {id:'graisse',nom:'Graissage des rouages',desc:'Moins de bruit, moins d’effort et moins de secousses.',base:{huile:5,outil:1}},
+        {id:'lanterne',nom:'Lanterne de calotte',desc:'Les changements de sacs restent sûrs pendant les longues rafales nocturnes.',base:{cire:5,verre:2}},
+      ],
+    },
+    moulinEau:{
+      nom:'Moulin à eau', rythme:'Régularité de la roue', unite:'débit',
+      confort:[
+        {id:'abri',nom:'Repos du bief',desc:'Une banquette sèche à l’écart des embruns et des maillets.',base:{planche:10,toile:3}},
+        {id:'passerelle',nom:'Passerelle antidérapante',desc:'Les réglages de vanne ne se terminent plus les pattes dans l’eau.',base:{planche:12,corde:3}},
+        {id:'graisse',nom:'Graissage de l’arbre',desc:'La roue transmet sa force sans secouer tout le bâtiment.',base:{huile:6,outil:1}},
+        {id:'manteau',nom:'Manteaux huilés',desc:'Les longues relèves restent supportables près de la roue.',base:{toile:5,huile:3}},
+      ],
+    },
+    cuisine:{
+      nom:'Four banal', rythme:'Régularité des fournées', unite:'foyer',
+      confort:[
+        {id:'repas',nom:'Table du personnel',desc:'Les fourniers goûtent assis, plutôt que debout entre deux plaques.',base:{planche:10,pain:8}},
+        {id:'hotte',nom:'Hotte de tirage',desc:'La fumée quitte le four avant de fatiguer les yeux et les poumons.',base:{brique:10,tuile:5}},
+        {id:'table',nom:'Table de préparation',desc:'Chaque ingrédient reste à portée et les longues recettes usent moins les équipes.',base:{planche:14,poterie:4}},
+        {id:'reserve',nom:'Réserve de petit bois',desc:'Le foyer reste stable sans courir chercher une bûche au milieu du service.',base:{bois:18,corde:3}},
+      ],
+    },
+    fumoir:{
+      nom:'Fumoir', rythme:'Régularité du tirage', unite:'fumée',
+      confort:[
+        {id:'abri',nom:'Auvent du saleur',desc:'Les préparations se font au sec, loin du conduit brûlant.',base:{planche:9,tuile:4}},
+        {id:'gants',nom:'Gants épais',desc:'Crochets, grilles et portes chaudes fatiguent moins les équipes.',base:{cuir:4,toile:3}},
+        {id:'table',nom:'Table de salaison',desc:'Les lots sont suspendus sans porter chaque pièce à bout de bras.',base:{planche:12,poterie:3}},
+        {id:'masque',nom:'Masques à fumée',desc:'La fumée aromatise les vivres plutôt que les poumons du personnel.',base:{toile:5,herbe:4}},
+      ],
+    },
+    laiterie:{
+      nom:'Laiterie', rythme:'Régularité des soins', unite:'ferments',
+      confort:[
+        {id:'banc',nom:'Banc de baratte',desc:'Les longues séries se font à bonne hauteur et ménagent les épaules.',base:{planche:9,toile:2}},
+        {id:'etamine',nom:'Étamine propre',desc:'Égoutter devient plus rapide et les lots ratés plus rares.',base:{toile:5,eau:5}},
+        {id:'saumure',nom:'Bac de saumure',desc:'Les croûtes sont lavées sans porter chaque meule au puits.',base:{poterie:4,eau:12}},
+        {id:'claies',nom:'Claies à hauteur',desc:'Retourner les meules fatigue moins les équipes de cave.',base:{planche:15,corde:3}},
+      ],
+    },
+    carriere:{
+      nom:'Carrière', rythme:'Régularité du front', unite:'stabilité',
+      confort:[
+        {id:'abri',nom:'Abri des carriers',desc:'Les pauses se prennent hors de la poussière et des chutes de pierre.',base:{bois:10,toile:3}},
+        {id:'casque',nom:'Casques renforcés',desc:'Les éclats et les petits éboulis coûtent moins de vigueur.',base:{cuir:4,fer:2}},
+        {id:'treuil',nom:'Treuil équilibré',desc:'Les blocs quittent le front sans épuiser toute une relève.',base:{poutre:1,corde:5,outil:1}},
+        {id:'drain',nom:'Rigole de drainage',desc:'Le front reste praticable et les équipes gardent les pattes sèches.',base:{pierre:12,planche:8}},
+      ],
+    },
   };
 
   function gere(b) { return !!(b && TYPES[b.type]); }
@@ -186,6 +240,39 @@
       if(typeof p.signature.reine!=='number')p.signature.reine=1;
       if(typeof p.signature.selection!=='number')p.signature.selection=0;
       if(!p.signature.politique)p.signature.politique='douce';
+    } else if(b.type==='moulin'){
+      if(typeof p.signature.vent!=='number')p.signature.vent=46;
+      if(typeof p.signature.cible!=='number')p.signature.cible=62;
+      if(typeof p.signature.changement!=='number')p.signature.changement=55;
+      if(typeof p.signature.inertie!=='number')p.signature.inertie=28;
+      if(!p.signature.politique)p.signature.politique='regulier';
+    } else if(b.type==='moulinEau'){
+      if(typeof p.signature.debit!=='number')p.signature.debit=64;
+      if(typeof p.signature.cible!=='number')p.signature.cible=72;
+      if(typeof p.signature.changement!=='number')p.signature.changement=95;
+      if(typeof p.signature.bassin!=='number')p.signature.bassin=68;
+      if(typeof p.signature.ouverture!=='number')p.signature.ouverture=62;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='cuisine'){
+      if(typeof p.signature.chaleur!=='number')p.signature.chaleur=64;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+      if(!Array.isArray(p.signature.marmite))p.signature.marmite=[];
+      if(!p.signature.connues||typeof p.signature.connues!=='object')p.signature.connues={};
+      if(typeof p.signature.decouvertes!=='number')p.signature.decouvertes=Object.keys(p.signature.connues).length;
+    } else if(b.type==='fumoir'){
+      if(typeof p.signature.tirage!=='number')p.signature.tirage=48;
+      if(typeof p.signature.fumee!=='number')p.signature.fumee=52;
+      if(typeof p.signature.creosote!=='number')p.signature.creosote=8;
+      if(!['aulne','fruitier','resineux','charbon'].includes(p.signature.essence))p.signature.essence='aulne';
+    } else if(b.type==='laiterie'){
+      if(typeof p.signature.ferments!=='number')p.signature.ferments=58;
+      if(typeof p.signature.humidite!=='number')p.signature.humidite=56;
+      if(!p.signature.politique)p.signature.politique='equilibre';
+    } else if(b.type==='carriere'){
+      if(typeof p.signature.stabilite!=='number')p.signature.stabilite=86;
+      if(!p.signature.couches||typeof p.signature.couches!=='object')p.signature.couches={pierre:62,sable:48,argile:44};
+      if(!['pierre','sable','argile'].includes(p.signature.cible))p.signature.cible='pierre';
+      if(!p.signature.politique)p.signature.politique='equilibre';
     }
     return p;
   }
@@ -249,7 +336,7 @@
     const forme = vigueur >= 82 ? 1.04 : (vigueur >= 48 ? 0.92 + vigueur * 0.0015 : 0.54 + vigueur * 0.009);
     const boost = eq ? clamp(0.88 / (eq.duree / 24), 0.9, 2.45) : 1;
     const regul = 0.96 + clamp(b.rythmeAtelier || 0, 0, 100) * 0.0016;
-    return { actif:true, facteur:boost * cad.vitesse * forme * regul, raison:'', equipe:eq };
+    return { actif:true, facteur:boost * cad.vitesse * forme * regul * facteurSignature(b), raison:'', equipe:eq };
   }
   function tickHabitant(h, b, poste, dt, ville) {
     const vie = window.VieVillage.assurerHabitant(h), p = personnel(b), cad = CADENCES[p.cadence], conf = confort(b);
@@ -331,6 +418,38 @@
         const remplissage=.006*(.35+nectar/100)*(s.colonie/100)*(s.politique==='miel'?1.28:(s.politique==='douce'?.88:1));
         s.reserve=clamp(s.reserve+dt*remplissage,0,100);
         if(s.colonie>70&&s.humeur>64&&s.reine<5){s.selection+=dt*.003*(s.politique==='essaimage'?2:1);if(s.selection>=100){s.selection-=100;s.reine++;}}
+      } else if(b.type==='moulin'){
+        const s=p.signature;s.changement-=dt;
+        if(s.changement<=0){s.cible=12+Math.random()*86;s.changement=38+Math.random()*74;}
+        const pasV=1-Math.exp(-Math.max(0,dt)/18);s.vent=clamp(s.vent+(s.cible-s.vent)*pasV,0,100);
+        if(s.vent>52)s.inertie=clamp(s.inertie+dt*.018*(s.vent/100)*(s.politique==='inertie'?1.55:1),0,100);
+        else s.inertie=clamp(s.inertie-dt*.012*(s.politique==='inertie'?.55:1),0,100);
+      } else if(b.type==='moulinEau'){
+        const s=p.signature;s.changement-=dt;
+        if(s.changement<=0){s.cible=24+Math.random()*72;s.changement=85+Math.random()*105;}
+        const pasD=1-Math.exp(-Math.max(0,dt)/44);s.debit=clamp(s.debit+(s.cible-s.debit)*pasD,0,100);
+        const ouv=ouvertureMoulinEau(b)/100,d=s.debit/100;
+        let entree=d*(1-ouv)*.018,sortie=ouv*Math.max(0,.58-d)*.030;
+        if(s.politique==='retenue')entree*=1.45;
+        if(s.politique==='puissance')sortie*=1.35;
+        s.bassin=clamp(s.bassin+dt*(entree-sortie),0,100);
+      } else if(b.type==='cuisine'){
+        const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&!x.bloque);
+        const cible=s.politique==='mijoter'?48:(s.politique==='banquet'?88:68);
+        const temps=actif?38:95,pasC=1-Math.exp(-Math.max(0,dt)/temps);
+        s.chaleur=clamp(s.chaleur+(cible-s.chaleur)*pasC-(actif&&s.politique==='banquet'?dt*.002:0),0,100);
+      } else if(b.type==='fumoir'){
+        const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&x.rec!=='nettoyer_fumoir'&&!x.bloque);
+        const cible=clamp(s.tirage+(s.essence==='charbon'?9:(s.essence==='resineux'?4:0)),18,96),pasF=1-Math.exp(-Math.max(0,dt)/26);
+        s.fumee=clamp(s.fumee+(cible-s.fumee)*pasF,0,100);
+        if(actif)s.creosote=clamp(s.creosote+dt*.0018*(.55+s.fumee/70)*(s.essence==='resineux'?1.45:(s.essence==='charbon'?.72:1)),0,100);
+      } else if(b.type==='laiterie'){
+        const s=p.signature,cible=s.politique==='frais'?38:(s.politique==='cave'?72:56),pasH=1-Math.exp(-Math.max(0,dt)/135);
+        s.humidite=clamp(s.humidite+(cible-s.humidite)*pasH,0,100);
+        s.ferments=clamp(s.ferments+dt*.004*(s.politique==='frais'?1.25:1),0,100);
+      } else if(b.type==='carriere'){
+        const s=p.signature,actif=(b.postes||[]).some(x=>x.hab&&x.rec&&x.rec!=='soutenir_front'&&!x.bloque);
+        if(!actif)s.stabilite=clamp(s.stabilite+dt*.0025*(s.politique==='prudente'?1.4:1),0,100);
       }
     }
   }
@@ -401,6 +520,33 @@
     } else if(b.type==='rucher'){
       const s=personnel(b).signature;
       if(copie.miel){let facteur=.55+(s.colonie/100)*.35+(s.humeur/100)*.18;if(rec.id==='miel_de_fleurs')facteur*=.65+nectarVillage()/100*.65;if(s.politique==='miel')facteur*=1.18;copie.miel=Math.max(1,arrondiVivant(copie.miel*facteur));}
+    } else if(b.type==='cuisine'){
+      const s=personnel(b).signature,stabilite=1-Math.min(1,Math.abs(s.chaleur-(s.politique==='mijoter'?48:(s.politique==='banquet'?88:68)))/55);
+      let facteur=.88+stabilite*.20;
+      if(s.politique==='mijoter'&&(rec.duree||0)>=55)facteur*=1.14;
+      else if(s.politique==='banquet')facteur*=1.17;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='fumoir'){
+      const s=personnel(b).signature;
+      if(rec.id!=='nettoyer_fumoir'){
+        const qualite=clamp(1.20-Math.abs(s.fumee-46)/145,.72,1.20);
+        let essence=s.essence==='fruitier'?1.10:(s.essence==='resineux'?1.13:(s.essence==='charbon'?.94:1));
+        if(rec.id==='fumer_poisson'&&s.essence==='fruitier')essence*=1.04;
+        if(rec.id==='fumer_viande'&&s.essence==='resineux')essence*=1.05;
+        for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*qualite*essence));
+      }
+    } else if(b.type==='laiterie'){
+      const s=personnel(b).signature,stable=1-Math.min(1,Math.abs(s.humidite-(s.politique==='frais'?38:(s.politique==='cave'?72:56)))/55);
+      let facteur=.86+stable*.22;
+      if(s.politique==='frais'&&(rec.id==='baratter'||rec.id==='cultiver_ferments'))facteur*=1.18;
+      if(s.politique==='cave'&&(rec.id==='fromage_frais'||rec.id==='affiner_cave'))facteur*=1.26;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
+    } else if(b.type==='carriere'){
+      const s=personnel(b).signature,sortie={extraire_pierre:'pierre',tamiser_sable:'sable',extraire_argile:'argile'}[rec.id];
+      let facteur=.82+s.stabilite/100*.26;
+      if(sortie===s.cible)facteur*=1.18;
+      if(s.politique==='prudente')facteur*=.90;else if(s.politique==='profonde')facteur*=1.23;
+      for(const k in copie)copie[k]=Math.max(1,arrondiVivant(copie[k]*facteur));
     }
     return copie;
   }
@@ -461,6 +607,23 @@
       if(rec.id==='recolter_miel'){s.reserve=clamp(s.reserve-2.4*(s.politique==='miel'?1.25:1),0,100);s.humeur=clamp(s.humeur-.7,0,100);}
       else if(rec.id==='miel_de_fleurs'){s.reserve=clamp(s.reserve-4.2*(s.politique==='miel'?1.25:1),0,100);s.humeur=clamp(s.humeur-1.1,0,100);}
       else if(rec.id==='fondre_rayons')s.humeur=clamp(s.humeur-.4,0,100);
+    }else if(b.type==='cuisine'){
+      s.chaleur=clamp(s.chaleur+(s.politique==='banquet'?2.2:(s.politique==='mijoter'?.35:1)),0,100);
+    }else if(b.type==='fumoir'){
+      if(rec.id==='nettoyer_fumoir')s.creosote=clamp(s.creosote-48,0,100);
+      else s.creosote=clamp(s.creosote+.7+s.fumee*.018,0,100);
+    }else if(b.type==='laiterie'){
+      if(rec.id==='cultiver_ferments')s.ferments=clamp(s.ferments+30,0,100);
+      else s.ferments=clamp(s.ferments-({baratter:2,fromage_frais:6,affiner_cave:11}[rec.id]||0),0,100);
+    }else if(b.type==='carriere'){
+      if(rec.id==='soutenir_front'){
+        s.stabilite=clamp(s.stabilite+52,0,100);
+        s.couches={pierre:48+Math.random()*38,sable:34+Math.random()*42,argile:34+Math.random()*42};
+      }else{
+        const mat={extraire_pierre:'pierre',tamiser_sable:'sable',extraire_argile:'argile'}[rec.id];
+        if(mat)s.couches[mat]=clamp(s.couches[mat]-(s.politique==='profonde'?2.1:(s.politique==='prudente'?.75:1.2)),0,100);
+        if(mat||rec.id==='tailler_pierre')s.stabilite=clamp(s.stabilite-(s.politique==='profonde'?2.2:(s.politique==='prudente'?.7:1.25)),0,100);
+      }
     }
   }
 
@@ -488,6 +651,35 @@
     return clamp(total,0,100);
   }
 
+  function facteurSignature(b){
+    if(!b)return 1;
+    if(b.type==='cuisine'){
+      const s=personnel(b).signature,cible=s.politique==='mijoter'?48:(s.politique==='banquet'?88:68),stable=1-Math.min(1,Math.abs(s.chaleur-cible)/60);
+      return clamp((s.politique==='mijoter'?.82:(s.politique==='banquet'?1.16:1))*(.82+stable*.25),.64,1.34);
+    }
+    if(b.type==='fumoir'){
+      const s=personnel(b).signature,encrasse=1-clamp(s.creosote/125,0,.62);
+      return clamp((.62+s.fumee/100*.78)*(s.essence==='charbon'?1.10:1)*encrasse,.48,1.42);
+    }
+    if(b.type==='laiterie'){
+      const s=personnel(b).signature,cible=s.politique==='frais'?38:(s.politique==='cave'?72:56),stable=1-Math.min(1,Math.abs(s.humidite-cible)/60);
+      return clamp((s.politique==='frais'?1.12:(s.politique==='cave'?.82:1))*(.84+stable*.22),.68,1.24);
+    }
+    if(b.type==='carriere'){
+      const s=personnel(b).signature;return clamp((.78+s.stabilite/100*.34)*(s.politique==='prudente'?.88:(s.politique==='profonde'?1.16:1)),.55,1.32);
+    }
+    if(b.type==='moulinEau'){
+      const s=personnel(b).signature,ouv=ouvertureMoulinEau(b)/100,force=(s.debit*.62+s.bassin*.38)/100;
+      return clamp(.48+force*(.48+ouv*.62),.42,1.56);
+    }
+    if(b.type!=='moulin')return 1;
+    const s=personnel(b).signature;
+    if(s.politique==='chasseur')return s.vent<35?.48:clamp(.58+s.vent/62,.65,1.72);
+    if(s.politique==='inertie')return .66+(s.vent*.52+s.inertie*.48)/100*.70;
+    return .76+(s.vent*.72+s.inertie*.28)/100*.58;
+  }
+  function ouvertureMoulinEau(b){const s=personnel(b).signature;return clamp(s.ouverture+(s.politique==='puissance'?16:(s.politique==='retenue'?-16:0)),15,100);}
+
   function soutienRepos() {
     let n=0;
     for(const bid in E().bat){const b=E().bat[bid];if(b.type==='puits'&&personnel(b).signature.politique==='bourg')n++;}
@@ -513,15 +705,65 @@
       const s=personnel(b).signature,besoin=rec.id==='miel_de_fleurs'?4.2:(rec.id==='recolter_miel'?2.4:0);
       if(besoin&&s.reserve<besoin)return {ok:false,raison:'hausses en remplissage'};
       if(rec.id==='miel_de_fleurs'&&nectarVillage()<18)return {ok:false,raison:'réseau floral insuffisant'};
+    }else if(b.type==='fumoir'){
+      const s=personnel(b).signature;
+      if(rec.id!=='nettoyer_fumoir'&&s.creosote>=88)return {ok:false,raison:'conduit à ramoner'};
+    }else if(b.type==='laiterie'){
+      const besoin={baratter:2,fromage_frais:6,affiner_cave:11}[rec.id]||0,s=personnel(b).signature;
+      if(besoin&&s.ferments<besoin)return {ok:false,raison:'ferments à renouveler'};
+    }else if(b.type==='carriere'){
+      const s=personnel(b).signature,mat={extraire_pierre:'pierre',tamiser_sable:'sable',extraire_argile:'argile'}[rec.id];
+      if(rec.id!=='soutenir_front'&&s.stabilite<16)return {ok:false,raison:'front à soutenir'};
+      if(mat&&s.couches[mat]<4)return {ok:false,raison:'couche à renouveler'};
     }
     return {ok:true,raison:''};
   }
   function etableMax(b){return 5+Math.max(1,b.niv||1)*1.5;}
   function etableReserve(b){return personnel(b).signature.politique==='renouvellement'?4:2;}
 
+  const RECETTES_MARMITE={
+    'fromage+herbe+miel':'fromage_herbes_secret',
+    'fromage+huile+legume':'gratin_racines_secret',
+    'champignon+herbe+viande':'ragout_bois_secret',
+    'fromage+legume+poisson':'soupe_aventurier_secret',
+    'farine+fruit+miel':'brioche_verger_secret',
+    'miel+poisson+viande':'banquet_village_secret',
+  };
+  function ajouterIngredientCuisine(b,id){
+    if(!b||b.type!=='cuisine')return false;
+    const s=personnel(b).signature,i=s.marmite.indexOf(id);
+    if(i>=0){s.marmite.splice(i,1);return true;}
+    if(s.marmite.length>=3)s.marmite.shift();
+    s.marmite.push(id);return true;
+  }
+  function viderMarmiteCuisine(b){if(!b||b.type!=='cuisine')return false;personnel(b).signature.marmite=[];return true;}
+  function testerMarmiteCuisine(b){
+    if(!b||b.type!=='cuisine')return {ok:false,raison:'Ce bâtiment ne possède pas de marmite.'};
+    const s=personnel(b).signature;
+    if(s.marmite.length!==3)return {ok:false,raison:'Choisissez trois ingrédients.'};
+    const cout={};for(const id of s.marmite)cout[id]=(cout[id]||0)+1;
+    if(!window.Etat.assez(cout))return {ok:false,raison:'Ingrédients insuffisants.',cout};
+    window.Etat.depenser(cout);
+    const rid=RECETTES_MARMITE[s.marmite.slice().sort().join('+')],deja=!!(rid&&s.connues[rid]);
+    s.marmite=[];s.chaleur=clamp(s.chaleur+3,0,100);
+    if(!rid)return {ok:true,nouveau:false,raison:'Le mélange nourrit le personnel, mais ne révèle aucune recette.'};
+    if(!deja){s.connues[rid]=true;s.decouvertes=Object.keys(s.connues).length;}
+    return {ok:true,nouveau:!deja,rec:window.REC&&window.REC[rid],raison:deja?'Cette recette figure déjà dans le carnet.':'Nouvelle recette découverte !'};
+  }
+  function modifierEntrees(b,rec,entrees){
+    const copie=Object.assign({},entrees||{});if(!b||!rec||b.type!=='fumoir'||rec.id==='nettoyer_fumoir')return copie;
+    const essence=personnel(b).signature.essence;
+    if(essence==='fruitier')copie.greffon=(copie.greffon||0)+1;
+    else if(essence==='resineux')copie.resine=(copie.resine||0)+1;
+    else if(essence==='charbon'){
+      const bois=copie.bois||1;delete copie.bois;copie.charbonbois=(copie.charbonbois||0)+Math.max(1,Math.ceil(bois*.65));
+    }
+    return copie;
+  }
+
   window.EcosystemesBatiments = { TYPES, CADENCES, gere, definition, personnel, confort,
     disponibilite, equipeHabitant, affecterEquipe, repartirEquipes, ajouterEquipe, retirerEquipe,
-    tickHabitant, tick, modifierSorties, finirRecette, peutDemarrer,
-    pollinisationCible, humiditeCible, nectarCible, nectarVillage, soutienRepos, troupeauMax, reproducteurs,
-    etableMax, etableReserve };
+    tickHabitant, tick, modifierEntrees, modifierSorties, finirRecette, peutDemarrer,
+    pollinisationCible, humiditeCible, nectarCible, nectarVillage, facteurSignature, ouvertureMoulinEau, soutienRepos, troupeauMax, reproducteurs,
+    etableMax, etableReserve, RECETTES_MARMITE, ajouterIngredientCuisine, viderMarmiteCuisine, testerMarmiteCuisine };
 })();

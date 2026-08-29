@@ -72,6 +72,8 @@
     'Affiné sur claie. Le bourg entier sait quand la cave est ouverte.');
   r('poissonfume','Poisson fumé',      'vivres', 2, 22, 'poisson', ['#b9926a','#7f6242'],
     'Se garde tout un hiver. C\'est ce qu\'on emporte en expédition.');
+  r('viandefumee','Viande fumée',      'vivres', 2, 25, 'viande',  ['#a96247','#693a2d'],
+    'Jambons et saucisses passés à la fumée froide. Se conserve longtemps et nourrit les grandes tablées.');
   r('tourte',    'Tourte',             'vivres', 3, 54, 'pain',    ['#d8a85c','#9a6f34'],
     'Pain, poisson, fromage : les trois d\'un coup. Un repas de fête, un rendement de fête.');
 
